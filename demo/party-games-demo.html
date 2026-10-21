@@ -1017,6 +1017,77 @@ div.clue { cursor: default; }
 .clockbar.over .ck-fill { background: var(--red, #e5484d); }
 .clockbar.over .ck-phase { color: var(--red-text); font-weight: 800; }
 
+/* ============ v12: Кто я — вопросы/ответы ============ */
+.qa-card .side-h { flex-wrap: wrap; }
+.qa-text { font-size: 16px; }
+.qa-form { display: flex; gap: 8px; }
+.qa-form .inp { flex: 1; }
+.qa-now { margin-top: 10px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-weight: 700; }
+.qa-t { display: inline-flex; gap: 12px; }
+.qa-t .y { color: var(--green-text); }
+.qa-t .n { color: var(--red-text); }
+.qa-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.qa-b { flex-direction: column; gap: 6px; padding: 14px 8px; font-size: 18px; border-radius: 14px; border: 2px solid var(--line-strong); min-height: 84px; }
+.qa-b .qa-who { display: inline-flex; align-items: center; gap: 3px; min-height: 18px; flex-wrap: wrap; justify-content: center; }
+.qa-b small { font-size: 12px; color: var(--muted); margin-left: 2px; }
+.qa-yes.on { background: var(--green); border-color: var(--green); color: var(--green-ink); }
+.qa-no.on { background: var(--red, #e5484d); border-color: var(--red, #e5484d); color: #fff; }
+.qa-idk.on { background: var(--surface-2); border-color: var(--accent); color: var(--accent-text); }
+.qa-b.on small { color: inherit; }
+.qa-hist { margin-top: 10px; }
+.qa-hist summary { cursor: pointer; color: var(--muted); font-weight: 700; font-size: 13px; }
+.qa-list { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 12px; max-height: 220px; overflow-y: auto; }
+.qa-i { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 9px; background: var(--surface-2); font-size: 14px; border-left: 3px solid var(--line-strong); }
+.qa-i.v-yes { border-left-color: var(--green); }
+.qa-i.v-no { border-left-color: var(--red, #e5484d); }
+.qa-a { font-weight: 800; white-space: nowrap; display: inline-flex; gap: 6px; align-items: baseline; }
+.qa-a small { color: var(--muted); font-weight: 600; font-size: 11px; }
+.qa-i.v-yes .qa-a { color: var(--green-text); }
+.qa-i.v-no .qa-a { color: var(--red-text); }
+@media (max-width: 640px) { .qa-b { font-size: 16px; min-height: 70px; padding: 10px 4px; } }
+
+/* Шпион — очередь вопросов */
+.spy-turn { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; border-color: var(--accent-line); }
+.st-pair { display: flex; align-items: center; gap: 10px; }
+.st-arrow { color: var(--accent-text); }
+.st-txt { font-size: 17px; }
+.st-log { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; font-size: 12px; color: var(--muted); }
+.st-log span { background: var(--surface-2); padding: 3px 8px; border-radius: 99px; }
+.qcnt { font-style: normal; font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; }
+.vote-row.quiet { box-shadow: inset 3px 0 0 var(--accent); }
+.quiet-t { color: var(--accent-text); font-style: normal; font-weight: 700; }
+.vote-row.in-q { background: var(--accent-soft); }
+.cn-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+.sum-i { display: inline-block; line-height: 1.5; font-size: 13px; padding: 4px 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.sum-i svg { color: var(--accent-text); }
+.sum-i.bad svg { color: var(--red-text); }
+/* Номинации марафона */
+.noms { margin: 18px 0 6px; }
+.nom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 10px; text-align: left; }
+.nom { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.nom-ic { width: 38px; height: 38px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; }
+.nom-t { font-family: var(--display); font-size: 15px; }
+.nom-who { display: flex; flex-wrap: wrap; gap: 8px; font-weight: 700; }
+.nom-u { font-size: 12px; color: var(--muted); }
+/* Реакции */
+.react-fab.off { opacity: 0.45; cursor: not-allowed; }
+.react-pop { top: auto; bottom: calc(100% + 10px); left: auto; right: 0; min-width: 0; display: grid; grid-template-columns: repeat(2, auto); gap: 6px; padding: 8px; transform-origin: bottom right; }
+.react-b { border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font: inherit; font-weight: 800; font-size: 14px; padding: 9px 14px; border-radius: 99px; cursor: pointer; white-space: nowrap; transition: transform 0.1s, background 0.15s; }
+.react-b:hover { background: var(--accent-soft); border-color: var(--accent-line); transform: translateY(-1px); }
+#react-layer { position: fixed; inset: 0; pointer-events: none; z-index: 140; }
+.rbub { position: fixed; transform: translate(-50%, -100%); z-index: 140; pointer-events: none; white-space: nowrap;
+  background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 12px; padding: 4px 9px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  animation: rbub 2.6s ease both; }
+.rbub::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--accent); }
+.rbub.r-facepalm, .rbub.r-oops { background: var(--red, #e5484d); color: #fff; }
+.rbub.r-facepalm::after, .rbub.r-oops::after { border-top-color: var(--red, #e5484d); }
+.rbub.r-genius, .rbub.r-fire { background: var(--green); color: var(--green-ink); }
+.rbub.r-genius::after, .rbub.r-fire::after { border-top-color: var(--green); }
+@keyframes rbub { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -100%) scale(1.08); } 18% { transform: translate(-50%, -100%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -125%); } }
+@media (prefers-reduced-motion: reduce) { .rbub { animation: none; } }
+.sum-i > svg { vertical-align: -2px; margin-right: 4px; }
+.sum-i .who-n { vertical-align: -5px; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -1298,6 +1369,7 @@ body{padding-bottom:84px}
         s.pending = null;
         s.firstClue = true;
         s.ready = {};
+        s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} };
         ctx.clearTimer("cn-reveal");
         startClock(s, ctx, FIRST_CLUE_MS);
       }
@@ -1308,6 +1380,26 @@ body{padding-bottom:84px}
         s.pending = null;
         s.step = "setup";
         s.ready = {};
+      }
+      function summary(s) {
+        const st = s.st;
+        if (!st) return null;
+        const top = (o) => {
+          const e = Object.entries(o).sort((a, b) => b[1] - a[1]);
+          return e.length && e[0][1] > 0 ? { pid: e[0][0], n: e[0][1] } : null;
+        };
+        const best = s.clues.filter((c) => c.hits).sort((a, b) => b.hits - a.hits || b.id - a.id)[0];
+        return {
+          bestClue: best ? { text: clueText(best), by: best.by, team: best.team, hits: best.hits } : null,
+          sniper: top(st.right),
+          miss: top(st.wrong),
+          assassin: st.assassin,
+          clues: s.clues.length
+        };
+      }
+      function stats(s) {
+        const st = s.st || {};
+        return { captain: { ...st.capHits || {} }, sniper: { ...st.right || {} } };
       }
       function setupNeeds(s, ctx) {
         var _a;
@@ -1371,6 +1463,18 @@ body{padding-bottom:84px}
         if (!c || c.revealed) return;
         s.pending = null;
         c.revealed = true;
+        const st = s.st || (s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} });
+        const own = c.color === s.turn;
+        for (const id of c.marks) {
+          const bag = own ? st.right : st.wrong;
+          bag[id] = (bag[id] || 0) + 1;
+        }
+        if (c.color === "assassin") st.assassin = [...c.marks];
+        if (own && s.clue) {
+          s.clue.hits = (s.clue.hits || 0) + 1;
+          const cap = s.clue.by;
+          st.capHits[cap] = (st.capHits[cap] || 0) + 1;
+        }
         s.cards.forEach((x) => x.marks = []);
         s.log.push({ kind: "reveal", team: s.turn, text: c.w, color: c.color, by: TN[s.turn] });
         if (c.color === "assassin") {
@@ -1558,6 +1662,7 @@ body{padding-bottom:84px}
           needs: setup || s.winner ? setupNeeds(s, ctx) : [],
           clock: c ? { endsAt: c.endsAt, total: c.total, over: c.over || false, paused: c.paused, left: c.paused ? c.left : Math.max(0, c.endsAt - Date.now()) } : null,
           log: s.log.slice(-40),
+          summary: s.winner ? summary(s) : null,
           cards: s.cards.map((x) => ({
             w: setup ? "" : x.w,
             // до старта слова скрыты
@@ -1590,7 +1695,7 @@ body{padding-bottom:84px}
         checkConsensus(s, ctx);
         checkReady(s, ctx);
       }
-      module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, pause, resume };
+      module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, pause, resume, stats };
     }
   });
 
@@ -1812,7 +1917,12 @@ body{padding-bottom:84px}
         }
         s._left = null;
       }
-      module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume };
+      function stats(s) {
+        const explainer = {};
+        for (const h of s.history) if (h.pts > 0) explainer[h.explainer] = (explainer[h.explainer] || 0) + h.pts;
+        return { explainer };
+      }
+      module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume, stats };
     }
   });
 
@@ -1829,7 +1939,7 @@ body{padding-bottom:84px}
         short: "\u0412\u0441\u0435 \u0437\u043D\u0430\u044E\u0442 \u043B\u043E\u043A\u0430\u0446\u0438\u044E, \u043A\u0440\u043E\u043C\u0435 \u0448\u043F\u0438\u043E\u043D\u0430. \u0412\u044B\u0447\u0438\u0441\u043B\u0438\u0442\u0435 \u0435\u0433\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C\u0438 \u2014 \u0438\u043B\u0438 \u043E\u043D \u0432\u044B\u0447\u0438\u0441\u043B\u0438\u0442 \u043C\u0435\u0441\u0442\u043E.",
         rules: [
           "\u041A\u0430\u0436\u0434\u044B\u0439 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0443 \u0441 \u043B\u043E\u043A\u0430\u0446\u0438\u0435\u0439 \u0438 \u0441\u0432\u043E\u0435\u0439 \u0440\u043E\u043B\u044C\u044E, \u0430 \u0448\u043F\u0438\u043E\u043D \u2014 \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430\u0434\u043F\u0438\u0441\u044C \xAB\u0412\u044B \u0448\u043F\u0438\u043E\u043D\xBB. \u0421\u043F\u0438\u0441\u043A\u0430 \u043B\u043E\u043A\u0430\u0446\u0438\u0439 \u043D\u0435\u0442 \u2014 \u0448\u043F\u0438\u043E\u043D\u0443 \u043F\u0440\u0438\u0434\u0451\u0442\u0441\u044F \u0434\u043E\u0433\u0430\u0434\u0430\u0442\u044C\u0441\u044F \u043F\u043E \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u0443.",
-          "\u0418\u0433\u0440\u043E\u043A\u0438 \u043F\u043E \u043E\u0447\u0435\u0440\u0435\u0434\u0438 \u0437\u0430\u0434\u0430\u044E\u0442 \u0434\u0440\u0443\u0433 \u0434\u0440\u0443\u0433\u0443 \u0432\u043E\u043F\u0440\u043E\u0441\u044B \u043E \u043B\u043E\u043A\u0430\u0446\u0438\u0438, \u0441\u0442\u0430\u0440\u0430\u044F\u0441\u044C \u043D\u0435 \u0432\u044B\u0434\u0430\u0442\u044C \u0435\u0451 \u0448\u043F\u0438\u043E\u043D\u0443, \u043D\u043E \u0438 \u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0441\u0432\u043E\u0438\u043C, \u0447\u0442\u043E \u043E\u043D\u0438 \xAB\u0432 \u0442\u0435\u043C\u0435\xBB.",
+          "\u0412\u043E\u043F\u0440\u043E\u0441\u044B \u0438\u0434\u0443\u0442 \u043F\u043E \u043E\u0447\u0435\u0440\u0435\u0434\u0438: \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u044E\u0449\u0438\u0439 \u0432\u044B\u0431\u0438\u0440\u0430\u0435\u0442 \u043D\u0430 \u0441\u0430\u0439\u0442\u0435, \u043A\u043E\u0433\u043E \u0441\u043F\u0440\u043E\u0441\u0438\u0442\u044C, \u0442\u043E\u0442 \u043E\u0442\u0432\u0435\u0447\u0430\u0435\u0442 \u0432\u0441\u043B\u0443\u0445 \u0438 \u0436\u043C\u0451\u0442 \xAB\u041E\u0442\u0432\u0435\u0442\u0438\u043B\xBB \u2014 \u0442\u0435\u043F\u0435\u0440\u044C \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u043E\u043D. \u0421\u0440\u0430\u0437\u0443 \u0441\u043F\u0440\u043E\u0441\u0438\u0442\u044C \u0442\u043E\u0433\u043E, \u043A\u0442\u043E \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u043E \u0441\u043F\u0440\u043E\u0441\u0438\u043B \u0442\u0435\u0431\u044F, \u043D\u0435\u043B\u044C\u0437\u044F. \u0420\u044F\u0434\u043E\u043C \u0441 \u0438\u0433\u0440\u043E\u043A\u0430\u043C\u0438 \u0432\u0438\u0434\u043D\u043E, \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432 \u0438\u043C \u0437\u0430\u0434\u0430\u043B\u0438 \u2014 \u043C\u043E\u043B\u0447\u0443\u043D\u044B \u043F\u043E\u0434\u0441\u0432\u0435\u0447\u0435\u043D\u044B.",
           "\u0413\u043E\u043B\u043E\u0441\u043E\u0432\u0430\u043D\u0438\u0435: \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \xAB\u041E\u0431\u0432\u0438\u043D\u0438\u0442\u044C\xBB \u043D\u0430\u043F\u0440\u043E\u0442\u0438\u0432 \u0438\u0433\u0440\u043E\u043A\u0430. \u041A\u043E\u0433\u0434\u0430 \u0437\u0430 \u043A\u043E\u0433\u043E-\u0442\u043E \u043F\u0440\u043E\u0433\u043E\u043B\u043E\u0441\u043E\u0432\u0430\u043B\u0438 \u0432\u0441\u0435 \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u2014 \u0440\u0430\u0443\u043D\u0434 \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F. \u0413\u043E\u043B\u043E\u0441 \u043C\u043E\u0436\u043D\u043E \u043E\u0442\u043E\u0437\u0432\u0430\u0442\u044C.",
           "\u0415\u0441\u043B\u0438 \u0448\u043F\u0438\u043E\u043D \u0443\u0432\u0435\u0440\u0435\u043D, \u043E\u043D \u0436\u043C\u0451\u0442 \xAB\u042F \u0437\u043D\u0430\u044E \u043B\u043E\u043A\u0430\u0446\u0438\u044E\xBB: \u0443 \u043D\u0435\u0433\u043E \u043C\u0438\u043D\u0443\u0442\u0430, \u0447\u0442\u043E\u0431\u044B \u043D\u0430\u0437\u0432\u0430\u0442\u044C \u0435\u0451 \u0432\u0441\u043B\u0443\u0445 \u0432 Discord. \u041C\u0438\u0440\u043D\u044B\u0435 \u0438\u0433\u0440\u043E\u043A\u0438 \u0440\u0435\u0448\u0430\u044E\u0442 \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438 \xAB\u0428\u043F\u0438\u043E\u043D \u0443\u0433\u0430\u0434\u0430\u043B\xBB / \xAB\u0428\u043F\u0438\u043E\u043D \u043D\u0435 \u0443\u0433\u0430\u0434\u0430\u043B\xBB \u2014 \u0440\u0435\u0448\u0430\u0435\u0442 \u0431\u043E\u043B\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u043E. \u0413\u043E\u043B\u043E\u0441\u043E\u0432\u0430\u043D\u0438\u0435 \u043D\u0430 \u044D\u0442\u043E \u0432\u0440\u0435\u043C\u044F \u0437\u0430\u043C\u043E\u0440\u0430\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044F.",
           "\u041E\u0447\u043A\u0438 \u0437\u0430 \u0440\u0430\u0443\u043D\u0434: \u0448\u043F\u0438\u043E\u043D \u0443\u0433\u0430\u0434\u0430\u043B \u043B\u043E\u043A\u0430\u0446\u0438\u044E \u2014 \u0448\u043F\u0438\u043E\u043D\u0443 +3. \u041E\u0431\u0432\u0438\u043D\u0438\u043B\u0438 \u043D\u0435\u0432\u0438\u043D\u043E\u0432\u043D\u043E\u0433\u043E \u2014 \u0448\u043F\u0438\u043E\u043D\u0443 +2. \u0428\u043F\u0438\u043E\u043D\u0430 \u043F\u043E\u0439\u043C\u0430\u043B\u0438 \u0433\u043E\u043B\u043E\u0441\u043E\u0432\u0430\u043D\u0438\u0435\u043C \u0438\u043B\u0438 \u043E\u043D \u043E\u0448\u0438\u0431\u0441\u044F \u0441 \u043B\u043E\u043A\u0430\u0446\u0438\u0435\u0439 \u2014 \u043A\u0430\u0436\u0434\u043E\u043C\u0443 \u043C\u0438\u0440\u043D\u043E\u043C\u0443 +1. \u0411\u043E\u043D\u0443\u0441: \u043C\u0438\u0440\u043D\u044B\u0439, \u0447\u0435\u0439 \u0433\u043E\u043B\u043E\u0441 \u0432 \u043A\u043E\u043D\u0446\u0435 \u0440\u0430\u0443\u043D\u0434\u0430 \u0441\u0442\u043E\u0438\u0442 \u043D\u0430 \u0448\u043F\u0438\u043E\u043D\u0435, \u2014 \u0435\u0449\u0451 +1.",
@@ -1859,7 +1969,13 @@ body{padding-bottom:84px}
         s.endsAt = Date.now() + s.minutes * 6e4;
         s.round++;
         s.firstAsks = pick(ids);
+        s.asker = s.firstAsks;
+        s.target = null;
+        s.prev = null;
+        s.asked = Object.fromEntries(ids.map((id) => [id, 0]));
+        s.qlog = [];
       }
+      var alivePart = (s, ctx) => s.participants.filter((id) => ctx.room.players.get(id));
       function create(ctx, st) {
         if (ctx.players().length < 3) return "\u0414\u043B\u044F \xAB\u0428\u043F\u0438\u043E\u043D\u0430\xBB \u043D\u0443\u0436\u043D\u043E \u043C\u0438\u043D\u0438\u043C\u0443\u043C 3 \u0438\u0433\u0440\u043E\u043A\u0430";
         const s = { minutes: clampInt(st.minutes, 1, 30, 8), spyCount: clampInt(st.spies, 1, 3, 1), round: 0, score: {} };
@@ -1944,6 +2060,26 @@ body{padding-bottom:84px}
             checkJudges(s, ctx);
             return;
           }
+          case "askWho": {
+            if (s.phase !== "play") return;
+            if (pid !== s.asker && !ctx.isHost) return "\u0421\u0435\u0439\u0447\u0430\u0441 \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0434\u0440\u0443\u0433\u043E\u0439 \u0438\u0433\u0440\u043E\u043A";
+            const t = msg.target;
+            if (!alivePart(s, ctx).includes(t) || t === s.asker) return "\u042D\u0442\u043E\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430 \u0441\u043F\u0440\u043E\u0441\u0438\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F";
+            if (t === s.prev && alivePart(s, ctx).length > 2) return "\u041D\u0435\u043B\u044C\u0437\u044F \u0441\u0440\u0430\u0437\u0443 \u0437\u0430\u0434\u0430\u0442\u044C \u0432\u043E\u043F\u0440\u043E\u0441 \u0442\u043E\u043C\u0443, \u043A\u0442\u043E \u0441\u043F\u0440\u043E\u0441\u0438\u043B \u0432\u0430\u0441";
+            s.target = s.target === t ? null : t;
+            return;
+          }
+          case "answered": {
+            if (s.phase !== "play" || !s.target) return;
+            if (pid !== s.target && pid !== s.asker && !ctx.isHost) return "\u041E\u0442\u0432\u0435\u0447\u0430\u0435\u0442 \u0434\u0440\u0443\u0433\u043E\u0439 \u0438\u0433\u0440\u043E\u043A";
+            s.asked[s.target] = (s.asked[s.target] || 0) + 1;
+            s.qlog.push({ from: s.asker, to: s.target });
+            if (s.qlog.length > 30) s.qlog.shift();
+            s.prev = s.asker;
+            s.asker = s.target;
+            s.target = null;
+            return;
+          }
           case "reveal": {
             if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
             if (s.phase === "over") return;
@@ -1981,11 +2117,22 @@ body{padding-bottom:84px}
           result: s.result,
           roundPts: over ? s.roundPts : null,
           firstAsks: s.firstAsks,
+          asker: s.asker,
+          target: s.target,
+          prev: s.prev,
+          asked: s.asked,
+          qlog: s.qlog.slice(-8),
           score: s.score
         };
       }
       function onLeave(s, pid, ctx) {
         delete s.votes[pid];
+        if (s.target === pid) s.target = null;
+        if (s.asker === pid) {
+          const rest = alivePart(s, ctx).filter((id) => id !== pid);
+          s.asker = rest.length ? pick(rest) : null;
+          s.target = null;
+        }
         for (const k of Object.keys(s.votes)) if (s.votes[k] === pid) delete s.votes[k];
         if (s.phase !== "over" && s.spies.includes(pid)) {
           s.phase = "over";
@@ -2016,7 +2163,16 @@ body{padding-bottom:84px}
           });
         }
       }
-      module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume };
+      function stats(s) {
+        const detector = {};
+        const spy = {};
+        if (s.phase === "over" && s.result && s.result.kind !== "reveal") {
+          for (const id of town(s)) if (s.spies.includes(s.votes[id])) detector[id] = 1;
+          if (s.result.winner === "spy") for (const id of s.spies) spy[id] = 1;
+        }
+        return { detector, spy };
+      }
+      module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume, stats };
     }
   });
 
@@ -2032,7 +2188,7 @@ body{padding-bottom:84px}
         short: "\u0423 \u0442\u0435\u0431\u044F \u043D\u0430 \u043B\u0431\u0443 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436 \u2014 \u0432\u0441\u0435 \u0435\u0433\u043E \u0432\u0438\u0434\u044F\u0442, \u043A\u0440\u043E\u043C\u0435 \u0442\u0435\u0431\u044F. \u0423\u0433\u0430\u0434\u0430\u0439 \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C\u0438 \xAB\u0434\u0430/\u043D\u0435\u0442\xBB.",
         rules: [
           "\u041A\u0430\u0436\u0434\u043E\u043C\u0443 \u0438\u0433\u0440\u043E\u043A\u0443 \u0434\u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436: \u0435\u0433\u043E \u0432\u0438\u0434\u044F\u0442 \u0432\u0441\u0435, \u043A\u0440\u043E\u043C\u0435 \u0441\u0430\u043C\u043E\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430. \u041F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0435\u0439 \u0440\u0430\u0437\u0434\u0430\u044E\u0442 \u0441\u043B\u0443\u0447\u0430\u0439\u043D\u043E \u0438\u043B\u0438 \u043A\u0430\u0436\u0434\u044B\u0439 \u0437\u0430\u0433\u0430\u0434\u044B\u0432\u0430\u0435\u0442 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u0441\u043E\u0441\u0435\u0434\u0443.",
-          "\u0412 \u0441\u0432\u043E\u0439 \u0445\u043E\u0434 \u0437\u0430\u0434\u0430\u0432\u0430\u0439 \u0432\u043E\u043F\u0440\u043E\u0441\u044B, \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043C\u043E\u0436\u043D\u043E \u043E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \xAB\u0434\u0430\xBB \u0438\u043B\u0438 \xAB\u043D\u0435\u0442\xBB. \u041F\u043E\u0441\u043B\u0435 \u043E\u0442\u0432\u0435\u0442\u0430 \xAB\u043D\u0435\u0442\xBB \u043D\u0430\u0436\u043C\u0438 \xAB\u041F\u0435\u0440\u0435\u0434\u0430\u0442\u044C \u0445\u043E\u0434\xBB.",
+          "\u0412 \u0441\u0432\u043E\u0439 \u0445\u043E\u0434 \u0437\u0430\u0434\u0430\u0432\u0430\u0439 \u0432\u043E\u043F\u0440\u043E\u0441\u044B, \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043C\u043E\u0436\u043D\u043E \u043E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \xAB\u0434\u0430\xBB \u0438\u043B\u0438 \xAB\u043D\u0435\u0442\xBB. \u0412\u043E\u043F\u0440\u043E\u0441 \u043C\u043E\u0436\u043D\u043E \u043D\u0430\u043F\u0435\u0447\u0430\u0442\u0430\u0442\u044C \u0438\u043B\u0438 \u0437\u0430\u0434\u0430\u0442\u044C \u0433\u043E\u043B\u043E\u0441\u043E\u043C. \u041E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043E\u0442\u0432\u0435\u0447\u0430\u044E\u0442 \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438 \xAB\u0414\u0430 / \u041D\u0435\u0442 / \u041D\u0435 \u0437\u043D\u0430\u044E\xBB \u2014 \u0432\u043E\u043F\u0440\u043E\u0441 \u0438 \u043E\u0442\u0432\u0435\u0442 \u0441\u0430\u043C\u0438 \u043F\u043E\u043F\u0430\u0434\u0430\u044E\u0442 \u0432 \u0442\u0432\u043E\u044E \u0438\u0441\u0442\u043E\u0440\u0438\u044E. \u041F\u043E\u0441\u043B\u0435 \u043E\u0442\u0432\u0435\u0442\u0430 \xAB\u043D\u0435\u0442\xBB \u043D\u0430\u0436\u043C\u0438 \xAB\u041F\u0435\u0440\u0435\u0434\u0430\u0442\u044C \u0445\u043E\u0434\xBB.",
           "\u0414\u0443\u043C\u0430\u0435\u0448\u044C, \u0447\u0442\u043E \u0437\u043D\u0430\u0435\u0448\u044C \u043E\u0442\u0432\u0435\u0442, \u2014 \u043D\u0430\u0437\u043E\u0432\u0438 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u0432\u0441\u043B\u0443\u0445. \u0423\u0433\u0430\u0434\u0430\u043B \u2014 \u043D\u0430\u0436\u043C\u0438 \xAB\u042F \u0443\u0433\u0430\u0434\u0430\u043B\xBB, \u0438 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436 \u043E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F \u0442\u0435\u0431\u0435.",
           "\u041E\u0447\u043A\u0438: \u0443\u0433\u0430\u0434\u0430\u043B \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u2014 +1. \u0411\u043E\u043D\u0443\u0441 \u0437\u0430 \u0441\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u043F\u0435\u0440\u0432\u044B\u0439 \u0443\u0433\u0430\u0434\u0430\u0432\u0448\u0438\u0439 +2, \u0432\u0442\u043E\u0440\u043E\u0439 +1. \u0421\u0434\u0430\u043B\u0441\u044F \u2014 0."
         ],
@@ -2060,16 +2216,46 @@ body{padding-bottom:84px}
           a: {},
           // pid -> {char, writer, guessedAt, gaveUp}
           deck: new Deck(CHARACTERS),
-          finishOrder: []
+          finishOrder: [],
+          q: null,
+          // текущий вопрос: {id, asker, text, answers: {pid: 'yes'|'no'|'idk'}}
+          qn: 0
         };
         ids.forEach((id, i) => {
-          s.a[id] = { char: s.mode === "random" ? s.deck.draw() : null, writer: ids[(i + ids.length - 1) % ids.length] };
+          s.a[id] = { char: s.mode === "random" ? s.deck.draw() : null, writer: ids[(i + ids.length - 1) % ids.length], qa: [] };
         });
         s.phase = s.mode === "random" ? "play" : "write";
         return s;
       }
       var active2 = (s, ctx) => s.order.filter((id) => ctx.room.players.get(id));
+      var ANS = ["yes", "no", "idk"];
+      function tally(q) {
+        const t = { yes: 0, no: 0, idk: 0 };
+        for (const v of Object.values(q.answers)) t[v]++;
+        return t;
+      }
+      function verdict(t) {
+        if (t.yes > t.no && t.yes >= t.idk) return "yes";
+        if (t.no > t.yes && t.no >= t.idk) return "no";
+        return t.yes || t.no || t.idk ? "idk" : null;
+      }
+      function archive(s) {
+        const q = s.q;
+        s.q = null;
+        if (!q || !Object.keys(q.answers).length) return;
+        const t = tally(q);
+        const a = s.a[q.asker];
+        if (a) {
+          a.qa.push({ text: q.text, ...t, v: verdict(t) });
+          if (a.qa.length > 40) a.qa.shift();
+        }
+      }
+      function newQ(s, asker, text) {
+        archive(s);
+        s.q = { id: ++s.qn, asker, text: String(text || "").trim().slice(0, 120), answers: {} };
+      }
       function advance(s, ctx) {
+        archive(s);
         const act = active2(s, ctx);
         if (!act.length) return;
         for (let k = 0; k < s.order.length; k++) {
@@ -2104,6 +2290,23 @@ body{padding-bottom:84px}
             s.phase = "play";
             return;
           }
+          case "ask": {
+            if (s.phase !== "play") return;
+            if (s.order[s.turn] !== pid) return "\u0421\u0435\u0439\u0447\u0430\u0441 \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0434\u0440\u0443\u0433\u043E\u0439 \u0438\u0433\u0440\u043E\u043A";
+            newQ(s, pid, msg.text);
+            return;
+          }
+          case "answer": {
+            if (s.phase !== "play") return;
+            if (!s.a[pid]) return;
+            const asker = s.order[s.turn];
+            if (pid === asker) return "\u041D\u0430 \u0441\u0432\u043E\u0439 \u0432\u043E\u043F\u0440\u043E\u0441 \u043E\u0442\u0432\u0435\u0447\u0430\u044E\u0442 \u0434\u0440\u0443\u0433\u0438\u0435";
+            if (!ANS.includes(msg.v)) return;
+            if (!s.q || s.q.asker !== asker) newQ(s, asker, "");
+            if (s.q.answers[pid] === msg.v) delete s.q.answers[pid];
+            else s.q.answers[pid] = msg.v;
+            return;
+          }
           case "next": {
             if (s.phase !== "play") return;
             if (s.order[s.turn] !== pid && !ctx.isHost) return "\u041F\u0435\u0440\u0435\u0434\u0430\u0442\u044C \u0445\u043E\u0434 \u043C\u043E\u0436\u0435\u0442 \u0438\u0433\u0440\u043E\u043A, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0445\u043E\u0434\u0438\u0442";
@@ -2126,7 +2329,7 @@ body{padding-bottom:84px}
           case "addMe": {
             if (s.a[pid]) return;
             s.order.push(pid);
-            s.a[pid] = { char: s.deck.draw(), writer: null };
+            s.a[pid] = { char: s.deck.draw(), writer: null, qa: [] };
             return;
           }
         }
@@ -2146,6 +2349,7 @@ body{padding-bottom:84px}
           pending: s.phase === "write" ? Object.values(s.a).filter((a) => !a.char).map((a) => a.writer) : [],
           finishOrder: s.finishOrder,
           points: points(s),
+          q: s.q && s.phase === "play" ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers } : null,
           players: Object.fromEntries(
             Object.entries(s.a).map(([id, a]) => [
               id,
@@ -2153,7 +2357,8 @@ body{padding-bottom:84px}
                 char: s.phase === "write" ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== "over" ? null : a.char,
                 writer: a.writer,
                 guessed: !!a.guessedAt,
-                gaveUp: !!a.gaveUp
+                gaveUp: !!a.gaveUp,
+                qa: a.qa.slice(-12)
               }
             ])
           )
@@ -2175,7 +2380,8 @@ body{padding-bottom:84px}
       }
       var isOver = (s) => s.phase === "over";
       var results = (s) => points(s);
-      module.exports = { meta, create, action, view, onLeave, isOver, results, points };
+      var stats = (s) => ({ sherlock: s.finishOrder.length ? { [s.finishOrder[0]]: 1 } : {} });
+      module.exports = { meta, create, action, view, onLeave, isOver, results, points, stats };
     }
   });
 
@@ -2428,7 +2634,12 @@ body{padding-bottom:84px}
       var isOver = (s) => s.phase === "over";
       var results = (s) => ({ ...s.points });
       var onPresence = (s, ctx) => checkAccept(s, ctx);
-      module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence };
+      function stats(s) {
+        const hints = {};
+        for (const h of s.history) if (h.correct && h.heart) hints[h.heart] = (hints[h.heart] || 0) + 1;
+        return { hints };
+      }
+      module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, stats };
     }
   });
 
@@ -2465,7 +2676,7 @@ body{padding-bottom:84px}
       function makeTour(plan) {
         const queue = [];
         for (const item of plan) for (let n = 1; n <= item.rounds; n++) queue.push({ type: item.type, n, of: item.rounds, settings: item.settings || {} });
-        return { queue, idx: 0, phase: "play", totals: {}, log: [], playedBy: {} };
+        return { queue, idx: 0, phase: "play", totals: {}, log: [], playedBy: {}, stats: {} };
       }
       function check(tour, game, GAMES2, ctx) {
         if (!tour || tour.phase !== "play" || !game) return false;
@@ -2477,10 +2688,36 @@ body{padding-bottom:84px}
           tour.totals[id] = (tour.totals[id] || 0) + p;
           tour.playedBy[id] = (tour.playedBy[id] || 0) + 1;
         }
+        if (g.stats) {
+          tour.stats = tour.stats || {};
+          for (const [key, byPid] of Object.entries(g.stats(game.state) || {})) {
+            const bag = tour.stats[key] = tour.stats[key] || {};
+            for (const [id, n] of Object.entries(byPid)) bag[id] = (bag[id] || 0) + n;
+          }
+        }
         const item = tour.queue[tour.idx];
         tour.log.push({ type: item.type, n: item.n, raw, pts });
         tour.phase = tour.idx >= tour.queue.length - 1 ? "done" : "between";
         return true;
+      }
+      var NOMINATIONS = [
+        { key: "captain", title: "\u041B\u0443\u0447\u0448\u0438\u0439 \u043A\u0430\u043F\u0438\u0442\u0430\u043D", unit: "\u0441\u043B\u043E\u0432 \u043E\u0442\u0433\u0430\u0434\u0430\u043B\u0438 \u043F\u043E \u0435\u0433\u043E \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0430\u043C", game: "codenames" },
+        { key: "sniper", title: "\u0421\u043D\u0430\u0439\u043F\u0435\u0440", unit: "\u0432\u0435\u0440\u043D\u044B\u0445 \u0433\u043E\u043B\u043E\u0441\u043E\u0432 \u0432 \u041A\u043E\u0434\u043D\u0435\u0439\u043C\u0441", game: "codenames" },
+        { key: "hints", title: "\u041C\u0430\u0441\u0442\u0435\u0440 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043E\u043A", unit: "\u0441\u0435\u0440\u0434\u0435\u0447\u0435\u043A \u0432 \xAB\u041D\u0430\u043C\u0451\u043A \u043F\u043E\u043D\u044F\u043B\xBB", game: "justone" },
+        { key: "detector", title: "\u0414\u0435\u0442\u0435\u043A\u0442\u043E\u0440 \u0448\u043F\u0438\u043E\u043D\u043E\u0432", unit: "\u0440\u0430\u0437 \u0433\u043E\u043B\u043E\u0441\u043E\u0432\u0430\u043B \u0437\u0430 \u043D\u0430\u0441\u0442\u043E\u044F\u0449\u0435\u0433\u043E \u0448\u043F\u0438\u043E\u043D\u0430", game: "spyfall" },
+        { key: "spy", title: "\u0428\u043F\u0438\u043E\u043D-\u043D\u0435\u0432\u0438\u0434\u0438\u043C\u043A\u0430", unit: "\u043F\u043E\u0431\u0435\u0434 \u0437\u0430 \u0448\u043F\u0438\u043E\u043D\u0430", game: "spyfall" },
+        { key: "sherlock", title: "\u0428\u0435\u0440\u043B\u043E\u043A", unit: "\u0440\u0430\u0437 \u043F\u0435\u0440\u0432\u044B\u043C \u0443\u0433\u0430\u0434\u0430\u043B \u0441\u0435\u0431\u044F \u0432 \xAB\u041A\u0442\u043E \u044F?\xBB", game: "whoami" },
+        { key: "explainer", title: "\u0417\u043B\u0430\u0442\u043E\u0443\u0441\u0442", unit: "\u043E\u0447\u043A\u043E\u0432 \u043E\u0431\u044A\u044F\u0441\u043D\u0435\u043D\u0438\u0435\u043C \u0432 \u042D\u043B\u0438\u0430\u0441\u0435", game: "alias" }
+      ];
+      function nominations(tour) {
+        var _a;
+        const out = [];
+        for (const n of NOMINATIONS) {
+          const bag = ((_a = tour.stats) == null ? void 0 : _a[n.key]) || {};
+          const best = Math.max(0, ...Object.values(bag));
+          if (best > 0) out.push({ key: n.key, title: n.title, unit: n.unit, game: n.game, n: best, pids: Object.keys(bag).filter((id) => bag[id] === best) });
+        }
+        return out;
       }
       function publicTour(tour) {
         if (!tour) return null;
@@ -2490,10 +2727,11 @@ body{padding-bottom:84px}
           idx: tour.idx,
           queue: tour.queue.map(({ type, n, of }) => ({ type, n, of })),
           totals: tour.totals,
-          log: tour.log
+          log: tour.log,
+          nominations: tour.phase === "done" || tour.phase === "final" ? nominations(tour) : []
         };
       }
-      module.exports = { placePoints, makeTour, check, publicTour, PLACE_POINTS };
+      module.exports = { placePoints, makeTour, check, publicTour, nominations, PLACE_POINTS };
     }
   });
 
@@ -2541,7 +2779,25 @@ body{padding-bottom:84px}
         g.resume && g.resume(room2.game.state, makeCtx2(room2), "suspend");
       }
       var publicSuspended = (room2) => room2.suspended ? { type: room2.suspended.game.type, tour: !!room2.suspended.tour } : null;
-      module.exports = { AVATAR_KEYS, cleanAvatar, startGame: startGame2, suspend, resume, publicSuspended };
+      var REACTIONS = ["lol", "facepalm", "genius", "oops", "fire", "think"];
+      function react(room2, pid, r) {
+        if (!REACTIONS.includes(r)) return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u0440\u0435\u0430\u043A\u0446\u0438\u044F";
+        const g = room2.game;
+        if (g && g.type === "codenames") {
+          const s = g.state;
+          const live = s.step !== "setup" && !s.winner;
+          if (live && (s.captain.red === pid || s.captain.blue === pid)) return "\u041A\u0430\u043F\u0438\u0442\u0430\u043D \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0440\u0435\u0430\u0433\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u043F\u0430\u0440\u0442\u0438\u0438";
+        }
+        const now = Date.now();
+        room2.reactLast = room2.reactLast || {};
+        if (now - (room2.reactLast[pid] || 0) < 700) return "\u041D\u0435 \u0442\u0430\u043A \u0431\u044B\u0441\u0442\u0440\u043E";
+        room2.reactLast[pid] = now;
+        room2.reactions = (room2.reactions || []).filter((x) => now - x.at < 4e3);
+        room2.reactions.push({ id: now + ":" + pid, pid, r, at: now });
+        if (room2.reactions.length > 30) room2.reactions.shift();
+      }
+      var publicReactions = (room2) => (room2.reactions || []).filter((x) => Date.now() - x.at < 3e3);
+      module.exports = { AVATAR_KEYS, cleanAvatar, startGame: startGame2, suspend, resume, publicSuspended, react, publicReactions, REACTIONS };
     }
   });
 
@@ -2636,6 +2892,7 @@ body{padding-bottom:84px}
         gameType: room.gameType,
         players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile, avatar: p.avatar })),
         chat: room.chat.slice(-50),
+        reactions: Session.publicReactions(room),
         tour: Tour.publicTour(room.tour),
         suspended: Session.publicSuspended(room)
       },
@@ -2688,6 +2945,8 @@ body{padding-bottom:84px}
         if (String(msg.text || "").trim())
           room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
         return;
+      case "react":
+        return Session.react(room, pid, msg.r);
       case "leaveRoom":
         removePlayer(pid);
         return;
@@ -2892,6 +3151,7 @@ body{padding-bottom:84px}
     heartf: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" fill="currentColor"/>',
     target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>',
     medal: '<circle cx="12" cy="15" r="6"/><path d="M8.5 10 6 3h4l2 4 2-4h4l-2.5 7"/>',
+    smile: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/>',
     sparkles: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
     mic: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
     alert: '<path d="M12 3 2 21h20z"/><path d="M12 10v4M12 17.5h.01"/>',
@@ -3245,6 +3505,8 @@ window.RULES = {
       'Закончилось время команды — ход переходит соперникам автоматически.',
       'Все подсказки висят в панели команды. Капитан может зачеркнуть цифру, когда слово уже отгадали.',
       'Сменить команду или уступить место капитана можно только между партиями.',
+      'После партии — итоги: лучшая подсказка, снайпер, «мимо кассы» и кто открыл убийцу.',
+      'Капитаны во время партии не могут ставить реакции — иначе это подсказка.',
       'В марафоне каждый игрок победившей команды получает +3.',
     ],
   },
@@ -3281,7 +3543,8 @@ window.RULES = {
       ['Шпион', 'Видит только «Вы шпион». Списка локаций нет — догадывайся по разговору.'],
     ],
     steps: [
-      'По очереди задавайте друг другу вопросы о месте: «Ты часто тут бываешь?», «Что здесь пахнет?».',
+      'Вопросы идут по очереди. Спрашивающий нажимает «Спросить» напротив игрока и задаёт вопрос вслух: «Ты часто тут бываешь?», «Чем здесь пахнет?».',
+      'Ответивший жмёт «Ответил» — теперь спрашивает он. Сразу спросить того, кто только что спросил тебя, нельзя.',
       'Отвечай так, чтобы свои поняли, что ты в теме, но шпион не догадался, где вы.',
       'Подозреваешь кого-то — жми «Обвинить» напротив него. Если за одного игрока проголосовали все остальные — раунд окончен. Голос можно забрать.',
       'Шпион понял локацию — жмёт «Я знаю локацию» и за минуту называет её вслух. Мирные решают большинством: «угадал» или «не угадал».',
@@ -3293,7 +3556,7 @@ window.RULES = {
       ['+1 бонус', 'мирному, чей голос в конце стоит на шпионе'],
     ],
     win: 'Очки считаются за каждый раунд. В марафоне один раунд — одна катка, места по очкам раунда.',
-    tips: ['Не спрашивай слишком прямо — шпион тоже слушает.', 'Шпиону выгодно задавать общие вопросы и повторять за другими.'],
+    tips: ['Рядом с каждым видно, сколько вопросов ему задали. Кого ещё ни разу не спрашивали — подсвечен: шпиону сложнее отсидеться.', 'Не спрашивай слишком прямо — шпион тоже слушает.', 'Шпиону выгодно задавать общие вопросы и повторять за другими.'],
   },
   whoami: {
     title: 'Кто я?',
@@ -3301,7 +3564,8 @@ window.RULES = {
     meta: ['3–20 игроков', 'каждый сам за себя', '≈ 15 минут'],
     steps: [
       'Персонажей раздают случайно или каждый загадывает персонажа соседу — как решит хост.',
-      'В свой ход задавай вопросы, на которые отвечают только «да» или «нет»: «Я человек?», «Я из фильма?».',
+      'В свой ход задавай вопросы, на которые отвечают только «да» или «нет»: «Я человек?», «Я из фильма?». Вопрос можно напечатать или сказать голосом.',
+      'Остальные отвечают кнопками «Да / Нет / Не знаю». Вопрос и ответ сами попадают в твою историю — видно, что ты уже спрашивал.',
       'Ответили «да» — спрашивай дальше. Ответили «нет» — нажми «Передать ход».',
       'Думаешь, что знаешь, — назови персонажа вслух. Угадал — жми «Я угадал», и он откроется тебе.',
     ],
@@ -3345,7 +3609,7 @@ window.RULES = {
     steps: [
       'Хост выбирает игры, их порядок и сколько каток сыграть в каждой.',
       'После каждой катки видно, кто сколько получил в марафон.',
-      'В конце открывается турнирная таблица.',
+      'В конце открывается турнирная таблица и номинации вечера: лучший капитан, снайпер, мастер подсказок, детектор шпионов, шпион-невидимка, Шерлок, Златоуст.',
     ],
     points: [
       ['+3', 'за 1-е место в катке'],
@@ -3740,10 +4004,18 @@ window.RULES = {
     }
   }
 
+  const seenReact = new Set();
   socket.on('state', (st) => {
     offset = st.serverNow - Date.now();
     const prevKey = S?.game ? S.game.type + (S.game.round || '') : null;
     detectEvents(S, st);
+    // Новые реакции: звук и перерисовка, когда пузырь должен исчезнуть
+    for (const x of st.room.reactions || []) {
+      if (seenReact.has(x.id)) continue;
+      seenReact.add(x.id);
+      if (x.pid !== st.me) Sound.play('pop');
+      setTimeout(() => render(), 2700);
+    }
     S = st;
     if (location.pathname !== `/r/${st.room.code}`) history.replaceState(null, '', `/r/${st.room.code}`);
     if (!S.game && !ui.selected) ui.selected = S.room.gameType;
@@ -3823,6 +4095,7 @@ window.RULES = {
     if (c) c.scrollTop = nearBottom ? c.scrollHeight : chatScroll;
     fitBoard();
     tick();
+    placeReactions();
   }
 
   // Ключ «экрана»: когда он меняется — плавно проявляем новую сцену
@@ -3854,6 +4127,7 @@ window.RULES = {
     center.style.setProperty('--board-w', Math.round(w) + 'px');
   }
   let fitT;
+  document.addEventListener('scroll', () => S && placeReactions(), true);
   window.addEventListener('resize', () => {
     clearTimeout(fitT);
     fitT = setTimeout(fitBoard, 80);
@@ -3986,7 +4260,7 @@ window.RULES = {
           items.push(`<button class="pop-i danger" data-act="kick" data-pid="${p.id}">${ic('x', 16)}<span>Выгнать</span></button>`);
         }
         return `<div class="menu-wrap" data-pop>
-          <button class="pm ${p.connected ? '' : 'off'} ${mine ? 'me' : ''}" ${items.length ? `data-act="menu" data-menu="p:${p.id}"` : ''} title="${esc(p.name)}${p.connected ? '' : ' — офлайн'}">
+          <button data-pm="${p.id}" class="pm ${p.connected ? '' : 'off'} ${mine ? 'me' : ''}" ${items.length ? `data-act="menu" data-menu="p:${p.id}"` : ''} title="${esc(p.name)}${p.connected ? '' : ' — офлайн'}">
             ${avaHtml(p, 26, 'round')}
             <span class="pm-n">${esc(p.name)}</span>
             ${p.id === r.hostId ? `<span class="pm-host" title="Хост">${ic('crown', 13)}</span>` : ''}
@@ -4001,6 +4275,46 @@ window.RULES = {
       <div class="strip-list">${people}</div>
       ${!g && !tour() ? `<button class="btn sm ghost leave-btn" data-act="leave" title="Выйти из комнаты">${ic('logout', 16)}<span class="hide-m">Выйти</span></button>` : ''}
     </div>`;
+  }
+
+  // ---------- реакции ----------
+  const REACT = { lol: 'Ха-ха', facepalm: 'Ну ты что', genius: 'Гений', oops: 'Ой', fire: 'Огонь', think: 'Хм…' };
+  // Капитан Коднеймс во время партии молчит — иначе реакция станет подсказкой
+  function reactBlocked() {
+    const g = S.game;
+    if (!g || g.type !== 'codenames') return false;
+    const live = g.step !== 'setup' && !g.winner;
+    return live && (g.captain.red === S.me || g.captain.blue === S.me);
+  }
+  function reactFab() {
+    const blocked = reactBlocked();
+    const open = ui.menu === 'react' && !blocked;
+    return `<div class="menu-wrap" data-pop>
+      <button class="chat-fab react-fab ${open ? 'on' : ''} ${blocked ? 'off' : ''}" data-act="${blocked ? 'react-no' : 'menu'}" data-menu="react" title="${blocked ? 'Капитан не может реагировать во время партии' : 'Реакции'}">${ic('smile', 22)}</button>
+      ${open ? `<div class="pop react-pop ${ui.popAnim ? 'anim' : ''}">${Object.entries(REACT).map(([k, t]) => `<button class="react-b r-${k}" data-act="react" data-r="${k}">${t}</button>`).join('')}</div>` : ''}
+    </div>`;
+  }
+  const liveReactions = () => (S.room.reactions || []).filter((x) => now() - x.at < 2600);
+  // Пузыри рисуются отдельным слоем поверх всего — полоса игроков прокручивается и обрезала бы их
+  function placeReactions() {
+    let layer = document.getElementById('react-layer');
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.id = 'react-layer';
+      document.body.appendChild(layer);
+    }
+    if (!S) return (layer.innerHTML = '');
+    const last = {};
+    for (const x of liveReactions()) last[x.pid] = x;
+    layer.innerHTML = Object.values(last)
+      .map((x) => {
+        const el = $app.querySelector(`[data-pm="${x.pid}"] .ava`);
+        if (!el) return '';
+        const b = el.getBoundingClientRect();
+        if (!b.width) return '';
+        return `<span class="rbub r-${x.r}" style="left:${b.left + b.width / 2}px;top:${b.top - 6}px;animation-delay:-${Math.max(0, now() - x.at)}ms">${REACT[x.r] || ''}</span>`;
+      })
+      .join('');
   }
 
   function renderChat() {
@@ -4021,6 +4335,7 @@ window.RULES = {
           : ''
       }
       <div class="fab-row">
+        ${reactFab()}
         ${
           hostTools
             ? `<div class="menu-wrap" data-pop>
@@ -4258,6 +4573,20 @@ window.RULES = {
     </div>`;
   }
 
+  // Номинации марафона — считаются из того, что происходило в играх
+  const NOM_IC = { captain: 'crown', sniper: 'target', hints: 'heartf', detector: 'eye', spy: 'spy', sherlock: 'question', explainer: 'mic' };
+  function tourNoms() {
+    const list = tour()?.nominations || [];
+    if (!list.length) return '';
+    return `<div class="noms"><div class="kicker">Номинации вечера</div><div class="nom-grid">${list
+      .map(
+        (n) => `<div class="nom"><span class="nom-ic">${ic(NOM_IC[n.key] || 'star', 20)}</span><b class="nom-t">${esc(n.title)}</b>
+          <span class="nom-who">${n.pids.map((id) => `<span class="who-n">${pa(id, 'sm', 'round')}<span>${nm(id)}</span></span>`).join('')}</span>
+          <span class="nom-u">${n.n} — ${esc(n.unit)}</span></div>`
+      )
+      .join('')}</div></div>`;
+  }
+
   function renderTourFinal() {
     const { rows } = tourRows();
     const podium = rows.slice(0, 3);
@@ -4268,6 +4597,7 @@ window.RULES = {
       <div class="podium">${order
         .map((i) => `<div class="pod p${i + 1}">${pa(podium[i].id, 'lg')}<div class="pod-n">${nm(podium[i].id)}</div><div class="pod-bar"><span>${i + 1}</span><b>${podium[i].total} ${plural(podium[i].total, 'очко', 'очка', 'очков')}</b></div></div>`)
         .join('')}</div>
+      ${tourNoms()}
       ${tourTable()}
       ${isHost() ? `<div class="row c"><button class="btn primary" data-act="tour-end">${ic('home', 16)} Вернуться в лобби</button></div>` : ''}
     </div>`;
@@ -4396,6 +4726,16 @@ window.RULES = {
   const prepPool = (g) => Object.keys(g.team).filter((id) => player(id)?.connected);
   const isPrep = (g) => g.step === 'setup' || (g.winner && !tour());
 
+  // Итоги партии Коднеймс — повод посмеяться
+  function cnSummary(x) {
+    const items = [];
+    if (x.bestClue) items.push(`<span class="sum-i">${ic('star', 14)} Лучшая подсказка: <b>${esc(x.bestClue.text)}</b> от ${nm(x.bestClue.by)} — ${x.bestClue.hits} ${plural(x.bestClue.hits, 'слово', 'слова', 'слов')}</span>`);
+    if (x.sniper) items.push(`<span class="sum-i">${ic('target', 14)} Снайпер: ${who(x.sniper.pid)} — ${x.sniper.n} ${plural(x.sniper.n, 'верный голос', 'верных голоса', 'верных голосов')}</span>`);
+    if (x.miss) items.push(`<span class="sum-i bad">${ic('x', 14)} Мимо кассы: ${who(x.miss.pid)} — ${x.miss.n} ${plural(x.miss.n, 'чужая карточка', 'чужие карточки', 'чужих карточек')}</span>`);
+    if (x.assassin?.length) items.push(`<span class="sum-i bad">${ic('alert', 14)} Убийцу открыли: ${x.assassin.map((id) => who(id)).join(', ')}</span>`);
+    return items.length ? `<span class="cn-sum">${items.join('')}</span>` : '';
+  }
+
   function renderClock(g) {
     const c = g.clock;
     if (!c) {
@@ -4493,6 +4833,7 @@ window.RULES = {
         <div class="rb-txt">
           <b>${head}</b>
           <span class="muted small">${g.winner ? 'Можно поменять команду или уступить место капитана. ' : ''}Выберите роль и нажмите «Готов» — партия начнётся, когда готовы все.${g.needs.length ? ` <span class="warn-t">Не хватает: ${g.needs.join(', ')}</span>` : ''}</span>
+          ${g.winner && g.summary ? cnSummary(g.summary) : ''}
           <span class="rb-list">${pool.map((id) => `<span class="ava-wrap ${g.ready[id] ? 'is-ready' : ''}" title="${nm(id)}${g.ready[id] ? ' — готов' : ''}">${pa(id, 'sm', 'round')}${g.ready[id] ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span>`).join('')}<span class="muted small">${n}/${pool.length}</span></span>
         </div>
         <div class="rb-actions">
@@ -4675,11 +5016,33 @@ window.RULES = {
       </div>`;
     }
 
+    // Очередь вопросов
+    const playing = g.phase === 'play';
+    const alive = g.participants.filter((id) => player(id));
+    const totalQ = g.qlog.length;
+    // «Молчун»: вопросов было уже немало, а этому игроку — ни одного
+    const quiet = (id) => playing && totalQ >= Math.max(2, Math.ceil(alive.length / 2)) && !(g.asked[id] || 0);
+    const canPick = playing && (me === g.asker || isHost()) && g.inGame;
+    const turnBox = playing && g.asker
+      ? `<div class="card spy-turn">
+          ${
+            g.target
+              ? `<div class="st-pair">${pa(g.asker, 44, 'round')}<span class="st-arrow">${ic('chat', 18)}</span>${pa(g.target, 44, 'round')}</div>
+                 <div class="st-txt"><b>${nm(g.asker)}</b> спрашивает <b>${nm(g.target)}</b></div>
+                 ${me === g.target || me === g.asker || isHost() ? `<button class="btn primary big-w" data-act="spy-answered">${ic('check', 18)} ${me === g.target ? 'Ответил — теперь я спрашиваю' : 'Ответил — дальше'}</button>` : ''}`
+              : `<div class="st-pair">${pa(g.asker, 44, 'round')}</div>
+                 <div class="st-txt">${me === g.asker ? '<b>Ваш вопрос.</b> Выберите ниже, кого спросить' : `Спрашивает <b>${nm(g.asker)}</b> — выбирает, кого`}</div>`
+          }
+          ${g.qlog.length ? `<div class="st-log">${g.qlog.slice(-5).map((q) => `<span>${nm(q.from)} → ${nm(q.to)}</span>`).join('')}</div>` : ''}
+        </div>`
+      : '';
     const players = g.participants
       .map((id) => {
         const voters = Object.keys(g.votes).filter((v) => g.votes[v] === id);
-        return `<div class="vote-row ${g.votes[me] === id ? 'my' : ''}">
-          <span>${who(id, 'sm')}${id === g.firstAsks && !over ? ' <em class="small muted">· спрашивает первым</em>' : ''}${over && g.spies.includes(id) ? ` ${ic('spy', 16)}` : ''}</span>
+        const pickable = canPick && !g.target && id !== g.asker && player(id) && !(id === g.prev && alive.length > 2);
+        return `<div class="vote-row ${g.votes[me] === id ? 'my' : ''} ${quiet(id) ? 'quiet' : ''} ${playing && (id === g.asker || id === g.target) ? 'in-q' : ''}">
+          <span>${who(id, 'sm')}${playing ? ` <em class="qcnt" title="Сколько вопросов задали этому игроку">${ic('chat', 12)} ${g.asked[id] || 0}</em>` : ''}${quiet(id) ? ' <em class="small quiet-t">ещё не спрашивали</em>' : ''}${over && g.spies.includes(id) ? ` ${ic('spy', 16)}` : ''}</span>
+          ${pickable ? `<button class="btn xs primary" data-act="spy-ask" data-pid="${id}">Спросить</button>` : ''}
           <span class="voters">${voters.map((v) => pa(v, 'xs')).join('')}</span>
           ${g.phase === 'play' && g.inGame && id !== me ? `<button class="btn xs ${g.votes[me] === id ? 'danger' : ''}" data-act="spy-vote" data-pid="${id}">${g.votes[me] === id ? 'Отозвать' : 'Обвинить'}</button>` : ''}
         </div>`;
@@ -4700,6 +5063,7 @@ window.RULES = {
       ${card}
       ${g.phase === 'play' && g.isSpy ? `<div class="row c"><button class="btn primary big-w" data-act="spy-claim">${ic('target', 18)} Я знаю локацию</button></div><p class="center small muted">У вас будет минута, чтобы назвать её вслух.</p>` : ''}
       ${claim}
+      ${guessing ? '' : turnBox}
       ${roundTable}
       ${!guessing ? `<div class="card"><div class="side-h">Голосование <span class="muted small">— нужны голоса всех остальных</span></div>${players}</div>` : ''}
       ${score.length && score.some(([, n]) => n) ? `<div class="card"><div class="side-h">Общий счёт</div>${leaderboard(score)}</div>` : ''}
@@ -4744,6 +5108,31 @@ window.RULES = {
       })
       .join('');
     const notesKey = `pg_notes_${S.room.code}`;
+    // Вопросы «да/нет»: спрашивающий печатает (или говорит голосом), остальные отвечают кнопками
+    const AL = { yes: 'Да', no: 'Нет', idk: 'Не знаю' };
+    const qaList = (list) =>
+      list.length
+        ? `<div class="qa-list">${list
+            .slice()
+            .reverse()
+            .map((x) => `<div class="qa-i v-${x.v || 'idk'}"><span class="qa-q">${x.text ? esc(x.text) : '<i class="muted">вопрос голосом</i>'}</span><span class="qa-a">${AL[x.v] || '—'}<small>${x.yes}/${x.no}/${x.idk}</small></span></div>`)
+            .join('')}</div>`
+        : '';
+    const q = g.q && g.q.asker === g.turnPid ? g.q : null;
+    const asker = g.turnPid;
+    const qVotes = (v) => (q ? Object.entries(q.who).filter(([, a]) => a === v).map(([id]) => `<span title="${nm(id)}">${pa(id, 'xs', 'round')}</span>`).join('') : '');
+    const qBox = over
+      ? ''
+      : asker === me
+        ? `<div class="card qa-card"><div class="side-h">${ic('mic', 16)} Ваш вопрос <span class="muted small">— можно напечатать или просто спросить голосом</span></div>
+            <form data-form="who-ask" class="qa-form"><input class="inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Я человек? Я из фильма?" autocomplete="off"/><button class="btn primary">${ic('send', 16)} Спросить</button></form>
+            ${q ? `<div class="qa-now"><span>${q.text ? esc(q.text) : 'Вопрос голосом'}</span><span class="qa-t"><b class="y">Да ${q.yes}</b><b class="n">Нет ${q.no}</b><b>Не знаю ${q.idk}</b></span></div>` : ''}
+          </div>`
+        : `<div class="card qa-card"><div class="side-h">${ic('question', 16)} Спрашивает ${nm(asker)}${q && q.text ? `: <b class="qa-text">${esc(q.text)}</b>` : ' <span class="muted small">— вопрос голосом</span>'}</div>
+            <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q && q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}${q ? `<small>${q[v]}</small>` : ''}</span></button>`).join('')}</div>
+            ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)}</summary>${qaList(g.players[asker].qa)}</details>` : ''}
+          </div>`;
+    const myQa = g.players[me]?.qa || [];
     const actions = over
       ? ''
       : `<div class="mega-dock">
@@ -4754,7 +5143,8 @@ window.RULES = {
       <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — вопросы «да/нет». После ответа «нет» ход переходит.</span>`}</div>
       <div class="call-grid">${tiles}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
-      <div class="card notes-card"><div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
+      ${qBox}
+      <div class="card notes-card">${myQa.length ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaList(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
     </div>`;
   }
@@ -4976,6 +5366,15 @@ window.RULES = {
     'who-random': () => act('randomFor'),
     'who-force': () => act('forceStart'),
     'who-next': () => act('next'),
+    'who-ans': (d) => act('answer', { v: d.v }),
+    react: (d) => {
+      ui.menu = null;
+      emit('react', { r: d.r });
+      render();
+    },
+    'react-no': () => toast('Капитан не может реагировать во время партии — это была бы подсказка'),
+    'spy-ask': (d) => act('askWho', { target: d.pid }),
+    'spy-answered': () => act('answered'),
     'who-guessed': () => confirm('Вы назвали персонажа и вам подтвердили?') && act('guessed'),
     'who-giveup': () => confirm('Сдаться и узнать персонажа?') && act('giveUp'),
     'who-add': () => act('addMe'),
@@ -5164,6 +5563,9 @@ window.RULES = {
       }
     } else if (kind === 'who-write') {
       const r = await act('write', { text: fd.get('text') });
+      if (!r.error) clear();
+    } else if (kind === 'who-ask') {
+      const r = await act('ask', { text: fd.get('text') });
       if (!r.error) clear();
     } else if (kind === 'jo-clue') {
       const r = await act('clue', { text: fd.get('text') });

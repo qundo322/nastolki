@@ -116,6 +116,7 @@ function publicRoom(room) {
       .filter(Boolean)
       .map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile || null, avatar: p.avatar || null })),
     chat: room.chat.slice(-50),
+    reactions: Session.publicReactions(room),
     tour: Tour.publicTour(room.tour),
     suspended: Session.publicSuspended(room),
   };
@@ -297,6 +298,8 @@ io.on('connection', (socket) => {
     room.chat.push({ id: newId(), pid, name: room.players.get(pid).name, text: t, at: Date.now() });
     if (room.chat.length > 100) room.chat.splice(0, room.chat.length - 100);
   }));
+
+  socket.on('react', inRoom((room, pid, { r }) => Session.react(room, pid, r)));
 
   socket.on('kick', hostOnly((room, pid, { target }) => {
     if (target === pid) return 'Нельзя выгнать себя';

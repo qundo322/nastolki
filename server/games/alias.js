@@ -227,4 +227,11 @@ function resume(s, ctx) {
   s._left = null;
 }
 
-module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume };
+// Для номинаций марафона: очки, заработанные объяснением
+function stats(s) {
+  const explainer = {};
+  for (const h of s.history) if (h.pts > 0) explainer[h.explainer] = (explainer[h.explainer] || 0) + h.pts;
+  return { explainer };
+}
+
+module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume, stats };

@@ -262,4 +262,11 @@ const results = (s) => ({ ...s.points });
 // Кто-то из подсказчиков отвалился — остальных может уже хватать для «засчитать»
 const onPresence = (s, ctx) => checkAccept(s, ctx);
 
-module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence };
+// Для номинаций марафона: сердечки за лучшую подсказку
+function stats(s) {
+  const hints = {};
+  for (const h of s.history) if (h.correct && h.heart) hints[h.heart] = (hints[h.heart] || 0) + 1;
+  return { hints };
+}
+
+module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, stats };

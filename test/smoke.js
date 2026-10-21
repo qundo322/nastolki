@@ -50,6 +50,18 @@ function bot(profile, name) {
   for (const b of bots) await b.act('ready');
   await wait(100);
   assert(g(h).step === 'clue' && g(h).clock, 'all ready → game starts');
+  // реакции: капитан во время партии не может, агент — может
+  {
+    const c0 = g(h);
+    const capB = byId(c0.captain.red);
+    assert((await capB.call('react', { r: 'lol' })).error, 'captain cannot react');
+    const agB = bots.find((b) => c0.team[b.st.me] && c0.captain.red !== b.st.me && c0.captain.blue !== b.st.me);
+    assert((await agB.call('react', { r: 'genius' })).ok, 'agent reacts');
+    assert((await agB.call('react', { r: 'genius' })).error, 'rate limit');
+    assert((await agB.call('react', { r: 'xxx' })).error, 'unknown reaction');
+    await wait(80);
+    assert(h.st.room.reactions.some((x) => x.pid === agB.st.me && x.r === 'genius'), 'reaction broadcast');
+  }
   const mover = bots.find((b) => g(b).team[b.st.me] && g(b).captain[g(b).team[b.st.me]] !== b.st.me);
   const other = g(mover).team[mover.st.me] === 'red' ? 'blue' : 'red';
   assert((await mover.act('join', { team: other })).error, 'no team change mid-game');
@@ -146,24 +158,54 @@ function bot(profile, name) {
   assert(g(h).roundPts[town[0].st.me].pts === 1, 'correct voter +1');
   await h.act('next');
   await wait(100);
+  // очередь вопросов
+  const askerB = byId(g(h).asker);
+  const others = bots.filter((b) => b !== askerB);
+  assert((await others[0].act('answered')).error === undefined || !g(h).target, 'nobody to answer yet');
+  if (others[0] !== h) assert((await others[0].act('askWho', { target: others[1].st.me })).error, 'only asker picks');
+  await askerB.act('askWho', { target: others[0].st.me });
+  await wait(50);
+  assert(g(h).target === others[0].st.me, 'target set');
+  await others[0].act('answered');
+  await wait(50);
+  assert(g(h).asker === others[0].st.me && g(h).asked[others[0].st.me] === 1 && g(h).prev === askerB.st.me, 'answerer asks next');
+  assert((await others[0].act('askWho', { target: askerB.st.me })).error, 'no immediate ask-back');
   spy = bots.find((b) => g(b).isSpy);
   town = bots.filter((b) => b !== spy);
   for (const t of town) await t.act('vote', { target: spy.st.me });
   await wait(100);
   assert(g(h).result.kind === 'caught' && g(h).roundPts[town[0].st.me].pts === 2, 'caught: +1 +1');
-  console.log('✓ Шпион');
+  console.log('✓ Шпион (+ очередь вопросов)');
   await h.call('stopGame');
 
   // ---- Кто я: очки
   await h.call('selectGame', { type: 'whoami' });
   await h.call('startGame', { settings: { mode: 'random' } });
   await wait(100);
+  // вопросы «да/нет» кнопками
+  const wAsk = byId(g(h).turnPid);
+  const wOthers = bots.filter((b) => b !== wAsk);
+  await wAsk.act('ask', { text: 'Я человек?' });
+  await wOthers[0].act('answer', { v: 'yes' });
+  await wOthers[1].act('answer', { v: 'yes' });
+  await wOthers[2].act('answer', { v: 'no' });
+  assert((await wAsk.act('answer', { v: 'yes' })).error, 'asker cannot answer');
+  await wait(50);
+  assert(g(h).q.yes === 2 && g(h).q.no === 1 && g(h).q.text === 'Я человек?', 'tally');
+  await wAsk.act('next');
+  await wait(50);
+  const hist = g(h).players[wAsk.st.me].qa;
+  assert(hist.length === 1 && hist[0].v === 'yes', 'archived to history');
+  const wAsk2 = byId(g(h).turnPid);
+  await bots.find((b) => b !== wAsk2).act('answer', { v: 'idk' }); // вопрос голосом
+  await wait(50);
+  assert(g(h).q && g(h).q.text === '' && g(h).q.idk === 1, 'voice question auto-created');
   for (const b of bots) await b.act('guessed');
   await wait(100);
   const pts = g(h).points;
   const order = g(h).finishOrder;
   assert(g(h).phase === 'over' && pts[order[0]] === 3 && pts[order[1]] === 2 && pts[order[2]] === 1, 'whoami points');
-  console.log('✓ Кто я');
+  console.log('✓ Кто я (+ ответы кнопками)');
   await h.call('stopGame');
 
   // ---- Намёк понял: сердечко и очки
@@ -236,6 +278,8 @@ function bot(profile, name) {
   await wait(3300);
   t = h.st.room.tour;
   assert(t.phase === 'between', 'between after codenames');
+  const sm = g(h).summary;
+  assert(sm && sm.assassin.length === ag.length && sm.miss, 'codenames summary: assassin openers');
   const winners = Object.keys(g(h).team).filter((id) => g(h).team[id] === g(h).winner);
   assert(winners.every((id) => t.totals[id] === 3), 'winners +3');
   assert((await bots[1].call('tourNext')).error, 'only host next');
@@ -254,6 +298,8 @@ function bot(profile, name) {
   await h.call('tourNext');
   await wait(100);
   assert(h.st.room.tour.phase === 'final' && !h.st.game, 'final');
+  const noms = h.st.room.tour.nominations.map((n) => n.key);
+  assert(noms.includes('sherlock') && noms.includes('detector'), 'nominations ' + noms.join(','));
   const sum = Object.values(h.st.room.tour.totals).reduce((a, b) => a + b, 0);
   assert(sum > 0, 'totals');
   await h.call('tourEnd');

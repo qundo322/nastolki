@@ -10,7 +10,7 @@ const meta = {
   short: 'Все знают локацию, кроме шпиона. Вычислите его вопросами — или он вычислит место.',
   rules: [
     'Каждый получает карточку с локацией и своей ролью, а шпион — только надпись «Вы шпион». Списка локаций нет — шпиону придётся догадаться по разговору.',
-    'Игроки по очереди задают друг другу вопросы о локации, стараясь не выдать её шпиону, но и показать своим, что они «в теме».',
+    'Вопросы идут по очереди: спрашивающий выбирает на сайте, кого спросить, тот отвечает вслух и жмёт «Ответил» — теперь спрашивает он. Сразу спросить того, кто только что спросил тебя, нельзя. Рядом с игроками видно, сколько вопросов им задали — молчуны подсвечены.',
     'Голосование: нажмите «Обвинить» напротив игрока. Когда за кого-то проголосовали все остальные — раунд заканчивается. Голос можно отозвать.',
     'Если шпион уверен, он жмёт «Я знаю локацию»: у него минута, чтобы назвать её вслух в Discord. Мирные игроки решают кнопками «Шпион угадал» / «Шпион не угадал» — решает большинство. Голосование на это время замораживается.',
     'Очки за раунд: шпион угадал локацию — шпиону +3. Обвинили невиновного — шпиону +2. Шпиона поймали голосованием или он ошибся с локацией — каждому мирному +1. Бонус: мирный, чей голос в конце раунда стоит на шпионе, — ещё +1.',
@@ -41,7 +41,14 @@ function deal(s, ctx) {
   s.endsAt = Date.now() + s.minutes * 60000;
   s.round++;
   s.firstAsks = pick(ids);
+  // Очередь вопросов: спрашивающий выбирает, кого спросить; ответивший спрашивает следующим
+  s.asker = s.firstAsks;
+  s.target = null;
+  s.prev = null; // кто спросил текущего — ему нельзя сразу задать встречный вопрос
+  s.asked = Object.fromEntries(ids.map((id) => [id, 0]));
+  s.qlog = [];
 }
+const alivePart = (s, ctx) => s.participants.filter((id) => ctx.room.players.get(id));
 
 function create(ctx, st) {
   if (ctx.players().length < 3) return 'Для «Шпиона» нужно минимум 3 игрока';
@@ -131,6 +138,26 @@ function action(s, pid, msg, ctx) {
       checkJudges(s, ctx);
       return;
     }
+    case 'askWho': {
+      if (s.phase !== 'play') return;
+      if (pid !== s.asker && !ctx.isHost) return 'Сейчас спрашивает другой игрок';
+      const t = msg.target;
+      if (!alivePart(s, ctx).includes(t) || t === s.asker) return 'Этого игрока спросить нельзя';
+      if (t === s.prev && alivePart(s, ctx).length > 2) return 'Нельзя сразу задать вопрос тому, кто спросил вас';
+      s.target = s.target === t ? null : t;
+      return;
+    }
+    case 'answered': {
+      if (s.phase !== 'play' || !s.target) return;
+      if (pid !== s.target && pid !== s.asker && !ctx.isHost) return 'Отвечает другой игрок';
+      s.asked[s.target] = (s.asked[s.target] || 0) + 1;
+      s.qlog.push({ from: s.asker, to: s.target });
+      if (s.qlog.length > 30) s.qlog.shift();
+      s.prev = s.asker;
+      s.asker = s.target;
+      s.target = null;
+      return;
+    }
     case 'reveal': {
       if (!ctx.isHost) return 'Только хост';
       if (s.phase === 'over') return;
@@ -169,12 +196,23 @@ function view(s, pid) {
     result: s.result,
     roundPts: over ? s.roundPts : null,
     firstAsks: s.firstAsks,
+    asker: s.asker,
+    target: s.target,
+    prev: s.prev,
+    asked: s.asked,
+    qlog: s.qlog.slice(-8),
     score: s.score,
   };
 }
 
 function onLeave(s, pid, ctx) {
   delete s.votes[pid];
+  if (s.target === pid) s.target = null;
+  if (s.asker === pid) {
+    const rest = alivePart(s, ctx).filter((id) => id !== pid);
+    s.asker = rest.length ? pick(rest) : null;
+    s.target = null;
+  }
   for (const k of Object.keys(s.votes)) if (s.votes[k] === pid) delete s.votes[k];
   if (s.phase !== 'over' && s.spies.includes(pid)) {
     s.phase = 'over';
@@ -205,4 +243,15 @@ function resume(s, ctx) {
   }
 }
 
-module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume };
+// Для номинаций марафона
+function stats(s) {
+  const detector = {};
+  const spy = {};
+  if (s.phase === 'over' && s.result && s.result.kind !== 'reveal') {
+    for (const id of town(s)) if (s.spies.includes(s.votes[id])) detector[id] = 1;
+    if (s.result.winner === 'spy') for (const id of s.spies) spy[id] = 1;
+  }
+  return { detector, spy };
+}
+
+module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume, stats };

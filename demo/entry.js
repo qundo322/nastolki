@@ -100,6 +100,7 @@ function viewFor(pid) {
       gameType: room.gameType,
       players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile, avatar: p.avatar })),
       chat: room.chat.slice(-50),
+      reactions: Session.publicReactions(room),
       tour: Tour.publicTour(room.tour),
       suspended: Session.publicSuspended(room),
     },
@@ -159,6 +160,8 @@ function handle(pid, ev, msg = {}) {
       if (String(msg.text || '').trim())
         room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
       return;
+    case 'react':
+      return Session.react(room, pid, msg.r);
     case 'leaveRoom':
       removePlayer(pid);
       return;

@@ -1009,3 +1009,74 @@ div.clue { cursor: default; }
 .btn.ja-on { background: transparent; color: var(--green-text); box-shadow: inset 0 0 0 2px var(--green); border-color: transparent; }
 .clockbar.over .ck-fill { background: var(--red, #e5484d); }
 .clockbar.over .ck-phase { color: var(--red-text); font-weight: 800; }
+
+/* ============ v12: Кто я — вопросы/ответы ============ */
+.qa-card .side-h { flex-wrap: wrap; }
+.qa-text { font-size: 16px; }
+.qa-form { display: flex; gap: 8px; }
+.qa-form .inp { flex: 1; }
+.qa-now { margin-top: 10px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-weight: 700; }
+.qa-t { display: inline-flex; gap: 12px; }
+.qa-t .y { color: var(--green-text); }
+.qa-t .n { color: var(--red-text); }
+.qa-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.qa-b { flex-direction: column; gap: 6px; padding: 14px 8px; font-size: 18px; border-radius: 14px; border: 2px solid var(--line-strong); min-height: 84px; }
+.qa-b .qa-who { display: inline-flex; align-items: center; gap: 3px; min-height: 18px; flex-wrap: wrap; justify-content: center; }
+.qa-b small { font-size: 12px; color: var(--muted); margin-left: 2px; }
+.qa-yes.on { background: var(--green); border-color: var(--green); color: var(--green-ink); }
+.qa-no.on { background: var(--red, #e5484d); border-color: var(--red, #e5484d); color: #fff; }
+.qa-idk.on { background: var(--surface-2); border-color: var(--accent); color: var(--accent-text); }
+.qa-b.on small { color: inherit; }
+.qa-hist { margin-top: 10px; }
+.qa-hist summary { cursor: pointer; color: var(--muted); font-weight: 700; font-size: 13px; }
+.qa-list { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 12px; max-height: 220px; overflow-y: auto; }
+.qa-i { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 9px; background: var(--surface-2); font-size: 14px; border-left: 3px solid var(--line-strong); }
+.qa-i.v-yes { border-left-color: var(--green); }
+.qa-i.v-no { border-left-color: var(--red, #e5484d); }
+.qa-a { font-weight: 800; white-space: nowrap; display: inline-flex; gap: 6px; align-items: baseline; }
+.qa-a small { color: var(--muted); font-weight: 600; font-size: 11px; }
+.qa-i.v-yes .qa-a { color: var(--green-text); }
+.qa-i.v-no .qa-a { color: var(--red-text); }
+@media (max-width: 640px) { .qa-b { font-size: 16px; min-height: 70px; padding: 10px 4px; } }
+
+/* Шпион — очередь вопросов */
+.spy-turn { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; border-color: var(--accent-line); }
+.st-pair { display: flex; align-items: center; gap: 10px; }
+.st-arrow { color: var(--accent-text); }
+.st-txt { font-size: 17px; }
+.st-log { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; font-size: 12px; color: var(--muted); }
+.st-log span { background: var(--surface-2); padding: 3px 8px; border-radius: 99px; }
+.qcnt { font-style: normal; font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; }
+.vote-row.quiet { box-shadow: inset 3px 0 0 var(--accent); }
+.quiet-t { color: var(--accent-text); font-style: normal; font-weight: 700; }
+.vote-row.in-q { background: var(--accent-soft); }
+.cn-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+.sum-i { display: inline-block; line-height: 1.5; font-size: 13px; padding: 4px 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.sum-i svg { color: var(--accent-text); }
+.sum-i.bad svg { color: var(--red-text); }
+/* Номинации марафона */
+.noms { margin: 18px 0 6px; }
+.nom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 10px; text-align: left; }
+.nom { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.nom-ic { width: 38px; height: 38px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; }
+.nom-t { font-family: var(--display); font-size: 15px; }
+.nom-who { display: flex; flex-wrap: wrap; gap: 8px; font-weight: 700; }
+.nom-u { font-size: 12px; color: var(--muted); }
+/* Реакции */
+.react-fab.off { opacity: 0.45; cursor: not-allowed; }
+.react-pop { top: auto; bottom: calc(100% + 10px); left: auto; right: 0; min-width: 0; display: grid; grid-template-columns: repeat(2, auto); gap: 6px; padding: 8px; transform-origin: bottom right; }
+.react-b { border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font: inherit; font-weight: 800; font-size: 14px; padding: 9px 14px; border-radius: 99px; cursor: pointer; white-space: nowrap; transition: transform 0.1s, background 0.15s; }
+.react-b:hover { background: var(--accent-soft); border-color: var(--accent-line); transform: translateY(-1px); }
+#react-layer { position: fixed; inset: 0; pointer-events: none; z-index: 140; }
+.rbub { position: fixed; transform: translate(-50%, -100%); z-index: 140; pointer-events: none; white-space: nowrap;
+  background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 12px; padding: 4px 9px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  animation: rbub 2.6s ease both; }
+.rbub::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--accent); }
+.rbub.r-facepalm, .rbub.r-oops { background: var(--red, #e5484d); color: #fff; }
+.rbub.r-facepalm::after, .rbub.r-oops::after { border-top-color: var(--red, #e5484d); }
+.rbub.r-genius, .rbub.r-fire { background: var(--green); color: var(--green-ink); }
+.rbub.r-genius::after, .rbub.r-fire::after { border-top-color: var(--green); }
+@keyframes rbub { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -100%) scale(1.08); } 18% { transform: translate(-50%, -100%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -125%); } }
+@media (prefers-reduced-motion: reduce) { .rbub { animation: none; } }
+.sum-i > svg { vertical-align: -2px; margin-right: 4px; }
+.sum-i .who-n { vertical-align: -5px; }

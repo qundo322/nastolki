@@ -16,7 +16,7 @@ function placePoints(raw) {
 function makeTour(plan) {
   const queue = [];
   for (const item of plan) for (let n = 1; n <= item.rounds; n++) queue.push({ type: item.type, n, of: item.rounds, settings: item.settings || {} });
-  return { queue, idx: 0, phase: 'play', totals: {}, log: [], playedBy: {} };
+  return { queue, idx: 0, phase: 'play', totals: {}, log: [], playedBy: {}, stats: {} };
 }
 
 // Вызывается после каждого изменения: если катка закончилась — записываем результат
@@ -30,10 +30,38 @@ function check(tour, game, GAMES, ctx) {
     tour.totals[id] = (tour.totals[id] || 0) + p;
     tour.playedBy[id] = (tour.playedBy[id] || 0) + 1;
   }
+  // Копим статистику для номинаций
+  if (g.stats) {
+    tour.stats = tour.stats || {};
+    for (const [key, byPid] of Object.entries(g.stats(game.state) || {})) {
+      const bag = (tour.stats[key] = tour.stats[key] || {});
+      for (const [id, n] of Object.entries(byPid)) bag[id] = (bag[id] || 0) + n;
+    }
+  }
   const item = tour.queue[tour.idx];
   tour.log.push({ type: item.type, n: item.n, raw, pts });
   tour.phase = tour.idx >= tour.queue.length - 1 ? 'done' : 'between';
   return true;
+}
+
+// Номинации финала: у кого больше всего в своей категории
+const NOMINATIONS = [
+  { key: 'captain', title: 'Лучший капитан', unit: 'слов отгадали по его подсказкам', game: 'codenames' },
+  { key: 'sniper', title: 'Снайпер', unit: 'верных голосов в Коднеймс', game: 'codenames' },
+  { key: 'hints', title: 'Мастер подсказок', unit: 'сердечек в «Намёк понял»', game: 'justone' },
+  { key: 'detector', title: 'Детектор шпионов', unit: 'раз голосовал за настоящего шпиона', game: 'spyfall' },
+  { key: 'spy', title: 'Шпион-невидимка', unit: 'побед за шпиона', game: 'spyfall' },
+  { key: 'sherlock', title: 'Шерлок', unit: 'раз первым угадал себя в «Кто я?»', game: 'whoami' },
+  { key: 'explainer', title: 'Златоуст', unit: 'очков объяснением в Элиасе', game: 'alias' },
+];
+function nominations(tour) {
+  const out = [];
+  for (const n of NOMINATIONS) {
+    const bag = tour.stats?.[n.key] || {};
+    const best = Math.max(0, ...Object.values(bag));
+    if (best > 0) out.push({ key: n.key, title: n.title, unit: n.unit, game: n.game, n: best, pids: Object.keys(bag).filter((id) => bag[id] === best) });
+  }
+  return out;
 }
 
 function publicTour(tour) {
@@ -44,7 +72,8 @@ function publicTour(tour) {
     queue: tour.queue.map(({ type, n, of }) => ({ type, n, of })),
     totals: tour.totals,
     log: tour.log,
+    nominations: tour.phase === 'done' || tour.phase === 'final' ? nominations(tour) : [],
   };
 }
 
-module.exports = { placePoints, makeTour, check, publicTour, PLACE_POINTS };
+module.exports = { placePoints, makeTour, check, publicTour, nominations, PLACE_POINTS };

@@ -108,6 +108,8 @@ function newBoard(s, ctx) {
   s.pending = null;
   s.firstClue = true;
   s.ready = {};
+  // Статистика партии для итогов
+  s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} };
   ctx.clearTimer('cn-reveal');
   startClock(s, ctx, FIRST_CLUE_MS);
 }
@@ -122,6 +124,29 @@ function enterSetup(s, ctx) {
   s.ready = {};
 }
 // Чего не хватает, чтобы начать
+// Итоги партии: лучшая подсказка, снайпер, мимокрокодил, кто открыл убийцу
+function summary(s) {
+  const st = s.st;
+  if (!st) return null;
+  const top = (o) => {
+    const e = Object.entries(o).sort((a, b) => b[1] - a[1]);
+    return e.length && e[0][1] > 0 ? { pid: e[0][0], n: e[0][1] } : null;
+  };
+  const best = s.clues.filter((c) => c.hits).sort((a, b) => b.hits - a.hits || b.id - a.id)[0];
+  return {
+    bestClue: best ? { text: clueText(best), by: best.by, team: best.team, hits: best.hits } : null,
+    sniper: top(st.right),
+    miss: top(st.wrong),
+    assassin: st.assassin,
+    clues: s.clues.length,
+  };
+}
+// Для номинаций марафона
+function stats(s) {
+  const st = s.st || {};
+  return { captain: { ...(st.capHits || {}) }, sniper: { ...(st.right || {}) } };
+}
+
 function setupNeeds(s, ctx) {
   const need = [];
   for (const t of ['red', 'blue']) {
@@ -179,6 +204,19 @@ function reveal(s, i, ctx) {
   if (!c || c.revealed) return;
   s.pending = null;
   c.revealed = true;
+  // Кто голосовал за открытую карточку
+  const st = s.st || (s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} });
+  const own = c.color === s.turn;
+  for (const id of c.marks) {
+    const bag = own ? st.right : st.wrong;
+    bag[id] = (bag[id] || 0) + 1;
+  }
+  if (c.color === 'assassin') st.assassin = [...c.marks];
+  if (own && s.clue) {
+    s.clue.hits = (s.clue.hits || 0) + 1;
+    const cap = s.clue.by;
+    st.capHits[cap] = (st.capHits[cap] || 0) + 1;
+  }
   s.cards.forEach((x) => (x.marks = []));
   s.log.push({ kind: 'reveal', team: s.turn, text: c.w, color: c.color, by: TN[s.turn] });
   if (c.color === 'assassin') {
@@ -374,6 +412,7 @@ function view(s, pid, ctx) {
     needs: setup || s.winner ? setupNeeds(s, ctx) : [],
     clock: c ? { endsAt: c.endsAt, total: c.total, over: c.over || false, paused: c.paused, left: c.paused ? c.left : Math.max(0, c.endsAt - Date.now()) } : null,
     log: s.log.slice(-40),
+    summary: s.winner ? summary(s) : null,
     cards: s.cards.map((x) => ({
       w: setup ? '' : x.w, // до старта слова скрыты
       revealed: x.revealed,
@@ -411,4 +450,4 @@ function onPresence(s, ctx) {
   checkReady(s, ctx);
 }
 
-module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, pause, resume };
+module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, pause, resume, stats };
