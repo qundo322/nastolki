@@ -1,0 +1,284 @@
+// Прогон всех игр ботами: node test/smoke.js (сервер должен быть запущен на :3000)
+const { io } = require('socket.io-client');
+const URL = process.env.URL || 'http://localhost:3000';
+const assert = (c, m) => {
+  if (!c) throw new Error('ASSERT: ' + m);
+};
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function bot(profile, name) {
+  const s = io(URL, { transports: ['websocket'] });
+  const b = { profile, name, s, st: null, token: (profile || name) + Math.random() };
+  s.on('state', (st) => (b.st = st));
+  b.call = (ev, data) => new Promise((r) => s.emit(ev, data, r));
+  b.act = (type, x = {}) => b.call('action', { type, ...x });
+  b.enter = (ev, code) => b.call(ev, { token: b.token, profile: b.profile, name: b.name, code });
+  return b;
+}
+
+(async () => {
+  const bots = [bot('vlad'), bot('kostya'), bot('ruslan'), bot('yan'), bot(null, 'Гость')];
+  await wait(300);
+  const [h] = bots;
+  const r = await h.enter('createRoom');
+  assert(r.ok, 'create');
+  for (const b of bots.slice(1)) assert((await b.enter('joinRoom', r.code)).ok, 'join');
+  await wait(200);
+  assert(h.st.room.players.length === 5, 'players 5');
+  assert(h.st.room.players[0].name === 'Влад' && h.st.room.players[0].profile === 'vlad', 'profile name');
+  // тот же профиль с другого устройства, пока онлайн — нельзя
+  const dup = bot('kostya');
+  await wait(200);
+  assert((await dup.enter('joinRoom', r.code)).error, 'duplicate profile rejected');
+  dup.s.disconnect();
+  assert((await h.call('setAvatar', { avatar: { s: 1, h: 2, hc: 3, e: 4, m: 5, b: 6, a: 7, w: 9 } })).ok, 'avatar');
+  assert((await h.call('setAvatar', { avatar: { s: 12 } })).error, 'bad avatar rejected');
+  await wait(100);
+  assert(h.st.room.players[0].avatar.w === 9, 'avatar stored');
+  console.log('✓ Профили');
+
+  const g = (b) => b.st.game;
+  const byId = (id) => bots.find((b) => b.st.me === id);
+
+  // ---- Коднеймс: консенсус + отсчёт
+  await h.call('selectGame', { type: 'codenames' });
+  assert((await h.call('startGame', { settings: {} })).ok, 'cn start');
+  await wait(100);
+  await h.act('shuffleTeams');
+  await wait(100);
+  assert(g(h).step === 'setup' && !g(h).clock && g(h).cards[0].w === '', 'setup phase hides board');
+  for (const b of bots) await b.act('ready');
+  await wait(100);
+  assert(g(h).step === 'clue' && g(h).clock, 'all ready → game starts');
+  const mover = bots.find((b) => g(b).team[b.st.me] && g(b).captain[g(b).team[b.st.me]] !== b.st.me);
+  const other = g(mover).team[mover.st.me] === 'red' ? 'blue' : 'red';
+  assert((await mover.act('join', { team: other })).error, 'no team change mid-game');
+  let cn = g(h);
+  const cap = byId(cn.captain[cn.turn]);
+  assert((await cap.act('clue', { word: 'юбка', slots: [1, 1.5] })).error, 'bad strength rejected');
+  assert((await cap.act('clue', { word: 'юбка', slots: ['0.735'] })).error, '3 decimals rejected');
+  assert((await cap.act('clue', { word: 'юбка', slots: ['0,73', 1, '1'] })).ok, 'clue');
+  await wait(100);
+  assert(JSON.stringify(g(h).clue.slots.map((x) => x.v)) === '[1,1,0.73]', 'slots parsed');
+  assert((await bots.find((b) => b !== cap).act('strike', { clue: 0, k: 0 })).error, 'only captain strikes');
+  await cap.act('strike', { clue: 0, k: 2 });
+  await wait(100);
+  assert(g(h).clues[0].slots[2].done === true, 'struck');
+  const agents = bots.filter((b) => g(b).team[b.st.me] === cn.turn && b !== cap);
+  const own = g(cap).cards.findIndex((c) => c.color === cn.turn && !c.revealed);
+  await agents[0].act('mark', { i: own });
+  await wait(100);
+  if (agents.length > 1) {
+    assert(!g(h).pending, 'no pending until all agree');
+    for (const a of agents.slice(1)) await a.act('mark', { i: own });
+    await wait(100);
+  }
+  assert(g(h).pending && g(h).pending.i === own, 'pending countdown');
+  await wait(3300);
+  assert(g(agents[0]).cards[own].revealed, 'revealed after 3s');
+  // отмена отсчёта
+  const own2 = g(cap).cards.findIndex((c) => c.color === cn.turn && !c.revealed);
+  for (const a of agents) await a.act('mark', { i: own2 });
+  await wait(100);
+  assert(g(h).pending, 'pending 2');
+  await agents[0].act('mark', { i: own2 }); // снял голос
+  await wait(100);
+  assert(!g(h).pending, 'cancelled');
+  await agents[0].act('endTurn');
+  await wait(100);
+  assert(g(h).turn !== cn.turn, 'turn passed');
+  // таймер: после передачи хода у капитана 60 с, после подсказки — 60 с на отгадывание
+  let ck = g(h).clock;
+  assert(ck && ck.total === 60000 && !ck.paused, 'clue clock 60s');
+  const cap2 = byId(g(h).captain[g(h).turn]);
+  await cap2.act('clue', { word: 'проба' });
+  await wait(100);
+  assert(g(h).clock.total === 60000, 'guess clock');
+  // правка подсказки в течение 15 с
+  assert((await cap2.act('editClue', { word: 'исправил', slots: [1, '0.5'] })).ok, 'edit clue');
+  await wait(100);
+  assert(g(h).clue.word === 'исправил' && g(h).clue.slots.length === 2, 'clue edited');
+  assert((await bots.find((b) => b !== cap2).act('editClue', { word: 'чужая' })).error, 'only author edits');
+  // бонус +15 с за своё слово
+  const before = g(h).clock.left;
+  const ag2 = bots.filter((b) => g(b).team[b.st.me] === g(h).turn && b !== cap2);
+  const own3 = g(cap2).cards.findIndex((c) => c.color === g(h).turn && !c.revealed);
+  for (const a of ag2) await a.act('mark', { i: own3 });
+  await wait(2300);
+  assert(g(h).cards[own3].revealed, 'revealed after 2s');
+  assert(g(h).clock.left > before + 10000, 'bonus +15s');
+  // пауза таймера
+  await h.act('pauseClock');
+  await wait(100);
+  assert(g(h).clock.paused, 'paused');
+  const frozen = g(h).clock.left;
+  await wait(400);
+  assert(g(h).clock.left === frozen, 'frozen while paused');
+  await h.act('pauseClock');
+  await wait(100);
+  assert(!g(h).clock.paused, 'resumed');
+  // уход в лобби и возврат: игра сохраняется
+  const turnBefore = g(h).turn;
+  await h.call('stopGame');
+  await wait(100);
+  assert(!h.st.game && h.st.room.suspended?.type === 'codenames', 'suspended');
+  assert((await h.call('resumeGame')).ok, 'resume');
+  await wait(100);
+  assert(h.st.game?.type === 'codenames' && g(h).turn === turnBefore && !g(h).clock.paused, 'resumed game state');
+  console.log('✓ Коднеймс');
+  await h.call('stopGame');
+
+  // ---- Шпион: заявка шпиона + подтверждение + очки
+  await h.call('selectGame', { type: 'spyfall' });
+  assert((await h.call('startGame', { settings: { minutes: 5, spies: 1 } })).ok, 'spy start');
+  await wait(100);
+  let spy = bots.find((b) => g(b).isSpy);
+  assert(!('locations' in g(spy)), 'no locations list');
+  let town = bots.filter((b) => b !== spy);
+  await town[0].act('vote', { target: spy.st.me }); // один голос — бонус
+  await spy.act('claim');
+  await wait(100);
+  assert(g(h).phase === 'guessing', 'guessing');
+  for (const t of town.slice(0, 3)) await t.act('judge', { ok: true });
+  await wait(100);
+  assert(g(h).phase === 'over' && g(h).result.kind === 'spyRight', 'spy right confirmed');
+  assert(g(h).roundPts[spy.st.me].pts === 3, 'spy +3');
+  assert(g(h).roundPts[town[0].st.me].pts === 1, 'correct voter +1');
+  await h.act('next');
+  await wait(100);
+  spy = bots.find((b) => g(b).isSpy);
+  town = bots.filter((b) => b !== spy);
+  for (const t of town) await t.act('vote', { target: spy.st.me });
+  await wait(100);
+  assert(g(h).result.kind === 'caught' && g(h).roundPts[town[0].st.me].pts === 2, 'caught: +1 +1');
+  console.log('✓ Шпион');
+  await h.call('stopGame');
+
+  // ---- Кто я: очки
+  await h.call('selectGame', { type: 'whoami' });
+  await h.call('startGame', { settings: { mode: 'random' } });
+  await wait(100);
+  for (const b of bots) await b.act('guessed');
+  await wait(100);
+  const pts = g(h).points;
+  const order = g(h).finishOrder;
+  assert(g(h).phase === 'over' && pts[order[0]] === 3 && pts[order[1]] === 2 && pts[order[2]] === 1, 'whoami points');
+  console.log('✓ Кто я');
+  await h.call('stopGame');
+
+  // ---- Намёк понял: сердечко и очки
+  await h.call('selectGame', { type: 'justone' });
+  await h.call('startGame', { settings: { target: 3 } });
+  await wait(100);
+  const guesser = byId(g(h).guesser);
+  const helpers = bots.filter((b) => b !== guesser);
+  const word = g(helpers[0]).word;
+  const cl = ['одинаково', 'одинаково', 'ракета', 'облако'];
+  for (const [i, b] of helpers.entries()) await b.act('clue', { text: cl[i] });
+  await wait(100);
+  await helpers[0].act('filterDone');
+  await guesser.act('guess', { text: word });
+  await wait(100);
+  assert(g(h).correct, 'correct');
+  assert((await helpers.find((b) => b !== h).act('next')).error, 'helpers wait for heart');
+  await guesser.act('heart', { pid: helpers[2].st.me });
+  await guesser.act('next');
+  await wait(100);
+  const P = g(h).points;
+  assert(P[guesser.st.me] === 2 && P[helpers[2].st.me] === 4 && P[helpers[3].st.me] === 1 && P[helpers[0].st.me] === 0, 'justone points ' + JSON.stringify(P));
+  assert(g(h).phase === 'over' && g(h).winners[0] === helpers[2].st.me, 'target reached');
+  // неточный ответ засчитывается, только когда «за» все подсказчики
+  await h.act('restart');
+  await wait(100);
+  const g2 = byId(g(h).guesser);
+  const hs2 = bots.filter((b) => b !== g2);
+  for (const [i, b] of hs2.entries()) await b.act('clue', { text: 'подсказка' + i });
+  await wait(100);
+  await hs2[0].act('filterDone');
+  await g2.act('guess', { text: 'почтитак' });
+  await wait(100);
+  assert(g(h).correct === false, 'near-miss not correct');
+  if (g2 !== h) assert((await g2.act('next')).error, 'guesser cannot skip the vote');
+  for (const b of hs2.slice(0, -1)) await b.act('accept');
+  await wait(100);
+  assert(g(h).correct === false && g(h).accept.length === hs2.length - 1, 'not all agreed yet');
+  await hs2[0].act('accept'); // передумал
+  await hs2[0].act('accept');
+  await hs2[hs2.length - 1].act('accept');
+  await wait(100);
+  assert(g(h).correct === true && g(h).accepted, 'accepted by all helpers');
+  assert((await hs2[1].act('accept')).error, 'locked after accept');
+  console.log('✓ Намёк понял (+ «засчитать» всеми)');
+  await h.call('stopGame');
+
+  // ---- Марафон
+  const plan = [
+    { type: 'codenames', rounds: 1 },
+    { type: 'whoami', rounds: 1, settings: { mode: 'random' } },
+    { type: 'spyfall', rounds: 1 },
+  ];
+  assert((await h.call('startTour', { plan })).ok, 'tour start');
+  await wait(100);
+  let t = h.st.room.tour;
+  assert(t.queue.length === 3 && h.st.game.type === 'codenames', 'tour queue');
+  assert((await h.act('newBoard')).error, 'no restart in tour');
+  // проигрываем коднеймс открытием убийцы
+  await h.act('shuffleTeams');
+  await wait(100);
+  await h.act('forceStart');
+  await wait(100);
+  cn = g(h);
+  await byId(cn.captain[cn.turn]).act('clue', { word: 'тест' });
+  await wait(100);
+  const ass = g(byId(cn.captain[cn.turn])).cards.findIndex((c) => c.color === 'assassin');
+  const ag = bots.filter((b) => g(b).team[b.st.me] === cn.turn && b.st.me !== cn.captain[cn.turn]);
+  for (const a of ag) await a.act('mark', { i: ass });
+  await wait(3300);
+  t = h.st.room.tour;
+  assert(t.phase === 'between', 'between after codenames');
+  const winners = Object.keys(g(h).team).filter((id) => g(h).team[id] === g(h).winner);
+  assert(winners.every((id) => t.totals[id] === 3), 'winners +3');
+  assert((await bots[1].call('tourNext')).error, 'only host next');
+  await h.call('tourNext');
+  await wait(100);
+  assert(h.st.game.type === 'whoami', 'second game');
+  for (const b of bots) await b.act('guessed');
+  await wait(100);
+  await h.call('tourNext');
+  await wait(100);
+  spy = bots.find((b) => g(b).isSpy);
+  for (const b of bots.filter((x) => x !== spy)) await b.act('vote', { target: spy.st.me });
+  await wait(100);
+  t = h.st.room.tour;
+  assert(t.phase === 'done', 'done');
+  await h.call('tourNext');
+  await wait(100);
+  assert(h.st.room.tour.phase === 'final' && !h.st.game, 'final');
+  const sum = Object.values(h.st.room.tour.totals).reduce((a, b) => a + b, 0);
+  assert(sum > 0, 'totals');
+  await h.call('tourEnd');
+  await wait(100);
+  assert(!h.st.room.tour, 'tour closed');
+  console.log('✓ Марафон');
+
+  // ---- реконнект по профилю и кик
+  const yan = bots[3];
+  yan.s.disconnect();
+  await wait(200);
+  assert(!h.st.room.players.find((p) => p.name === 'Ян').connected, 'offline');
+  const again = bot('yan'); // новое устройство, другой токен
+  await wait(300);
+  assert((await again.enter('joinRoom', r.code)).ok, 'rejoin by profile');
+  await wait(100);
+  assert(h.st.room.players.length === 5 && h.st.room.players.find((p) => p.name === 'Ян').connected, 'same seat');
+  await h.call('kick', { target: again.st.me });
+  await wait(100);
+  assert(h.st.room.players.length === 4, 'kicked');
+  console.log('✓ Переподключение и кик');
+
+  console.log('\nВСЕ ТЕСТЫ ПРОШЛИ');
+  process.exit(0);
+})().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

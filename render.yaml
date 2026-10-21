@@ -1,0 +1,15 @@
+# Конфиг для Render: сервис создаётся одной кнопкой (см. DEPLOY.md)
+services:
+  - type: web
+    name: nastolki-svoi
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: node server/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: MAX_PLAYERS
+        value: "20"
+      - key: NODE_VERSION
+        value: "22"

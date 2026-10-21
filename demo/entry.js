@@ -1,0 +1,336 @@
+// Демо-режим: «сервер» работает прямо в странице, игроки — вкладки в нижней панели.
+const GAMES = {
+  codenames: require('../server/games/codenames'),
+  alias: require('../server/games/alias'),
+  spyfall: require('../server/games/spyfall'),
+  whoami: require('../server/games/whoami'),
+  justone: require('../server/games/justone'),
+};
+
+const PROFILES = require('../server/profiles');
+const Tour = require('../server/tournament');
+const Session = require('../server/session');
+window.AVATAR_BASE = null; // в демо картинок нет — инициалы
+
+// ---- окружение для app.js ----
+const META = Object.entries(GAMES).map(([id, g]) => ({ id, ...g.meta }));
+const origFetch = window.fetch ? window.fetch.bind(window) : null;
+window.fetch = (u, o) =>
+  String(u).endsWith('/api/games')
+    ? Promise.resolve({ json: () => Promise.resolve(META) })
+    : String(u).endsWith('/api/profiles')
+      ? Promise.resolve({ json: () => Promise.resolve(PROFILES) })
+      : origFetch(u, o);
+try {
+  history.replaceState = () => {};
+} catch {}
+window.confirm = () => true; // в демо подтверждения не спрашиваем
+const op = window.prompt;
+window.prompt = (m, d) => {
+  try {
+    return op.call(window, m, d);
+  } catch {
+    return null;
+  }
+};
+
+// ---- комната ----
+const uid = () => Math.random().toString(16).slice(2, 14);
+const room = {
+  code: 'DEMO',
+  hostId: null,
+  players: new Map(),
+  order: [],
+  gameType: 'codenames',
+  game: null,
+  timers: new Map(),
+  chat: [],
+  tour: null,
+  suspended: null,
+};
+const NAMES = ['Влад', 'Дима', 'Оля', 'Саша', 'Мила', 'Костя', 'Аня', 'Женя', 'Таня', 'Рома', 'Лена', 'Игорь'];
+const randAvatar = () => Object.fromEntries(Session.AVATAR_KEYS.map((k) => [k, Math.floor(Math.random() * 10)]));
+function addPlayer(name, profile = null) {
+  const id = uid();
+  room.players.set(id, { id, name, profile, avatar: randAvatar(), connected: true, sockets: new Set([1]) });
+  room.order.push(id);
+  if (!room.hostId) room.hostId = id;
+  return id;
+}
+PROFILES.slice(0, 5).forEach((p) => addPlayer(p.name, p.id));
+let active = room.hostId;
+let entered = false; // демо стартует с экрана входа
+const lastView = {};
+
+function makeCtx() {
+  return {
+    room,
+    players: () => room.order.map((id) => room.players.get(id)).filter(Boolean),
+    broadcast,
+    setTimer(key, ms, fn) {
+      clearTimeout(room.timers.get(key));
+      room.timers.set(
+        key,
+        setTimeout(() => {
+          room.timers.delete(key);
+          fn();
+          broadcast();
+        }, ms)
+      );
+    },
+    clearTimer(key) {
+      clearTimeout(room.timers.get(key));
+      room.timers.delete(key);
+    },
+  };
+}
+const clearTimers = () => {
+  for (const t of room.timers.values()) clearTimeout(t);
+  room.timers.clear();
+};
+
+function viewFor(pid) {
+  const g = room.game ? GAMES[room.game.type] : null;
+  return {
+    me: pid,
+    serverNow: Date.now(),
+    room: {
+      code: room.code,
+      hostId: room.hostId,
+      gameType: room.gameType,
+      players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile, avatar: p.avatar })),
+      chat: room.chat.slice(-50),
+      tour: Tour.publicTour(room.tour),
+      suspended: Session.publicSuspended(room),
+    },
+    game: g ? { type: room.game.type, ...g.view(room.game.state, pid, makeCtx()) } : null,
+  };
+}
+
+// ---- фейковый сокет ----
+const handlers = {};
+const fire = (ev, data) => (handlers[ev] || []).forEach((f) => f(data));
+function broadcast() {
+  Tour.check(room.tour, room.game, GAMES, makeCtx());
+  for (const id of room.order) lastView[id] = viewFor(id);
+  if (entered && lastView[active]) fire('state', lastView[active]);
+  renderBar();
+}
+
+function removePlayer(pid) {
+  room.players.delete(pid);
+  room.order = room.order.filter((x) => x !== pid);
+  if (room.game) {
+    const g = GAMES[room.game.type];
+    g.onLeave && g.onLeave(room.game.state, pid, makeCtx());
+  }
+  if (room.hostId === pid) room.hostId = room.order[0];
+  if (active === pid) active = room.hostId;
+}
+
+function handle(pid, ev, msg = {}) {
+  const host = room.hostId === pid;
+  const onlyHost = () => (host ? null : 'Это может сделать только хост');
+  switch (ev) {
+    case 'createRoom':
+    case 'joinRoom': {
+      // В демо вход = выбрать, за кого играть
+      let seat = msg.profile
+        ? [...room.players.values()].find((p) => p.profile === msg.profile)
+        : [...room.players.values()].find((p) => !p.profile && p.name === msg.name);
+      if (!seat) seat = room.players.get(addPlayer(msg.profile ? PROFILES.find((p) => p.id === msg.profile).name : msg.name || 'Гость', msg.profile || null));
+      const av = Session.cleanAvatar(msg.avatar);
+      if (av) seat.avatar = av;
+      active = seat.id;
+      if (ev === 'createRoom' && !room.game) room.hostId = seat.id;
+      entered = true;
+      return { ok: true, code: room.code, pid: seat.id };
+    }
+    case 'setAvatar': {
+      const av = Session.cleanAvatar(msg.avatar);
+      if (!av) return 'Неверный аватар';
+      room.players.get(pid).avatar = av;
+      return;
+    }
+    case 'rename':
+      room.players.get(pid).name = String(msg.name || '').slice(0, 24) || 'Игрок';
+      return;
+    case 'chat':
+      if (String(msg.text || '').trim())
+        room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
+      return;
+    case 'leaveRoom':
+      removePlayer(pid);
+      return;
+    case 'kick':
+      return onlyHost() || removePlayer(msg.target);
+    case 'makeHost':
+      if (onlyHost()) return onlyHost();
+      room.hostId = msg.target;
+      return;
+    case 'selectGame':
+      if (onlyHost()) return onlyHost();
+      if (room.game) return 'Сначала завершите текущую игру';
+      room.gameType = msg.type;
+      return;
+    case 'startGame':
+      if (onlyHost()) return onlyHost();
+      return startGame(room.gameType, msg.settings);
+    case 'stopGame':
+      if (onlyHost()) return onlyHost();
+      Session.suspend(room, GAMES, makeCtx, clearTimers);
+      return;
+    case 'resumeGame':
+      if (onlyHost()) return onlyHost();
+      if (room.game) return 'Игра уже идёт';
+      return Session.resume(room, GAMES, makeCtx);
+    case 'startTour': {
+      if (onlyHost()) return onlyHost();
+      const plan = (msg.plan || []).filter((x) => GAMES[x.type]);
+      if (!plan.length) return 'Выберите хотя бы одну игру';
+      room.suspended = null;
+      room.tour = Tour.makeTour(plan);
+      const err = startTourGame();
+      if (err) room.tour = null;
+      return err;
+    }
+    case 'tourNext': {
+      if (onlyHost()) return onlyHost();
+      const t = room.tour;
+      if (!t) return;
+      if (t.phase === 'done') {
+        clearTimers();
+        room.game = null;
+        t.phase = 'final';
+        return;
+      }
+      if (t.phase !== 'between') return 'Катка ещё не закончена';
+      t.idx++;
+      return startTourGame();
+    }
+    case 'tourEnd':
+      if (onlyHost()) return onlyHost();
+      clearTimers();
+      room.game = null;
+      room.tour = null;
+      return;
+    case 'action': {
+      if (!room.game) return 'Игра не запущена';
+      if (room.tour) {
+        if (room.tour.phase !== 'play') return 'Катка окончена — ждём хоста';
+        if ((GAMES[room.game.type].meta.restartActions || []).includes(msg.type)) return 'В марафоне катку не перезапустить';
+      }
+      const ctx = makeCtx();
+      ctx.isHost = host;
+      return GAMES[room.game.type].action(room.game.state, pid, msg, ctx);
+    }
+  }
+}
+
+function startGame(type, settings) {
+  return Session.startGame(room, GAMES, makeCtx, clearTimers, type, settings);
+}
+function startTourGame() {
+  const item = room.tour.queue[room.tour.idx];
+  const err = startGame(item.type, item.settings);
+  if (err) return `${GAMES[item.type].meta.title}: ${err}`;
+  room.tour.phase = 'play';
+}
+
+const socket = {
+  id: 'demo',
+  on(ev, fn) {
+    (handlers[ev] = handlers[ev] || []).push(fn);
+  },
+  emit(ev, data, cb) {
+    let r;
+    try {
+      r = handle(active, ev, data);
+    } catch (e) {
+      console.error(e);
+      r = 'Ошибка: ' + e.message;
+    }
+    const res = typeof r === 'string' ? { error: r } : r || { ok: true };
+    setTimeout(() => {
+      cb && cb(res);
+      broadcast();
+    }, 0);
+  },
+};
+window.io = () => {
+  setTimeout(() => {
+    fire('connect');
+    broadcast();
+  }, 0);
+  return socket;
+};
+
+// ---- панель «Смотреть как» ----
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+}
+function hint() {
+  const g = room.game;
+  if (room.tour && room.tour.phase === 'final') return 'Марафон окончен — турнирная таблица.';
+  if (room.tour && room.tour.phase !== 'play') return 'Катка окончена — хост запускает следующую.';
+  if (!g && room.suspended) return 'Игра на паузе — хост может вернуться к ней из лобби.';
+  if (!g) return 'Вы хост — выберите одну игру или соберите марафон.';
+  const s = g.state;
+  const n = (id) => room.players.get(id)?.name || '?';
+  switch (g.type) {
+    case 'codenames':
+      if (s.step === 'setup' || s.winner) return 'Подготовка: переключайтесь по игрокам и жмите зелёную «Готов» — когда готовы все, партия начнётся.';
+      if (!s.captain[s.turn]) return 'Выберите капитанов: переключитесь на игрока и нажмите «Стать капитаном».';
+      return s.step === 'clue'
+        ? `Подсказку пишет капитан — ${n(s.captain[s.turn])}.`
+        : 'Карточка откроется, когда ВСЕ агенты ходящей команды нажмут на неё — переключайтесь по игрокам.';
+    case 'alias':
+      return s.phase === 'ready' || s.phase === 'running' || s.phase === 'review' ? `Объясняет ${n(s.explainer)}.` : '';
+    case 'spyfall':
+      return s.phase === 'play'
+        ? `Шпион: ${s.spies.map(n).join(', ')} (подсказка только в демо).`
+        : s.phase === 'guessing'
+          ? 'Переключитесь на мирных и нажмите «угадал / не угадал» — решает большинство.'
+          : '';
+    case 'whoami':
+      return s.phase === 'write' ? 'Каждый загадывает персонажа соседу — переключайтесь по игрокам.' : `Ходит ${n(s.order[s.turn])}.`;
+    case 'justone':
+      return s.phase === 'result' && s.correct && !s.heart
+        ? `${n(s.guesser)} отмечает лучшую подсказку.`
+        : `Угадывает ${n(s.guesser)}; остальные пишут подсказки.`;
+  }
+  return '';
+}
+const bar = document.createElement('div');
+bar.id = 'demo-bar';
+if (document.body) document.body.appendChild(bar);
+else document.addEventListener('DOMContentLoaded', () => document.body.appendChild(bar));
+function renderBar() {
+  if (!entered) {
+    bar.innerHTML = '<div class="db-row"><span class="db-l">Демо</span><span class="db-hint">Выберите себя и нажмите «Создать комнату» — остальные игроки уже ждут внутри.</span></div>';
+    return;
+  }
+  bar.innerHTML = `<div class="db-row"><button class="db-p exit" data-demo-exit>← Вход</button><span class="db-l">Смотреть как:</span>${room.order
+    .map((id) => {
+      const p = room.players.get(id);
+      return `<button class="db-p ${id === active ? 'on' : ''}" data-demo-pid="${id}">${esc(p.name)}${id === room.hostId ? ' · хост' : ''}</button>`;
+    })
+    .join('')}${room.order.length < 20 ? '<button class="db-p add" data-demo-add>+ игрок</button>' : ''}</div><div class="db-hint">${esc(hint())}</div>`;
+}
+bar.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.demoExit !== undefined) {
+    entered = false;
+    fire('kicked');
+    renderBar();
+    return;
+  }
+  if (b.dataset.demoAdd !== undefined) {
+    const free = PROFILES.find((p) => ![...room.players.values()].some((x) => x.profile === p.id));
+    if (free) addPlayer(free.name, free.id);
+    else addPlayer('Гость ' + room.order.length);
+  } else if (b.dataset.demoPid) active = b.dataset.demoPid;
+  broadcast();
+  window.scrollTo({ top: 0 });
+});
