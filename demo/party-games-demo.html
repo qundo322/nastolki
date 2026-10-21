@@ -1664,6 +1664,24 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .msg-t { margin-left: auto; flex: none; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; padding-left: 6px; }
 .msg > div { flex: 1; min-width: 0; }
 
+/* Панель хоста — ряд круглых кнопок рядом с шестерёнкой, открыта до закрытия */
+.ctl-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap-reverse; justify-content: flex-end; max-width: min(560px, calc(100vw - 150px)); padding: 6px; border-radius: 99px; background: color-mix(in srgb, var(--surface) 70%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); }
+.ctl-row.anim > * { animation: ctlIn .28s cubic-bezier(.2,.9,.3,1.25) both; }
+.ctl-row.anim > *:nth-last-child(2) { animation-delay: .03s; } .ctl-row.anim > *:nth-last-child(3) { animation-delay: .06s; } .ctl-row.anim > *:nth-last-child(4) { animation-delay: .09s; }
+.ctl-row.anim > *:nth-last-child(5) { animation-delay: .12s; } .ctl-row.anim > *:nth-last-child(6) { animation-delay: .15s; } .ctl-row.anim > *:nth-last-child(7) { animation-delay: .18s; } .ctl-row.anim > *:nth-last-child(8) { animation-delay: .21s; }
+@keyframes ctlIn { from { opacity: 0; transform: translateX(24px) scale(.6); } to { opacity: 1; transform: none; } }
+.chat-fab.ctl-fab { width: 46px; height: 46px; box-shadow: none; }
+.ctl-fab:hover { border-color: var(--accent); color: var(--accent-text); }
+.ctl-fab.hot { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.ctl-row .ctl-sep { width: 1px; height: 26px; background: var(--line-strong); margin: 0 2px; }
+/* подпись при наведении */
+.ctl-fab[data-tip]::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translate(-50%, 4px); white-space: nowrap; pointer-events: none;
+  background: var(--surface-3); color: var(--text); border: 1px solid var(--line-strong); font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 8px; opacity: 0; transition: opacity .15s, transform .15s; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
+.ctl-fab[data-tip]:hover::after, .ctl-fab[data-tip]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.chat-fab.gear.on { border-color: var(--accent); color: var(--accent-text); }
+@media (hover: none) { .ctl-fab[data-tip]:active::after { opacity: 1; transform: translate(-50%, 0); } }
+@media (max-width: 640px) { .chat-fab.ctl-fab { width: 42px; height: 42px; } .ctl-row { max-width: calc(100vw - 120px); border-radius: 22px; } }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -5328,6 +5346,7 @@ window.RULES = {
     mRounds: { codenames: 2, justone: 1, whoami: 1, spyfall: 3, alias: 1 },
     mOpen: {},
     showTable: false,
+    ctlOpen: LS.get('pg_ctl', '') === '1',
   };
 
   // ---------- тема: тёмная / светлая / чёрная (OLED) ----------
@@ -5910,6 +5929,7 @@ window.RULES = {
     ui.sumAnim = false;
     ui.gaAnim = false;
     ui.tabAnim = false;
+    ui.ctlAnim = false;
     restoreInputs(keep);
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
@@ -6151,7 +6171,7 @@ window.RULES = {
     if (ui.chatOpen) ui.chatSeen = r.chat.length;
     const unread = Math.max(0, r.chat.length - ui.chatSeen);
     const hostTools = g && isHost();
-    const ctlOpen = hostTools && ui.menu === 'ctl';
+    const ctlOpen = hostTools && ui.ctlOpen; // панель хоста открыта, пока её не закроют шестерёнкой
     return `<div class="chat-dock ${ui.chatOpen ? 'open' : ''}">
       ${
         ui.chatOpen
@@ -6166,10 +6186,8 @@ window.RULES = {
         ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''}" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
         ${
           hostTools
-            ? `<div class="menu-wrap" data-pop>
-                <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="menu" data-menu="ctl" title="Управление игрой (хост)">${ic('gear', 22)}${g.clock?.paused ? '<i class="badge warn-b">II</i>' : ''}</button>
-                ${ctlOpen ? renderControls(g) : ''}
-              </div>`
+            ? `${ctlOpen ? renderControls(g) : ''}
+               <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="ctl-toggle" title="${ctlOpen ? 'Скрыть управление игрой' : 'Управление игрой (хост)'}" aria-expanded="${!!ctlOpen}">${ic(ctlOpen ? 'x' : 'gear', 22)}${g.clock?.paused && !ctlOpen ? '<i class="badge warn-b">II</i>' : ''}</button>`
             : ''
         }
         <button class="chat-fab" data-act="chat" title="${ui.chatOpen ? 'Свернуть чат' : 'Чат'}">${ic(ui.chatOpen ? 'x' : 'chat', 22)}${unread && !ui.chatOpen ? `<i class="badge">${unread > 9 ? '9+' : unread}</i>` : ''}</button>
@@ -6217,7 +6235,8 @@ window.RULES = {
   // ---------- управление хоста (открывается шестерёнкой у чата) ----------
   function renderControls(g) {
     const t = tour();
-    const btn = (actName, icon, label, cls = '') => `<button class="ctl ${cls}" data-act="${actName}">${ic(icon, 18)}<span>${label}</span></button>`;
+    // Кнопки хоста — круглые, как остальные; подпись — всплывающая подсказка над кнопкой
+    const btn = (actName, icon, label, cls = '') => `<button class="chat-fab ctl-fab ${cls}" data-act="${actName}" data-tip="${label}" aria-label="${label}">${ic(icon, 20)}</button>`;
     const items = [];
     if (g.type === 'codenames') {
       if (isPrep(g)) items.push(btn('cn-force', 'play', 'Начать без ожидания'));
@@ -6247,7 +6266,7 @@ window.RULES = {
     }
     items.push('<span class="ctl-sep"></span>');
     items.push(btn('stop', 'home', 'В лобби (пауза)'));
-    return `<div class="pop ctl-pop ${ui.popAnim ? 'anim' : ''}"><div class="ctl-h">${ic('crown', 14)} Управление игрой</div>${items.join('')}</div>`;
+    return `<div class="ctl-row ${ui.ctlAnim ? 'anim' : ''}" role="toolbar" aria-label="Управление игрой">${items.join('')}</div>`;
   }
 
   // ---------- лобби ----------
@@ -7640,6 +7659,12 @@ window.RULES = {
     // марафон
     'tour-next': () => emit('tourNext'),
     'tour-end': () => emit('tourEnd'),
+    'ctl-toggle': () => {
+      ui.ctlOpen = !ui.ctlOpen;
+      ui.ctlAnim = ui.ctlOpen;
+      LS.set('pg_ctl', ui.ctlOpen ? '1' : '');
+      render();
+    },
     'tour-table': () => {
       ui.showTable = !ui.showTable;
       ui.tabAnim = ui.showTable;

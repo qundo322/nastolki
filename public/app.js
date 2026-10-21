@@ -56,6 +56,7 @@
     mRounds: { codenames: 2, justone: 1, whoami: 1, spyfall: 3, alias: 1 },
     mOpen: {},
     showTable: false,
+    ctlOpen: LS.get('pg_ctl', '') === '1',
   };
 
   // ---------- тема: тёмная / светлая / чёрная (OLED) ----------
@@ -638,6 +639,7 @@
     ui.sumAnim = false;
     ui.gaAnim = false;
     ui.tabAnim = false;
+    ui.ctlAnim = false;
     restoreInputs(keep);
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
@@ -879,7 +881,7 @@
     if (ui.chatOpen) ui.chatSeen = r.chat.length;
     const unread = Math.max(0, r.chat.length - ui.chatSeen);
     const hostTools = g && isHost();
-    const ctlOpen = hostTools && ui.menu === 'ctl';
+    const ctlOpen = hostTools && ui.ctlOpen; // панель хоста открыта, пока её не закроют шестерёнкой
     return `<div class="chat-dock ${ui.chatOpen ? 'open' : ''}">
       ${
         ui.chatOpen
@@ -894,10 +896,8 @@
         ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''}" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
         ${
           hostTools
-            ? `<div class="menu-wrap" data-pop>
-                <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="menu" data-menu="ctl" title="Управление игрой (хост)">${ic('gear', 22)}${g.clock?.paused ? '<i class="badge warn-b">II</i>' : ''}</button>
-                ${ctlOpen ? renderControls(g) : ''}
-              </div>`
+            ? `${ctlOpen ? renderControls(g) : ''}
+               <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="ctl-toggle" title="${ctlOpen ? 'Скрыть управление игрой' : 'Управление игрой (хост)'}" aria-expanded="${!!ctlOpen}">${ic(ctlOpen ? 'x' : 'gear', 22)}${g.clock?.paused && !ctlOpen ? '<i class="badge warn-b">II</i>' : ''}</button>`
             : ''
         }
         <button class="chat-fab" data-act="chat" title="${ui.chatOpen ? 'Свернуть чат' : 'Чат'}">${ic(ui.chatOpen ? 'x' : 'chat', 22)}${unread && !ui.chatOpen ? `<i class="badge">${unread > 9 ? '9+' : unread}</i>` : ''}</button>
@@ -945,7 +945,8 @@
   // ---------- управление хоста (открывается шестерёнкой у чата) ----------
   function renderControls(g) {
     const t = tour();
-    const btn = (actName, icon, label, cls = '') => `<button class="ctl ${cls}" data-act="${actName}">${ic(icon, 18)}<span>${label}</span></button>`;
+    // Кнопки хоста — круглые, как остальные; подпись — всплывающая подсказка над кнопкой
+    const btn = (actName, icon, label, cls = '') => `<button class="chat-fab ctl-fab ${cls}" data-act="${actName}" data-tip="${label}" aria-label="${label}">${ic(icon, 20)}</button>`;
     const items = [];
     if (g.type === 'codenames') {
       if (isPrep(g)) items.push(btn('cn-force', 'play', 'Начать без ожидания'));
@@ -975,7 +976,7 @@
     }
     items.push('<span class="ctl-sep"></span>');
     items.push(btn('stop', 'home', 'В лобби (пауза)'));
-    return `<div class="pop ctl-pop ${ui.popAnim ? 'anim' : ''}"><div class="ctl-h">${ic('crown', 14)} Управление игрой</div>${items.join('')}</div>`;
+    return `<div class="ctl-row ${ui.ctlAnim ? 'anim' : ''}" role="toolbar" aria-label="Управление игрой">${items.join('')}</div>`;
   }
 
   // ---------- лобби ----------
@@ -2368,6 +2369,12 @@
     // марафон
     'tour-next': () => emit('tourNext'),
     'tour-end': () => emit('tourEnd'),
+    'ctl-toggle': () => {
+      ui.ctlOpen = !ui.ctlOpen;
+      ui.ctlAnim = ui.ctlOpen;
+      LS.set('pg_ctl', ui.ctlOpen ? '1' : '');
+      render();
+    },
     'tour-table': () => {
       ui.showTable = !ui.showTable;
       ui.tabAnim = ui.showTable;

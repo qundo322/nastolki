@@ -1656,3 +1656,21 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .msg { position: relative; }
 .msg-t { margin-left: auto; flex: none; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; padding-left: 6px; }
 .msg > div { flex: 1; min-width: 0; }
+
+/* Панель хоста — ряд круглых кнопок рядом с шестерёнкой, открыта до закрытия */
+.ctl-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap-reverse; justify-content: flex-end; max-width: min(560px, calc(100vw - 150px)); padding: 6px; border-radius: 99px; background: color-mix(in srgb, var(--surface) 70%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); }
+.ctl-row.anim > * { animation: ctlIn .28s cubic-bezier(.2,.9,.3,1.25) both; }
+.ctl-row.anim > *:nth-last-child(2) { animation-delay: .03s; } .ctl-row.anim > *:nth-last-child(3) { animation-delay: .06s; } .ctl-row.anim > *:nth-last-child(4) { animation-delay: .09s; }
+.ctl-row.anim > *:nth-last-child(5) { animation-delay: .12s; } .ctl-row.anim > *:nth-last-child(6) { animation-delay: .15s; } .ctl-row.anim > *:nth-last-child(7) { animation-delay: .18s; } .ctl-row.anim > *:nth-last-child(8) { animation-delay: .21s; }
+@keyframes ctlIn { from { opacity: 0; transform: translateX(24px) scale(.6); } to { opacity: 1; transform: none; } }
+.chat-fab.ctl-fab { width: 46px; height: 46px; box-shadow: none; }
+.ctl-fab:hover { border-color: var(--accent); color: var(--accent-text); }
+.ctl-fab.hot { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.ctl-row .ctl-sep { width: 1px; height: 26px; background: var(--line-strong); margin: 0 2px; }
+/* подпись при наведении */
+.ctl-fab[data-tip]::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translate(-50%, 4px); white-space: nowrap; pointer-events: none;
+  background: var(--surface-3); color: var(--text); border: 1px solid var(--line-strong); font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 8px; opacity: 0; transition: opacity .15s, transform .15s; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
+.ctl-fab[data-tip]:hover::after, .ctl-fab[data-tip]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.chat-fab.gear.on { border-color: var(--accent); color: var(--accent-text); }
+@media (hover: none) { .ctl-fab[data-tip]:active::after { opacity: 1; transform: translate(-50%, 0); } }
+@media (max-width: 640px) { .chat-fab.ctl-fab { width: 42px; height: 42px; } .ctl-row { max-width: calc(100vw - 120px); border-radius: 22px; } }
