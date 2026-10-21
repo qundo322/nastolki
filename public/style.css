@@ -558,7 +558,7 @@ button.num { font: inherit; font-weight: 800; }
 .pv-word { font-family: var(--display); font-weight: 700; text-transform: uppercase; }
 
 /* поле 5×5 — растягивается на всю доступную ширину, но помещается по высоте */
-.cn-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; container-type: inline-size; }
+.cn-board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; container-type: inline-size; }
 .cn-card {
   position: relative; aspect-ratio: 1.55; border-radius: 8px; border: 0; cursor: pointer; padding: 4px 3px;
   background: var(--cn-card); color: var(--cn-text); font-family: var(--card-font); font-weight: 700; text-transform: uppercase;
@@ -1250,7 +1250,7 @@ div.clue { cursor: default; }
 [data-glow='off'] .turn-glow { display: none; }
 /* Статус занимает всю зарезервированную высоту — без пустого зазора над полем */
 .cn-status > :first-child { flex: 1 1 auto; }
-.cn-status > .cn-clue, .cn-status > .ready-box, .cn-status > .clue-form, .cn-status > form { align-items: center; }
+.cn-status > .ready-box { align-items: center; }
 .cn-status > .cn-clue { display: flex; }
 
 #radio-pause { position: fixed; bottom: 22px; z-index: 71; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text);
@@ -1330,3 +1330,47 @@ h1, h2, h3, h4, .h2, .tp-name, .gname, .mega-word, .qa-big, .rl-hero h3, .nom-t,
 .cn-side, .tri-side { top: 96px; }
 .cn-side { max-height: calc(100vh - 116px - var(--ctl-h)); }
 @media (max-width: 640px) { .pb-stack { display: none; } }
+
+/* ============ v17: форма капитана — 3 шага в одну строку, фиксированная высота ============ */
+.cn-clue.cform { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 1.7fr) minmax(190px, 0.9fr); gap: 18px; align-items: stretch; height: 122px; padding: 12px 16px 12px 22px; margin-bottom: 8px; flex-wrap: nowrap; }
+.cf-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; justify-content: flex-start; }
+.cf-l { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cf-l b { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+.cf-hint { font-weight: 600; color: var(--faint); margin-left: 4px; }
+.cform .clue-word { height: 56px; font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; padding: 0 14px; }
+.cform .clue-word::placeholder { text-transform: none; font-weight: 600; font-size: 16px; letter-spacing: 0; }
+/* карточки силы — в одну строку, лишние прокручиваются вбок */
+.cform .slots { display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; overflow-x: auto; overflow-y: hidden; height: 56px; padding-bottom: 2px; scrollbar-width: thin; }
+.cform .slot { flex: none; height: 50px; display: inline-flex; align-items: center; gap: 6px; padding: 0 6px 0 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line-strong); }
+.cform .slot input[type='range'] { width: 78px; }
+.cform .slot .slot-v { width: 50px; height: 34px; padding: 0; font-size: 15px; }
+.cform .slot-x { width: 22px; height: 22px; padding: 0; }
+.cform .add-slot { flex: none; height: 50px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 12px; border: 1.5px dashed var(--accent-line); background: transparent; color: var(--accent-text); font: inherit; font-weight: 800; cursor: pointer; }
+.cform .add-slot:hover { background: var(--accent-soft); }
+.cf-pv { height: 22px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; font-weight: 800; }
+.cf-pv .pv-word { text-transform: uppercase; margin-right: 4px; }
+.cf-pv .num { display: inline-flex; min-width: 22px; height: 20px; padding: 0 5px; border-radius: 6px; background: var(--text); color: var(--bg); font-size: 12px; align-items: center; justify-content: center; }
+.cf-pv .num.bad { background: var(--red); color: #fff; }
+.cf-btns { display: flex; gap: 6px; margin-top: auto; }
+.cf-go { flex: 1; height: 46px; justify-content: center; font-size: 16px; }
+@media (max-width: 900px) {
+  .cn-clue.cform { grid-template-columns: 1fr; height: auto; gap: 10px; }
+  .cform .clue-word { height: 48px; }
+}
+
+/* читаемая подпись фазы на цветной полосе таймера */
+.clockbar:not(.idle) .ck-phase { color: inherit; opacity: 0.85; font-weight: 700; }
+/* кнопка «Перейти за …» не вылезает за панель */
+.cn-side > .tp-join, .cn-side > .tp-in { width: auto; align-self: stretch; box-sizing: border-box; }
+
+/* Плашка-предложение включить свечение */
+.glow-ask { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 95; display: flex; align-items: center; gap: 14px; width: min(640px, calc(100vw - 24px)); padding: 12px 14px; border-color: var(--accent-line); box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+.glow-ask.anim { animation: gaIn .3s cubic-bezier(.2,.9,.3,1); }
+@keyframes gaIn { from { opacity: 0; transform: translate(-50%, 24px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.ga-ic { flex: none; width: 40px; height: 40px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; }
+.ga-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ga-sw { flex: none; display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; color: var(--text); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
+.ga-sw .sw-t { margin: 0; }
+@media (max-width: 640px) { .glow-ask { flex-wrap: wrap; bottom: 70px; } .ga-t { flex-basis: calc(100% - 60px); } }
+.cn-card { min-width: 0; }
+.cn-card .w.phrase { font-size: 0.8em; }

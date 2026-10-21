@@ -59,7 +59,48 @@
     mute: '<path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M22 9l-6 6M16 9l6 6"/>',
     music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
   };
-  window.ic = (name, size = 18, cls = '') =>
-    `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || P.dice}</svg>`;
+  // Упрощённые версии для мелких размеров (≤ 15 px): меньше деталей, заливка и жирные линии — читается как корона капитана
+  const F = 'fill="currentColor" stroke="none"';
+  const S = {
+    crown: `<path d="M2.5 18.5h19L20 7l-5 4.5L12 5l-3 6.5L4 7z" ${F}/>`,
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.5h4"/>',
+    users: `<circle cx="9" cy="7.5" r="4" ${F}/><path d="M1.5 21a7.5 7.5 0 0 1 15 0z" ${F}/><circle cx="17.5" cy="8.5" r="3" ${F}/><path d="M18 13.2a5.5 5.5 0 0 1 4.8 7.8H18.5" ${F}/>`,
+    user: `<circle cx="12" cy="7.5" r="4.5" ${F}/><path d="M3.5 21.5a8.5 8.5 0 0 1 17 0z" ${F}/>`,
+    chat: `<path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5v9a2.5 2.5 0 0 1-2.5 2.5H8l-5 4.5z" ${F}/>`,
+    list: '<path d="M4 6h16M4 12h16M4 18h11"/>',
+    star: `<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z" ${F}/>`,
+    eye: `<path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.5" ${F}/>`,
+    eyeoff: '<path d="M3 3l18 18"/><path d="M5.5 7.5A16 16 0 0 0 1.5 12S5.5 19 12 19a10 10 0 0 0 5-1.3M9.5 5.3A10 10 0 0 1 12 5c6.5 0 10.5 7 10.5 7a16 16 0 0 1-2.4 3.2"/>',
+    pencil: `<path d="M15.5 3.5l5 5L9 20H4v-5z" ${F}/>`,
+    mic: `<rect x="8" y="2" width="8" height="13" rx="4" ${F}/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/>`,
+    question: `<path d="M8.5 8.5a3.5 3.5 0 1 1 5.2 3c-1 .6-1.7 1.3-1.7 2.5v.5"/><circle cx="12" cy="19" r="1.7" ${F}/>`,
+    palette: `<circle cx="12" cy="7.5" r="4.5" ${F}/><path d="M3.5 21.5a8.5 8.5 0 0 1 17 0z" ${F}/>`,
+    target: `<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.8" ${F}/>`,
+    flag: `<path d="M4 22V3"/><path d="M5 3.5h13l-2.5 4.5 2.5 4.5H5z" ${F}/>`,
+    alert: `<path fill-rule="evenodd" d="M12 2 1 21.5h22zM10.8 9h2.4v6.2h-2.4zm0 8h2.4v2.4h-2.4z" ${F}/>`,
+    trophy: `<path d="M6 3h12v5.5a6 6 0 0 1-12 0z" ${F}/><path d="M12 14.5V19M7.5 21h9M18 5h3v1.5a3.5 3.5 0 0 1-3.5 3.5M6 5H3v1.5A3.5 3.5 0 0 0 6.5 10"/>`,
+    sparkles: `<path d="M12 1.5l2.6 7.9 7.9 2.6-7.9 2.6L12 22.5l-2.6-7.9L1.5 12l7.9-2.6z" ${F}/>`,
+    spy: `<path d="M2 11h20" /><path d="M6 10l1.5-6h9L18 10z" ${F}/><circle cx="7" cy="16.5" r="3.5" ${F}/><circle cx="17" cy="16.5" r="3.5" ${F}/>`,
+    bulb: `<path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" ${F}/><path d="M9 21h6"/>`,
+    hat: `<path d="M7 3.5h10V15H7z" ${F}/><path d="M2.5 16.5h19v3h-19z" ${F}/>`,
+    grid: `<rect x="3" y="3" width="8" height="8" rx="2" ${F}/><rect x="13" y="3" width="8" height="8" rx="2" ${F}/><rect x="3" y="13" width="8" height="8" rx="2" ${F}/><rect x="13" y="13" width="8" height="8" rx="2" ${F}/>`,
+    heart: `<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" ${F}/>`,
+    gear: '<circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2.1 2.1M16.9 16.9 19 19M5 19l2.1-2.1M16.9 7.1 19 5"/>',
+    send: `<path d="M22 2 2 9.5l8 3.5 3.5 8z" ${F}/>`,
+    skip: `<path d="M4 4l11 8-11 8z" ${F}/><path d="M19.5 4.5v15"/>`,
+    medal: `<circle cx="12" cy="15" r="6.5" ${F}/><path d="M8 9 5.5 2.5h4L12 7l2.5-4.5h4L16 9"/>`,
+    home: `<path d="M2.5 11.5 12 3.5l9.5 8V21h-6v-6h-7v6h-6z" ${F}/>`,
+    link: '<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/>',
+    userplus: `<circle cx="9.5" cy="7.5" r="4.5" ${F}/><path d="M1.5 21.5a8 8 0 0 1 14-5.3V21.5z" ${F}/><path d="M19.5 13v8M15.5 17h8"/>`,
+    headphones: `<path d="M3.5 17v-5a8.5 8.5 0 0 1 17 0v5"/><rect x="2" y="13.5" width="6" height="8" rx="2" ${F}/><rect x="16" y="13.5" width="6" height="8" rx="2" ${F}/>`,
+    book: `<path d="M2 4h6.5A3.5 3.5 0 0 1 12 7.5V21a3 3 0 0 0-3-3H2z" ${F}/><path d="M22 4h-6.5A3.5 3.5 0 0 0 12 7.5V21a3 3 0 0 1 3-3h7z" ${F}/>`,
+    music: `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3.5" ${F}/><circle cx="18" cy="16" r="3.5" ${F}/>`,
+  };
+  window.ic = (name, size = 18, cls = '') => {
+    const small = size <= 15;
+    const body = (small && S[name]) || P[name] || P.dice;
+    const sw = small ? 2.7 : 2;
+    return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+  };
   window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb' };
 })();

@@ -75,7 +75,7 @@
   const themeIcon = () => THEMES.find((t) => t.id === theme())?.icon || 'moon';
   // Настройки вида: свечение хода и размер слов на карточках Коднеймс (у каждого свои)
   const VIEW = {
-    glow: LS.get('pg_glow', '1') !== '0',
+    glow: LS.get('pg_glow', '0') === '1', // по умолчанию выключено — предложим включить при старте партии
     fs: Number(LS.get('pg_cnfs', '36')) || 36,
   };
   const FS_OPTS = [24, 30, 36, 42];
@@ -488,6 +488,8 @@
     offset = st.serverNow - Date.now();
     const prevKey = S?.game ? S.game.type + (S.game.round || '') : null;
     detectEvents(S, st);
+    // Первая начавшаяся партия Коднеймс — предложить включить свечение хода
+    if (st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup') && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
     // Партия Коднеймс закончилась — показываем итоги
     if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
       ui.showSum = true;
@@ -565,7 +567,10 @@
     ui.popAnim = false;
     ui.rulesAnim = false;
     ui.sumAnim = false;
+    ui.gaAnim = false;
     restoreInputs(keep);
+    const pv0 = document.getElementById('cn-preview');
+    if (pv0) pv0.innerHTML = cluePreview();
     const rb2 = $app.querySelector('.rl-body');
     if (rb2) {
       rb2.scrollTop = rulesScroll;
@@ -714,6 +719,12 @@
       </main>
       ${renderChat()}
       ${ui.showRules ? renderRules() : ''}
+      ${ui.glowAsk && g && g.type === 'codenames' ? `<div class="glow-ask card ${ui.gaAnim ? 'anim' : ''}" role="dialog" aria-label="Свечение хода">
+          <span class="ga-ic">${ic('sparkles', 20)}</span>
+          <div class="ga-t"><b>Подсветить ход команды?</b><span class="muted small">Мягкое мерцание цвета команды с её стороны экрана — сразу видно, чья очередь. Можно поменять в меню «Вид».</span></div>
+          <button class="ga-sw" data-act="view-glow" role="switch" aria-checked="${VIEW.glow}"><i class="sw-t ${VIEW.glow ? 'on' : ''}"></i><span>${VIEW.glow ? 'Включено' : 'Выключено'}</span></button>
+          <button class="btn sm primary" data-act="glow-ok">Готово</button>
+        </div>` : ''}
       ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
       ${ui.avEdit ? renderAvatarModal() : ''}
     </div>`;
@@ -1164,7 +1175,7 @@
       })
       .join('');
   function cluePreview() {
-    const word = $app.querySelector('.clue-word')?.value.trim() || 'слово';
+    const word = $app.querySelector('.clue-word')?.value.trim() || ui.keep?.['cn-clue'] || 'слово';
     return `<span class="pv-word">${esc(word)}</span> ${(ui.cnSlots || []).map((x) => `<span class="num ${validStrength(x.v) ? '' : 'bad'}">${esc(String(x.v).replace(',', '.') || '?')}</span>`).join(' ')}`;
   }
   const ring = (cls = '', off = null) =>
@@ -1279,26 +1290,38 @@
     </div>`;
   }
 
+  // Форма капитана: слово → карточки с силой → отправка. Высота фиксированная — поле не сдвигается.
   function clueForm(g, mode) {
     if (!ui.cnSlots) ui.cnSlots = [{ id: slotId(), v: '1' }];
+    const n = ui.cnSlots.length;
     const slots = ui.cnSlots
       .map(
         (x, k) => `<div class="slot ${validStrength(x.v) ? '' : 'bad'}">
           <span class="slot-n">${k + 1}</span>
-          <input type="range" min="0.01" max="1" step="0.01" value="${validStrength(x.v) ? parseFloat(String(x.v).replace(',', '.')) : 1}" data-slot="${x.id}" data-kind="range" aria-label="Сила слова ${k + 1}"/>
-          <input class="inp slot-v" inputmode="decimal" maxlength="4" value="${esc(x.v)}" data-slot="${x.id}" data-kind="num" data-keep="cn-s-${x.id}" aria-label="Сила слова ${k + 1}"/>
-          ${ui.cnSlots.length > 1 ? `<button type="button" class="icon-x" data-act="cn-sdel" data-id="${x.id}" title="Убрать слово">${ic('x', 14)}</button>` : '<span class="slot-gap"></span>'}
+          <input type="range" min="0.01" max="1" step="0.01" value="${validStrength(x.v) ? parseFloat(String(x.v).replace(',', '.')) : 1}" data-slot="${x.id}" data-kind="range" aria-label="Сила для карточки ${k + 1}"/>
+          <input class="inp slot-v" inputmode="decimal" maxlength="4" value="${esc(x.v)}" data-slot="${x.id}" data-kind="num" data-keep="cn-s-${x.id}" aria-label="Сила для карточки ${k + 1}"/>
+          ${n > 1 ? `<button type="button" class="icon-x slot-x" data-act="cn-sdel" data-id="${x.id}" title="Убрать карточку">${ic('x', 13)}</button>` : ''}
         </div>`
       )
       .join('');
     const word = mode === 'edit' ? esc(g.clue.word) : '';
-    return `<form class="cn-clue form t-${g.turn}" data-form="clue" data-mode="${mode}">
-      <div class="clue-inputs">
-        <input class="inp clue-word" name="word" data-keep="cn-clue${mode === 'edit' ? '-e' : ''}" data-preview="1" value="${word}" placeholder="Подсказка — одно слово" maxlength="30" autocomplete="off" required/>
-        ${mode === 'edit' ? `<button type="button" class="btn ghost" data-act="cn-edit-cancel">Отмена</button>` : ''}
-        <button class="btn primary">${mode === 'edit' ? `${ic('check', 16)} Сохранить` : `${ic('send', 16)} Отправить`}</button>
+    return `<form class="cn-clue cform t-${g.turn}" data-form="clue" data-mode="${mode}">
+      <div class="cf-col cf-word">
+        <label class="cf-l"><b>1</b> Слово-подсказка</label>
+        <input class="inp clue-word" name="word" data-keep="cn-clue${mode === 'edit' ? '-e' : ''}" data-preview="1" value="${word}" placeholder="Одно слово" maxlength="30" autocomplete="off" required/>
       </div>
-      <div class="slots"><span class="slots-l" title="1 — точно подходит, 0.73 — подходит на 73%">Сила слов</span>${slots}${ui.cnSlots.length < 9 ? `<button type="button" class="btn ghost add-slot" data-act="cn-sadd" title="Добавить ещё одно слово">${ic('plus', 16)}</button>` : ''}</div>
+      <div class="cf-col cf-slots">
+        <label class="cf-l"><b>2</b> К скольким карточкам · сила <span class="cf-hint" title="1 — точно про это слово, 0.5 — подходит наполовину">1 = точно, 0.5 = наполовину</span></label>
+        <div class="slots">${slots}${n < 9 ? `<button type="button" class="add-slot" data-act="cn-sadd" title="Добавить карточку">${ic('plus', 16)}<span>карточка</span></button>` : ''}</div>
+      </div>
+      <div class="cf-col cf-send">
+        <label class="cf-l"><b>3</b> Агенты увидят</label>
+        <div class="cf-pv" id="cn-preview">${cluePreview()}</div>
+        <div class="cf-btns">
+          ${mode === 'edit' ? `<button type="button" class="btn ghost" data-act="cn-edit-cancel">Отмена</button>` : ''}
+          <button class="btn primary cf-go">${mode === 'edit' ? `${ic('check', 16)} Сохранить` : `${ic('send', 16)} Отправить`}</button>
+        </div>
+      </div>
     </form>`;
   }
 
@@ -1408,7 +1431,7 @@
         const elapsed = pend ? Math.max(0, g.pending.ms - (g.pending.at - now())) : 0;
         if (g.step === 'setup') return `<div class="cn-card blank" style="--i:${i}">${ic('grid', 18)}</div>`;
         return `<button class="cn-card ${c.color ? 'c-' + c.color : ''} ${c.revealed ? 'rev' : ''} ${c.marks.includes(me) ? 'mine' : ''} ${pend ? 'pending' : ''} ${ui.flip && ui.flip.has(i) ? 'flip' : ''} ${ui.enter && g.step === 'clue' ? 'deal' : ''}" style="--i:${i};${ui.flip && ui.flip.has(i) ? `--fd:-${Date.now() - ui.flip.get(i)}ms` : ''}" data-act="cn-mark" data-i="${i}">
-          <span class="w" lang="ru">${hy(c.w)}</span>
+          <span class="w ${/\s/.test(c.w) ? 'phrase' : ''}" lang="ru">${hy(c.w)}</span>
           ${c.marks.length ? `<span class="marks">${c.marks.map((m) => pa(m, 'xs')).join('')}</span>` : ''}
           ${pend ? `<span class="pend" style="--d:${g.pending.ms}ms;--e:-${elapsed}ms">${ring('fill')}</span>` : ''}
         </button>`;
@@ -1845,6 +1868,11 @@
       VIEW.glow = !VIEW.glow;
       LS.set('pg_glow', VIEW.glow ? '1' : '0');
       applyView();
+      render();
+    },
+    'glow-ok': () => {
+      ui.glowAsk = false;
+      LS.set('pg_glow_asked', '1');
       render();
     },
     'view-fs': (d) => {
