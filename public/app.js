@@ -209,6 +209,19 @@
     <form class="lofi-add" data-lofi-form><input class="inp" name="url" placeholder="Ссылка на YouTube" autocomplete="off"/><button class="btn sm primary" title="Добавить в очередь">${ic('plus', 16)} В очередь</button></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
+  // Кнопка радио — слева снизу, открывает мини-плеер над собой
+  const fab = document.createElement('button');
+  fab.id = 'radio-fab';
+  fab.hidden = true;
+  fab.title = 'Радио комнаты — у всех играет одно и то же';
+  fab.innerHTML = `<span class="rf-ic">${ic('headphones', 20)}<i class="eq"><b></b><b></b><b></b></i></span><span class="rf-t"><b>Радио</b><span class="rf-sub">включить</span></span>`;
+  document.body.appendChild(fab);
+  fab.addEventListener('click', () => {
+    Sound.play('click');
+    if (!music.on) return startMusic();
+    music.open = !music.open;
+    syncMusicUI();
+  });
   const rEmit = (op, x = {}) => emit('radio', { op, ...x });
 
   function syncMusicUI() {
@@ -217,8 +230,11 @@
     dock.classList.toggle('mini', !music.open);
     dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
-    const hb = document.querySelector('[data-act="lofi"]');
-    if (hb) hb.classList.toggle('on', music.on && music.playing);
+    fab.hidden = !r;
+    fab.classList.toggle('on', music.on);
+    fab.classList.toggle('playing', music.on && music.playing);
+    fab.classList.toggle('open', music.on && music.open);
+    fab.querySelector('.rf-sub').textContent = !music.on ? 'включить' : music.playing ? (r?.cur?.live ? 'эфир' : 'играет') : 'пауза';
     if (!r) return;
     const host = isHost();
     const c = r.cur;
@@ -265,7 +281,7 @@
         events: {
           onReady: (e) => {
             music.ready = true;
-            e.target.setVolume(music.vol);
+            e.target.setVolume(music.vol / 2); // ползунок 0–100 = громкость 0–50: тише и точнее
             const rr = radio();
             if (rr && rr.cur.vid !== c.vid) {
               music.curId = null;
@@ -348,7 +364,7 @@
     music.vol = Number(e.target.value);
     LS.set('pg_lofi_vol', String(music.vol));
     try {
-      music.player && music.ready && music.player.setVolume(music.vol);
+      music.player && music.ready && music.player.setVolume(music.vol / 2);
     } catch {}
   });
 
@@ -437,7 +453,6 @@
     }
   }
 
-  const seenReact = new Set();
   socket.on('state', (st) => {
     offset = st.serverNow - Date.now();
     const prevKey = S?.game ? S.game.type + (S.game.round || '') : null;
@@ -446,15 +461,9 @@
     if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
       ui.showSum = true;
       ui.sumAnim = true;
+      confetti(st.game.winner);
     }
     if (st.game?.type !== 'codenames' || !st.game.winner) ui.showSum = false;
-    // Новые реакции: звук и перерисовка, когда пузырь должен исчезнуть
-    for (const x of st.room.reactions || []) {
-      if (seenReact.has(x.id)) continue;
-      seenReact.add(x.id);
-      if (x.pid !== st.me) Sound.play('pop');
-      setTimeout(() => render(), 2700);
-    }
     S = st;
     syncRadio();
     if (location.pathname !== `/r/${st.room.code}`) history.replaceState(null, '', `/r/${st.room.code}`);
@@ -536,7 +545,6 @@
     if (c) c.scrollTop = nearBottom ? c.scrollHeight : chatScroll;
     fitBoard();
     tick();
-    placeReactions();
   }
 
   // Ключ «экрана»: когда он меняется — плавно проявляем новую сцену
@@ -568,7 +576,6 @@
     center.style.setProperty('--board-w', Math.round(w) + 'px');
   }
   let fitT;
-  document.addEventListener('scroll', () => S && placeReactions(), true);
   window.addEventListener('resize', () => {
     clearTimeout(fitT);
     fitT = setTimeout(fitBoard, 80);
@@ -662,7 +669,6 @@
           <div class="gtitle">${title}</div>
           <div class="top-actions">
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
-            <button class="btn sm ghost icon-btn lofi-btn ${music.playing ? 'on' : ''}" data-act="lofi" title="Радио комнаты — у всех играет одно и то же">${ic('headphones')}</button>
             ${sfxMenu()}
             ${themeMenu()}
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
@@ -719,46 +725,6 @@
     </div>`;
   }
 
-  // ---------- реакции ----------
-  const REACT = { lol: 'Ха-ха', facepalm: 'Ну ты что', genius: 'Гений', oops: 'Ой', fire: 'Огонь', think: 'Хм…' };
-  // Капитан Коднеймс во время партии молчит — иначе реакция станет подсказкой
-  function reactBlocked() {
-    const g = S.game;
-    if (!g || g.type !== 'codenames') return false;
-    const live = g.step !== 'setup' && !g.winner;
-    return live && (g.captain.red === S.me || g.captain.blue === S.me);
-  }
-  function reactFab() {
-    const blocked = reactBlocked();
-    const open = ui.menu === 'react' && !blocked;
-    return `<div class="menu-wrap" data-pop>
-      <button class="chat-fab react-fab ${open ? 'on' : ''} ${blocked ? 'off' : ''}" data-act="${blocked ? 'react-no' : 'menu'}" data-menu="react" title="${blocked ? 'Капитан не может реагировать во время партии' : 'Реакции'}">${ic('smile', 22)}</button>
-      ${open ? `<div class="pop react-pop ${ui.popAnim ? 'anim' : ''}">${Object.entries(REACT).map(([k, t]) => `<button class="react-b r-${k}" data-act="react" data-r="${k}">${t}</button>`).join('')}</div>` : ''}
-    </div>`;
-  }
-  const liveReactions = () => (S.room.reactions || []).filter((x) => now() - x.at < 2600);
-  // Пузыри рисуются отдельным слоем поверх всего — полоса игроков прокручивается и обрезала бы их
-  function placeReactions() {
-    let layer = document.getElementById('react-layer');
-    if (!layer) {
-      layer = document.createElement('div');
-      layer.id = 'react-layer';
-      document.body.appendChild(layer);
-    }
-    if (!S) return (layer.innerHTML = '');
-    const last = {};
-    for (const x of liveReactions()) last[x.pid] = x;
-    layer.innerHTML = Object.values(last)
-      .map((x) => {
-        const el = $app.querySelector(`[data-pm="${x.pid}"] .ava`);
-        if (!el) return '';
-        const b = el.getBoundingClientRect();
-        if (!b.width) return '';
-        return `<span class="rbub r-${x.r}" style="left:${b.left + b.width / 2}px;top:${b.top - 6}px;animation-delay:-${Math.max(0, now() - x.at)}ms">${REACT[x.r] || ''}</span>`;
-      })
-      .join('');
-  }
-
   function renderChat() {
     const r = S.room;
     const g = S.game;
@@ -777,7 +743,6 @@
           : ''
       }
       <div class="fab-row">
-        ${reactFab()}
         ${
           hostTools
             ? `<div class="menu-wrap" data-pop>
@@ -819,6 +784,7 @@
         </div>
         ${R.roles ? sec('users', 'Кто есть кто', `<div class="rl-roles">${R.roles.map((r) => `<div class="rl-role"><b>${esc(r[0])}</b><span>${esc(r[1])}</span></div>`).join('')}</div>`) : ''}
         ${sec('list', 'Как проходит игра', `<ol class="rl-steps">${R.steps.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`)}
+        ${R.timers ? sec('clock', 'Время', `<div class="rl-pts">${R.timers.map((p) => `<div class="rl-pt t ${p[0].startsWith('−') ? 'neg' : ''}"><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`) : ''}
         ${R.points ? sec('star', 'Очки', `<div class="rl-pts">${R.points.map((p) => `<div class="rl-pt ${p[0].startsWith('−') ? 'neg' : p[0] === '0' ? 'zero' : ''}"><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`) : ''}
         ${sec('trophy', 'Кто побеждает', `<p class="rl-win">${esc(R.win)}</p>`)}
         ${R.tips ? sec('bulb', 'Полезно знать', `<ul class="rl-tips">${R.tips.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`) : ''}
@@ -1168,6 +1134,64 @@
   const prepPool = (g) => Object.keys(g.team).filter((id) => player(id)?.connected);
   const isPrep = (g) => g.step === 'setup' || (g.winner && !tour());
 
+  // Конфетти со стороны победившей команды (красные слева, синие справа)
+  function confetti(team) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.getElementById('confetti')?.remove();
+    const cv = document.createElement('canvas');
+    cv.id = 'confetti';
+    document.body.appendChild(cv);
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const W = (cv.width = innerWidth * dpr);
+    const H = (cv.height = innerHeight * dpr);
+    cv.style.width = innerWidth + 'px';
+    cv.style.height = innerHeight + 'px';
+    const c = cv.getContext('2d');
+    const left = team === 'red';
+    const base = left ? ['#ff6452', '#ff9a8c', '#ffd2cb'] : ['#4fb8ff', '#9ad6ff', '#d4eeff'];
+    const cols = [...base, '#f2c14b', '#ffffff'];
+    const P = [];
+    const spawn = (n) => {
+      for (let i = 0; i < n; i++) {
+        P.push({
+          x: (left ? -10 : W + 10) + (Math.random() - 0.5) * 40 * dpr,
+          y: H * (0.25 + Math.random() * 0.5),
+          vx: (left ? 1 : -1) * (6 + Math.random() * 10) * dpr,
+          vy: (-8 - Math.random() * 9) * dpr,
+          w: (6 + Math.random() * 6) * dpr,
+          h: (3 + Math.random() * 4) * dpr,
+          r: Math.random() * 6,
+          vr: (Math.random() - 0.5) * 0.4,
+          col: cols[(Math.random() * cols.length) | 0],
+        });
+      }
+    };
+    spawn(110);
+    setTimeout(() => spawn(70), 350);
+    setTimeout(() => spawn(50), 800);
+    const t0 = performance.now();
+    const step = (t) => {
+      c.clearRect(0, 0, W, H);
+      for (const p of P) {
+        p.vy += 0.32 * dpr;
+        p.vx *= 0.985;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.r += p.vr;
+        c.save();
+        c.translate(p.x, p.y);
+        c.rotate(p.r);
+        c.fillStyle = p.col;
+        c.globalAlpha = Math.max(0, 1 - (t - t0) / 4200);
+        c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2)));
+        c.restore();
+      }
+      if (t - t0 < 4200) requestAnimationFrame(step);
+      else cv.remove();
+    };
+    requestAnimationFrame(step);
+  }
+
   // Итоги партии Коднеймс — окно с карточками, открывается само после победы
   const mmss = (ms) => {
     const t = Math.round(ms / 1000);
@@ -1248,13 +1272,33 @@
     const clues = (g.clues || []).filter((c) => c.team === t);
     const turn = g.turn === t && !g.winner && g.step !== 'setup';
     const prep = isPrep(g);
+    const st = g.pst;
     const rd = (id) => (prep && g.ready[id] ? `<span class="rd" title="Готов">${ic('check', 11)}</span>` : '');
+    const stat = (n, label, cls = '') => `<span class="ps ${cls}"><b>${n}</b>${label}</span>`;
+    // Карточка капитана: статистика + все его подсказки
+    const clueList = clues.length
+      ? clues
+          .map((c) => `<div class="hrow ${g.clue && g.clue.id === c.id && !g.winner ? 'now' : ''} ${c.slots.every((x) => x.done) ? 'alldone' : ''}"><span class="hword">${esc(c.word)}</span><span class="hnums">${clueChips(c, cap === me)}</span></div>`)
+          .join('')
+      : '<span class="muted small">подсказок ещё не было</span>';
     const capBlock = cap
-      ? `<div class="tp-cap">${pa(cap, 'md')}${rd(cap)}<div class="tp-cap-n"><span>${nm(cap)}</span><span class="tp-role">${ic('crown', 12)} капитан</span></div></div>
-         ${amCapHere && prep ? `<button class="btn tp-leave" data-act="cn-join" data-team="${t}">${ic('logout', 16)} Уступить место капитана</button>` : ''}`
+      ? `<div class="pcard cap ${cap === me ? 'me' : ''} ${turn && g.step === 'clue' ? 'active' : ''}">
+          <div class="pc-top"><span class="ava-wrap">${pa(cap, 'md', 'round')}${rd(cap)}</span><div class="pc-n"><span>${nm(cap)}</span><span class="tp-role">${ic('crown', 12)} капитан</span></div></div>
+          ${st ? `<div class="pc-stats">${stat(clues.length, plural(clues.length, 'подсказка', 'подсказки', 'подсказок'))}${stat(st.capHits[cap] || 0, 'отгадали')}</div>` : ''}
+          <div class="pc-clues">${clueList}</div>
+          ${amCapHere && prep ? `<button class="btn tp-leave" data-act="cn-join" data-team="${t}">${ic('logout', 16)} Уступить место капитана</button>` : ''}
+        </div>`
       : prep || !myTeam || myTeam === t
         ? `<button class="tp-become" data-act="cn-cap" data-team="${t}">${ic('crown', 18)}<span>Стать капитаном</span></button>`
         : `<div class="tp-empty muted small">${ic('crown', 14)} капитана нет</div>`;
+    const agentCards = members
+      .map(
+        (id) => `<div class="pcard ${id === me ? 'me' : ''}">
+          <div class="pc-top"><span class="ava-wrap">${pa(id, 'md', 'round')}${rd(id)}</span><div class="pc-n"><span>${nm(id)}${id === me ? ' <small class="muted">(вы)</small>' : ''}</span><span class="pc-role">агент</span></div></div>
+          ${st ? `<div class="pc-stats">${stat(st.right[id] || 0, 'верно', 'ok')}${stat(st.wrong[id] || 0, 'мимо', 'bad')}${st.lead[id] ? stat(st.lead[id], 'первым') : ''}</div>` : ''}
+        </div>`
+      )
+      .join('');
     return `<aside class="cn-side t-${t} ${turn ? 'turn' : ''}">
       <div class="tp-head">
         <span class="tp-name">${TN[t]}</span>
@@ -1263,18 +1307,9 @@
       ${turn ? `<div class="tp-turn">${ic('clock', 14)} ${g.step === 'clue' ? 'Капитан думает' : 'Отгадывают'}</div>` : ''}
       <div class="tp-sec"><div class="tp-label">Капитан</div>${capBlock}</div>
       <div class="tp-sec"><div class="tp-label">Агенты · ${members.length}</div>
-        <div class="tp-agents">${members.map((id) => `<div class="tp-agent ${id === me ? 'me' : ''}"><span class="ava-wrap">${pa(id, 'sm')}${rd(id)}</span><span>${nm(id)}</span></div>`).join('') || '<span class="muted small">пока никого</span>'}</div>
+        <div class="tp-agents">${agentCards || '<span class="muted small">пока никого</span>'}</div>
       </div>
       ${myTeam !== t && (prep || !myTeam) ? `<button class="btn tp-join" data-act="cn-join" data-team="${t}">${ic('userplus', 18)} ${myTeam ? 'Перейти' : 'Играть'} за ${TNg[t]}</button>` : myTeam === t && !amCapHere ? `<div class="tp-in">${ic('check', 14)} Вы в этой команде</div>` : !prep && myTeam && myTeam !== t ? `<div class="tp-in muted">${ic('clock', 14)} Сменить команду можно после партии</div>` : ''}
-      <div class="tp-sec tp-clues"><div class="tp-label">Подсказки</div>${
-        clues.length
-          ? clues
-              .map(
-                (c) => `<div class="hrow ${g.clue && g.clue.id === c.id && !g.winner ? 'now' : ''} ${c.slots.every((x) => x.done) ? 'alldone' : ''}"><span class="hword">${esc(c.word)}</span><span class="hnums">${clueChips(c, cap === me)}</span></div>`
-              )
-              .join('')
-          : '<span class="muted small">ещё не было</span>'
-      }</div>
     </aside>`;
   }
 
@@ -1336,7 +1371,8 @@
         </button>`;
       })
       .join('');
-    return `
+    const glow = !g.winner && g.step !== 'setup' ? `<div class="turn-glow g-${g.turn}" aria-hidden="true"></div>` : '';
+    return `${glow}
       <div class="cn">
         ${teamPanel(g, 'red')}
         <section class="cn-center">
@@ -1413,15 +1449,22 @@
       center = `<div class="stage-card left">
         <div class="kicker">Проверка слов · команда «${esc(team.name)}»</div>
         <p class="small muted">Нажмите на слово, чтобы поменять статус. Угадано +1${g.penalty ? ', пропуск −1' : ''}.</p>
+        ${(() => {
+          const ok = g.turnWords.filter((w) => w.ok === true || w.ok === 'own').length;
+          const no = g.turnWords.filter((w) => w.ok === false || w.ok === null || w.ok === undefined).length;
+          const pts = ok - (g.penalty ? no : 0);
+          return `<div class="rv-sum"><span class="ok">${ic('check', 14)} ${ok} угадано</span><span class="no">${ic('x', 14)} ${no} ${g.penalty ? 'пропуск' : 'мимо'}</span><b>${pts > 0 ? '+' : ''}${pts} ${plural(Math.abs(pts), 'очко', 'очка', 'очков')}</b></div>`;
+        })()}
         <div class="review">${
           g.turnWords
             .map(
               (w, i) => `<button class="rw ${w.last ? 'last' : ''} ${w.ok === true || w.ok === 'own' ? 'ok' : typeof w.ok === 'number' ? 'other' : 'no'}" data-act="al-toggle" data-i="${i}">
-            <span>${esc(w.w)}</span><em>${w.last ? 'последнее: ' + lastLabel(w) : w.ok ? '+1' : g.penalty ? '−1' : '0'}</em></button>`
+            <span class="rw-ic">${w.ok === true || w.ok === 'own' ? ic('check', 18) : typeof w.ok === 'number' ? ic('swap', 18) : ic('x', 18)}</span>
+            <span class="rw-w">${esc(w.w)}</span><em>${w.last ? 'последнее: ' + lastLabel(w) : w.ok ? '+1' : g.penalty ? '−1' : '0'}</em></button>`
             )
             .join('') || '<p class="muted">Ни одного слова</p>'
         }</div>
-        <div class="row c">${canConfirm ? `<button class="btn primary big-w" data-act="al-confirm">${ic('check', 18)} Подтвердить очки</button>` : `<span class="muted">Подтверждает ${nm(g.explainer)}</span>`}</div>
+        <div class="rv-cta">${canConfirm ? `<button class="btn primary mega" data-act="al-confirm">${ic('check', 20)} Подтвердить очки</button>` : `<span class="muted">Подтверждает ${nm(g.explainer)}</span>`}</div>
       </div>`;
     } else if (g.phase === 'over') {
       center = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победила команда «${esc(g.teams[g.winner].name)}»!</h2>
@@ -1573,29 +1616,29 @@
     const notesKey = `pg_notes_${S.room.code}`;
     // Вопросы «да/нет»: спрашивающий печатает (или говорит голосом), остальные отвечают кнопками
     const AL = { yes: 'Да', no: 'Нет', idk: 'Не знаю' };
-    const qaList = (list) =>
-      list.length
-        ? `<div class="qa-list">${list
-            .slice()
-            .reverse()
-            .map((x) => `<div class="qa-i v-${x.v || 'idk'}"><span class="qa-q">${x.text ? esc(x.text) : '<i class="muted">вопрос голосом</i>'}</span><span class="qa-a">${AL[x.v] || '—'}<small>${x.yes}/${x.no}/${x.idk}</small></span></div>`)
-            .join('')}</div>`
-        : '';
+    const qaCard = (x, live = false) =>
+      `<div class="qa-c v-${live ? 'live' : x.v || 'idk'}">
+        <div class="qa-c-q">${x.text ? esc(x.text) : '<i>вопрос голосом</i>'}</div>
+        <div class="qa-c-a">${live ? '<span class="qa-c-v">ждём ответы…</span>' : `<span class="qa-c-v">${AL[x.v] || '—'}</span>`}<span class="qa-c-n"><i class="y">${x.yes}</i><i class="n">${x.no}</i><i>${x.idk}</i></span></div>
+      </div>`;
+    const qaCards = (list, extra = '') => `<div class="qa-grid">${list.map((x) => qaCard(x)).join('')}${extra}</div>`;
     const q = g.q && g.q.asker === g.turnPid ? g.q : null;
     const asker = g.turnPid;
     const qVotes = (v) => (q ? Object.entries(q.who).filter(([, a]) => a === v).map(([id]) => `<span title="${nm(id)}">${pa(id, 'xs', 'round')}</span>`).join('') : '');
-    const qBox = over
-      ? ''
-      : asker === me
-        ? `<div class="card qa-card"><div class="side-h">${ic('mic', 16)} Ваш вопрос <span class="muted small">— можно напечатать или просто спросить голосом</span></div>
-            <form data-form="who-ask" class="qa-form"><input class="inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Я человек? Я из фильма?" autocomplete="off"/><button class="btn primary">${ic('send', 16)} Спросить</button></form>
-            ${q ? `<div class="qa-now"><span>${q.text ? esc(q.text) : 'Вопрос голосом'}</span><span class="qa-t"><b class="y">Да ${q.yes}</b><b class="n">Нет ${q.no}</b><b>Не знаю ${q.idk}</b></span></div>` : ''}
-          </div>`
-        : `<div class="card qa-card"><div class="side-h">${ic('question', 16)} Спрашивает ${nm(asker)}${q && q.text ? `: <b class="qa-text">${esc(q.text)}</b>` : ' <span class="muted small">— вопрос голосом</span>'}</div>
-            <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q && q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}${q ? `<small>${q[v]}</small>` : ''}</span></button>`).join('')}</div>
-            ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)}</summary>${qaList(g.players[asker].qa)}</details>` : ''}
-          </div>`;
     const myQa = g.players[me]?.qa || [];
+    let qBox = '';
+    if (!over && asker === me) {
+      // Мой ход: мои вопросы карточками, последняя карточка — «Спросить»
+      const askCard = `<form data-form="who-ask" class="qa-c qa-ask"><div class="qa-c-q"><input class="inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Следующий вопрос… (или голосом)" autocomplete="off"/></div><button class="btn primary">${ic('send', 16)} Спросить</button></form>`;
+      qBox = `<div class="card qa-card"><div class="side-h">${ic('mic', 16)} Ваши вопросы <span class="muted small">— остальные отвечают кнопками</span></div>
+        ${qaCards(myQa, (q ? qaCard({ ...q }, true) : '') + askCard)}</div>`;
+    } else if (!over) {
+      qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 'sm', 'round')} Спрашивает <b>${nm(asker)}</b></div>
+        <div class="qa-big">${q && q.text ? `«${esc(q.text)}»` : '<span class="muted">Вопрос голосом — слушайте в Discord</span>'}</div>
+        <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q && q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}${q ? `<small>${q[v]}</small>` : ''}</span></button>`).join('')}</div>
+        ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)} · ${g.players[asker].qa.length}</summary>${qaCards(g.players[asker].qa)}</details>` : ''}
+      </div>`;
+    }
     const actions = over
       ? ''
       : `<div class="mega-dock">
@@ -1607,7 +1650,7 @@
       <div class="call-grid">${tiles}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
-      <div class="card notes-card">${myQa.length ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaList(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
+      <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
     </div>`;
   }
@@ -1835,12 +1878,6 @@
       ui.sumAnim = ui.showSum;
       render();
     },
-    react: (d) => {
-      ui.menu = null;
-      emit('react', { r: d.r });
-      render();
-    },
-    'react-no': () => toast('Капитан не может реагировать во время партии — это была бы подсказка'),
     'spy-ask': (d) => act('askWho', { target: d.pid }),
     'spy-answered': () => act('answered'),
     'who-guessed': () => confirm('Вы назвали персонажа и вам подтвердили?') && act('guessed'),

@@ -48,24 +48,4 @@ function resume(room, GAMES, makeCtx) {
 
 const publicSuspended = (room) => (room.suspended ? { type: room.suspended.game.type, tour: !!room.suspended.tour } : null);
 
-// Реакции над аватаркой. Капитан Коднеймс во время партии реагировать не может — иначе это подсказка.
-const REACTIONS = ['lol', 'facepalm', 'genius', 'oops', 'fire', 'think'];
-function react(room, pid, r) {
-  if (!REACTIONS.includes(r)) return 'Неизвестная реакция';
-  const g = room.game;
-  if (g && g.type === 'codenames') {
-    const s = g.state;
-    const live = s.step !== 'setup' && !s.winner;
-    if (live && (s.captain.red === pid || s.captain.blue === pid)) return 'Капитан не может реагировать во время партии';
-  }
-  const now = Date.now();
-  room.reactLast = room.reactLast || {};
-  if (now - (room.reactLast[pid] || 0) < 700) return 'Не так быстро';
-  room.reactLast[pid] = now;
-  room.reactions = (room.reactions || []).filter((x) => now - x.at < 4000);
-  room.reactions.push({ id: now + ':' + pid, pid, r, at: now });
-  if (room.reactions.length > 30) room.reactions.shift();
-}
-const publicReactions = (room) => (room.reactions || []).filter((x) => Date.now() - x.at < 3000);
-
-module.exports = { AVATAR_KEYS, cleanAvatar, startGame, suspend, resume, publicSuspended, react, publicReactions, REACTIONS };
+module.exports = { AVATAR_KEYS, cleanAvatar, startGame, suspend, resume, publicSuspended };

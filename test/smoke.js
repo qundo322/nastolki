@@ -50,18 +50,6 @@ function bot(profile, name) {
   for (const b of bots) await b.act('ready');
   await wait(100);
   assert(g(h).step === 'clue' && g(h).clock, 'all ready → game starts');
-  // реакции: капитан во время партии не может, агент — может
-  {
-    const c0 = g(h);
-    const capB = byId(c0.captain.red);
-    assert((await capB.call('react', { r: 'lol' })).error, 'captain cannot react');
-    const agB = bots.find((b) => c0.team[b.st.me] && c0.captain.red !== b.st.me && c0.captain.blue !== b.st.me);
-    assert((await agB.call('react', { r: 'genius' })).ok, 'agent reacts');
-    assert((await agB.call('react', { r: 'genius' })).error, 'rate limit');
-    assert((await agB.call('react', { r: 'xxx' })).error, 'unknown reaction');
-    await wait(80);
-    assert(h.st.room.reactions.some((x) => x.pid === agB.st.me && x.r === 'genius'), 'reaction broadcast');
-  }
   const mover = bots.find((b) => g(b).team[b.st.me] && g(b).captain[g(b).team[b.st.me]] !== b.st.me);
   const other = g(mover).team[mover.st.me] === 'red' ? 'blue' : 'red';
   assert((await mover.act('join', { team: other })).error, 'no team change mid-game');

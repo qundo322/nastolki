@@ -569,7 +569,7 @@ button.num { font: inherit; font-weight: 800; }
 .cn-card {
   position: relative; aspect-ratio: 1.55; border-radius: 8px; border: 0; cursor: pointer; padding: 4px 3px;
   background: var(--cn-card); color: var(--cn-text); font-family: var(--card-font); font-weight: 700; text-transform: uppercase;
-  font-size: clamp(10px, 2.6cqi, 24px); letter-spacing: 0.01em;
+  font-size: clamp(12px, 3.9cqi, 36px); letter-spacing: 0.01em;
   display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 3px 0 var(--cn-edge);
   transition: transform 0.1s, background 0.12s, opacity 0.2s;
 }
@@ -1069,22 +1069,6 @@ div.clue { cursor: default; }
 .nom-t { font-family: var(--display); font-size: 15px; }
 .nom-who { display: flex; flex-wrap: wrap; gap: 8px; font-weight: 700; }
 .nom-u { font-size: 12px; color: var(--muted); }
-/* Реакции */
-.react-fab.off { opacity: 0.45; cursor: not-allowed; }
-.react-pop { top: auto; bottom: calc(100% + 10px); left: auto; right: 0; min-width: 0; display: grid; grid-template-columns: repeat(2, auto); gap: 6px; padding: 8px; transform-origin: bottom right; }
-.react-b { border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font: inherit; font-weight: 800; font-size: 14px; padding: 9px 14px; border-radius: 99px; cursor: pointer; white-space: nowrap; transition: transform 0.1s, background 0.15s; }
-.react-b:hover { background: var(--accent-soft); border-color: var(--accent-line); transform: translateY(-1px); }
-#react-layer { position: fixed; inset: 0; pointer-events: none; z-index: 140; }
-.rbub { position: fixed; transform: translate(-50%, -100%); z-index: 140; pointer-events: none; white-space: nowrap;
-  background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 12px; padding: 4px 9px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.35);
-  animation: rbub 2.6s ease both; }
-.rbub::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--accent); }
-.rbub.r-facepalm, .rbub.r-oops { background: var(--red, #e5484d); color: #fff; }
-.rbub.r-facepalm::after, .rbub.r-oops::after { border-top-color: var(--red, #e5484d); }
-.rbub.r-genius, .rbub.r-fire { background: var(--green); color: var(--green-ink); }
-.rbub.r-genius::after, .rbub.r-fire::after { border-top-color: var(--green); }
-@keyframes rbub { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -100%) scale(1.08); } 18% { transform: translate(-50%, -100%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -125%); } }
-@media (prefers-reduced-motion: reduce) { .rbub { animation: none; } }
 .sum-i > svg { vertical-align: -2px; margin-right: 4px; }
 .sum-i .who-n { vertical-align: -5px; }
 
@@ -1123,6 +1107,139 @@ div.clue { cursor: default; }
 .lofi-add { display: flex; gap: 6px; }
 .lofi-add .inp { flex: 1; min-width: 0; padding: 8px 10px; font-size: 13px; }
 #lofi.mini .lofi-queue, #lofi.mini .lofi-add, #lofi.mini .lofi-now, #lofi.mini .lofi-host { display: none; }
+
+/* ============ v14: карточки игроков, свечение хода, OLED, конфетти ============ */
+.pcard { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.pcard.me { border-color: var(--accent-line); }
+.pcard.cap.active { box-shadow: inset 0 0 0 1px var(--accent); }
+.pc-top { display: flex; align-items: center; gap: 10px; }
+.pc-n { display: flex; flex-direction: column; min-width: 0; flex: 1; font-weight: 800; }
+.pc-n > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-role { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.pc-stats { display: flex; flex-wrap: wrap; gap: 5px; }
+.ps { display: inline-flex; align-items: baseline; gap: 4px; font-size: 12px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); padding: 3px 8px; border-radius: 99px; }
+.ps b { font-size: 14px; color: var(--text); }
+.ps.ok b { color: var(--green-text); }
+.ps.bad b { color: var(--red-text); }
+.pc-clues { display: flex; flex-direction: column; gap: 2px; border-top: 1px dashed var(--line); padding-top: 6px; }
+.pc-clues .hrow { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 9px; flex-wrap: wrap; }
+.pc-clues .hrow.now { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--accent-line); }
+.tp-agents { gap: 8px; }
+.tp-cap > .rd, .pcard .ava-wrap > .rd { right: -3px; bottom: -3px; left: auto; top: auto; }
+@media (max-width: 760px) {
+  .pc-clues { display: none; }
+  .tp-agents { flex-direction: row; flex-wrap: wrap; }
+  .tp-agents .pcard { flex: 1 1 140px; padding: 8px; gap: 6px; }
+  .pcard .ava { width: 26px !important; height: 26px !important; }
+}
+
+/* Мерцание цвета ходящей команды со своей стороны — под всем интерфейсом */
+.turn-glow { position: fixed; top: 0; bottom: 0; width: 42vw; z-index: 0; pointer-events: none; opacity: 0.5; animation: tglow 3.6s ease-in-out infinite; }
+.turn-glow.g-red { left: 0; background: radial-gradient(ellipse 70% 60% at 0% 55%, color-mix(in srgb, var(--cn-red) 26%, transparent), transparent 70%); }
+.turn-glow.g-blue { right: 0; background: radial-gradient(ellipse 70% 60% at 100% 55%, color-mix(in srgb, var(--cn-blue) 26%, transparent), transparent 70%); }
+@keyframes tglow { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.8; } }
+.cn { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .turn-glow { animation: none; opacity: 0.5; } }
+
+/* OLED: приглушённые карточки, чтобы ночью не резало глаза */
+[data-theme='oled'] {
+  --cn-red: #8a2c24;
+  --cn-red-text: #ffc2b9;
+  --cn-red-glow: rgba(138, 44, 36, 0.45);
+  --cn-blue: #164a70;
+  --cn-blue-text: #b9dcff;
+  --cn-blue-glow: rgba(22, 74, 112, 0.45);
+  --cn-neu: #2c2b29;
+  --cn-neu-text: #a9a59e;
+  --cn-ass: #050505;
+  --cn-ass-text: #8b8b90;
+  --cn-text: #cfced6;
+  --cn-card: #0e0e11;
+}
+[data-theme='oled'] .cn-card.c-assassin { box-shadow: inset 0 0 0 1px #3a3a42; }
+[data-theme='oled'] .turn-glow { opacity: 0.35; }
+
+/* Конфетти победителей */
+#confetti { position: fixed; inset: 0; z-index: 150; pointer-events: none; }
+
+/* Радио — кнопка слева снизу, плеер над ней */
+#radio-fab { position: fixed; left: 16px; bottom: 16px; z-index: 71; display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px 0 8px; border-radius: 99px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--line-strong); box-shadow: 0 8px 24px rgba(0,0,0,.3); cursor: pointer; font: inherit; transition: border-color .15s, transform .12s; }
+#radio-fab[hidden] { display: none; }
+#radio-fab:hover { border-color: var(--accent-line); transform: translateY(-1px); }
+#radio-fab.on { border-color: var(--accent); }
+.rf-ic { position: relative; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; }
+.rf-t { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.rf-t b { font-size: 14px; }
+.rf-sub { font-size: 11px; color: var(--muted); font-weight: 700; }
+.eq { position: absolute; right: -4px; bottom: -3px; display: none; gap: 1.5px; align-items: flex-end; height: 12px; padding: 2px 3px; border-radius: 6px; background: var(--surface); }
+.eq b { width: 2.5px; background: var(--accent-text); border-radius: 2px; animation: eq 0.9s ease-in-out infinite; }
+.eq b:nth-child(2) { animation-delay: -0.3s; }
+.eq b:nth-child(3) { animation-delay: -0.6s; }
+@keyframes eq { 0%, 100% { height: 3px; } 50% { height: 9px; } }
+#radio-fab.playing .eq { display: inline-flex; }
+#lofi { bottom: 80px; }
+/* «Свернуть» = убрать плеер с экрана, музыка продолжает играть */
+#lofi.mini { position: fixed; left: -10000px; bottom: 0; width: 320px; }
+@media (max-width: 640px) {
+  #radio-fab { left: 10px; bottom: 10px; height: 46px; padding: 0 12px 0 6px; }
+  .rf-ic { width: 32px; height: 32px; }
+  #lofi { bottom: 66px; }
+}
+
+/* Кто я — вопрос крупно, история карточками */
+.qa-asker { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+.qa-asker b { color: var(--text); }
+.qa-big { font-family: var(--display); font-size: clamp(24px, 3.4vw, 40px); line-height: 1.2; text-align: center; padding: 14px 8px 18px; word-break: break-word; }
+.qa-big .muted { font-family: inherit; font-size: 18px; }
+.qa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin: 8px 0 4px; }
+.qa-c { display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-height: 104px; padding: 12px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); border-top: 4px solid var(--line-strong); }
+.qa-c.v-yes { border-top-color: var(--green); }
+.qa-c.v-no { border-top-color: var(--red); }
+.qa-c.v-live { border-top-color: var(--accent); border-style: dashed; border-top-style: solid; }
+.qa-c-q { font-weight: 800; font-size: 16px; line-height: 1.3; }
+.qa-c-q i { color: var(--muted); font-weight: 600; }
+.qa-c-a { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.qa-c-v { font-family: var(--display); font-size: 15px; }
+.qa-c.v-yes .qa-c-v { color: var(--green-text); }
+.qa-c.v-no .qa-c-v { color: var(--red-text); }
+.qa-c.v-live .qa-c-v { color: var(--accent-text); font-family: inherit; font-size: 13px; font-weight: 700; }
+.qa-c-n { display: inline-flex; gap: 8px; font-size: 12px; font-weight: 800; color: var(--muted); }
+.qa-c-n i { font-style: normal; }
+.qa-c-n .y { color: var(--green-text); }
+.qa-c-n .n { color: var(--red-text); }
+.qa-c.qa-ask { border: 2px dashed var(--accent-line); border-top: 4px solid var(--accent); background: var(--accent-soft); }
+.qa-ask .inp { width: 100%; font-weight: 700; }
+.qa-ask .btn { width: 100%; justify-content: center; }
+.qa-hist .qa-grid { margin-top: 10px; }
+
+/* Элиас — проверка слов карточками, кнопка всегда на виду */
+.review { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin: 12px 0 0; flex-direction: initial; }
+.review .rw { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 92px; padding: 12px; border-radius: 14px; text-align: left; cursor: pointer;
+  border: 2px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; transition: transform .1s, border-color .15s, background .15s; }
+.review .rw:hover { transform: translateY(-1px); }
+.review .rw.ok { border-color: color-mix(in srgb, var(--green) 60%, transparent); background: color-mix(in srgb, var(--green) 12%, var(--surface-2)); }
+.review .rw.no { border-color: color-mix(in srgb, var(--red) 50%, transparent); background: color-mix(in srgb, var(--red) 9%, var(--surface-2)); }
+.review .rw.other { border-color: var(--accent-line); background: var(--accent-soft); }
+.review .rw.last { border-style: dashed; }
+.rw-ic { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--surface); }
+.rw.ok .rw-ic { color: var(--green-text); }
+.rw.no .rw-ic { color: var(--red-text); }
+.rw.other .rw-ic { color: var(--accent-text); }
+.rw-w { font-weight: 800; font-size: 18px; line-height: 1.2; }
+.review .rw em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--muted); }
+.rw.ok em { color: var(--green-text); }
+.rw.no em { color: var(--red-text); }
+.rv-sum { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.rv-sum span { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 99px; background: var(--surface-2); }
+.rv-sum .ok { color: var(--green-text); }
+.rv-sum .no { color: var(--red-text); }
+.rv-sum b { margin-left: auto; font-family: var(--display); font-size: 18px; }
+.rv-cta { position: sticky; bottom: 0; z-index: 5; display: flex; justify-content: center; padding: 14px 0 6px; margin-top: 8px;
+  background: linear-gradient(to bottom, transparent, var(--surface) 35%); }
+.rl-pt.t b { color: var(--accent-text); }
+.rl-pt.t.neg b { color: var(--red-text); }
+.who { padding-bottom: 130px; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -1326,7 +1443,7 @@ body{padding-bottom:84px}
           "\u0421\u0432\u043E\u044F \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u2014 \u043C\u043E\u0436\u043D\u043E \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442\u044C \u0438\u043B\u0438 \u043D\u0430\u0436\u0430\u0442\u044C \xAB\u041F\u0435\u0440\u0435\u0434\u0430\u0442\u044C \u0445\u043E\u0434\xBB. \u041D\u0435\u0439\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u0438\u043B\u0438 \u0447\u0443\u0436\u0430\u044F \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442 \u0441\u043E\u043F\u0435\u0440\u043D\u0438\u043A\u0430\u043C. \u0427\u0451\u0440\u043D\u0430\u044F \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 (\u0443\u0431\u0438\u0439\u0446\u0430) \u2014 \u043C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u043E\u0435 \u043F\u043E\u0440\u0430\u0436\u0435\u043D\u0438\u0435.",
           "\u041F\u043E\u0431\u0435\u0436\u0434\u0430\u0435\u0442 \u043A\u043E\u043C\u0430\u043D\u0434\u0430, \u043F\u0435\u0440\u0432\u043E\u0439 \u043E\u0442\u043A\u0440\u044B\u0432\u0448\u0430\u044F \u0432\u0441\u0435 \u0441\u0432\u043E\u0438 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0438. \u041D\u0430\u0447\u0438\u043D\u0430\u044E\u0449\u0430\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u0438\u0449\u0435\u0442 9 \u0441\u043B\u043E\u0432, \u0432\u0442\u043E\u0440\u0430\u044F \u2014 8.",
           "\u041F\u0435\u0440\u0435\u0434 \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u0430\u0440\u0442\u0438\u0435\u0439 \u0432\u0441\u0435 \u0440\u0430\u0441\u043F\u0440\u0435\u0434\u0435\u043B\u044F\u044E\u0442\u0441\u044F \u043F\u043E \u043A\u043E\u043C\u0430\u043D\u0434\u0430\u043C \u0438 \u0440\u043E\u043B\u044F\u043C \u0438 \u043D\u0430\u0436\u0438\u043C\u0430\u044E\u0442 \u0437\u0435\u043B\u0451\u043D\u0443\u044E \u043A\u043D\u043E\u043F\u043A\u0443 \xAB\u0413\u043E\u0442\u043E\u0432\xBB. \u041A\u043E\u0433\u0434\u0430 \u0433\u043E\u0442\u043E\u0432\u044B \u0432\u0441\u0435 \u2014 \u043F\u0430\u0440\u0442\u0438\u044F \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u0442\u0441\u044F. \u0412\u043E \u0432\u0440\u0435\u043C\u044F \u043F\u0430\u0440\u0442\u0438\u0438 \u043C\u0435\u043D\u044F\u0442\u044C \u043A\u043E\u043C\u0430\u043D\u0434\u0443 \u043D\u0435\u043B\u044C\u0437\u044F \u2014 \u0442\u043E\u043B\u044C\u043A\u043E \u043F\u043E\u0441\u043B\u0435 \u0435\u0451 \u043E\u043A\u043E\u043D\u0447\u0430\u043D\u0438\u044F (\u0442\u043E\u0433\u0434\u0430 \u0436\u0435 \u043C\u043E\u0436\u043D\u043E \u0443\u0441\u0442\u0443\u043F\u0438\u0442\u044C \u043C\u0435\u0441\u0442\u043E \u043A\u0430\u043F\u0438\u0442\u0430\u043D\u0430).",
-          "\u041E\u0447\u043A\u0438 \u0432 \u043C\u0430\u0440\u0430\u0444\u043E\u043D\u0435: \u043A\u0430\u0436\u0434\u044B\u0439 \u0438\u0433\u0440\u043E\u043A \u043F\u043E\u0431\u0435\u0434\u0438\u0432\u0448\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0437\u0430\u043D\u0438\u043C\u0430\u0435\u0442 1-\u0435 \u043C\u0435\u0441\u0442\u043E (+3), \u043F\u0440\u043E\u0438\u0433\u0440\u0430\u0432\u0448\u0438\u0435 \u2014 0."
+          "\u0412\u043D\u0443\u0442\u0440\u0438 \u043F\u0430\u0440\u0442\u0438\u0438 \u043E\u0447\u043A\u043E\u0432 \u043D\u0435\u0442 \u2014 \u043F\u043E\u0431\u0435\u0436\u0434\u0430\u0435\u0442 \u043A\u043E\u043C\u0430\u043D\u0434\u0430. \u041E\u0447\u043A\u0438 \u0432 \u043C\u0430\u0440\u0430\u0444\u043E\u043D\u0435: \u043A\u0430\u0436\u0434\u044B\u0439 \u0438\u0433\u0440\u043E\u043A \u043F\u043E\u0431\u0435\u0434\u0438\u0432\u0448\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0437\u0430\u043D\u0438\u043C\u0430\u0435\u0442 1-\u0435 \u043C\u0435\u0441\u0442\u043E (+3), \u043F\u0440\u043E\u0438\u0433\u0440\u0430\u0432\u0448\u0438\u0435 \u2014 0."
         ],
         restartActions: ["newBoard"],
         settings: [
@@ -1514,6 +1631,7 @@ body{padding-bottom:84px}
         s.step = "clue";
         s.clue = null;
         s.turnAt = Date.now();
+        s.firstClue = false;
         if (s.st) s.st.turns++;
         startClock(s, ctx, clueTime(s));
       }
@@ -1717,6 +1835,7 @@ body{padding-bottom:84px}
         return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435";
       }
       function view(s, pid, ctx) {
+        var _a, _b, _c, _d;
         const isCap = s.captain.red === pid || s.captain.blue === pid;
         const setup = s.step === "setup";
         const showAll = (isCap || !!s.winner) && !setup;
@@ -1739,6 +1858,8 @@ body{padding-bottom:84px}
           clock: c ? { endsAt: c.endsAt, total: c.total, over: c.over || false, paused: c.paused, left: c.paused ? c.left : Math.max(0, c.endsAt - Date.now()) } : null,
           log: s.log.slice(-40),
           summary: s.winner ? summary(s) : null,
+          // Простая статистика каждого игрока в этой партии
+          pst: setup ? null : { right: ((_a = s.st) == null ? void 0 : _a.right) || {}, wrong: ((_b = s.st) == null ? void 0 : _b.wrong) || {}, capHits: ((_c = s.st) == null ? void 0 : _c.capHits) || {}, lead: ((_d = s.st) == null ? void 0 : _d.lead) || {} },
           cards: s.cards.map((x) => ({
             w: setup ? "" : x.w,
             // до старта слова скрыты
@@ -2855,25 +2976,7 @@ body{padding-bottom:84px}
         g.resume && g.resume(room2.game.state, makeCtx2(room2), "suspend");
       }
       var publicSuspended = (room2) => room2.suspended ? { type: room2.suspended.game.type, tour: !!room2.suspended.tour } : null;
-      var REACTIONS = ["lol", "facepalm", "genius", "oops", "fire", "think"];
-      function react(room2, pid, r) {
-        if (!REACTIONS.includes(r)) return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u0440\u0435\u0430\u043A\u0446\u0438\u044F";
-        const g = room2.game;
-        if (g && g.type === "codenames") {
-          const s = g.state;
-          const live = s.step !== "setup" && !s.winner;
-          if (live && (s.captain.red === pid || s.captain.blue === pid)) return "\u041A\u0430\u043F\u0438\u0442\u0430\u043D \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0440\u0435\u0430\u0433\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u043F\u0430\u0440\u0442\u0438\u0438";
-        }
-        const now = Date.now();
-        room2.reactLast = room2.reactLast || {};
-        if (now - (room2.reactLast[pid] || 0) < 700) return "\u041D\u0435 \u0442\u0430\u043A \u0431\u044B\u0441\u0442\u0440\u043E";
-        room2.reactLast[pid] = now;
-        room2.reactions = (room2.reactions || []).filter((x) => now - x.at < 4e3);
-        room2.reactions.push({ id: now + ":" + pid, pid, r, at: now });
-        if (room2.reactions.length > 30) room2.reactions.shift();
-      }
-      var publicReactions = (room2) => (room2.reactions || []).filter((x) => Date.now() - x.at < 3e3);
-      module.exports = { AVATAR_KEYS, cleanAvatar, startGame: startGame2, suspend, resume, publicSuspended, react, publicReactions, REACTIONS };
+      module.exports = { AVATAR_KEYS, cleanAvatar, startGame: startGame2, suspend, resume, publicSuspended };
     }
   });
 
@@ -3074,7 +3177,6 @@ body{padding-bottom:84px}
         gameType: room.gameType,
         players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile, avatar: p.avatar })),
         chat: room.chat.slice(-50),
-        reactions: Session.publicReactions(room),
         radio: Radio.view(room),
         tour: Tour.publicTour(room.tour),
         suspended: Session.publicSuspended(room)
@@ -3128,8 +3230,6 @@ body{padding-bottom:84px}
         if (String(msg.text || "").trim())
           room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
         return;
-      case "react":
-        return Session.react(room, pid, msg.r);
       case "radio":
         return Radio.handle(room, pid, msg, room.hostId === pid);
       case "leaveRoom":
@@ -3660,7 +3760,7 @@ body{padding-bottom:84px}
 ;
 /* Правила игр — простым языком. Структура:
    title, goal (суть в одной фразе), meta (чипсы), roles [[кто, что делает]],
-   steps (по шагам), points [[значение, за что]], win, tips. */
+   steps (по шагам), timers [[время, на что]], points [[значение, за что]], win, tips. */
 window.RULES = {
   codenames: {
     title: 'Коднеймс',
@@ -3677,12 +3777,17 @@ window.RULES = {
       'Открыли свою — можно искать дальше или нажать «Передать ход». Открыли нейтральную или чужую — ход сразу переходит соперникам.',
       'Чёрная карточка — убийца: открыли её — ваша команда сразу проиграла.',
     ],
-    points: [
+    timers: [
       ['2 мин', 'на самую первую подсказку капитана'],
       ['1 мин', 'на каждую следующую подсказку'],
       ['−время', 'капитан не уложился — дальше думает за счёт минуты команды'],
       ['1 мин', 'команде на отгадывание'],
       ['+15 сек', 'за каждую верно открытую карточку'],
+    ],
+    points: [
+      ['Победа', 'внутри партии очков нет — побеждает команда, первой открывшая все свои карточки'],
+      ['+3', 'в марафоне — каждому игроку победившей команды'],
+      ['0', 'в марафоне — проигравшей команде'],
     ],
     win: 'Команда, которая первой откроет все свои карточки (у начинающих их 9, у вторых — 8). Или та, чьи соперники открыли убийцу.',
     tips: [
@@ -3691,8 +3796,6 @@ window.RULES = {
       'Все подсказки висят в панели команды. Капитан может зачеркнуть цифру, когда слово уже отгадали.',
       'Сменить команду или уступить место капитана можно только между партиями.',
       'После партии — итоги: лучшая подсказка, снайпер, «мимо кассы» и кто открыл убийцу.',
-      'Капитаны во время партии не могут ставить реакции — иначе это подсказка.',
-      'В марафоне каждый игрок победившей команды получает +3.',
     ],
   },
   alias: {
@@ -4019,6 +4122,19 @@ window.RULES = {
     <form class="lofi-add" data-lofi-form><input class="inp" name="url" placeholder="Ссылка на YouTube" autocomplete="off"/><button class="btn sm primary" title="Добавить в очередь">${ic('plus', 16)} В очередь</button></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
+  // Кнопка радио — слева снизу, открывает мини-плеер над собой
+  const fab = document.createElement('button');
+  fab.id = 'radio-fab';
+  fab.hidden = true;
+  fab.title = 'Радио комнаты — у всех играет одно и то же';
+  fab.innerHTML = `<span class="rf-ic">${ic('headphones', 20)}<i class="eq"><b></b><b></b><b></b></i></span><span class="rf-t"><b>Радио</b><span class="rf-sub">включить</span></span>`;
+  document.body.appendChild(fab);
+  fab.addEventListener('click', () => {
+    Sound.play('click');
+    if (!music.on) return startMusic();
+    music.open = !music.open;
+    syncMusicUI();
+  });
   const rEmit = (op, x = {}) => emit('radio', { op, ...x });
 
   function syncMusicUI() {
@@ -4027,8 +4143,11 @@ window.RULES = {
     dock.classList.toggle('mini', !music.open);
     dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
-    const hb = document.querySelector('[data-act="lofi"]');
-    if (hb) hb.classList.toggle('on', music.on && music.playing);
+    fab.hidden = !r;
+    fab.classList.toggle('on', music.on);
+    fab.classList.toggle('playing', music.on && music.playing);
+    fab.classList.toggle('open', music.on && music.open);
+    fab.querySelector('.rf-sub').textContent = !music.on ? 'включить' : music.playing ? (r?.cur?.live ? 'эфир' : 'играет') : 'пауза';
     if (!r) return;
     const host = isHost();
     const c = r.cur;
@@ -4075,7 +4194,7 @@ window.RULES = {
         events: {
           onReady: (e) => {
             music.ready = true;
-            e.target.setVolume(music.vol);
+            e.target.setVolume(music.vol / 2); // ползунок 0–100 = громкость 0–50: тише и точнее
             const rr = radio();
             if (rr && rr.cur.vid !== c.vid) {
               music.curId = null;
@@ -4158,7 +4277,7 @@ window.RULES = {
     music.vol = Number(e.target.value);
     LS.set('pg_lofi_vol', String(music.vol));
     try {
-      music.player && music.ready && music.player.setVolume(music.vol);
+      music.player && music.ready && music.player.setVolume(music.vol / 2);
     } catch {}
   });
 
@@ -4247,7 +4366,6 @@ window.RULES = {
     }
   }
 
-  const seenReact = new Set();
   socket.on('state', (st) => {
     offset = st.serverNow - Date.now();
     const prevKey = S?.game ? S.game.type + (S.game.round || '') : null;
@@ -4256,15 +4374,9 @@ window.RULES = {
     if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
       ui.showSum = true;
       ui.sumAnim = true;
+      confetti(st.game.winner);
     }
     if (st.game?.type !== 'codenames' || !st.game.winner) ui.showSum = false;
-    // Новые реакции: звук и перерисовка, когда пузырь должен исчезнуть
-    for (const x of st.room.reactions || []) {
-      if (seenReact.has(x.id)) continue;
-      seenReact.add(x.id);
-      if (x.pid !== st.me) Sound.play('pop');
-      setTimeout(() => render(), 2700);
-    }
     S = st;
     syncRadio();
     if (location.pathname !== `/r/${st.room.code}`) history.replaceState(null, '', `/r/${st.room.code}`);
@@ -4346,7 +4458,6 @@ window.RULES = {
     if (c) c.scrollTop = nearBottom ? c.scrollHeight : chatScroll;
     fitBoard();
     tick();
-    placeReactions();
   }
 
   // Ключ «экрана»: когда он меняется — плавно проявляем новую сцену
@@ -4378,7 +4489,6 @@ window.RULES = {
     center.style.setProperty('--board-w', Math.round(w) + 'px');
   }
   let fitT;
-  document.addEventListener('scroll', () => S && placeReactions(), true);
   window.addEventListener('resize', () => {
     clearTimeout(fitT);
     fitT = setTimeout(fitBoard, 80);
@@ -4472,7 +4582,6 @@ window.RULES = {
           <div class="gtitle">${title}</div>
           <div class="top-actions">
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
-            <button class="btn sm ghost icon-btn lofi-btn ${music.playing ? 'on' : ''}" data-act="lofi" title="Радио комнаты — у всех играет одно и то же">${ic('headphones')}</button>
             ${sfxMenu()}
             ${themeMenu()}
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
@@ -4529,46 +4638,6 @@ window.RULES = {
     </div>`;
   }
 
-  // ---------- реакции ----------
-  const REACT = { lol: 'Ха-ха', facepalm: 'Ну ты что', genius: 'Гений', oops: 'Ой', fire: 'Огонь', think: 'Хм…' };
-  // Капитан Коднеймс во время партии молчит — иначе реакция станет подсказкой
-  function reactBlocked() {
-    const g = S.game;
-    if (!g || g.type !== 'codenames') return false;
-    const live = g.step !== 'setup' && !g.winner;
-    return live && (g.captain.red === S.me || g.captain.blue === S.me);
-  }
-  function reactFab() {
-    const blocked = reactBlocked();
-    const open = ui.menu === 'react' && !blocked;
-    return `<div class="menu-wrap" data-pop>
-      <button class="chat-fab react-fab ${open ? 'on' : ''} ${blocked ? 'off' : ''}" data-act="${blocked ? 'react-no' : 'menu'}" data-menu="react" title="${blocked ? 'Капитан не может реагировать во время партии' : 'Реакции'}">${ic('smile', 22)}</button>
-      ${open ? `<div class="pop react-pop ${ui.popAnim ? 'anim' : ''}">${Object.entries(REACT).map(([k, t]) => `<button class="react-b r-${k}" data-act="react" data-r="${k}">${t}</button>`).join('')}</div>` : ''}
-    </div>`;
-  }
-  const liveReactions = () => (S.room.reactions || []).filter((x) => now() - x.at < 2600);
-  // Пузыри рисуются отдельным слоем поверх всего — полоса игроков прокручивается и обрезала бы их
-  function placeReactions() {
-    let layer = document.getElementById('react-layer');
-    if (!layer) {
-      layer = document.createElement('div');
-      layer.id = 'react-layer';
-      document.body.appendChild(layer);
-    }
-    if (!S) return (layer.innerHTML = '');
-    const last = {};
-    for (const x of liveReactions()) last[x.pid] = x;
-    layer.innerHTML = Object.values(last)
-      .map((x) => {
-        const el = $app.querySelector(`[data-pm="${x.pid}"] .ava`);
-        if (!el) return '';
-        const b = el.getBoundingClientRect();
-        if (!b.width) return '';
-        return `<span class="rbub r-${x.r}" style="left:${b.left + b.width / 2}px;top:${b.top - 6}px;animation-delay:-${Math.max(0, now() - x.at)}ms">${REACT[x.r] || ''}</span>`;
-      })
-      .join('');
-  }
-
   function renderChat() {
     const r = S.room;
     const g = S.game;
@@ -4587,7 +4656,6 @@ window.RULES = {
           : ''
       }
       <div class="fab-row">
-        ${reactFab()}
         ${
           hostTools
             ? `<div class="menu-wrap" data-pop>
@@ -4629,6 +4697,7 @@ window.RULES = {
         </div>
         ${R.roles ? sec('users', 'Кто есть кто', `<div class="rl-roles">${R.roles.map((r) => `<div class="rl-role"><b>${esc(r[0])}</b><span>${esc(r[1])}</span></div>`).join('')}</div>`) : ''}
         ${sec('list', 'Как проходит игра', `<ol class="rl-steps">${R.steps.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`)}
+        ${R.timers ? sec('clock', 'Время', `<div class="rl-pts">${R.timers.map((p) => `<div class="rl-pt t ${p[0].startsWith('−') ? 'neg' : ''}"><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`) : ''}
         ${R.points ? sec('star', 'Очки', `<div class="rl-pts">${R.points.map((p) => `<div class="rl-pt ${p[0].startsWith('−') ? 'neg' : p[0] === '0' ? 'zero' : ''}"><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`) : ''}
         ${sec('trophy', 'Кто побеждает', `<p class="rl-win">${esc(R.win)}</p>`)}
         ${R.tips ? sec('bulb', 'Полезно знать', `<ul class="rl-tips">${R.tips.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`) : ''}
@@ -4978,6 +5047,64 @@ window.RULES = {
   const prepPool = (g) => Object.keys(g.team).filter((id) => player(id)?.connected);
   const isPrep = (g) => g.step === 'setup' || (g.winner && !tour());
 
+  // Конфетти со стороны победившей команды (красные слева, синие справа)
+  function confetti(team) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.getElementById('confetti')?.remove();
+    const cv = document.createElement('canvas');
+    cv.id = 'confetti';
+    document.body.appendChild(cv);
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const W = (cv.width = innerWidth * dpr);
+    const H = (cv.height = innerHeight * dpr);
+    cv.style.width = innerWidth + 'px';
+    cv.style.height = innerHeight + 'px';
+    const c = cv.getContext('2d');
+    const left = team === 'red';
+    const base = left ? ['#ff6452', '#ff9a8c', '#ffd2cb'] : ['#4fb8ff', '#9ad6ff', '#d4eeff'];
+    const cols = [...base, '#f2c14b', '#ffffff'];
+    const P = [];
+    const spawn = (n) => {
+      for (let i = 0; i < n; i++) {
+        P.push({
+          x: (left ? -10 : W + 10) + (Math.random() - 0.5) * 40 * dpr,
+          y: H * (0.25 + Math.random() * 0.5),
+          vx: (left ? 1 : -1) * (6 + Math.random() * 10) * dpr,
+          vy: (-8 - Math.random() * 9) * dpr,
+          w: (6 + Math.random() * 6) * dpr,
+          h: (3 + Math.random() * 4) * dpr,
+          r: Math.random() * 6,
+          vr: (Math.random() - 0.5) * 0.4,
+          col: cols[(Math.random() * cols.length) | 0],
+        });
+      }
+    };
+    spawn(110);
+    setTimeout(() => spawn(70), 350);
+    setTimeout(() => spawn(50), 800);
+    const t0 = performance.now();
+    const step = (t) => {
+      c.clearRect(0, 0, W, H);
+      for (const p of P) {
+        p.vy += 0.32 * dpr;
+        p.vx *= 0.985;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.r += p.vr;
+        c.save();
+        c.translate(p.x, p.y);
+        c.rotate(p.r);
+        c.fillStyle = p.col;
+        c.globalAlpha = Math.max(0, 1 - (t - t0) / 4200);
+        c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2)));
+        c.restore();
+      }
+      if (t - t0 < 4200) requestAnimationFrame(step);
+      else cv.remove();
+    };
+    requestAnimationFrame(step);
+  }
+
   // Итоги партии Коднеймс — окно с карточками, открывается само после победы
   const mmss = (ms) => {
     const t = Math.round(ms / 1000);
@@ -5058,13 +5185,33 @@ window.RULES = {
     const clues = (g.clues || []).filter((c) => c.team === t);
     const turn = g.turn === t && !g.winner && g.step !== 'setup';
     const prep = isPrep(g);
+    const st = g.pst;
     const rd = (id) => (prep && g.ready[id] ? `<span class="rd" title="Готов">${ic('check', 11)}</span>` : '');
+    const stat = (n, label, cls = '') => `<span class="ps ${cls}"><b>${n}</b>${label}</span>`;
+    // Карточка капитана: статистика + все его подсказки
+    const clueList = clues.length
+      ? clues
+          .map((c) => `<div class="hrow ${g.clue && g.clue.id === c.id && !g.winner ? 'now' : ''} ${c.slots.every((x) => x.done) ? 'alldone' : ''}"><span class="hword">${esc(c.word)}</span><span class="hnums">${clueChips(c, cap === me)}</span></div>`)
+          .join('')
+      : '<span class="muted small">подсказок ещё не было</span>';
     const capBlock = cap
-      ? `<div class="tp-cap">${pa(cap, 'md')}${rd(cap)}<div class="tp-cap-n"><span>${nm(cap)}</span><span class="tp-role">${ic('crown', 12)} капитан</span></div></div>
-         ${amCapHere && prep ? `<button class="btn tp-leave" data-act="cn-join" data-team="${t}">${ic('logout', 16)} Уступить место капитана</button>` : ''}`
+      ? `<div class="pcard cap ${cap === me ? 'me' : ''} ${turn && g.step === 'clue' ? 'active' : ''}">
+          <div class="pc-top"><span class="ava-wrap">${pa(cap, 'md', 'round')}${rd(cap)}</span><div class="pc-n"><span>${nm(cap)}</span><span class="tp-role">${ic('crown', 12)} капитан</span></div></div>
+          ${st ? `<div class="pc-stats">${stat(clues.length, plural(clues.length, 'подсказка', 'подсказки', 'подсказок'))}${stat(st.capHits[cap] || 0, 'отгадали')}</div>` : ''}
+          <div class="pc-clues">${clueList}</div>
+          ${amCapHere && prep ? `<button class="btn tp-leave" data-act="cn-join" data-team="${t}">${ic('logout', 16)} Уступить место капитана</button>` : ''}
+        </div>`
       : prep || !myTeam || myTeam === t
         ? `<button class="tp-become" data-act="cn-cap" data-team="${t}">${ic('crown', 18)}<span>Стать капитаном</span></button>`
         : `<div class="tp-empty muted small">${ic('crown', 14)} капитана нет</div>`;
+    const agentCards = members
+      .map(
+        (id) => `<div class="pcard ${id === me ? 'me' : ''}">
+          <div class="pc-top"><span class="ava-wrap">${pa(id, 'md', 'round')}${rd(id)}</span><div class="pc-n"><span>${nm(id)}${id === me ? ' <small class="muted">(вы)</small>' : ''}</span><span class="pc-role">агент</span></div></div>
+          ${st ? `<div class="pc-stats">${stat(st.right[id] || 0, 'верно', 'ok')}${stat(st.wrong[id] || 0, 'мимо', 'bad')}${st.lead[id] ? stat(st.lead[id], 'первым') : ''}</div>` : ''}
+        </div>`
+      )
+      .join('');
     return `<aside class="cn-side t-${t} ${turn ? 'turn' : ''}">
       <div class="tp-head">
         <span class="tp-name">${TN[t]}</span>
@@ -5073,18 +5220,9 @@ window.RULES = {
       ${turn ? `<div class="tp-turn">${ic('clock', 14)} ${g.step === 'clue' ? 'Капитан думает' : 'Отгадывают'}</div>` : ''}
       <div class="tp-sec"><div class="tp-label">Капитан</div>${capBlock}</div>
       <div class="tp-sec"><div class="tp-label">Агенты · ${members.length}</div>
-        <div class="tp-agents">${members.map((id) => `<div class="tp-agent ${id === me ? 'me' : ''}"><span class="ava-wrap">${pa(id, 'sm')}${rd(id)}</span><span>${nm(id)}</span></div>`).join('') || '<span class="muted small">пока никого</span>'}</div>
+        <div class="tp-agents">${agentCards || '<span class="muted small">пока никого</span>'}</div>
       </div>
       ${myTeam !== t && (prep || !myTeam) ? `<button class="btn tp-join" data-act="cn-join" data-team="${t}">${ic('userplus', 18)} ${myTeam ? 'Перейти' : 'Играть'} за ${TNg[t]}</button>` : myTeam === t && !amCapHere ? `<div class="tp-in">${ic('check', 14)} Вы в этой команде</div>` : !prep && myTeam && myTeam !== t ? `<div class="tp-in muted">${ic('clock', 14)} Сменить команду можно после партии</div>` : ''}
-      <div class="tp-sec tp-clues"><div class="tp-label">Подсказки</div>${
-        clues.length
-          ? clues
-              .map(
-                (c) => `<div class="hrow ${g.clue && g.clue.id === c.id && !g.winner ? 'now' : ''} ${c.slots.every((x) => x.done) ? 'alldone' : ''}"><span class="hword">${esc(c.word)}</span><span class="hnums">${clueChips(c, cap === me)}</span></div>`
-              )
-              .join('')
-          : '<span class="muted small">ещё не было</span>'
-      }</div>
     </aside>`;
   }
 
@@ -5146,7 +5284,8 @@ window.RULES = {
         </button>`;
       })
       .join('');
-    return `
+    const glow = !g.winner && g.step !== 'setup' ? `<div class="turn-glow g-${g.turn}" aria-hidden="true"></div>` : '';
+    return `${glow}
       <div class="cn">
         ${teamPanel(g, 'red')}
         <section class="cn-center">
@@ -5223,15 +5362,22 @@ window.RULES = {
       center = `<div class="stage-card left">
         <div class="kicker">Проверка слов · команда «${esc(team.name)}»</div>
         <p class="small muted">Нажмите на слово, чтобы поменять статус. Угадано +1${g.penalty ? ', пропуск −1' : ''}.</p>
+        ${(() => {
+          const ok = g.turnWords.filter((w) => w.ok === true || w.ok === 'own').length;
+          const no = g.turnWords.filter((w) => w.ok === false || w.ok === null || w.ok === undefined).length;
+          const pts = ok - (g.penalty ? no : 0);
+          return `<div class="rv-sum"><span class="ok">${ic('check', 14)} ${ok} угадано</span><span class="no">${ic('x', 14)} ${no} ${g.penalty ? 'пропуск' : 'мимо'}</span><b>${pts > 0 ? '+' : ''}${pts} ${plural(Math.abs(pts), 'очко', 'очка', 'очков')}</b></div>`;
+        })()}
         <div class="review">${
           g.turnWords
             .map(
               (w, i) => `<button class="rw ${w.last ? 'last' : ''} ${w.ok === true || w.ok === 'own' ? 'ok' : typeof w.ok === 'number' ? 'other' : 'no'}" data-act="al-toggle" data-i="${i}">
-            <span>${esc(w.w)}</span><em>${w.last ? 'последнее: ' + lastLabel(w) : w.ok ? '+1' : g.penalty ? '−1' : '0'}</em></button>`
+            <span class="rw-ic">${w.ok === true || w.ok === 'own' ? ic('check', 18) : typeof w.ok === 'number' ? ic('swap', 18) : ic('x', 18)}</span>
+            <span class="rw-w">${esc(w.w)}</span><em>${w.last ? 'последнее: ' + lastLabel(w) : w.ok ? '+1' : g.penalty ? '−1' : '0'}</em></button>`
             )
             .join('') || '<p class="muted">Ни одного слова</p>'
         }</div>
-        <div class="row c">${canConfirm ? `<button class="btn primary big-w" data-act="al-confirm">${ic('check', 18)} Подтвердить очки</button>` : `<span class="muted">Подтверждает ${nm(g.explainer)}</span>`}</div>
+        <div class="rv-cta">${canConfirm ? `<button class="btn primary mega" data-act="al-confirm">${ic('check', 20)} Подтвердить очки</button>` : `<span class="muted">Подтверждает ${nm(g.explainer)}</span>`}</div>
       </div>`;
     } else if (g.phase === 'over') {
       center = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победила команда «${esc(g.teams[g.winner].name)}»!</h2>
@@ -5383,29 +5529,29 @@ window.RULES = {
     const notesKey = `pg_notes_${S.room.code}`;
     // Вопросы «да/нет»: спрашивающий печатает (или говорит голосом), остальные отвечают кнопками
     const AL = { yes: 'Да', no: 'Нет', idk: 'Не знаю' };
-    const qaList = (list) =>
-      list.length
-        ? `<div class="qa-list">${list
-            .slice()
-            .reverse()
-            .map((x) => `<div class="qa-i v-${x.v || 'idk'}"><span class="qa-q">${x.text ? esc(x.text) : '<i class="muted">вопрос голосом</i>'}</span><span class="qa-a">${AL[x.v] || '—'}<small>${x.yes}/${x.no}/${x.idk}</small></span></div>`)
-            .join('')}</div>`
-        : '';
+    const qaCard = (x, live = false) =>
+      `<div class="qa-c v-${live ? 'live' : x.v || 'idk'}">
+        <div class="qa-c-q">${x.text ? esc(x.text) : '<i>вопрос голосом</i>'}</div>
+        <div class="qa-c-a">${live ? '<span class="qa-c-v">ждём ответы…</span>' : `<span class="qa-c-v">${AL[x.v] || '—'}</span>`}<span class="qa-c-n"><i class="y">${x.yes}</i><i class="n">${x.no}</i><i>${x.idk}</i></span></div>
+      </div>`;
+    const qaCards = (list, extra = '') => `<div class="qa-grid">${list.map((x) => qaCard(x)).join('')}${extra}</div>`;
     const q = g.q && g.q.asker === g.turnPid ? g.q : null;
     const asker = g.turnPid;
     const qVotes = (v) => (q ? Object.entries(q.who).filter(([, a]) => a === v).map(([id]) => `<span title="${nm(id)}">${pa(id, 'xs', 'round')}</span>`).join('') : '');
-    const qBox = over
-      ? ''
-      : asker === me
-        ? `<div class="card qa-card"><div class="side-h">${ic('mic', 16)} Ваш вопрос <span class="muted small">— можно напечатать или просто спросить голосом</span></div>
-            <form data-form="who-ask" class="qa-form"><input class="inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Я человек? Я из фильма?" autocomplete="off"/><button class="btn primary">${ic('send', 16)} Спросить</button></form>
-            ${q ? `<div class="qa-now"><span>${q.text ? esc(q.text) : 'Вопрос голосом'}</span><span class="qa-t"><b class="y">Да ${q.yes}</b><b class="n">Нет ${q.no}</b><b>Не знаю ${q.idk}</b></span></div>` : ''}
-          </div>`
-        : `<div class="card qa-card"><div class="side-h">${ic('question', 16)} Спрашивает ${nm(asker)}${q && q.text ? `: <b class="qa-text">${esc(q.text)}</b>` : ' <span class="muted small">— вопрос голосом</span>'}</div>
-            <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q && q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}${q ? `<small>${q[v]}</small>` : ''}</span></button>`).join('')}</div>
-            ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)}</summary>${qaList(g.players[asker].qa)}</details>` : ''}
-          </div>`;
     const myQa = g.players[me]?.qa || [];
+    let qBox = '';
+    if (!over && asker === me) {
+      // Мой ход: мои вопросы карточками, последняя карточка — «Спросить»
+      const askCard = `<form data-form="who-ask" class="qa-c qa-ask"><div class="qa-c-q"><input class="inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Следующий вопрос… (или голосом)" autocomplete="off"/></div><button class="btn primary">${ic('send', 16)} Спросить</button></form>`;
+      qBox = `<div class="card qa-card"><div class="side-h">${ic('mic', 16)} Ваши вопросы <span class="muted small">— остальные отвечают кнопками</span></div>
+        ${qaCards(myQa, (q ? qaCard({ ...q }, true) : '') + askCard)}</div>`;
+    } else if (!over) {
+      qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 'sm', 'round')} Спрашивает <b>${nm(asker)}</b></div>
+        <div class="qa-big">${q && q.text ? `«${esc(q.text)}»` : '<span class="muted">Вопрос голосом — слушайте в Discord</span>'}</div>
+        <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q && q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}${q ? `<small>${q[v]}</small>` : ''}</span></button>`).join('')}</div>
+        ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)} · ${g.players[asker].qa.length}</summary>${qaCards(g.players[asker].qa)}</details>` : ''}
+      </div>`;
+    }
     const actions = over
       ? ''
       : `<div class="mega-dock">
@@ -5417,7 +5563,7 @@ window.RULES = {
       <div class="call-grid">${tiles}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
-      <div class="card notes-card">${myQa.length ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaList(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
+      <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
     </div>`;
   }
@@ -5645,12 +5791,6 @@ window.RULES = {
       ui.sumAnim = ui.showSum;
       render();
     },
-    react: (d) => {
-      ui.menu = null;
-      emit('react', { r: d.r });
-      render();
-    },
-    'react-no': () => toast('Капитан не может реагировать во время партии — это была бы подсказка'),
     'spy-ask': (d) => act('askWho', { target: d.pid }),
     'spy-answered': () => act('answered'),
     'who-guessed': () => confirm('Вы назвали персонажа и вам подтвердили?') && act('guessed'),
