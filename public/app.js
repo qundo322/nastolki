@@ -75,12 +75,21 @@
   const themeIcon = () => THEMES.find((t) => t.id === theme())?.icon || 'moon';
   // Настройки вида: свечение хода и размер слов на карточках Коднеймс (у каждого свои)
   const VIEW = {
-    glow: LS.get('pg_glow', '0') === '1', // по умолчанию выключено — предложим включить при старте партии
+    // Сила свечения хода: 0 — выкл (по умолчанию, предложим при старте партии), 1 — слабое, 2 — среднее, 3 — сильное
+    glow: (() => {
+      const v = LS.get('pg_glow', '0');
+      return v === '1' && !LS.get('pg_glow_lvl', '') ? 2 : Number(LS.get('pg_glow_lvl', '0')) || 0;
+    })(),
     fs: Number(LS.get('pg_cnfs', '36')) || 36,
   };
   const FS_OPTS = [24, 30, 36, 42];
   function applyView() {
     document.documentElement.dataset.glow = VIEW.glow ? 'on' : 'off';
+    const GL = [null, ['0.55', '20%'], ['0.9', '30%'], ['1', '50%']][VIEW.glow];
+    if (GL) {
+      document.documentElement.style.setProperty('--glow-k', GL[0]);
+      document.documentElement.style.setProperty('--glow-a', GL[1]);
+    }
     document.documentElement.style.setProperty('--cn-fs', String(VIEW.fs));
   }
   applyView();
@@ -92,7 +101,8 @@
               <div class="vp-h">Тема</div>
               ${THEMES.map((t) => `<button class="pop-i ${theme() === t.id ? 'on' : ''}" data-act="set-theme" data-t="${t.id}">${ic(t.icon, 16)}<span>${t.name}</span>${theme() === t.id ? ic('check', 16, 'tick') : ''}</button>`).join('')}
               <div class="vp-sep"></div>
-              <button class="pop-i vp-toggle" data-act="view-glow" role="switch" aria-checked="${VIEW.glow}">${ic('sparkles', 16)}<span>Свечение хода команды</span><i class="sw-t ${VIEW.glow ? 'on' : ''}"></i></button>
+              <div class="vp-h">Свечение хода</div>
+              <div class="vp-seg glow-seg">${['Выкл', 'Слабое', 'Среднее', 'Сильное'].map((t, i) => `<button class="${VIEW.glow === i ? 'on' : ''}" data-act="view-glow" data-n="${i}">${t}</button>`).join('')}</div>
               <div class="vp-h">Размер слов на карточках</div>
               <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
             </div>`
@@ -274,11 +284,12 @@
       ? `<button class="btn sm ghost icon-btn" data-lofi="skip" title="Следующий трек (для всех)">${ic('skip', 16)}</button>${c.live ? '' : `<button class="btn sm ghost icon-btn" data-lofi="lofi" title="Вернуть лофи-эфир">${ic('music', 16)}</button>`}`
       : '';
     const q = r.queue;
+    if (dock.querySelector('.lq-i.dragging')) return; // не перерисовывать очередь посреди перетаскивания
     dock.querySelector('.lofi-queue').innerHTML = `<div class="lq-h">Очередь <span class="muted">${q.length || 'пусто'}</span></div>${q
       .map(
-        (x, i) => `<div class="lq-i"><span class="lq-n">${i + 1}</span><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
+        (x, i) => `<div class="lq-i ${host ? 'can-drag' : ''}" data-q="${x.qid}">${host ? `<span class="lq-grip" data-grip title="Перетащите, чтобы поменять порядок">⋮⋮</span>` : ''}<span class="lq-n">${i + 1}</span><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
           host
-            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="up" data-q="${x.qid}" ${i === 0 ? 'disabled' : ''} title="Выше">${ic('up', 14)}</button><button class="icon-x" data-lofi="down" data-q="${x.qid}" ${i === q.length - 1 ? 'disabled' : ''} title="Ниже">${ic('down', 14)}</button><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="Убрать">${ic('x', 14)}</button></span>`
+            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="Убрать">${ic('x', 14)}</button></span>`
             : ''
         }</div>`
       )
@@ -377,6 +388,44 @@
     else if (a === 'lofi') rEmit('lofi');
     else if (a === 'rm') rEmit('remove', { qid: b.dataset.q });
     else if (a === 'up' || a === 'down') rEmit('move', { qid: b.dataset.q, d: a === 'up' ? -1 : 1 });
+  });
+  // Перетаскивание треков в очереди (хост): мышью и пальцем
+  dock.addEventListener('pointerdown', (e) => {
+    const grip = e.target.closest('[data-grip]');
+    if (!grip) return;
+    const row = grip.closest('.lq-i');
+    const list = row.parentElement;
+    const rows = [...list.querySelectorAll('.lq-i')];
+    const from = rows.indexOf(row);
+    const h = row.getBoundingClientRect().height + 4;
+    const y0 = e.clientY;
+    let to = from;
+    e.preventDefault();
+    row.classList.add('dragging');
+    grip.setPointerCapture(e.pointerId);
+    const move = (ev) => {
+      const dy = ev.clientY - y0;
+      row.style.transform = `translateY(${dy}px)`;
+      to = Math.max(0, Math.min(rows.length - 1, from + Math.round(dy / h)));
+      rows.forEach((r, k) => {
+        if (r === row) return;
+        let shift = 0;
+        if (from < to && k > from && k <= to) shift = -h;
+        if (from > to && k < from && k >= to) shift = h;
+        r.style.transform = shift ? `translateY(${shift}px)` : '';
+      });
+    };
+    const up = () => {
+      grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', up);
+      grip.removeEventListener('pointercancel', up);
+      rows.forEach((r) => (r.style.transform = ''));
+      row.classList.remove('dragging');
+      if (to !== from) rEmit('moveTo', { qid: row.dataset.q, to });
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', up);
+    grip.addEventListener('pointercancel', up);
   });
   dock.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -488,8 +537,10 @@
     offset = st.serverNow - Date.now();
     const prevKey = S?.game ? S.game.type + (S.game.round || '') : null;
     detectEvents(S, st);
+    // Мою подсказку выбрали лучшей — сердечки
+    if (st.game?.type === 'justone' && st.game.heart === st.me && S?.game?.type === 'justone' && S.game.heart !== st.me && !st.game.isGuesser) heartRain();
     // Первая начавшаяся партия Коднеймс — предложить включить свечение хода
-    if (st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup') && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
+    if (((st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup')) || (st.game?.type === 'justone' && S?.game?.type !== 'justone')) && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
     // Партия Коднеймс закончилась — показываем итоги
     if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
       ui.showSum = true;
@@ -572,6 +623,7 @@
     ui.rulesAnim = false;
     ui.sumAnim = false;
     ui.gaAnim = false;
+    ui.tabAnim = false;
     restoreInputs(keep);
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
@@ -593,6 +645,7 @@
     }
     fitBoard();
     fitWords();
+    if ($app.querySelector('.qz-reveal')) qzLoop();
     tick();
   }
 
@@ -724,7 +777,7 @@
     const meta = gameMeta(g ? g.type : ui.selected);
     let stage;
     if (t && t.phase === 'final') stage = renderTourFinal();
-    else if (g) stage = (t ? renderTourStrip() + renderTourBetween() : '') + renderGame(g);
+    else if (g) stage = (t ? renderTourBetween() : '') + renderGame(g);
     else stage = renderLobby();
     const title = g ? `${gIcon(g.type)}<span>${esc(meta.title)}</span>` : t ? `${ic('trophy')}<span>Марафон</span>` : `<span class="muted">Лобби</span>`;
     return `
@@ -749,10 +802,11 @@
       </main>
       ${renderChat()}
       ${ui.showRules ? renderRules() : ''}
-      ${ui.glowAsk && g && g.type === 'codenames' ? `<div class="glow-ask card ${ui.gaAnim ? 'anim' : ''}" role="dialog" aria-label="Свечение хода">
+      ${renderTourModal()}
+      ${ui.glowAsk && g && ['codenames', 'justone'].includes(g.type) ? `<div class="glow-ask card ${ui.gaAnim ? 'anim' : ''}" role="dialog" aria-label="Свечение хода">
           <span class="ga-ic">${ic('sparkles', 20)}</span>
-          <div class="ga-t"><b>Подсветить ход команды?</b><span class="muted small">Мягкое мерцание цвета команды с её стороны экрана — сразу видно, чья очередь. Можно поменять в меню «Вид».</span></div>
-          <button class="ga-sw" data-act="view-glow" role="switch" aria-checked="${VIEW.glow}"><i class="sw-t ${VIEW.glow ? 'on' : ''}"></i><span>${VIEW.glow ? 'Включено' : 'Выключено'}</span></button>
+          <div class="ga-t"><b>Подсветить, чей ход?</b><span class="muted small">Мягкое мерцание по краю экрана: в Коднеймс — цветом команды с её стороны, в «Намёк понял» — сверху. Выберите силу, потом можно поменять в меню «Вид».</span></div>
+<div class="vp-seg glow-seg">${['Выкл', 'Слабое', 'Среднее', 'Сильное'].map((t, i) => `<button class="${VIEW.glow === i ? 'on' : ''}" data-act="view-glow" data-n="${i}">${t}</button>`).join('')}</div>
           <button class="btn sm primary" data-act="glow-ok">Готово</button>
         </div>` : ''}
       ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
@@ -823,6 +877,7 @@
           : ''
       }
       <div class="fab-row">
+        ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''}" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
         ${
           hostTools
             ? `<div class="menu-wrap" data-pop>
@@ -897,7 +952,12 @@
       if (g.phase === 'write') items.push(btn('who-force', 'play', 'Начать сейчас'));
     } else if (g.type === 'justone') {
       if (g.phase === 'clues') items.push(btn('jo-force', 'skip', 'Не ждать остальных'));
+      if (g.phase === 'filter') items.push(btn('jo-force', 'play', 'Показать угадывающему сейчас'));
       if (!t) items.push(btn('jo-restart', 'reset', 'Начать заново'));
+    } else if (g.type === 'quiz') {
+      if (g.phase === 'answer') items.push(btn('qz-skip', 'skip', 'Показать ответ сейчас'));
+      if (g.phase === 'reveal') items.push(btn('qz-skip', 'play', 'Следующий вопрос'));
+      if (!t) items.push(btn('qz-restart', 'reset', 'Начать заново'));
     }
     items.push('<span class="ctl-sep"></span>');
     items.push(btn('stop', 'home', 'В лобби (пауза)'));
@@ -1024,6 +1084,24 @@
         .join('')}</tbody></table></div>`;
   }
 
+  // Таблица марафона — модальное окно поверх всего (кнопка-кубок рядом с настройками)
+  function renderTourModal() {
+    const t = tour();
+    if (!t || !ui.showTable) return '';
+    const item = t.queue[Math.min(t.idx, t.queue.length - 1)];
+    const { rows } = tourRows();
+    const podium = rows.slice(0, 3).filter((r) => r.total > 0);
+    return `<div class="modal-bg ${ui.tabAnim ? '' : 'still'}" data-act="tour-table"></div>
+      <div class="modal card tour-modal ${ui.tabAnim ? '' : 'still'}" role="dialog" aria-modal="true" aria-label="Таблица марафона">
+        <div class="modal-h"><b>${ic('trophy', 18)} Марафон · катка ${Math.min(t.idx + 1, t.queue.length)} из ${t.queue.length}</b><button class="icon-x" data-act="tour-table">${ic('x', 18)}</button></div>
+        <div class="tm-progress">${t.queue.map((q, i) => `<span class="tm-step ${i < t.idx || (i === t.idx && t.phase !== 'play') ? 'done' : i === t.idx ? 'now' : ''}" title="${esc(gameMeta(q.type).title)}">${gIcon(q.type, 14)}</span>`).join('')}</div>
+        <p class="muted small">Сейчас: ${esc(gameMeta(item.type).title)}${item.of > 1 ? ` · ${item.n}/${item.of}` : ''}. Места в каждой катке: 1-е +3, 2-е +2, 3-е +1.</p>
+        ${podium.length ? `<div class="tm-podium">${podium.map((r, i) => `<div class="tmp p${i + 1}"><span class="tmp-place">${i + 1}</span>${pa(r.id, 44, 'round')}<b>${nm(r.id)}</b><span class="tmp-pts">${r.total}</span></div>`).join('')}</div>` : ''}
+        <div class="tm-table">${tourTable()}</div>
+        <div class="row end"><button class="btn primary" data-act="tour-table">Закрыть</button></div>
+      </div>`;
+  }
+
   function renderTourStrip() {
     const t = tour();
     const item = t.queue[t.idx];
@@ -1062,7 +1140,7 @@
   }
 
   // Номинации марафона — считаются из того, что происходило в играх
-  const NOM_IC = { captain: 'crown', sniper: 'target', hints: 'heartf', detector: 'eye', spy: 'spy', sherlock: 'question', explainer: 'mic' };
+  const NOM_IC = { captain: 'crown', sniper: 'target', hints: 'heartf', detector: 'eye', spy: 'spy', sherlock: 'question', explainer: 'mic', quiz: 'hash' };
   function tourNoms() {
     const list = tour()?.nominations || [];
     if (!list.length) return '';
@@ -1093,7 +1171,7 @@
 
   // ---------- игры ----------
   function renderGame(g) {
-    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust }[g.type];
+    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
@@ -1110,6 +1188,7 @@
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   }
   let lastTickSec = null;
+  const timeupSet = new Set();
   function tick() {
     const n = now();
     // тикаем последние 5 секунд таймера хода
@@ -1119,6 +1198,16 @@
       if (sec >= 1 && sec <= 5 && sec !== lastTickSec) Sound.play('tick');
       lastTickSec = sec;
     }
+    // Время вышло — звук во всех играх (ставим на точный момент нуля, пока экран не сменился)
+    document.querySelectorAll('[data-ends], [data-clock]').forEach((el) => {
+      if (el.dataset.paused === '1') return;
+      const ends = Number(el.dataset.ends);
+      const left = ends - n;
+      if (left > 0 && left <= 260 && !timeupSet.has(ends)) {
+        timeupSet.add(ends);
+        setTimeout(() => Sound.play('timeup'), left);
+      }
+    });
     document.querySelectorAll('[data-ends]').forEach((el) => {
       const left = Number(el.dataset.ends) - n;
       const t = el.querySelector('.t');
@@ -1189,24 +1278,44 @@
   // ===== Коднеймс =====
   const slotId = () => Math.random().toString(36).slice(2, 8);
   const fmtV = (v) => String(Math.round(Number(v) * 100) / 100);
-  const STRENGTH_RE = /^(0?[.,]\d{1,2}|1([.,]0{1,2})?|0)$/;
-  const validStrength = (v) => STRENGTH_RE.test(String(v).trim()) && parseFloat(String(v).replace(',', '.')) > 0;
+  // Сила: от −1 до 1, кроме 0, до сотых. Минус — «точно не это слово»
+  const STRENGTH_RE = /^[-−]?(0?[.,]\d{1,2}|1([.,]0{1,2})?)$/;
+  const numV = (v) => parseFloat(String(v).trim().replace(',', '.').replace('−', '-'));
+  const validStrength = (v) => STRENGTH_RE.test(String(v).trim()) && !!numV(v) && Math.abs(numV(v)) <= 1;
+  // Группы связанных слотов: j — «связан с предыдущим»
+  const groupsOf = (slots) => {
+    const g = [];
+    slots.forEach((x, k) => (x.j && k > 0 && g.length ? g[g.length - 1].push([x, k]) : g.push([[x, k]])));
+    return g;
+  };
   const TN = { red: 'Красные', blue: 'Синие' };
   const TNg = { red: 'красных', blue: 'синих' };
 
   // Чипы подсказки: активные — белые, зачёркнутые — погашены. Капитан своей команды кликает, чтобы зачеркнуть
   const clueChips = (c, canStrike) =>
-    c.slots
-      .map((x, k) => {
-        const title = x.done ? 'зачёркнуто' : `подходит на ${Math.round(x.v * 100)}%`;
-        return canStrike
-          ? `<button type="button" class="num ${x.done ? 'done' : ''} can" data-act="cn-strike" data-clue="${c.id}" data-k="${k}" title="${title} · нажмите, чтобы ${x.done ? 'вернуть' : 'зачеркнуть'}">${fmtV(x.v)}</button>`
-          : `<span class="num ${x.done ? 'done' : ''}" title="${title}">${fmtV(x.v)}</span>`;
+    groupsOf(c.slots)
+      .map((grp) => {
+        const chips = grp
+          .map(([x, k]) => {
+            const neg = x.v < 0;
+            const title = x.done ? 'зачёркнуто' : neg ? `точно НЕ это слово (${Math.round(-x.v * 100)}%)` : `подходит на ${Math.round(x.v * 100)}%`;
+            return canStrike
+              ? `<button type="button" class="num ${x.done ? 'done' : ''} ${neg ? 'neg' : ''} can" data-act="cn-strike" data-clue="${c.id}" data-k="${k}" title="${title} · нажмите, чтобы ${x.done ? 'вернуть' : 'зачеркнуть'}">${fmtV(x.v)}</button>`
+              : `<span class="num ${x.done ? 'done' : ''} ${neg ? 'neg' : ''}" title="${title}">${fmtV(x.v)}</span>`;
+          })
+          .join('<i class="plus-j">+</i>');
+        return grp.length > 1 ? `<span class="grp" title="Связанные слова: ищите их вместе">${ic('link', 11)}${chips}</span>` : chips;
       })
       .join('');
   function cluePreview() {
     const word = $app.querySelector('.clue-word')?.value.trim() || ui.keep?.['cn-clue'] || 'слово';
-    return `<span class="pv-word">${esc(word)}</span> ${(ui.cnSlots || []).map((x) => `<span class="num ${validStrength(x.v) ? '' : 'bad'}">${esc(String(x.v).replace(',', '.') || '?')}</span>`).join(' ')}`;
+    const slots = (ui.cnSlots || []).map((x) => ({ v: validStrength(x.v) ? numV(x.v) : null, j: x.j, raw: x.v }));
+    return `<span class="pv-word">${esc(word)}</span> ${groupsOf(slots)
+      .map((grp) => {
+        const chips = grp.map(([x]) => `<span class="num ${x.v == null ? 'bad' : x.v < 0 ? 'neg' : ''}">${esc(x.v == null ? String(x.raw || '?') : fmtV(x.v))}</span>`).join('<i class="plus-j">+</i>');
+        return grp.length > 1 ? `<span class="grp">${ic('link', 11)}${chips}</span>` : chips;
+      })
+      .join(' ')}`;
   }
   const ring = (cls = '', off = null) =>
     `<svg class="ring ${cls}" viewBox="0 0 36 36"><circle class="ring-bg" cx="18" cy="18" r="15.9"/><circle class="ring-fg" cx="18" cy="18" r="15.9" pathLength="100"${off != null ? ` style="stroke-dashoffset:${Math.max(0, Math.min(100, off))}"` : ''}/></svg>`;
@@ -1324,15 +1433,19 @@
   function clueForm(g, mode) {
     if (!ui.cnSlots) ui.cnSlots = [{ id: slotId(), v: '1' }];
     const n = ui.cnSlots.length;
+    // Между карточками — «нить»: нажал, и две соседние силы связаны (1+1)
     const slots = ui.cnSlots
-      .map(
-        (x, k) => `<div class="slot ${validStrength(x.v) ? '' : 'bad'}">
+      .map((x, k) => {
+        const thread = k > 0 ? `<button type="button" class="thread ${x.j ? 'on' : ''}" data-act="cn-link" data-id="${x.id}" title="${x.j ? 'Развязать' : 'Связать с предыдущей'}"><span class="th-line"></span><span class="th-knot">${ic('link', 13)}</span><span class="th-t">${x.j ? 'связаны' : 'связать'}</span></button>` : '';
+        const ok = validStrength(x.v);
+        const neg = ok && numV(x.v) < 0;
+        return `${thread}<div class="slot ${ok ? '' : 'bad'} ${neg ? 'neg' : ''} ${x.j ? 'joined' : ''} ${ui.cnSlots[k + 1]?.j ? 'joined-next' : ''}">
           <span class="slot-n">${k + 1}</span>
-          <input type="range" min="0.01" max="1" step="0.01" value="${validStrength(x.v) ? parseFloat(String(x.v).replace(',', '.')) : 1}" data-slot="${x.id}" data-kind="range" aria-label="Сила для карточки ${k + 1}"/>
-          <input class="inp slot-v" inputmode="decimal" maxlength="4" value="${esc(x.v)}" data-slot="${x.id}" data-kind="num" data-keep="cn-s-${x.id}" aria-label="Сила для карточки ${k + 1}"/>
+          <input type="range" min="-1" max="1" step="0.01" value="${ok ? numV(x.v) : 1}" data-slot="${x.id}" data-kind="range" aria-label="Сила для карточки ${k + 1}"/>
+          <input class="inp slot-v" inputmode="decimal" maxlength="5" value="${esc(x.v)}" data-slot="${x.id}" data-kind="num" data-keep="cn-s-${x.id}" aria-label="Сила для карточки ${k + 1}"/>
           ${n > 1 ? `<button type="button" class="icon-x slot-x" data-act="cn-sdel" data-id="${x.id}" title="Убрать карточку">${ic('x', 13)}</button>` : ''}
-        </div>`
-      )
+        </div>`;
+      })
       .join('');
     const word = mode === 'edit' ? esc(g.clue.word) : '';
     return `<form class="cform side t-${g.turn}" data-form="clue" data-mode="${mode}">
@@ -1340,7 +1453,7 @@
       <label class="cf-l"><b>1</b> Слово</label>
       <input class="inp clue-word" name="word" data-keep="cn-clue${mode === 'edit' ? '-e' : ''}" data-preview="1" value="${word}" placeholder="Одно слово" maxlength="30" autocomplete="off" required/>
       <label class="cf-l"><b>2</b> Карточки и сила</label>
-      <div class="cf-hint">1 — точно про это слово, 0.5 — подходит наполовину</div>
+      <div class="cf-hint">1 — точно про это слово, 0.5 — наполовину, −1 — точно НЕ это. Жёлтая нить связывает силы: 1+1</div>
       <div class="slots">${slots}</div>
       ${n < 9 ? `<button type="button" class="add-slot" data-act="cn-sadd">${ic('plus', 15)} Ещё карточка</button>` : ''}
       <label class="cf-l"><b>3</b> Агенты увидят</label>
@@ -1552,6 +1665,19 @@
       const lastLabel = (w) => (w.ok === 'own' ? 'угадала своя команда' : typeof w.ok === 'number' ? `угадали «${esc(g.teams[w.ok].name)}»` : 'никто не угадал');
       center = `<div class="stage-card left">
         <div class="kicker">Проверка слов · команда «${esc(team.name)}»</div>
+        ${(() => {
+          // Последнее слово — кто его угадал? Сразу кнопки команд их цветами
+          const lw = g.turnWords.find((w) => w.last);
+          if (!lw) return '';
+          const cur = lw.ok === 'own' ? g.turnTeam : typeof lw.ok === 'number' ? lw.ok : lw.set ? 'none' : null;
+          const order = [g.turnTeam, ...g.teams.map((_, i) => i).filter((i) => i !== g.turnTeam)];
+          return `<div class="al-last ${lw.set ? 'done' : ''}">
+            <div class="al-last-h"><span class="muted">Последнее слово</span><b>«${esc(lw.w)}»</b><span class="muted">— кто угадал?</span></div>
+            <div class="al-last-b">${order
+              .map((i) => `<button class="al-tb ${cur === i ? 'on' : ''}" style="--tc:${ALIAS_BG[i]}" data-act="al-last" data-to="${i}">${cur === i ? ic('check', 16) : ''}${esc(g.teams[i].name)}${i === g.turnTeam ? ' <small>(своя)</small>' : ''}</button>`)
+              .join('')}<button class="al-tb none ${cur === 'none' ? 'on' : ''}" data-act="al-last" data-to="none">${cur === 'none' ? ic('check', 16) : ''}Никто</button></div>
+          </div>`;
+        })()}
         <p class="small muted">Нажмите на слово, чтобы поменять статус. Угадано +1${g.penalty ? ', пропуск −1' : ''}.</p>
         ${(() => {
           const ok = g.turnWords.filter((w) => w.ok === true || w.ok === 'own').length;
@@ -1690,9 +1816,12 @@
         ${
           g.writeFor
             ? `<div class="kicker">Загадайте персонажа</div><div class="expl">${pa(g.writeFor, 96)}<h2 class="h2">для ${nm(g.writeFor)}</h2></div>
-               ${g.writtenForTarget ? `<p class="ok-text">${ic('check', 16)} Готово! Можно поменять, пока ждём остальных.</p>` : ''}
-               <form data-form="who-write" class="big-form"><input class="inp big-inp" name="text" data-keep="who-write" maxlength="60" placeholder="Персонаж или известный человек" autocomplete="off" required/><button class="btn primary mega">${g.writtenForTarget ? 'Заменить' : 'Загадать'}</button></form>
+               ${
+                 g.writtenForTarget
+                   ? `<p class="jo-sent">${ic('check', 18)} Персонаж загадан — ждём остальных</p>`
+                   : `<form data-form="who-write" class="big-form"><input class="inp big-inp" name="text" data-keep="who-write" maxlength="60" placeholder="Персонаж или известный человек" autocomplete="off" required/><button class="btn primary mega">Загадать</button></form>
                <button class="link-btn" data-act="who-random">или выбрать случайного</button>`
+               }`
             : '<p>Ждём остальных…</p>'
         }
         ${waiting ? `<p class="muted small">Ещё думают: ${waiting}</p>` : ''}
@@ -1732,14 +1861,21 @@
     const myQa = g.players[me]?.qa || [];
     let qBox = '';
     if (!over && asker === me) {
-      // Мой ход: мои вопросы карточками, последняя карточка — «Спросить»
-      const askCard = `<form data-form="who-ask" class="qa-c qa-ask"><div class="qa-c-q"><input class="inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Следующий вопрос… (или голосом)" autocomplete="off"/></div><button class="btn primary">${ic('send', 16)} Спросить</button></form>`;
-      qBox = `<div class="card qa-card"><div class="side-h">${ic('mic', 16)} Ваши вопросы <span class="muted small">— остальные отвечают кнопками</span></div>
-        ${qaCards(myQa, (q ? qaCard({ ...q }, true) : '') + askCard)}</div>`;
+      // Мой ход: большое поле вопроса по центру, ниже — история карточками
+      qBox = `<div class="card who-ask">
+          <div class="wa-k">${ic('mic', 16)} Ваш вопрос</div>
+          <form data-form="who-ask" class="wa-form"><input class="inp wa-inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Я человек? Я из фильма?" autocomplete="off" required/><button class="btn primary mega">${ic('send', 20)} Спросить</button></form>
+          ${q ? `<div class="wa-live"><span class="wa-q">«${esc(q.text)}»</span><span class="qa-t"><b class="y">Да ${q.yes}</b><b class="n">Нет ${q.no}</b><b>Не знаю ${q.idk}</b></span></div><p class="muted small center">Ответили все: «да» — спрашивайте дальше, «нет» — ход переходит</p>` : ''}
+        </div>
+        ${myQa.length ? `<div class="card qa-card"><div class="side-h">${ic('list', 16)} Ваши вопросы</div>${qaCards(myQa)}</div>` : ''}`;
     } else if (!over) {
       qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 'sm', 'round')} Спрашивает <b>${nm(asker)}</b></div>
-        <div class="qa-big">${q && q.text ? `«${esc(q.text)}»` : '<span class="muted">Вопрос голосом — слушайте в Discord</span>'}</div>
-        <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q && q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}${q ? `<small>${q[v]}</small>` : ''}</span></button>`).join('')}</div>
+        ${
+          q
+            ? `<div class="qa-big">«${esc(q.text)}»</div>
+               <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}<small>${q[v]}</small></span></button>`).join('')}</div>`
+            : `<div class="qa-big muted">Ждём вопрос…</div>`
+        }
         ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)} · ${g.players[asker].qa.length}</summary>${qaCards(g.players[asker].qa)}</details>` : ''}
       </div>`;
     }
@@ -1750,7 +1886,8 @@
           ${!myState.guessed && !myState.gaveUp ? `<button class="btn success mega" data-act="who-guessed">${ic('check', 24)} Я угадал!</button><button class="btn ghost mega" data-act="who-giveup">${ic('flag', 22)} Сдаюсь</button>` : `<span class="muted">Вы уже ${myState.guessed ? 'угадали' : 'сдались'} — помогайте остальным</span>`}
         </div>`;
     return `<div class="who">
-      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — вопросы «да/нет». После ответа «нет» ход переходит.</span>`}</div>
+      ${!over && g.qEnds ? `<div class="who-timer">${timerHtml(g.qEnds, 60)}</div>` : ''}
+      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута на вопрос. Большинство «нет» — ход переходит.</span>`}</div>
       <div class="call-grid">${tiles}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
@@ -1761,83 +1898,244 @@
 
   // ===== Намёк понял: всё по центру, главное действие — крупно =====
   function rJust(g) {
-    const head = `<div class="jo-head"><span>Раунд <b>${g.round}</b></span><span>До победы: <b>${g.target}</b> очков</span><span>Угадывает: ${who(g.guesser, 'sm')}</span></div>`;
-    const board = `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +2, подсказка дошла +1, лучшая подсказка +3</span></div>${leaderboard(Object.entries(g.points), g.guesser)}</div>`;
-    if (!g.inGame) return `<div class="narrow">${head}<div class="stage-card"><button class="btn primary mega" data-act="jo-add">Присоединиться</button></div>${board}</div>`;
-    let body = '';
-    const lastRound =
-      g.lastRound && g.phase === 'clues' && Object.keys(g.lastRound.got).length
-        ? `<div class="card last-round small"><b>Прошлый раунд («${esc(g.lastRound.word)}»):</b> ${Object.entries(g.lastRound.got)
-            .map(([id, r]) => `${nm(id)} <b class="plus">+${r.pts}</b>`)
-            .join(' · ')}</div>`
-        : '';
-    // Угадывающий видит подсказки без авторов — выбирает лучшую честно
+    const me = S.me;
+    const T = g.endsAt ? timerHtml(g.endsAt, (g.phaseMs || 30000) / 1000) : '';
+    // Шапка: раунд, цель, кто угадывает — тремя плитками
+    const head = `<div class="jo-top">
+      <div class="jo-tile"><span class="jt-k">Раунд</span><b class="jt-v">${g.round}</b></div>
+      <div class="jo-tile"><span class="jt-k">До победы</span><b class="jt-v">${g.target}<small>${plural(g.target, 'очко', 'очка', 'очков')}</small></b></div>
+      <div class="jo-tile wide ${g.isGuesser ? 'me' : ''}"><span class="jt-k">Угадывает</span><span class="jt-who">${pa(g.guesser, 40, 'round')}<b>${nm(g.guesser)}${g.isGuesser ? ' <small>(вы)</small>' : ''}</b></span></div>
+    </div>`;
+    // Таблица очков: сердечки рядом с очками
+    const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1] || (g.hearts[b[0]] || 0) - (g.hearts[a[0]] || 0));
+    const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— угадал +2 · подсказка дошла +1 · лучшая подсказка +3</span></div>
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === g.guesser ? 'turn' : ''} ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.hearts[id] ? `<span class="jb-h" title="Сколько раз его подсказку выбрали лучшей">${ic('heartf', 15)}${g.hearts[id]}</span>` : ''}<b class="jb-p">${n}</b></div>`).join('')}</div>`;
+    if (!g.inGame) return `<div class="narrow justone">${head}<div class="stage-card"><button class="btn primary mega" data-act="jo-add">Присоединиться</button></div>${board}</div>`;
+    // Кто уже готов (видят все)
+    const readyRow = (ids, done, label) =>
+      `<div class="jo-ready"><span class="muted small">${label} ${done.length}/${ids.length}</span><span class="jr-list">${ids
+        .map((id) => `<span class="jr ${done.includes(id) ? 'on' : ''}" title="${nm(id)}${done.includes(id) ? ' — готов' : ' — думает'}"><span class="ava-wrap">${pa(id, 34, 'round')}${done.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`)
+        .join('')}</span></div>`;
     const hearted = (c) => (g.isGuesser ? g.heart != null && c.key === g.heart : c.pid === g.heart);
     const clueEl = (c, tag = 'div', extra = '') =>
-      `<${tag} class="clue ${c.removed ? 'removed' : ''} ${hearted(c) ? 'hearted' : ''}" ${extra}><b>${hearted(c) ? ic('heartf', 16, 'heart') : ''}${esc(c.text)}</b>${c.pid && !g.isGuesser ? `<small>${pa(c.pid, 'xs')}${nm(c.pid)}</small>` : ''}</${tag}>`;
-    const bigForm = (form, ph, btnText, keep, max) =>
-      `<form data-form="${form}" class="big-form"><input class="inp big-inp" name="text" data-keep="${keep}" maxlength="${max}" placeholder="${ph}" autocomplete="off" ${form === 'jo-clue' ? 'required' : ''}/><button class="btn primary mega">${btnText}</button></form>`;
+      `<${tag} class="jc ${c.removed ? 'removed' : ''} ${hearted(c) ? 'hearted' : ''}" ${extra}><b>${esc(c.text)}</b>${hearted(c) ? `<span class="jc-heart">${ic('heartf', 20)}</span>` : ''}${c.pid && !g.isGuesser ? `<small>${pa(c.pid, 'xs', 'round')}${nm(c.pid)}</small>` : ''}</${tag}>`;
+    const bigForm = (form, ph, btnText, keep) =>
+      `<form data-form="${form}" class="big-form"><input class="inp big-inp" name="text" data-keep="${keep}" maxlength="30" placeholder="${ph}" autocomplete="off" pattern="[A-Za-zА-Яа-яЁёІіЇїЄєҐґ0-9]+(-[A-Za-zА-Яа-яЁёІіЇїЄєҐґ0-9]+)*" title="Одно слово: буквы и цифры, можно через дефис" ${form === 'jo-clue' ? 'required' : ''}/><button class="btn primary mega">${btnText}</button></form>`;
+    let body = '';
     if (g.phase === 'clues') {
-      const total = g.helpers.length;
-      const done = g.submitted.length;
       body = g.isGuesser
-        ? `<div class="stage-card"><div class="kicker">Вы угадываете</div><div class="big-ic">${ic('eyeoff', 48)}</div><h2 class="h2">Не подглядывайте</h2><p class="muted">Подсказки пишут: ${done}/${total}</p></div>`
-        : `<div class="stage-card"><div class="kicker">Загаданное слово</div><div class="mega-word">${esc(g.word)}</div>
-            ${bigForm('jo-clue', 'Одно слово-подсказка', g.myClue ? 'Заменить' : `${ic('send', 22)} Отправить`, 'jo-clue', 30)}
-            ${g.myClue ? `<p class="ok-text">${ic('check', 16)} Ваша подсказка: <b>${esc(g.myClue)}</b></p>` : ''}
-            <p class="muted small">Готово: ${done}/${total}</p></div>`;
+        ? `<div class="stage-card">${T}<div class="kicker">Вы угадываете</div><div class="big-ic">${ic('eyeoff', 48)}</div><h2 class="h2">Не подглядывайте — подсказчики пишут</h2>${readyRow(g.helpers, g.submitted, 'Написали')}</div>`
+        : `<div class="stage-card">${T}<div class="kicker">Загаданное слово</div><div class="mega-word">${esc(g.word)}</div>
+            ${g.myClue ? `<div class="jo-sent">${ic('check', 18)} Ваша подсказка: <b>${esc(g.myClue)}</b> <span class="muted">— ждём остальных</span></div>` : bigForm('jo-clue', 'Одно слово-подсказка', `${ic('send', 22)} Отправить`, 'jo-clue')}
+            <p class="muted small">Одно слово: буквы и цифры, можно через дефис. Отправленную подсказку поменять нельзя.</p>
+            ${readyRow(g.helpers, g.submitted, 'Написали')}</div>`;
     } else if (g.phase === 'filter') {
+      const iShow = g.show.includes(me);
       body = g.isGuesser
-        ? `<div class="stage-card"><div class="big-ic">${ic('eyeoff', 48)}</div><h2 class="h2">Подсказчики убирают совпадения…</h2><p class="muted">Ещё чуть-чуть</p></div>`
-        : `<div class="stage-card"><div class="kicker">Слово: ${esc(g.word)}</div><p>Вычеркните одинаковые и однокоренные подсказки (совпадения уже отмечены). Нажмите на подсказку, чтобы переключить.</p>
-            <div class="clues">${g.clues.map((c) => clueEl(c, 'button', `data-act="jo-toggle" data-pid="${c.pid}"`)).join('')}</div>
-            <button class="btn primary mega" data-act="jo-filterdone">Показать угадывающему ${ic('play', 22)}</button></div>`;
+        ? `<div class="stage-card">${T}<div class="big-ic">${ic('eyeoff', 48)}</div><h2 class="h2">Подсказчики убирают совпадения…</h2>${readyRow(g.helpers, g.show, 'Готовы показать')}</div>`
+        : `<div class="stage-card">${T}<div class="kicker">Слово: ${esc(g.word)}</div><p>Вычеркните одинаковые и однокоренные подсказки — совпадения уже отмечены. Нажмите на подсказку, чтобы переключить.</p>
+            <div class="jc-grid">${g.clues.map((c) => clueEl(c, 'button', `data-act="jo-toggle" data-pid="${c.pid}"`)).join('')}</div>
+            <button class="btn ${iShow ? 'ja-on' : 'primary'} mega" data-act="jo-filterdone">${iShow ? `${ic('check', 22)} Вы готовы — отменить` : `Показать угадывающему ${ic('play', 22)}`}</button>
+            ${readyRow(g.helpers, g.show, 'Нажали «Показать»')}</div>`;
     } else if (g.phase === 'guess') {
       const cl = g.clues.map((c) => clueEl(c)).join('');
       body = g.isGuesser
-        ? `<div class="stage-card"><div class="kicker">Подсказки</div><div class="clues big">${cl || `<p class="muted">${ic('alert', 16)} Все подсказки сгорели</p>`}</div>
-            ${bigForm('jo-guess', 'Ваш ответ', 'Ответить', 'jo-guess', 40)}
+        ? `<div class="stage-card"><div class="kicker">Подсказки для вас</div><div class="jc-grid">${cl || `<p class="muted">${ic('alert', 16)} Все подсказки сгорели</p>`}</div>
+            ${bigForm('jo-guess', 'Ваш ответ — одно слово', 'Ответить', 'jo-guess')}
             <button class="link-btn" data-act="jo-pass">пропустить слово</button></div>`
-        : `<div class="stage-card"><div class="kicker">Слово: ${esc(g.word)}</div><div class="clues">${cl}</div><p class="muted">${nm(g.guesser)} думает…</p></div>`;
+        : `<div class="stage-card"><div class="kicker">Слово: ${esc(g.word)}</div><div class="jc-grid">${cl}</div><p class="muted">${nm(g.guesser)} думает…</p></div>`;
     } else if (g.phase === 'result') {
-      const res = g.correct === null ? `${ic('skip', 22)} Пропуск — очков нет` : g.accepted ? `${ic('check', 22)} Засчитано — все подсказчики согласны` : g.correct ? `${ic('check', 22)} Угадано!` : `${ic('x', 22)} Не совпало`;
-      // Неточный ответ: подсказчики голосуют «засчитать», нужен голос каждого
       const voting = g.guess && !g.correct;
-      const me = S.me;
-      const iAccept = g.accept.includes(me);
-      const acceptBox = voting
+      const res = g.correct === null ? `${ic('skip', 22)} Пропуск — очков нет` : g.accepted ? `${ic('check', 22)} Засчитано — все подсказчики согласны` : g.correct ? `${ic('check', 22)} Угадано!` : `${ic('x', 22)} Не совпало`;
+      const amHelper = g.helpers.includes(me);
+      const voteRow = (list) => `<span class="ja-votes">${g.helpers.map((id) => `<span class="ava-wrap ${list.includes(id) ? 'is-ready' : ''}" title="${nm(id)}">${pa(id, 'sm', 'round')}${list.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span>`).join('')}<span class="muted small">${list.length}/${g.helpers.length}</span></span>`;
+      const decide = voting
         ? `<div class="jo-accept">
-            <p><b>Почти угадал?</b> <span class="muted">Синоним, опечатка или другая форма слова — ответ засчитается, если «за» все подсказчики.</span></p>
-            <div class="ja-row">
-              <span class="ja-votes">${g.helpers.map((id) => `<span class="ava-wrap ${g.accept.includes(id) ? 'is-ready' : ''}" title="${nm(id)}${g.accept.includes(id) ? ' — за' : ''}">${pa(id, 'sm', 'round')}${g.accept.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span>`).join('')}<span class="muted small">${g.accept.length}/${g.helpers.length}</span></span>
-              ${!g.isGuesser && g.helpers.includes(me) ? `<button class="btn ${iAccept ? 'ja-on' : 'success'} big-w" data-act="jo-override">${ic('check', 18)} ${iAccept ? 'Вы за — отменить' : 'Засчитать'}</button>` : g.isGuesser ? '<span class="muted">Подсказчики решают…</span>' : ''}
+            <p><b>Почти угадал?</b> <span class="muted">Синоним, опечатка или другая форма слова. Решение — когда так нажмут все подсказчики. Не договорились за время — не засчитано.</span></p>
+            <div class="ja-two">
+              <div class="ja-opt">${voteRow(g.accept)}${amHelper ? `<button class="btn ${g.accept.includes(me) ? 'ja-on' : 'success'} big-w" data-act="jo-override">${ic('check', 18)} Засчитать</button>` : ''}</div>
+              <div class="ja-opt">${voteRow(g.reject)}${amHelper ? `<button class="btn ${g.reject.includes(me) ? 'ja-off' : 'danger'} big-w" data-act="jo-reject">${ic('x', 18)} Не засчитывать</button>` : ''}</div>
             </div>
+            ${g.isGuesser ? '<p class="muted center">Подсказчики решают…</p>' : ''}
           </div>`
         : '';
       const live = g.clues.filter((c) => !c.removed);
       let hearts = '';
       if (g.correct) {
         hearts = g.isGuesser
-          ? `<p><b>Какая подсказка помогла больше всего?</b> <span class="muted small">Авторы скрыты — выбирайте честно. Автору +3</span></p><div class="clues big">${live.map((c) => clueEl(c, 'button', `data-act="jo-heart" data-key="${c.key}"`)).join('')}</div>`
-          : `<div class="clues">${live.map((c) => clueEl(c)).join('')}</div>`;
+          ? `<p><b>Какая подсказка помогла больше всего?</b> <span class="muted small">Авторы скрыты — выбирайте честно. Автору +3</span></p><div class="jc-grid">${live.map((c) => clueEl(c, 'button', `data-act="jo-heart" data-key="${c.key}"`)).join('')}</div>`
+          : `<div class="jc-grid">${live.map((c) => clueEl(c)).join('')}</div>`;
       }
-      const waitHeart = g.correct && g.heart == null && !g.isGuesser && !isHost();
-      body = `<div class="stage-card"><div class="kicker">Было слово</div><div class="mega-word">${esc(g.word)}</div>
-        <p>Ответ: <b>${esc(g.guess || '—')}</b></p><h2 class="h2 res">${res}</h2>
-        ${acceptBox}${hearts}
-        <div class="row c">${waitHeart ? `<span class="muted">Ждём отметку от ${nm(g.guesser)}</span>` : voting && g.isGuesser && !isHost() ? '' : `<button class="btn ${voting ? 'ghost' : 'primary mega'}" data-act="jo-next">${voting ? 'Не засчитывать, дальше' : g.isGuesser && g.correct && g.heart == null ? 'Дальше без отметки' : 'Дальше'} ${ic('play', 20)}</button>`}</div></div>`;
+      const nextBtn = voting
+        ? isHost() ? `<button class="btn ghost" data-act="jo-next">Хост: дальше без решения ${ic('play', 16)}</button>` : ''
+        : g.correct && !g.isGuesser && !isHost()
+          ? `<span class="muted">${g.heart == null ? `Ждём отметку от ${nm(g.guesser)}` : `${ic('heartf', 14)} Лучшая подсказка выбрана`}</span>`
+          : `<button class="btn primary mega" data-act="jo-next">${g.isGuesser && g.correct && g.heart == null ? 'Дальше без отметки' : 'Дальше'} ${ic('play', 20)}</button>`;
+      body = `<div class="stage-card">${T}<div class="kicker">Было слово</div><div class="mega-word">${esc(g.word)}</div>
+        <p class="jo-ans">Ответ: <b>${esc(g.guess || '—')}</b></p><h2 class="h2 res">${res}</h2>
+        ${decide}${hearts}
+        <div class="row c">${nextBtn}</div></div>`;
     } else if (g.phase === 'over') {
       body = `<div class="stage-card"><div class="big-ic">${ic('bulb', 56)}</div><h2 class="h2">Победа: ${g.winners.map(nm).join(', ')}!</h2>
         ${canRestart() ? `<button class="btn primary big-w" data-act="jo-restart">${ic('reset', 18)} Ещё раз</button>` : ''}</div>`;
     }
+    // Прошлые слова — карточками
     const hist = g.history.length
-      ? `<details class="card log"><summary>${ic('list', 16)} Прошлые слова</summary>${g.history
+      ? `<div class="card jo-hist"><div class="side-h">${ic('list', 16)} Прошлые слова</div><div class="jh-grid">${g.history
           .slice()
           .reverse()
-          .map((h) => `<div class="log-i">${ic(h.correct ? 'check' : h.correct === null ? 'skip' : 'x', 14)} <b>${esc(h.word)}</b> — ${nm(h.guesser)}${h.guess ? `: «${esc(h.guess)}»` : ''}${h.heart ? ` · ${ic('heartf', 12, 'heart')} ${nm(h.heart)}` : ''}</div>`)
-          .join('')}</details>`
+          .map((h) => {
+            const st = h.correct ? 'ok' : h.correct === null ? 'skip' : 'no';
+            const lbl = h.correct ? (h.accepted ? 'засчитано' : 'угадал') : h.correct === null ? 'пропуск' : 'мимо';
+            return `<div class="jh ${st}">
+              <div class="jh-top"><b class="jh-w">${esc(h.word)}</b><span class="jh-st">${ic(h.correct ? 'check' : h.correct === null ? 'skip' : 'x', 13)} ${lbl}</span></div>
+              <div class="jh-g">${pa(h.guesser, 'xs', 'round')}<span>${nm(h.guesser)}</span>${h.guess ? `<span class="muted">→ «${esc(h.guess)}»</span>` : ''}</div>
+              ${h.heart ? `<div class="jh-h">${ic('heartf', 13)} лучшая подсказка — ${nm(h.heart)}</div>` : ''}
+            </div>`;
+          })
+          .join('')}</div></div>`
       : '';
-    return `<div class="narrow justone">${head}${lastRound}${body}${board}${hist}</div>`;
+    const glow = ['clues', 'filter'].includes(g.phase) ? '<div class="turn-glow g-top-y" aria-hidden="true"></div>' : g.phase === 'guess' ? '<div class="turn-glow g-top-b" aria-hidden="true"></div>' : '';
+    return `${glow}<div class="narrow justone">${head}${body}${board}${hist}</div>`;
+  }
+
+  // ===== Викторина: ответ — число, шкала эффектно заполняется до правильного ответа =====
+  const QZ_FILL = 2400; // длительность заполнения шкалы, мс
+  const fmtN = (v, unit) => {
+    if (v == null || !Number.isFinite(Number(v))) return '—';
+    const n = Number(v);
+    const isYear = /год/.test(unit || '');
+    const r = Math.round(n * 1000) / 1000;
+    return isYear || Math.abs(r) < 10000 ? String(r).replace('.', ',') : r.toLocaleString('ru-RU').replace(/ /g, ' ');
+  };
+  function qzRange(res) {
+    const vals = [res.answer, ...res.list.map((x) => x.v)];
+    let lo = Math.min(...vals);
+    let hi = Math.max(...vals);
+    const pad = hi - lo ? (hi - lo) * 0.12 : Math.max(1, Math.abs(res.answer) * 0.15);
+    lo -= pad;
+    hi += pad;
+    if (Math.min(...vals) >= 0 && lo < 0) lo = 0;
+    if (hi - lo > 20) {
+      lo = Math.floor(lo);
+      hi = Math.ceil(hi);
+    }
+    return [lo, hi];
+  }
+  function rQuiz(g) {
+    const me = S.me;
+    const T = g.endsAt ? timerHtml(g.endsAt, (g.phaseMs || 30000) / 1000) : '';
+    const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1]);
+    const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— ближе всех +1 · точно в цель ещё +1</span></div>
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.wins[id] ? `<span class="qz-w" title="Сколько раз был ближе всех">${ic('target', 14)}${g.wins[id]}</span>` : ''}<b class="jb-p">${n}</b></div>`).join('')}</div>`;
+    const head = `<div class="jo-top qz-head">
+      <div class="jo-tile"><span class="jt-k">Вопрос</span><b class="jt-v">${g.round}<small>из ${g.rounds}</small></b></div>
+      <div class="jo-tile wide"><span class="jt-k">Тема</span><b class="jt-v qz-cat">${esc(g.q?.cat || '')}</b></div>
+    </div>`;
+    if (!g.inGame) return `<div class="narrow quiz">${head}<div class="stage-card"><button class="btn primary mega" data-act="qz-add">Присоединиться</button></div>${board}</div>`;
+    let body = '';
+    if (g.phase === 'answer') {
+      const ready = `<div class="jo-ready"><span class="muted small">Ответили ${g.answered.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.answered.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.answered.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>`;
+      body = `<div class="stage-card qz-card">${T}
+        <div class="qz-q">${esc(g.q.text)}</div>
+        <form data-form="qz-answer" class="big-form qz-form"><input class="inp big-inp qz-inp" name="v" data-keep="qz-v" inputmode="decimal" autocomplete="off" placeholder="Ваше число" required/>${g.q.unit ? `<span class="qz-unit">${esc(g.q.unit)}</span>` : ''}<button class="btn primary mega">${g.mine != null ? 'Изменить' : 'Ответить'}</button></form>
+        ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ваш ответ: <b>${fmtN(g.mine, g.q.unit)}</b> <span class="muted">— можно изменить, пока идёт время</span></div>` : '<p class="muted small">Можно с запятой: 3,14. Отрицательные — через минус.</p>'}
+        ${ready}</div>`;
+    } else if (g.phase === 'reveal' && g.res) {
+      const r = g.res;
+      const [lo, hi] = qzRange(r);
+      const pct = (v) => ((v - lo) / (hi - lo)) * 100;
+      const start = (ui.qzStart = ui.qzStart || {})[g.round] || (ui.qzStart[g.round] = now());
+      const el = Math.max(0, now() - start);
+      // Раскладываем метки по «дорожкам» сверху и снизу, чтобы близкие ответы не налезали друг на друга
+      const LANES = ['up', 'dn', 'up2', 'dn2', 'up3', 'dn3'];
+      const lastX = {};
+      const placed = r.list
+        .slice()
+        .sort((a, b) => a.v - b.v)
+        .map((x) => {
+          const px = pct(x.v);
+          const lane = LANES.find((l) => lastX[l] == null || px - lastX[l] > 9) || LANES[0];
+          lastX[lane] = px;
+          return { ...x, px, lane };
+        });
+      const order = r.list.map((x) => x.pid);
+      const markers = placed
+        .map((x) => {
+          const win = r.winners.includes(x.pid);
+          const i = order.indexOf(x.pid);
+          return `<div class="qz-m ${win ? 'win' : ''} ${x.lane}" style="left:${x.px}%;animation-delay:${QZ_FILL + 150 + i * 140 - el}ms"><span class="qz-mv">${fmtN(x.v, g.q.unit)}</span>${pa(x.pid, 30, 'round')}</div>`;
+        })
+        .join('');
+      const deep = placed.some((x) => /3$/.test(x.lane)) ? 3 : placed.some((x) => /2$/.test(x.lane)) ? 2 : 1;
+      const list = r.list
+        .map((x) => {
+          const pts = r.got[x.pid] || 0;
+          return `<div class="qz-r ${r.winners.includes(x.pid) ? 'win' : ''}">${pa(x.pid, 28, 'round')}<span class="jb-n">${nm(x.pid)}</span><span class="qz-rv">${fmtN(x.v, g.q.unit)}</span><span class="qz-rd">${x.diff < 1e-9 ? 'в яблочко!' : `±${fmtN(x.diff, '')}`}</span><b class="qz-rp">${pts ? '+' + pts : ''}</b></div>`;
+        })
+        .join('');
+      const iReady = g.ready.includes(me);
+      body = `<div class="stage-card qz-card">${T}
+        <div class="qz-q sm">${esc(g.q.text)}</div>
+        <div class="qz-reveal" data-qz-round="${g.round}" data-qz-from="${lo}" data-qz-to="${r.answer}" data-qz-unit="${esc(g.q.unit || '')}" data-qz-start="${start}">
+          <div class="qz-big"><span class="qz-num">${el >= QZ_FILL ? fmtN(r.answer, g.q.unit) : fmtN(lo, g.q.unit)}</span><span class="qz-u">${esc(g.q.unit || '')}</span></div>
+          <div class="qz-bar lanes-${deep}">
+            <div class="qz-fill" style="--p:${pct(r.answer)}%;animation-delay:-${el}ms"></div>
+            <div class="qz-hit" style="left:${pct(r.answer)}%;animation-delay:${QZ_FILL - el}ms"></div>
+            ${markers}
+          </div>
+          <div class="qz-scale"><span>${fmtN(lo, g.q.unit)}</span><span>${fmtN(hi, g.q.unit)}</span></div>
+        </div>
+        ${r.list.length ? `<div class="qz-list" style="animation-delay:${QZ_FILL + 300 - el}ms">${list}</div>` : '<p class="muted">Никто не успел ответить</p>'}
+        <div class="row c"><button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="qz-ready">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button><span class="muted small">${g.ready.length}/${g.order.length} готовы</span></div>
+      </div>`;
+    } else if (g.phase === 'over') {
+      body = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победа: ${(g.winners || []).map(nm).join(', ')}!</h2>
+        ${canRestart() ? `<button class="btn primary big-w" data-act="qz-restart">${ic('reset', 18)} Ещё раз</button>` : ''}</div>`;
+    }
+    return `<div class="narrow quiz">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
+  }
+  // Бегущее число на шкале: каждый кадр — по текущему элементу (переживает перерисовки)
+  let qzRaf = 0;
+  function qzLoop() {
+    cancelAnimationFrame(qzRaf);
+    const step = () => {
+      const box = $app.querySelector('.qz-reveal');
+      if (!box) return;
+      const t = Math.min(1, (now() - Number(box.dataset.qzStart)) / QZ_FILL);
+      const e = 1 - Math.pow(1 - t, 3);
+      const from = Number(box.dataset.qzFrom);
+      const to = Number(box.dataset.qzTo);
+      const num = box.querySelector('.qz-num');
+      const dec = (String(to).split('.')[1] || '').length; // столько знаков, сколько в правильном ответе
+      const k = Math.pow(10, dec);
+      if (num) num.textContent = fmtN(t >= 1 ? to : Math.round((from + (to - from) * e) * k) / k, box.dataset.qzUnit);
+      if (t < 1) qzRaf = requestAnimationFrame(step);
+      else if (!box.dataset.done) {
+        box.dataset.done = '1';
+        if (ui.qzDone !== box.dataset.qzRound) {
+          ui.qzDone = box.dataset.qzRound;
+          Sound.play('win');
+        }
+      }
+    };
+    qzRaf = requestAnimationFrame(step);
+  }
+
+  // Сердечки падают сверху — тому, чью подсказку выбрали лучшей
+  function heartRain() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const box = document.createElement('div');
+    box.className = 'heart-rain';
+    let html = '';
+    for (let i = 0; i < 34; i++) {
+      const size = 16 + Math.random() * 26;
+      html += `<span style="left:${Math.random() * 100}vw;animation-delay:${Math.random() * 1.4}s;animation-duration:${2.2 + Math.random() * 1.6}s;--dx:${(Math.random() - 0.5) * 120}px">${ic('heartf', Math.round(size))}</span>`;
+    }
+    box.innerHTML = html;
+    document.body.appendChild(box);
+    Sound.play('win');
+    setTimeout(() => box.remove(), 4400);
   }
 
   // ---------- обработчики ----------
@@ -1902,8 +2200,9 @@
       LS.set('pg_theme', d.t);
       render();
     },
-    'view-glow': () => {
-      VIEW.glow = !VIEW.glow;
+    'view-glow': (d) => {
+      VIEW.glow = Number(d.n) || 0;
+      LS.set('pg_glow_lvl', String(VIEW.glow));
       LS.set('pg_glow', VIEW.glow ? '1' : '0');
       applyView();
       render();
@@ -1952,13 +2251,20 @@
     },
     'cn-sdel': (d) => {
       ui.cnSlots = ui.cnSlots.filter((x) => x.id !== d.id);
+      if (ui.cnSlots[0]) ui.cnSlots[0].j = false;
+      render();
+    },
+    'cn-link': (d) => {
+      const x = (ui.cnSlots || []).find((y) => y.id === d.id);
+      if (x) x.j = !x.j;
+      Sound.play(x?.j ? 'pop' : 'tap');
       render();
     },
     'cn-strike': (d) => act('strike', { clue: Number(d.clue), k: Number(d.k) }),
     'cn-edit': () => {
       const c = S.game.clue;
       ui.cnEdit = true;
-      ui.cnSlots = c.slots.map((x) => ({ id: slotId(), v: fmtV(x.v) }));
+      ui.cnSlots = c.slots.map((x) => ({ id: slotId(), v: fmtV(x.v), j: !!x.j }));
       render();
       $app.querySelector('.clue-word')?.focus();
     },
@@ -2008,6 +2314,12 @@
     'jo-filterdone': () => act('filterDone'),
     'jo-pass': () => act('guess', { text: '' }),
     'jo-override': () => act('override'),
+    'qz-ready': () => act('ready'),
+    'qz-restart': () => act('restart'),
+    'qz-add': () => act('addMe'),
+    'qz-skip': () => act('skip'),
+    'al-last': (d) => act('lastTo', { to: d.to === 'none' ? 'none' : Number(d.to) }),
+    'jo-reject': () => act('reject'),
     'jo-heart': (d) => act('heart', { key: Number(d.key) }),
     'jo-next': () => act('next'),
     'jo-force': () => act('forceFilter'),
@@ -2018,6 +2330,7 @@
     'tour-end': () => emit('tourEnd'),
     'tour-table': () => {
       ui.showTable = !ui.showTable;
+      ui.tabAnim = ui.showTable;
       render();
     },
     mode: (d) => {
@@ -2176,11 +2489,11 @@
       const r = await emit('startTour', { plan });
       if (!r.error) ui.showTable = false;
     } else if (kind === 'clue') {
-      const vals = (ui.cnSlots || [{ v: '1' }]).map((x) => String(x.v).trim());
-      const bad = vals.find((v) => !validStrength(v));
-      if (bad !== undefined) return toast(`Сила «${bad || 'пусто'}» — число больше 0 и не больше 1, до двух знаков: 1, 0.73, 0.5`);
+      const list = ui.cnSlots || [{ v: '1' }];
+      const bad = list.find((x) => !validStrength(x.v));
+      if (bad) return toast(`Сила «${bad.v || 'пусто'}» — число от −1 до 1 (кроме 0), до двух знаков: 1, 0.73, −0.5`);
       const edit = f.dataset.mode === 'edit';
-      const r = await act(edit ? 'editClue' : 'clue', { word: fd.get('word'), slots: vals });
+      const r = await act(edit ? 'editClue' : 'clue', { word: fd.get('word'), slots: list.map((x, k) => ({ v: String(numV(x.v)), j: k > 0 && !!x.j })) });
       if (!r.error) {
         clear();
         ui.cnSlots = null;
@@ -2192,6 +2505,9 @@
       if (!r.error) clear();
     } else if (kind === 'who-ask') {
       const r = await act('ask', { text: fd.get('text') });
+      if (!r.error) clear();
+    } else if (kind === 'qz-answer') {
+      const r = await act('answer', { v: fd.get('v') });
       if (!r.error) clear();
     } else if (kind === 'jo-clue') {
       const r = await act('clue', { text: fd.get('text') });
@@ -2219,8 +2535,9 @@
     true
   );
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum)) {
+    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum || ui.showTable)) {
       ui.showSum = false;
+      ui.showTable = false;
       ui.menu = null;
       ui.avEdit = null;
       ui.showRules = false;
@@ -2240,11 +2557,13 @@
     if (e.target.dataset.slot) {
       const x = (ui.cnSlots || []).find((y) => y.id === e.target.dataset.slot);
       if (x) {
+        if (e.target.dataset.kind === 'range' && Number(e.target.value) === 0) e.target.value = numV(x.v) < 0 ? '-0.01' : '0.01'; // 0 — не сила
         x.v = e.target.dataset.kind === 'range' ? fmtV(e.target.value) : e.target.value;
         const twin = $app.querySelector(`[data-slot="${x.id}"][data-kind="${e.target.dataset.kind === 'range' ? 'num' : 'range'}"]`);
         if (twin && e.target.dataset.kind === 'range') twin.value = x.v;
-        if (twin && e.target.dataset.kind === 'num' && validStrength(x.v)) twin.value = parseFloat(x.v.replace(',', '.'));
+        if (twin && e.target.dataset.kind === 'num' && validStrength(x.v)) twin.value = numV(x.v);
         e.target.closest('.slot')?.classList.toggle('bad', !validStrength(x.v));
+        e.target.closest('.slot')?.classList.toggle('neg', validStrength(x.v) && numV(x.v) < 0);
       }
     }
     if (e.target.dataset.slot || e.target.dataset.preview) {

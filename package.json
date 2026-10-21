@@ -1,7 +1,7 @@
 {
   "name": "party-games",
   "version": "1.0.0",
-  "description": "Сборник онлайн-настолок: Коднеймс, Элиас, Шпион, Кто я, Намёк понял",
+  "description": "Сборник онлайн-настолок: Коднеймс, Элиас, Шпион, Кто я, Намёк понял, Викторина",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

@@ -107,6 +107,13 @@
       tone(160, 0.12, { type: 'square', gain: 0.06, delay: 0.1 });
     },
     tick: () => tone(1800, 0.03, { type: 'sine', gain: 0.1 }),
+    // Время вышло: короткий «гонг» — два низких тона с шумом
+    timeup: () => {
+      tone(523, 0.18, { type: 'square', gain: 0.07 });
+      tone(392, 0.32, { type: 'square', gain: 0.08, delay: 0.17 });
+      tone(196, 0.5, { type: 'triangle', gain: 0.18, delay: 0.17, to: 150 });
+      noise(0.35, { gain: 0.06, from: 2000, to: 300, delay: 0.17 });
+    },
     strike: () => noise(0.12, { gain: 0.1, from: 3000, to: 1200, q: 2 }),
     open: () => tone(600, 0.08, { type: 'sine', gain: 0.08, to: 900 }),
   };

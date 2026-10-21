@@ -5,6 +5,7 @@ const GAMES = {
   spyfall: require('../server/games/spyfall'),
   whoami: require('../server/games/whoami'),
   justone: require('../server/games/justone'),
+  quiz: require('../server/games/quiz'),
 };
 
 const PROFILES = require('../server/profiles');
@@ -298,6 +299,8 @@ function hint() {
           : '';
     case 'whoami':
       return s.phase === 'write' ? 'Каждый загадывает персонажа соседу — переключайтесь по игрокам.' : `Ходит ${n(s.order[s.turn])}.`;
+    case 'quiz':
+      return s.phase === 'answer' ? 'Ответ — число. Переключайтесь по игрокам и ответьте за каждого.' : '';
     case 'justone':
       return s.phase === 'result' && s.correct && !s.heart
         ? `${n(s.guesser)} отмечает лучшую подсказку.`

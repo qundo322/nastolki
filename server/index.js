@@ -12,6 +12,7 @@ const GAMES = {
   spyfall: require('./games/spyfall'),
   whoami: require('./games/whoami'),
   justone: require('./games/justone'),
+  quiz: require('./games/quiz'),
 };
 
 const PROFILES = require('./profiles');

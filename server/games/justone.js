@@ -1,16 +1,22 @@
 const { WORDS } = require('../words');
 const { shuffle, Deck, norm, clampInt, customWords } = require('../util');
 
+// Время фаз
+const CLUE_MS = 60000; // написать подсказку
+const FILTER_MS = 30000; // вычеркнуть совпадения
+const RESULT_MS = 30000; // выбрать лучшую подсказку / решить «засчитать»
+
 const meta = {
   title: 'Намёк понял',
   emoji: '💡',
   players: '3–20',
   short: 'Все пишут по одной подсказке, одинаковые сгорают. Угадал — и выбери лучшую подсказку.',
   rules: [
-    'Один игрок угадывает, остальные видят загаданное слово и пишут по одной подсказке из одного слова. Подсказка не должна быть однокоренной, переводом или созвучием.',
-    'Затем подсказчики видят все подсказки и вычёркивают одинаковые и однокоренные (совпадения отмечаются автоматически) — угадывающий их не увидит. Так что слишком очевидную ассоциацию писать рискованно.',
-    'Угадывающий видит оставшиеся подсказки анонимно и в случайном порядке и пишет ответ. Если ответ не совпал точь-в-точь (синоним, опечатка, другая форма слова), подсказчики могут нажать «Засчитать» — когда согласны все, ответ засчитывается. Если угадал — отмечает самую полезную подсказку (авторов он не видит, чтобы выбор был честным).',
-    'Очки, если слово угадано: угадывающему +2; каждому, чья подсказка не сгорела, +1; автору лучшей подсказки — ещё +3. Если не угадано или пропуск — очков нет ни у кого.',
+    'Один игрок угадывает, остальные видят загаданное слово и за минуту пишут по одной подсказке — одно слово (буквы и цифры, можно через дефис). Подсказку нельзя заменить после отправки.',
+    'Затем за 30 секунд подсказчики вычёркивают одинаковые и однокоренные подсказки (совпадения отмечаются автоматически). Подсказки уходят угадывающему, когда «Показать» нажмут все подсказчики или выйдет время.',
+    'Угадывающий видит оставшиеся подсказки анонимно и пишет ответ. Угадал — за 30 секунд отмечает лучшую подсказку сердечком.',
+    'Ответ не совпал точь-в-точь? Подсказчики решают: «Засчитать» или «Не засчитывать» — решение принимается, когда так нажмут все. За 30 секунд не договорились — не засчитано.',
+    'Очки, если слово угадано: угадывающему +2; каждому, чья подсказка не сгорела, +1; автору лучшей подсказки — ещё +3.',
     'Угадывающий меняется каждый раунд. Игра заканчивается в конце раунда, когда кто-то набрал нужное число очков (задаёт хост).',
   ],
   restartActions: ['restart'],
@@ -20,6 +26,10 @@ const meta = {
   ],
 };
 
+// Одно слово: буквы и цифры, части можно соединить дефисом
+const ONE_WORD = /^[\p{L}\d]+(?:-[\p{L}\d]+)*$/u;
+const cleanWord = (t) => String(t || '').trim().slice(0, 30);
+
 function create(ctx, st) {
   const ids = shuffle(ctx.players().map((p) => p.id));
   if (ids.length < 3) return 'Для «Намёк понял» нужно минимум 3 игрока';
@@ -28,7 +38,8 @@ function create(ctx, st) {
     g: -1,
     target: clampInt(st.target, 3, 100, 15),
     points: Object.fromEntries(ids.map((id) => [id, 0])),
-    deck: new Deck([...customWords(st.customWords), ...WORDS]),
+    hearts: {},
+    deck: new Deck([...customWords(st.customWords).filter((w) => !/\s/.test(w)), ...WORDS]),
     history: [],
     round: 0,
   };
@@ -37,6 +48,26 @@ function create(ctx, st) {
 }
 
 const alive = (s, ctx) => s.order.filter((id) => ctx.room.players.get(id));
+const online = (s, ctx, ids) => ids.filter((id) => ctx.room.players.get(id) && ctx.room.players.get(id).connected !== false);
+
+// ---- таймер фазы ----
+function setPhase(s, ctx, phase, ms) {
+  s.phase = phase;
+  ctx.clearTimer('jo');
+  if (ms) {
+    s.endsAt = Date.now() + ms;
+    s.phaseMs = ms;
+    ctx.setTimer('jo', ms, () => onTimeout(s, ctx));
+  } else {
+    s.endsAt = null;
+    s.phaseMs = null;
+  }
+}
+function onTimeout(s, ctx) {
+  if (s.phase === 'clues') toFilter(s, ctx);
+  else if (s.phase === 'filter') toGuess(s, ctx);
+  else if (s.phase === 'result') finishRound(s, ctx);
+}
 
 function nextRound(s, ctx) {
   for (let k = 0; k < s.order.length; k++) {
@@ -47,14 +78,16 @@ function nextRound(s, ctx) {
   s.guesser = s.order[s.g];
   s.word = s.deck.draw();
   s.clues = {}; // pid -> {text, removed}
-  s.phase = 'clues'; // clues | filter | guess | result | over
   s.guess = null;
   s.correct = null;
   s.heart = null;
   s.anon = null;
-  s.accept = {}; // голоса подсказчиков «засчитать» неточный ответ
+  s.accept = {}; // «засчитать» неточный ответ
+  s.reject = {}; // «не засчитывать»
   s.accepted = false;
+  s.show = {}; // кто нажал «Показать угадывающему»
   s.helpers = alive(s, ctx).filter((id) => id !== s.guesser);
+  setPhase(s, ctx, 'clues', CLUE_MS); // clues | filter | guess | result | over
 }
 
 function autoDupes(s) {
@@ -67,19 +100,15 @@ function autoDupes(s) {
   for (const ids of Object.values(groups)) if (ids.length > 1) ids.forEach((id) => (s.clues[id].removed = true));
   for (const c of Object.values(s.clues)) if (norm(c.text) === norm(s.word)) c.removed = true;
 }
-
-const helpersOnline = (s, ctx) =>
-  s.helpers.filter((id) => {
-    const p = ctx.room.players.get(id);
-    return p && p.connected !== false;
-  });
-function checkAccept(s, ctx) {
-  if (s.phase !== 'result' || !s.guess || s.correct) return;
-  const need = helpersOnline(s, ctx);
-  if (need.length && need.every((id) => s.accept[id])) {
-    s.correct = true;
-    s.accepted = true;
-  }
+function toFilter(s, ctx) {
+  autoDupes(s);
+  s.show = {};
+  setPhase(s, ctx, 'filter', FILTER_MS);
+}
+function toGuess(s, ctx) {
+  // Угадывающий видит подсказки анонимно и в случайном порядке — чтобы выбирать лучшую честно
+  s.anon = shuffle(Object.keys(s.clues));
+  setPhase(s, ctx, 'guess', 0);
 }
 
 // Подсчёт очков раунда
@@ -94,9 +123,42 @@ function award(s) {
   if (s.correct) {
     add(s.guesser, 2, 'угадал');
     for (const [id, c] of Object.entries(s.clues)) if (!c.removed) add(id, 1, 'подсказка дошла');
-    if (s.heart && s.clues[s.heart] && !s.clues[s.heart].removed) add(s.heart, 3, 'лучшая подсказка');
+    if (s.heart && s.clues[s.heart] && !s.clues[s.heart].removed) {
+      add(s.heart, 3, 'лучшая подсказка');
+      s.hearts[s.heart] = (s.hearts[s.heart] || 0) + 1;
+    }
   }
   return got;
+}
+function finishRound(s, ctx) {
+  if (s.phase !== 'result') return;
+  const got = award(s);
+  s.history.push({ word: s.word, guesser: s.guesser, guess: s.guess, correct: s.correct, accepted: s.accepted, heart: s.correct ? s.heart : null, got });
+  s.lastRound = { word: s.word, got };
+  const best = Math.max(...Object.values(s.points));
+  if (best >= s.target) {
+    setPhase(s, ctx, 'over', 0);
+    s.winners = Object.keys(s.points).filter((id) => s.points[id] === best);
+    return;
+  }
+  nextRound(s, ctx);
+}
+
+// Все подсказчики в сети согласны
+const allOf = (s, ctx, votes) => {
+  const need = online(s, ctx, s.helpers);
+  return need.length > 0 && need.every((id) => votes[id]);
+};
+function checkVotes(s, ctx) {
+  if (s.phase === 'clues' && s.helpers.length && online(s, ctx, s.helpers).every((id) => s.clues[id])) toFilter(s, ctx);
+  else if (s.phase === 'filter' && allOf(s, ctx, s.show)) toGuess(s, ctx);
+  else if (s.phase === 'result' && s.guess && !s.correct) {
+    if (allOf(s, ctx, s.accept)) {
+      s.correct = true;
+      s.accepted = true;
+      setPhase(s, ctx, 'result', RESULT_MS); // теперь — время выбрать лучшую подсказку
+    } else if (allOf(s, ctx, s.reject)) finishRound(s, ctx);
+  }
 }
 
 function action(s, pid, msg, ctx) {
@@ -105,21 +167,19 @@ function action(s, pid, msg, ctx) {
     case 'clue': {
       if (s.phase !== 'clues') return 'Подсказки уже собраны';
       if (!isHelper) return 'Вы угадываете в этом раунде';
-      const text = String(msg.text || '').trim().slice(0, 30);
+      if (s.clues[pid]) return 'Подсказка уже отправлена';
+      const text = cleanWord(msg.text);
       if (!text) return 'Пустая подсказка';
+      if (!ONE_WORD.test(text)) return 'Только одно слово: буквы и цифры, без пробелов и символов (дефис можно)';
       s.clues[pid] = { text, removed: false };
-      const need = s.helpers.filter((id) => ctx.room.players.get(id));
-      if (need.every((id) => s.clues[id])) {
-        autoDupes(s);
-        s.phase = 'filter';
-      }
+      checkVotes(s, ctx);
       return;
     }
     case 'forceFilter': {
+      // Хост может не ждать: подсказки → вычёркивание → показать угадывающему
       if (!ctx.isHost) return 'Только хост';
-      if (s.phase !== 'clues') return;
-      autoDupes(s);
-      s.phase = 'filter';
+      if (s.phase === 'clues') toFilter(s, ctx);
+      else if (s.phase === 'filter') toGuess(s, ctx);
       return;
     }
     case 'toggle': {
@@ -129,21 +189,24 @@ function action(s, pid, msg, ctx) {
       return;
     }
     case 'filterDone': {
+      // «Показать угадывающему» — нужно нажать всем подсказчикам
       if (s.phase !== 'filter') return;
-      if (!isHelper && !ctx.isHost) return;
-      // Угадывающий видит подсказки анонимно и в случайном порядке — чтобы выбирать лучшую честно
-      s.anon = shuffle(Object.keys(s.clues));
-      s.phase = 'guess';
+      if (!isHelper) return 'Решают подсказчики';
+      if (s.show[pid]) delete s.show[pid];
+      else s.show[pid] = true;
+      checkVotes(s, ctx);
       return;
     }
     case 'guess': {
       if (s.phase !== 'guess' || pid !== s.guesser) return;
-      const g = String(msg.text || '').trim().slice(0, 40);
+      const g = cleanWord(msg.text);
+      if (g && !ONE_WORD.test(g)) return 'Ответ — одно слово: буквы и цифры, без символов (дефис можно)';
       s.guess = g || null;
       s.correct = g ? norm(g) === norm(s.word) : null; // null = пропуск
       s.accept = {};
+      s.reject = {};
       s.accepted = false;
-      s.phase = 'result';
+      setPhase(s, ctx, 'result', s.correct === null ? 0 : RESULT_MS);
       return;
     }
     case 'heart': {
@@ -155,38 +218,33 @@ function action(s, pid, msg, ctx) {
       s.heart = s.heart === target ? null : target;
       return;
     }
-    // Ответ не совпал точь-в-точь (синоним, опечатка, другая форма) — подсказчики могут засчитать.
-    // Когда «за» проголосовали все подсказчики в сети — ответ засчитан.
     case 'override':
-    case 'accept': {
+    case 'accept':
+    case 'reject': {
+      // Неточный ответ: «засчитать» / «не засчитывать» — решение, когда так нажали все подсказчики
       if (s.phase !== 'result' || !isHelper) return;
-      if (!s.guess || (s.correct && !s.accepted)) return 'Ответ и так верный';
-      if (s.accepted) return 'Ответ уже засчитан';
-      if (s.accept[pid]) delete s.accept[pid];
-      else s.accept[pid] = true;
-      checkAccept(s, ctx);
+      if (!s.guess || s.correct) return s.accepted ? 'Ответ уже засчитан' : 'Ответ и так верный';
+      const yes = msg.type !== 'reject';
+      const mine = yes ? s.accept : s.reject;
+      const other = yes ? s.reject : s.accept;
+      delete other[pid];
+      if (mine[pid]) delete mine[pid];
+      else mine[pid] = true;
+      checkVotes(s, ctx);
       return;
     }
     case 'next': {
       if (s.phase !== 'result') return;
-      if (!isHelper && pid !== s.guesser && !ctx.isHost) return;
-      if (pid === s.guesser && !ctx.isHost && s.guess && !s.correct) return 'Подсказчики решают, засчитать ли ответ';
-      if (s.correct && !s.heart && pid !== s.guesser && !ctx.isHost) return 'Ждём, пока угадывающий отметит лучшую подсказку';
-      const got = award(s);
-      s.history.push({ word: s.word, guesser: s.guesser, guess: s.guess, correct: s.correct, heart: s.heart, got });
-      s.lastRound = { word: s.word, got };
-      const best = Math.max(...Object.values(s.points));
-      if (best >= s.target) {
-        s.phase = 'over';
-        s.winners = Object.keys(s.points).filter((id) => s.points[id] === best);
-        return;
-      }
-      nextRound(s, ctx);
+      if (s.guess && !s.correct && !ctx.isHost) return 'Подсказчики решают, засчитать ли ответ';
+      if (s.correct && pid !== s.guesser && !ctx.isHost) return 'Ждём, пока угадывающий отметит лучшую подсказку';
+      if (s.correct === null && !isHelper && pid !== s.guesser && !ctx.isHost) return;
+      finishRound(s, ctx);
       return;
     }
     case 'restart': {
       if (!ctx.isHost) return 'Только хост';
       for (const id of Object.keys(s.points)) s.points[id] = 0;
+      s.hearts = {};
       s.history = [];
       s.lastRound = null;
       s.round = 0;
@@ -214,6 +272,8 @@ function view(s, pid) {
     isGuesser,
     inGame: s.order.includes(pid),
     helpers: s.helpers,
+    endsAt: s.endsAt,
+    phaseMs: s.phaseMs,
     word: !isGuesser || s.phase === 'result' || s.phase === 'over' ? s.word : null,
     submitted: Object.keys(s.clues || {}),
     myClue: s.clues?.[pid]?.text || null,
@@ -224,12 +284,15 @@ function view(s, pid) {
             .map((id, key) => ({ key, text: s.clues[id]?.text, removed: s.clues[id]?.removed }))
             .filter((c) => c.text && !(s.phase === 'guess' && c.removed))
         : Object.entries(s.clues).map(([id, c]) => ({ pid: id, key: (s.anon || []).indexOf(id), text: c.text, removed: c.removed })),
+    show: Object.keys(s.show || {}),
     guess: s.guess,
     correct: s.correct,
     accept: Object.keys(s.accept || {}),
+    reject: Object.keys(s.reject || {}),
     accepted: !!s.accepted,
     heart: isGuesser && s.phase !== 'over' ? (s.heart ? (s.anon || []).indexOf(s.heart) : null) : s.heart,
     points: s.points,
+    hearts: s.hearts,
     target: s.target,
     winners: s.winners || null,
     lastRound: s.lastRound || null,
@@ -248,25 +311,28 @@ function onLeave(s, pid, ctx) {
   s.order = s.order.filter((x) => x !== pid);
   s.helpers = s.helpers.filter((x) => x !== pid);
   delete s.clues[pid];
-  if (s.accept) delete s.accept[pid];
-  checkAccept(s, ctx);
-  if (s.phase === 'clues' && s.helpers.length && s.helpers.every((id) => s.clues[id])) {
-    autoDupes(s);
-    s.phase = 'filter';
-  }
+  for (const v of [s.accept, s.reject, s.show]) if (v) delete v[pid];
+  checkVotes(s, ctx);
 }
+
+// Пауза игры (лобби) — таймер фазы замирает
+function pause(s, ctx) {
+  if (!s.endsAt) return;
+  s._left = Math.max(0, s.endsAt - Date.now());
+  ctx.clearTimer('jo');
+}
+function resume(s, ctx) {
+  if (s._left == null) return;
+  s.endsAt = Date.now() + s._left;
+  ctx.setTimer('jo', s._left, () => onTimeout(s, ctx));
+  s._left = null;
+}
+// Кто-то отвалился — остальных может уже хватать для решения
+const onPresence = (s, ctx) => checkVotes(s, ctx);
 
 const isOver = (s) => s.phase === 'over';
 const results = (s) => ({ ...s.points });
-
-// Кто-то из подсказчиков отвалился — остальных может уже хватать для «засчитать»
-const onPresence = (s, ctx) => checkAccept(s, ctx);
-
 // Для номинаций марафона: сердечки за лучшую подсказку
-function stats(s) {
-  const hints = {};
-  for (const h of s.history) if (h.correct && h.heart) hints[h.heart] = (hints[h.heart] || 0) + 1;
-  return { hints };
-}
+const stats = (s) => ({ hints: { ...s.hearts } });
 
-module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, stats };
+module.exports = { meta, create, action, view, onLeave, isOver, results, onPresence, stats, pause, resume };

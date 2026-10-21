@@ -79,6 +79,15 @@ function handle(room, pid, msg, isHost) {
     [r.queue[i], r.queue[j]] = [r.queue[j], r.queue[i]];
     return;
   }
+  if (op === 'moveTo') {
+    // Перетаскивание: поставить трек на позицию to
+    const i = r.queue.findIndex((x) => x.qid === msg.qid);
+    const to = Math.max(0, Math.min(r.queue.length - 1, Number(msg.to) | 0));
+    if (i < 0 || i === to) return;
+    const [item] = r.queue.splice(i, 1);
+    r.queue.splice(to, 0, item);
+    return;
+  }
   if (op === 'lofi') {
     play(r, DEFAULT);
     return;

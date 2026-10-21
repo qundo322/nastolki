@@ -59,7 +59,7 @@ function bot(profile, name) {
   assert((await cap.act('clue', { word: 'юбка', slots: ['0.735'] })).error, '3 decimals rejected');
   assert((await cap.act('clue', { word: 'юбка', slots: ['0,73', 1, '1'] })).ok, 'clue');
   await wait(100);
-  assert(JSON.stringify(g(h).clue.slots.map((x) => x.v)) === '[1,1,0.73]', 'slots parsed');
+  assert(JSON.stringify(g(h).clue.slots.map((x) => x.v)) === '[0.73,1,1]', 'slots parsed (order kept)');
   assert((await bots.find((b) => b !== cap).act('strike', { clue: 0, k: 0 })).error, 'only captain strikes');
   await cap.act('strike', { clue: 0, k: 2 });
   await wait(100);
@@ -185,9 +185,18 @@ function bot(profile, name) {
   const hist = g(h).players[wAsk.st.me].qa;
   assert(hist.length === 1 && hist[0].v === 'yes', 'archived to history');
   const wAsk2 = byId(g(h).turnPid);
-  await bots.find((b) => b !== wAsk2).act('answer', { v: 'idk' }); // вопрос голосом
-  await wait(50);
-  assert(g(h).q && g(h).q.text === '' && g(h).q.idk === 1, 'voice question auto-created');
+  const w2o = bots.filter((b) => b !== wAsk2);
+  assert((await w2o[0].act('answer', { v: 'yes' })).error, 'no voice questions — need text');
+  assert((await wAsk2.act('ask', { text: '' })).error, 'empty question rejected');
+  assert(g(h).qEnds > Date.now() + 50000, 'question timer ~60s');
+  await wAsk2.act('ask', { text: 'Я живой?' });
+  for (const b of w2o) await b.act('answer', { v: 'yes' });
+  await wait(60);
+  assert(g(h).turnPid === wAsk2.st.me && !g(h).q && g(h).players[wAsk2.st.me].qa.length === 1, 'all yes → same asker, next question');
+  await wAsk2.act('ask', { text: 'Я из книги?' });
+  for (const b of w2o) await b.act('answer', { v: 'no' });
+  await wait(60);
+  assert(g(h).turnPid !== wAsk2.st.me, 'all no → turn passes');
   for (const b of bots) await b.act('guessed');
   await wait(100);
   const pts = g(h).points;
@@ -204,9 +213,19 @@ function bot(profile, name) {
   const helpers = bots.filter((b) => b !== guesser);
   const word = g(helpers[0]).word;
   const cl = ['одинаково', 'одинаково', 'ракета', 'облако'];
+  assert((await helpers[0].act('clue', { text: 'два слова' })).error, 'only one word');
+  assert((await helpers[0].act('clue', { text: 'слово!' })).error, 'no symbols');
+  assert(g(h).endsAt && g(h).phaseMs === 60000, 'clues timer 60s');
   for (const [i, b] of helpers.entries()) await b.act('clue', { text: cl[i] });
+  assert((await helpers[0].act('clue', { text: 'другое' })).error, 'no replacing');
   await wait(100);
+  assert(g(h).phase === 'filter' && g(h).phaseMs === 30000, 'filter timer 30s');
   await helpers[0].act('filterDone');
+  await wait(50);
+  assert(g(h).phase === 'filter' && g(h).show.length === 1, 'show needs everyone');
+  for (const b of helpers.slice(1)) await b.act('filterDone');
+  await wait(50);
+  assert(g(h).phase === 'guess', 'all pressed show');
   await guesser.act('guess', { text: word });
   await wait(100);
   assert(g(h).correct, 'correct');
@@ -217,6 +236,7 @@ function bot(profile, name) {
   const P = g(h).points;
   assert(P[guesser.st.me] === 2 && P[helpers[2].st.me] === 4 && P[helpers[3].st.me] === 1 && P[helpers[0].st.me] === 0, 'justone points ' + JSON.stringify(P));
   assert(g(h).phase === 'over' && g(h).winners[0] === helpers[2].st.me, 'target reached');
+  assert(g(h).hearts[helpers[2].st.me] === 1, 'hearts counted');
   // неточный ответ засчитывается, только когда «за» все подсказчики
   await h.act('restart');
   await wait(100);
@@ -224,7 +244,8 @@ function bot(profile, name) {
   const hs2 = bots.filter((b) => b !== g2);
   for (const [i, b] of hs2.entries()) await b.act('clue', { text: 'подсказка' + i });
   await wait(100);
-  await hs2[0].act('filterDone');
+  for (const b of hs2) await b.act('filterDone');
+  await wait(50);
   await g2.act('guess', { text: 'почтитак' });
   await wait(100);
   assert(g(h).correct === false, 'near-miss not correct');
@@ -238,7 +259,58 @@ function bot(profile, name) {
   await wait(100);
   assert(g(h).correct === true && g(h).accepted, 'accepted by all helpers');
   assert((await hs2[1].act('accept')).error, 'locked after accept');
-  console.log('✓ Намёк понял (+ «засчитать» всеми)');
+  // «не засчитывать» — тоже только всеми
+  await g2.act('next');
+  await wait(80);
+  const g3 = byId(g(h).guesser);
+  const hs3 = bots.filter((b) => b !== g3);
+  for (const [i, b] of hs3.entries()) await b.act('clue', { text: 'намёк' + i });
+  for (const b of hs3) await b.act('filterDone');
+  await g3.act('guess', { text: 'мимо' });
+  await wait(50);
+  const r0 = g(h).round;
+  for (const b of hs3.slice(1)) await b.act('reject');
+  await wait(50);
+  assert(g(h).phase === 'result' && g(h).round === r0, 'reject needs everyone');
+  await hs3[0].act('reject');
+  await wait(80);
+  assert(g(h).round === r0 + 1 && g(h).phase === 'clues', 'all rejected → next round');
+  console.log('✓ Намёк понял (таймеры, одно слово, решения всеми)');
+  await h.call('stopGame');
+
+  // ---- Викторина: ближайший ответ получает балл, точное попадание — бонус
+  await h.call('selectGame', { type: 'quiz' });
+  assert((await h.call('startGame', { settings: { rounds: 3, seconds: 30 } })).ok, 'quiz start');
+  await wait(80);
+  assert(g(h).phase === 'answer' && g(h).q.text && g(h).q.answer === null, 'answer hidden while answering');
+  // правильный ответ узнаём через хост-«показать» в следующем раунде нельзя — считаем по результату
+  assert((await bots[0].act('answer', { v: 'abc' })).error, 'only numbers');
+  await bots[0].act('answer', { v: '1' });
+  await bots[1].act('answer', { v: '-5' });
+  await bots[2].act('answer', { v: '3,5' });
+  await bots[3].act('answer', { v: '100000' });
+  await wait(60);
+  assert(g(h).phase === 'answer' && g(h).answered.length === 4, 'waits for everyone');
+  await bots[4].act('answer', { v: '42' });
+  await wait(80);
+  const R = g(h).res;
+  assert(g(h).phase === 'reveal' && R && typeof R.answer === 'number', 'reveal after all answered');
+  const best = Math.min(...R.list.map((x) => x.diff));
+  assert(R.winners.every((id) => R.list.find((x) => x.pid === id).diff === best), 'closest wins');
+  assert(R.winners.every((id) => g(h).points[id] >= 1), 'winners got points');
+  for (const b of bots) await b.act('ready');
+  await wait(80);
+  assert(g(h).round === 2 && g(h).phase === 'answer', 'all ready → next question');
+  await wait(60);
+  await h.act('skip');
+  await wait(50);
+  assert(g(h).phase === 'reveal' && g(h).res.list.length === 0, 'host can reveal early');
+  await h.act('skip');
+  await h.act('skip');
+  await h.act('skip');
+  await wait(50);
+  assert(g(h).phase === 'over', 'game over after rounds');
+  console.log('✓ Викторина');
   await h.call('stopGame');
 
   // ---- Марафон
@@ -317,6 +389,10 @@ function bot(profile, name) {
     await h.call('radio', { op: 'move', qid: r.queue[1].qid, d: -1 });
     await wait(80);
     assert(h.st.room.radio.queue[0].vid === 'bbbbbbbbbbb', 'host reorders');
+    await h.call('radio', { op: 'moveTo', qid: h.st.room.radio.queue[0].qid, to: 1 });
+    await wait(60);
+    assert(h.st.room.radio.queue[1].vid === 'bbbbbbbbbbb', 'drag moveTo');
+    await h.call('radio', { op: 'moveTo', qid: h.st.room.radio.queue[1].qid, to: 0 });
     await guest.call('radio', { op: 'ended', id: 'wrong' });
     await guest.call('radio', { op: 'ended', id: h.st.room.radio.cur.id }); // слишком рано (<5 c) — игнор
     await wait(80);

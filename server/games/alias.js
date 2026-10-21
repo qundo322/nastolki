@@ -125,7 +125,22 @@ function action(s, pid, msg, ctx) {
         const states = [false, 'own', ...s.teams.map((_, i) => i).filter((i) => i !== s.turnTeam)];
         const cur = states.findIndex((x) => x === (w.ok === true ? 'own' : w.ok));
         w.ok = states[(cur + 1) % states.length];
+        w.set = true;
       } else w.ok = !w.ok;
+      return;
+    }
+    case 'lastTo': {
+      // Последнее слово: сразу выбрать, кто угадал — своя команда, соперники или никто
+      if (s.phase !== 'review') return;
+      const w = s.turnWords.find((x) => x.last);
+      if (!w) return;
+      const to = msg.to;
+      if (to === 'none') w.ok = false;
+      else {
+        const i = clampInt(to, 0, s.teams.length - 1, s.turnTeam);
+        w.ok = i === s.turnTeam ? 'own' : i;
+      }
+      w.set = true;
       return;
     }
     case 'confirm': {

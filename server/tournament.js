@@ -53,6 +53,7 @@ const NOMINATIONS = [
   { key: 'spy', title: 'Шпион-невидимка', unit: 'побед за шпиона', game: 'spyfall' },
   { key: 'sherlock', title: 'Шерлок', unit: 'раз первым угадал себя в «Кто я?»', game: 'whoami' },
   { key: 'explainer', title: 'Златоуст', unit: 'очков объяснением в Элиасе', game: 'alias' },
+  { key: 'quiz', title: 'Ходячая энциклопедия', unit: 'раз был ближе всех в «Викторине»', game: 'quiz' },
 ];
 function nominations(tour) {
   const out = [];

@@ -57,6 +57,7 @@
     gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
     volume: '<path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
     mute: '<path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M22 9l-6 6M16 9l6 6"/>',
+    hash: '<path d="M5 9h15M4 15h15M10 3 8 21M16 3l-2 18"/>',
     music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
   };
   // Упрощённые версии для мелких размеров (≤ 15 px): меньше деталей, заливка и жирные линии — читается как корона капитана
@@ -94,6 +95,7 @@
     userplus: `<circle cx="9.5" cy="7.5" r="4.5" ${F}/><path d="M1.5 21.5a8 8 0 0 1 14-5.3V21.5z" ${F}/><path d="M19.5 13v8M15.5 17h8"/>`,
     headphones: `<path d="M3.5 17v-5a8.5 8.5 0 0 1 17 0v5"/><rect x="2" y="13.5" width="6" height="8" rx="2" ${F}/><rect x="16" y="13.5" width="6" height="8" rx="2" ${F}/>`,
     book: `<path d="M2 4h6.5A3.5 3.5 0 0 1 12 7.5V21a3 3 0 0 0-3-3H2z" ${F}/><path d="M22 4h-6.5A3.5 3.5 0 0 0 12 7.5V21a3 3 0 0 1 3-3h7z" ${F}/>`,
+    hash: '<path d="M5 9h15M4 15h15M10 3 8 21M16 3l-2 18"/>',
     music: `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3.5" ${F}/><circle cx="18" cy="16" r="3.5" ${F}/>`,
   };
   window.ic = (name, size = 18, cls = '') => {
@@ -102,5 +104,5 @@
     const sw = small ? 2.7 : 2;
     return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   };
-  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb' };
+  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash' };
 })();

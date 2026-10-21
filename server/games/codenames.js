@@ -91,7 +91,8 @@ const clueTime = (s) => (s.firstClue ? FIRST_CLUE_MS : CLUE_MS);
 
 // ---------- доска ----------
 function newBoard(s, ctx) {
-  const pool = s.customPool.length >= 25 && s.onlyCustom ? s.customPool : [...s.customPool, ...WORDS];
+  const custom = s.customPool.filter((w) => !/\s/.test(w)); // на карточках — только одиночные слова
+  const pool = custom.length >= 25 && s.onlyCustom ? custom : [...custom, ...WORDS];
   const words = shuffle(pool).slice(0, 25);
   const start = Math.random() < 0.5 ? 'red' : 'blue';
   const other = enemy(start);
@@ -281,17 +282,30 @@ function checkConsensus(s, ctx) {
 }
 
 // Подсказка: слово + силы слов (0 < x ≤ 1, до сотых)
+// Подсказка: слово + силы (от −1 до 1, кроме 0, до сотых). Отрицательная сила — «точно НЕ это».
+// Слоты можно связать: j=true — «связан с предыдущим» (показывается как 1+1). Порядок задаёт капитан.
+const STRENGTH = /^-?(0?\.\d{1,2}|1(\.0{1,2})?)$/;
 function parseClue(msg) {
   const word = String(msg.word || '').trim().slice(0, 30);
   if (!word || /\s/.test(word)) return { error: 'Подсказка — одно слово' };
-  const raw = (Array.isArray(msg.slots) && msg.slots.length ? msg.slots : [1]).map((x) => String(x).trim().replace(',', '.'));
-  if (raw.length > MAX_SLOTS) return { error: `Не больше ${MAX_SLOTS} слов в одной подсказке` };
-  if (raw.some((x) => !/^(0(\.\d{1,2})?|1(\.0{1,2})?|\.\d{1,2})$/.test(x) || !(parseFloat(x) > 0)))
-    return { error: 'Сила слова — число больше 0 и не больше 1, до двух знаков: 1, 0.73, 0.5' };
-  const slots = raw.map((x) => ({ v: Math.round(parseFloat(x) * 100) / 100, done: false })).sort((a, b) => b.v - a.v);
+  const list = Array.isArray(msg.slots) && msg.slots.length ? msg.slots : [1];
+  if (list.length > MAX_SLOTS) return { error: `Не больше ${MAX_SLOTS} слов в одной подсказке` };
+  const slots = [];
+  for (const [k, item] of list.entries()) {
+    const raw = String(item && typeof item === 'object' ? item.v : item).trim().replace(',', '.');
+    const v = parseFloat(raw);
+    if (!STRENGTH.test(raw) || !v || Math.abs(v) > 1) return { error: 'Сила — число от −1 до 1 (кроме 0), до двух знаков: 1, 0.73, −0.5' };
+    slots.push({ v: Math.round(v * 100) / 100, done: false, j: k > 0 && !!(item && typeof item === 'object' && item.j) });
+  }
   return { word, slots };
 }
-const clueText = (c) => `${c.word} ${c.slots.map((x) => `(${x.v})`).join(' ')}`;
+// Текст подсказки: связанные силы — в одной скобке через «+»
+function slotGroups(slots) {
+  const g = [];
+  slots.forEach((x, k) => (x.j && k > 0 && g.length ? g[g.length - 1].push(x) : g.push([x])));
+  return g;
+}
+const clueText = (c) => `${c.word} ${slotGroups(c.slots).map((g) => `(${g.map((x) => x.v).join('+')})`).join(' ')}`;
 
 function action(s, pid, msg, ctx) {
   const name = ctx.room.players.get(pid)?.name || '?';
@@ -462,7 +476,7 @@ function view(s, pid, ctx) {
       w: setup ? '' : x.w, // до старта слова скрыты
       revealed: x.revealed,
       color: x.revealed || showAll ? x.color : null,
-      marks: ownTurn ? x.marks : [], // голоса видит только своя команда
+      marks: x.marks, // кто за какую карточку голосует — видят все, включая соперников
     })),
   };
 }

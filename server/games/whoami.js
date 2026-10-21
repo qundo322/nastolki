@@ -1,6 +1,8 @@
 const { CHARACTERS } = require('../words');
 const { shuffle, Deck } = require('../util');
 
+const Q_MS = 60000; // минута на один вопрос
+
 const meta = {
   title: 'Кто я?',
   emoji: '🤔',
@@ -8,7 +10,8 @@ const meta = {
   short: 'У тебя на лбу персонаж — все его видят, кроме тебя. Угадай вопросами «да/нет».',
   rules: [
     'Каждому игроку достаётся персонаж: его видят все, кроме самого игрока. Персонажей раздают случайно или каждый загадывает персонажа соседу.',
-    'В свой ход задавай вопросы, на которые можно ответить «да» или «нет». Вопрос можно напечатать или задать голосом. Остальные отвечают кнопками «Да / Нет / Не знаю» — вопрос и ответ сами попадают в твою историю. После ответа «нет» нажми «Передать ход».',
+    'В свой ход пиши вопросы, на которые можно ответить «да» или «нет». Остальные отвечают кнопками «Да / Нет / Не знаю» — вопрос и ответ попадают в твою историю.',
+    'Когда ответили все: большинство «да» — задавай следующий вопрос; большинство «нет» — ход переходит дальше. На каждый вопрос — минута, время вышло — ход переходит.',
     'Думаешь, что знаешь ответ, — назови персонажа вслух. Угадал — нажми «Я угадал», и персонаж откроется тебе.',
     'Очки: угадал персонажа — +1. Бонус за скорость: первый угадавший +2, второй +1. Сдался — 0.',
   ],
@@ -44,6 +47,7 @@ function create(ctx, st) {
     s.a[id] = { char: s.mode === 'random' ? s.deck.draw() : null, writer: ids[(i + ids.length - 1) % ids.length], qa: [] };
   });
   s.phase = s.mode === 'random' ? 'play' : 'write';
+  if (s.phase === 'play') startQ(s, ctx);
   return s;
 }
 
@@ -76,17 +80,43 @@ function newQ(s, asker, text) {
   archive(s);
   s.q = { id: ++s.qn, asker, text: String(text || '').trim().slice(0, 120), answers: {} };
 }
+// Таймер вопроса: минута на каждый вопрос, вышло время — ход переходит
+function startQ(s, ctx) {
+  ctx.clearTimer('who-q');
+  if (s.phase !== 'play') return (s.qEnds = null);
+  s.qEnds = Date.now() + Q_MS;
+  ctx.setTimer('who-q', Q_MS, () => {
+    if (s.phase !== 'play') return;
+    advance(s, ctx);
+  });
+}
+// Кто должен ответить: все в игре и в сети, кроме спрашивающего
+const voters = (s, ctx) => Object.keys(s.a).filter((id) => id !== s.order[s.turn] && ctx.room.players.get(id) && ctx.room.players.get(id).connected !== false);
+function checkAnswers(s, ctx) {
+  const q = s.q;
+  if (!q || s.phase !== 'play') return;
+  const need = voters(s, ctx);
+  if (!need.length || !need.every((id) => q.answers[id])) return;
+  const v = verdict(tally(q));
+  if (v === 'no') advance(s, ctx); // «нет» — ход дальше
+  else {
+    archive(s); // «да» (или «не знаю») — следующий вопрос
+    startQ(s, ctx);
+  }
+}
 
 function advance(s, ctx) {
   archive(s);
   const act = active(s, ctx);
-  if (!act.length) return;
-  for (let k = 0; k < s.order.length; k++) {
-    s.turn = (s.turn + 1) % s.order.length;
-    const id = s.order[s.turn];
-    const a = s.a[id];
-    if (ctx.room.players.get(id) && !a.guessedAt && !a.gaveUp) return;
+  if (act.length) {
+    for (let k = 0; k < s.order.length; k++) {
+      s.turn = (s.turn + 1) % s.order.length;
+      const id = s.order[s.turn];
+      const a = s.a[id];
+      if (ctx.room.players.get(id) && !a.guessedAt && !a.gaveUp) break;
+    }
   }
+  startQ(s, ctx);
 }
 
 function action(s, pid, msg, ctx) {
@@ -97,27 +127,37 @@ function action(s, pid, msg, ctx) {
       if (!target) return 'Вам некому загадывать';
       const text = String(msg.text || '').trim().slice(0, 60);
       if (!text) return 'Введите персонажа';
+      if (s.a[target].char) return 'Персонаж уже загадан';
       s.a[target].char = text;
-      if (Object.values(s.a).every((a) => a.char)) s.phase = 'play';
+      if (Object.values(s.a).every((a) => a.char)) {
+        s.phase = 'play';
+        startQ(s, ctx);
+      }
       return;
     }
     case 'randomFor': {
       if (s.phase !== 'write') return;
       const target = Object.keys(s.a).find((id) => s.a[id].writer === pid);
-      if (target) s.a[target].char = s.deck.draw();
-      if (Object.values(s.a).every((a) => a.char)) s.phase = 'play';
+      if (target && !s.a[target].char) s.a[target].char = s.deck.draw();
+      if (Object.values(s.a).every((a) => a.char)) {
+        s.phase = 'play';
+        startQ(s, ctx);
+      }
       return;
     }
     case 'forceStart': {
       if (!ctx.isHost) return 'Только хост';
       for (const a of Object.values(s.a)) if (!a.char) a.char = s.deck.draw();
       s.phase = 'play';
+      startQ(s, ctx);
       return;
     }
     case 'ask': {
       if (s.phase !== 'play') return;
       if (s.order[s.turn] !== pid) return 'Сейчас спрашивает другой игрок';
-      newQ(s, pid, msg.text);
+      if (!String(msg.text || '').trim()) return 'Напишите вопрос';
+      if (s.q && !Object.keys(s.q.answers).length) s.q.text = String(msg.text).trim().slice(0, 120); // поправить ещё не отвеченный
+      else newQ(s, pid, msg.text);
       return;
     }
     case 'answer': {
@@ -126,9 +166,10 @@ function action(s, pid, msg, ctx) {
       const asker = s.order[s.turn];
       if (pid === asker) return 'На свой вопрос отвечают другие';
       if (!ANS.includes(msg.v)) return;
-      if (!s.q || s.q.asker !== asker) newQ(s, asker, ''); // вопрос задан голосом
+      if (!s.q || s.q.asker !== asker) return 'Вопроса ещё нет';
       if (s.q.answers[pid] === msg.v) delete s.q.answers[pid];
       else s.q.answers[pid] = msg.v;
+      checkAnswers(s, ctx);
       return;
     }
     case 'next': {
@@ -147,7 +188,11 @@ function action(s, pid, msg, ctx) {
         s.finishOrder.push(pid);
       } else a.gaveUp = true;
       if (s.order[s.turn] === pid) advance(s, ctx);
-      if (Object.entries(s.a).every(([id, x]) => x.guessedAt || x.gaveUp || !ctx.room.players.get(id))) s.phase = 'over';
+      if (Object.entries(s.a).every(([id, x]) => x.guessedAt || x.gaveUp || !ctx.room.players.get(id))) {
+        s.phase = 'over';
+        ctx.clearTimer('who-q');
+        s.qEnds = null;
+      }
       return;
     }
     case 'addMe': {
@@ -175,6 +220,7 @@ function view(s, pid) {
     pending: s.phase === 'write' ? Object.values(s.a).filter((a) => !a.char).map((a) => a.writer) : [],
     finishOrder: s.finishOrder,
     points: points(s),
+    qEnds: s.phase === 'play' ? s.qEnds : null,
     q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers } : null,
     players: Object.fromEntries(
       Object.entries(s.a).map(([id, a]) => [
@@ -193,6 +239,20 @@ function view(s, pid) {
 
 function onLeave(s, pid, ctx) {
   if (s.order[s.turn] === pid) advance(s, ctx);
+  else checkAnswers(s, ctx);
+}
+const onPresence = (s, ctx) => checkAnswers(s, ctx);
+// Пауза (лобби): таймер вопроса замирает
+function pause(s, ctx) {
+  if (!s.qEnds) return;
+  s._left = Math.max(0, s.qEnds - Date.now());
+  ctx.clearTimer('who-q');
+}
+function resume(s, ctx) {
+  if (s._left == null || s.phase !== 'play') return;
+  s.qEnds = Date.now() + s._left;
+  ctx.setTimer('who-q', s._left, () => s.phase === 'play' && advance(s, ctx));
+  s._left = null;
 }
 
 function points(s) {
@@ -212,4 +272,4 @@ const results = (s) => points(s);
 // Для номинаций марафона
 const stats = (s) => ({ sherlock: s.finishOrder.length ? { [s.finishOrder[0]]: 1 } : {} });
 
-module.exports = { meta, create, action, view, onLeave, isOver, results, points, stats };
+module.exports = { meta, create, action, view, onLeave, isOver, results, points, stats, onPresence, pause, resume };
