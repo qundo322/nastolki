@@ -698,6 +698,7 @@
         <div class="tb-row">
           <div class="brand">${ic('dice', 22)}<b>Экранки</b></div>
           <div class="gtitle">${title}</div>
+          ${peopleMenu()}
           <div class="top-actions">
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
             ${sfxMenu()}
@@ -705,7 +706,6 @@
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
           </div>
         </div>
-        ${renderStrip()}
         ${g && g.type === 'codenames' ? renderClock(g) : ''}
       </header>
       ${!connected ? '<div class="offline">Нет соединения, переподключаемся…</div>' : ''}
@@ -719,40 +719,48 @@
     </div>`;
   }
 
-  // Второй этаж хедера: все игроки и зрители
-  function renderStrip() {
+  // Участники — одной кнопкой в шапке (аватарки + число), список в выпадающем окне
+  function peopleMenu() {
     const r = S.room;
     const g = S.game;
     const cn = g && g.type === 'codenames' ? g : null;
-    const people = r.players
+    const open = ui.menu === 'people';
+    const online = r.players.filter((p) => p.connected);
+    const stack = online.slice(0, 4).map((p) => avaHtml(p, 24, 'round')).join('');
+    const rows = r.players
       .map((p) => {
         const team = cn ? cn.team[p.id] : null;
         const cap = cn && (cn.captain.red === p.id || cn.captain.blue === p.id);
-        const tag = cn ? (team ? (cap ? 'капитан' : '') : 'зритель') : '';
-        const open = ui.menu === 'p:' + p.id;
+        const tag = cn ? (team ? (cap ? `капитан ${team === 'red' ? 'красных' : 'синих'}` : team === 'red' ? 'красные' : 'синие') : 'зритель') : '';
         const mine = p.id === S.me;
-        const items = [];
-        if (mine) items.push(`<button class="pop-i" data-act="av-open">${ic('palette', 16)}<span>Изменить аватар</span></button>`);
-        if (mine && !p.profile && !g) items.push(`<button class="pop-i" data-act="rename">${ic('pencil', 16)}<span>Изменить имя</span></button>`);
+        const acts = [];
+        if (mine) acts.push(`<button class="icon-x" data-act="av-open" title="Изменить аватар">${ic('palette', 16)}</button>`);
+        if (mine && !p.profile && !g) acts.push(`<button class="icon-x" data-act="rename" title="Изменить имя">${ic('pencil', 16)}</button>`);
         if (isHost() && !mine) {
-          items.push(`<button class="pop-i" data-act="makeHost" data-pid="${p.id}">${ic('crown', 16)}<span>Сделать хостом</span></button>`);
-          items.push(`<button class="pop-i danger" data-act="kick" data-pid="${p.id}">${ic('x', 16)}<span>Выгнать</span></button>`);
+          acts.push(`<button class="icon-x" data-act="makeHost" data-pid="${p.id}" title="Сделать хостом">${ic('crown', 16)}</button>`);
+          acts.push(`<button class="icon-x danger" data-act="kick" data-pid="${p.id}" title="Выгнать">${ic('x', 16)}</button>`);
         }
-        return `<div class="menu-wrap" data-pop>
-          <button data-pm="${p.id}" class="pm ${p.connected ? '' : 'off'} ${mine ? 'me' : ''}" ${items.length ? `data-act="menu" data-menu="p:${p.id}"` : ''} title="${esc(p.name)}${p.connected ? '' : ' — офлайн'}">
-            ${avaHtml(p, 26, 'round')}
-            <span class="pm-n">${esc(p.name)}</span>
-            ${p.id === r.hostId ? `<span class="pm-host" title="Хост">${ic('crown', 13)}</span>` : ''}
-            ${tag ? `<span class="pm-tag">${tag}</span>` : ''}
-          </button>
-          ${open && items.length ? `<div class="pop">${items.join('')}</div>` : ''}
+        return `<div class="pp-row ${p.connected ? '' : 'off'} ${mine ? 'me' : ''} ${team ? 't-' + team : ''}">
+          ${avaHtml(p, 32, 'round')}
+          <div class="pp-n"><span>${esc(p.name)}${mine ? ' <small class="muted">(вы)</small>' : ''}${p.id === r.hostId ? ` <span class="pm-host" title="Хост">${ic('crown', 13)}</span>` : ''}</span>
+            <small>${p.connected ? tag || (p.id === r.hostId ? 'хост' : 'в комнате') : 'офлайн'}</small></div>
+          <div class="pp-acts">${acts.join('')}</div>
         </div>`;
       })
       .join('');
-    return `<div class="tb-strip">
-      <span class="strip-l">${ic('users', 16)}<b>${r.players.length}</b></span>
-      <div class="strip-list">${people}</div>
-      ${!g && !tour() ? `<button class="btn sm ghost leave-btn" data-act="leave" title="Выйти из комнаты">${ic('logout', 16)}<span class="hide-m">Выйти</span></button>` : ''}
+    return `<div class="menu-wrap" data-pop>
+      <button class="btn sm ghost people-btn ${open ? 'on' : ''}" data-act="menu" data-menu="people" title="Участники">
+        <span class="pb-stack">${stack}</span><span class="pb-n">${ic('users', 15)}<b>${r.players.length}</b></span>
+      </button>
+      ${
+        open
+          ? `<div class="pop people-pop ${ui.popAnim ? 'anim' : ''}">
+              <div class="vp-h">Участники · ${r.players.length}${online.length !== r.players.length ? ` <span class="muted">(в сети ${online.length})</span>` : ''}</div>
+              <div class="pp-list">${rows}</div>
+              ${!g && !tour() ? `<div class="vp-sep"></div><button class="pop-i danger" data-act="leave">${ic('logout', 16)}<span>Выйти из комнаты</span></button>` : ''}
+            </div>`
+          : ''
+      }
     </div>`;
   }
 
@@ -1331,11 +1339,15 @@
       )
       .join('');
     return `<aside class="cn-side t-${t} ${turn ? 'turn' : ''}">
-      <div class="tp-head">
-        <span class="tp-name">${TN[t]}</span>
-        <span class="tp-left"><b>${g.left[t]}</b><small>осталось</small></span>
-      </div>
-      ${turn ? `<div class="tp-turn">${ic('clock', 14)} ${g.step === 'clue' ? 'Капитан думает' : 'Отгадывают'}</div>` : ''}
+      ${(() => {
+        const found = g.cards.filter((c) => c.revealed && c.color === t).length;
+        const total = found + g.left[t];
+        return `<div class="tp-top">
+          <div class="tp-name-row"><span class="tp-name">${TN[t]}</span>${turn ? `<span class="tp-turn">${ic('clock', 13)} ${g.step === 'clue' ? 'капитан думает' : 'отгадывают'}</span>` : ''}</div>
+          <div class="tp-count"><b>${g.left[t]}</b><span>${plural(g.left[t], 'слово осталось', 'слова осталось', 'слов осталось')}<small>найдено ${found} из ${total}</small></span></div>
+          <div class="tp-dots">${Array.from({ length: total }, (_, k) => `<i class="${k < found ? 'on' : ''}"></i>`).join('')}</div>
+        </div>`;
+      })()}
       <div class="tp-sec"><div class="tp-label">Капитан</div>${capBlock}</div>
       <div class="tp-sec"><div class="tp-label">Агенты · ${members.length}</div>
         <div class="tp-agents">${agentCards || '<span class="muted small">пока никого</span>'}</div>
