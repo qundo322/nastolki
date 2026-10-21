@@ -73,11 +73,29 @@
     );
   }
   const themeIcon = () => THEMES.find((t) => t.id === theme())?.icon || 'moon';
+  // Настройки вида: свечение хода и размер слов на карточках Коднеймс (у каждого свои)
+  const VIEW = {
+    glow: LS.get('pg_glow', '1') !== '0',
+    fs: Number(LS.get('pg_cnfs', '36')) || 36,
+  };
+  const FS_OPTS = [24, 30, 36, 42];
+  function applyView() {
+    document.documentElement.dataset.glow = VIEW.glow ? 'on' : 'off';
+    document.documentElement.style.setProperty('--cn-fs', String(VIEW.fs));
+  }
+  applyView();
   const themeMenu = () => `<div class="menu-wrap" data-pop>
-      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Тема оформления">${ic(themeIcon())}</button>
+      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: тема, свечение, размер слов">${ic(themeIcon())}</button>
       ${
         ui.menu === 'theme'
-          ? `<div class="pop right ${ui.popAnim ? 'anim' : ''}">${THEMES.map((t) => `<button class="pop-i ${theme() === t.id ? 'on' : ''}" data-act="set-theme" data-t="${t.id}">${ic(t.icon, 16)}<span>${t.name}</span>${theme() === t.id ? ic('check', 16, 'tick') : ''}</button>`).join('')}</div>`
+          ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
+              <div class="vp-h">Тема</div>
+              ${THEMES.map((t) => `<button class="pop-i ${theme() === t.id ? 'on' : ''}" data-act="set-theme" data-t="${t.id}">${ic(t.icon, 16)}<span>${t.name}</span>${theme() === t.id ? ic('check', 16, 'tick') : ''}</button>`).join('')}
+              <div class="vp-sep"></div>
+              <button class="pop-i vp-toggle" data-act="view-glow" role="switch" aria-checked="${VIEW.glow}">${ic('sparkles', 16)}<span>Свечение хода команды</span><i class="sw-t ${VIEW.glow ? 'on' : ''}"></i></button>
+              <div class="vp-h">Размер слов на карточках</div>
+              <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
+            </div>`
           : ''
       }
     </div>`;
@@ -216,6 +234,15 @@
   fab.title = 'Радио комнаты — у всех играет одно и то же';
   fab.innerHTML = `<span class="rf-ic">${ic('headphones', 20)}<i class="eq"><b></b><b></b><b></b></i></span><span class="rf-t"><b>Радио</b><span class="rf-sub">включить</span></span>`;
   document.body.appendChild(fab);
+  // Маленькая пауза рядом с кнопкой радио — видна, когда радио включено
+  const pauseBtn = document.createElement('button');
+  pauseBtn.id = 'radio-pause';
+  pauseBtn.hidden = true;
+  document.body.appendChild(pauseBtn);
+  pauseBtn.addEventListener('click', () => {
+    if (!music.player || !music.ready) return;
+    music.playing ? music.player.pauseVideo() : music.player.playVideo();
+  });
   fab.addEventListener('click', () => {
     Sound.play('click');
     if (!music.on) return startMusic();
@@ -231,6 +258,10 @@
     dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
     fab.hidden = !r;
+    pauseBtn.hidden = !r || !music.on;
+    pauseBtn.innerHTML = ic(music.playing ? 'pause' : 'play', 16);
+    pauseBtn.title = music.playing ? 'Пауза (только у вас)' : 'Продолжить';
+    pauseBtn.classList.toggle('paused', !music.playing);
     fab.classList.toggle('on', music.on);
     fab.classList.toggle('playing', music.on && music.playing);
     fab.classList.toggle('open', music.on && music.open);
@@ -1796,7 +1827,18 @@
     'set-theme': (d) => {
       document.documentElement.setAttribute('data-theme', d.t);
       LS.set('pg_theme', d.t);
-      ui.menu = null;
+      render();
+    },
+    'view-glow': () => {
+      VIEW.glow = !VIEW.glow;
+      LS.set('pg_glow', VIEW.glow ? '1' : '0');
+      applyView();
+      render();
+    },
+    'view-fs': (d) => {
+      VIEW.fs = Number(d.n);
+      LS.set('pg_cnfs', String(VIEW.fs));
+      applyView();
       render();
     },
     chat: () => {

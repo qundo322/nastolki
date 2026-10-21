@@ -28,7 +28,7 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>Экранки — демо</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
 <script>(function(){var t=null;try{t=localStorage.getItem("pg_theme")}catch(e){}if(t!=="light"&&t!=="dark"&&t!=="oled")t=window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)})()</script>
 <style>${css}\n${demoCss}</style></head>
 <body><div id="app"></div><div id="toasts"></div>

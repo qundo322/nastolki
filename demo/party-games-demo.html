@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>Экранки — демо</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
 <script>(function(){var t=null;try{t=localStorage.getItem("pg_theme")}catch(e){}if(t!=="light"&&t!=="dark"&&t!=="oled")t=window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t)})()</script>
 <style>/* ============================================================
    Темы. Все цвета — только через токены.
@@ -171,8 +171,8 @@
   --cn-ass: #444446;
   --cn-ass-text: #b6b6b9;
   --radius: 16px;
-  --font: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --display: 'Unbounded', var(--font);
+  --font: 'Google Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --display: 'Google Sans', var(--font); /* заголовки — тот же шрифт, жирный */
   --card-font: 'Roboto Condensed', var(--font), sans-serif;
   --ctl-h: 0px;
 }
@@ -540,7 +540,7 @@ button.num { font: inherit; font-weight: 800; }
 .edit-btn { position: relative; padding-left: 6px; }
 .edit-btn .ring { width: 26px; height: 26px; }
 .edit-btn .secs { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; min-width: 14px; }
-.ring { transform: rotate(-90deg); }
+.ring { display: block; transform: rotate(-90deg); }
 .ring circle { fill: none; stroke-width: 3.5; }
 .ring-bg { stroke: var(--line-strong); }
 .ring-fg { stroke: var(--accent); stroke-dasharray: 100; stroke-dashoffset: 0; stroke-linecap: round; transition: stroke-dashoffset 0.2s linear; }
@@ -569,7 +569,7 @@ button.num { font: inherit; font-weight: 800; }
 .cn-card {
   position: relative; aspect-ratio: 1.55; border-radius: 8px; border: 0; cursor: pointer; padding: 4px 3px;
   background: var(--cn-card); color: var(--cn-text); font-family: var(--card-font); font-weight: 700; text-transform: uppercase;
-  font-size: clamp(12px, 3.9cqi, 36px); letter-spacing: 0.01em;
+  font-size: clamp(11px, calc(var(--cn-fs, 36) * 0.108cqi), calc(var(--cn-fs, 36) * 1px)); letter-spacing: 0.01em;
   display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 3px 0 var(--cn-edge);
   transition: transform 0.1s, background 0.12s, opacity 0.2s;
 }
@@ -593,7 +593,8 @@ button.num { font: inherit; font-weight: 800; }
 /* голоса совпали: кольцо заполняется 2 секунды */
 .cn-card.pending { outline: 3px solid var(--accent); outline-offset: 2px; }
 .pend { position: absolute; top: -12px; right: -12px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35); z-index: 2; padding: 3px; }
-.pend .ring { width: 100%; height: 100%; }
+.pend .ring { display: block; width: 100%; height: 100%; }
+.pend { box-sizing: border-box; line-height: 0; font-size: 0; }
 .pend .ring-fg { stroke-dashoffset: 100; animation: fillring var(--d) linear forwards; animation-delay: var(--e); transition: none; }
 @keyframes fillring { to { stroke-dashoffset: 0; } }
 
@@ -1240,6 +1241,32 @@ div.clue { cursor: default; }
 .rl-pt.t b { color: var(--accent-text); }
 .rl-pt.t.neg b { color: var(--red-text); }
 .who { padding-bottom: 130px; }
+
+/* Меню «Вид» */
+.view-pop { min-width: 250px; }
+.vp-h { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 4px; }
+.vp-sep { height: 1px; background: var(--line); margin: 6px 4px; }
+.vp-toggle { width: 100%; }
+.sw-t { margin-left: auto; flex: none; width: 34px; height: 20px; border-radius: 99px; background: var(--line-strong); position: relative; transition: background .15s; }
+.sw-t::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.sw-t.on { background: var(--green); }
+.sw-t.on::after { transform: translateX(14px); }
+.vp-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px 6px 8px; }
+.vp-seg button { height: 36px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font-weight: 800; cursor: pointer; font-family: var(--card-font); }
+.vp-seg button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+[data-glow='off'] .turn-glow { display: none; }
+/* Статус занимает всю зарезервированную высоту — без пустого зазора над полем */
+.cn-status > :first-child { flex: 1 1 auto; }
+.cn-status > .cn-clue, .cn-status > .ready-box, .cn-status > .clue-form, .cn-status > form { align-items: center; }
+.cn-status > .cn-clue { display: flex; }
+
+#radio-pause { position: fixed; bottom: 22px; z-index: 71; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.3); transition: transform .12s, border-color .15s; left: 152px; }
+#radio-pause[hidden] { display: none; }
+#radio-pause:hover { transform: translateY(-1px); border-color: var(--accent-line); }
+#radio-pause.paused { color: var(--accent-text); border-color: var(--accent); }
+@media (max-width: 640px) { #radio-pause { bottom: 13px; left: 136px; width: 38px; height: 38px; } }
+h1, h2, h3, h4, .h2, .tp-name, .gname, .mega-word, .qa-big, .rl-hero h3, .nom-t, .sum-t { font-family: var(--display); font-weight: 700; letter-spacing: -0.01em; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -3986,11 +4013,29 @@ window.RULES = {
     );
   }
   const themeIcon = () => THEMES.find((t) => t.id === theme())?.icon || 'moon';
+  // Настройки вида: свечение хода и размер слов на карточках Коднеймс (у каждого свои)
+  const VIEW = {
+    glow: LS.get('pg_glow', '1') !== '0',
+    fs: Number(LS.get('pg_cnfs', '36')) || 36,
+  };
+  const FS_OPTS = [24, 30, 36, 42];
+  function applyView() {
+    document.documentElement.dataset.glow = VIEW.glow ? 'on' : 'off';
+    document.documentElement.style.setProperty('--cn-fs', String(VIEW.fs));
+  }
+  applyView();
   const themeMenu = () => `<div class="menu-wrap" data-pop>
-      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Тема оформления">${ic(themeIcon())}</button>
+      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: тема, свечение, размер слов">${ic(themeIcon())}</button>
       ${
         ui.menu === 'theme'
-          ? `<div class="pop right ${ui.popAnim ? 'anim' : ''}">${THEMES.map((t) => `<button class="pop-i ${theme() === t.id ? 'on' : ''}" data-act="set-theme" data-t="${t.id}">${ic(t.icon, 16)}<span>${t.name}</span>${theme() === t.id ? ic('check', 16, 'tick') : ''}</button>`).join('')}</div>`
+          ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
+              <div class="vp-h">Тема</div>
+              ${THEMES.map((t) => `<button class="pop-i ${theme() === t.id ? 'on' : ''}" data-act="set-theme" data-t="${t.id}">${ic(t.icon, 16)}<span>${t.name}</span>${theme() === t.id ? ic('check', 16, 'tick') : ''}</button>`).join('')}
+              <div class="vp-sep"></div>
+              <button class="pop-i vp-toggle" data-act="view-glow" role="switch" aria-checked="${VIEW.glow}">${ic('sparkles', 16)}<span>Свечение хода команды</span><i class="sw-t ${VIEW.glow ? 'on' : ''}"></i></button>
+              <div class="vp-h">Размер слов на карточках</div>
+              <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
+            </div>`
           : ''
       }
     </div>`;
@@ -4129,6 +4174,15 @@ window.RULES = {
   fab.title = 'Радио комнаты — у всех играет одно и то же';
   fab.innerHTML = `<span class="rf-ic">${ic('headphones', 20)}<i class="eq"><b></b><b></b><b></b></i></span><span class="rf-t"><b>Радио</b><span class="rf-sub">включить</span></span>`;
   document.body.appendChild(fab);
+  // Маленькая пауза рядом с кнопкой радио — видна, когда радио включено
+  const pauseBtn = document.createElement('button');
+  pauseBtn.id = 'radio-pause';
+  pauseBtn.hidden = true;
+  document.body.appendChild(pauseBtn);
+  pauseBtn.addEventListener('click', () => {
+    if (!music.player || !music.ready) return;
+    music.playing ? music.player.pauseVideo() : music.player.playVideo();
+  });
   fab.addEventListener('click', () => {
     Sound.play('click');
     if (!music.on) return startMusic();
@@ -4144,6 +4198,10 @@ window.RULES = {
     dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
     fab.hidden = !r;
+    pauseBtn.hidden = !r || !music.on;
+    pauseBtn.innerHTML = ic(music.playing ? 'pause' : 'play', 16);
+    pauseBtn.title = music.playing ? 'Пауза (только у вас)' : 'Продолжить';
+    pauseBtn.classList.toggle('paused', !music.playing);
     fab.classList.toggle('on', music.on);
     fab.classList.toggle('playing', music.on && music.playing);
     fab.classList.toggle('open', music.on && music.open);
@@ -5709,7 +5767,18 @@ window.RULES = {
     'set-theme': (d) => {
       document.documentElement.setAttribute('data-theme', d.t);
       LS.set('pg_theme', d.t);
-      ui.menu = null;
+      render();
+    },
+    'view-glow': () => {
+      VIEW.glow = !VIEW.glow;
+      LS.set('pg_glow', VIEW.glow ? '1' : '0');
+      applyView();
+      render();
+    },
+    'view-fs': (d) => {
+      VIEW.fs = Number(d.n);
+      LS.set('pg_cnfs', String(VIEW.fs));
+      applyView();
       render();
     },
     chat: () => {
