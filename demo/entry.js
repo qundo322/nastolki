@@ -8,6 +8,8 @@ const GAMES = {
   quiz: require('../server/games/quiz'),
 };
 
+const Waiting = require('../server/waiting');
+for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
 const PROFILES = require('../server/profiles');
 const Tour = require('../server/tournament');
 const Session = require('../server/session');
@@ -280,7 +282,8 @@ function hint() {
   if (room.tour && room.tour.phase !== 'play') return 'Катка окончена — хост запускает следующую.';
   if (!g && room.suspended) return 'Игра на паузе — хост может вернуться к ней из лобби.';
   if (!g) return 'Вы хост — выберите одну игру или соберите марафон.';
-  const s = g.state;
+  if (!g.state.inner) return 'Ждём игроков — когда все зайдут, хост жмёт «Начать игру».';
+  const s = g.state.inner;
   const n = (id) => room.players.get(id)?.name || '?';
   switch (g.type) {
     case 'codenames':

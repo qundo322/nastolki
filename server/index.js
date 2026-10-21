@@ -14,6 +14,9 @@ const GAMES = {
   justone: require('./games/justone'),
   quiz: require('./games/quiz'),
 };
+// Мало игроков — игра открывается в режиме «Ждём игроков» (см. server/waiting.js)
+const Waiting = require('./waiting');
+for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
 
 const PROFILES = require('./profiles');
 const Tour = require('./tournament');

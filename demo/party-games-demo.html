@@ -1744,6 +1744,26 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .qa-b .pend { top: 8px; right: 8px; }
 .ctl-fab.plus-t b { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: -.02em; }
 
+/* ---------- v23: «Ждём игроков» ---------- */
+.wait-screen { display: grid; place-items: center; padding: 24px 0; }
+.wait-card { width: min(520px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 28px 22px; }
+.wait-ic { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #000; }
+.wait-card h2 { margin: 0; font-size: 26px; }
+.wait-sub { margin: 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.wait-dots { display: inline-flex; gap: 4px; }
+.wait-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: waitDot 1.2s infinite ease-in-out; }
+.wait-dots i:nth-child(2) { animation-delay: .15s; }
+.wait-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes waitDot { 0%, 80%, 100% { opacity: .25; transform: scale(.8); } 40% { opacity: 1; transform: scale(1.1); } }
+.wait-need { margin: 0; color: var(--muted); font-size: 14px; }
+.wait-people { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 6px 0; }
+.wait-p { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; max-width: 72px; }
+.wait-p > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 72px; }
+.wait-p.off { opacity: .45; }
+.wait-link { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; }
+.wait-link .btn span { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wait-card .btn.big { width: 100%; margin-top: 6px; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -4378,6 +4398,50 @@ body{padding-bottom:84px}
     }
   });
 
+  // server/waiting.js
+  var require_waiting = __commonJS({
+    "server/waiting.js"(exports, module) {
+      function wrap(g) {
+        const w = {
+          meta: g.meta,
+          create(ctx, settings) {
+            const r = g.create(ctx, settings || {});
+            if (typeof r === "string") return { waiting: true, settings: settings || {}, need: r, inner: null };
+            return { waiting: false, inner: r };
+          },
+          action(s, pid, msg, ctx) {
+            if (s.inner) return g.action(s.inner, pid, msg, ctx);
+            if (msg.type === "begin") {
+              if (!ctx.isHost) return "\u041D\u0430\u0447\u0438\u043D\u0430\u0435\u0442 \u0445\u043E\u0441\u0442";
+              const r = g.create(ctx, s.settings);
+              if (typeof r === "string") {
+                s.need = r;
+                return r;
+              }
+              s.inner = r;
+              s.waiting = false;
+              return;
+            }
+            return "\u0416\u0434\u0451\u043C, \u043F\u043E\u043A\u0430 \u0445\u043E\u0441\u0442 \u043D\u0430\u0447\u043D\u0451\u0442 \u0438\u0433\u0440\u0443";
+          },
+          view(s, pid, ctx) {
+            return s.inner ? g.view(s.inner, pid, ctx) : { waiting: true, need: s.need };
+          },
+          onLeave: (s, pid, ctx) => s.inner && g.onLeave && g.onLeave(s.inner, pid, ctx),
+          isOver: (s) => !!s.inner && g.isOver(s.inner),
+          results: (s, ctx) => s.inner ? g.results(s.inner, ctx) : {}
+        };
+        if (g.onPresence) w.onPresence = (s, ctx) => s.inner && g.onPresence(s.inner, ctx);
+        if (g.pause) w.pause = (s, ctx, why) => s.inner && g.pause(s.inner, ctx, why);
+        if (g.resume) w.resume = (s, ctx, why) => s.inner && g.resume(s.inner, ctx, why);
+        if (g.stats) w.stats = (s) => s.inner ? g.stats(s.inner) : {};
+        return w;
+      }
+      var inner = (s) => s && "inner" in s ? s.inner : s;
+      module.exports = { wrap, inner };
+    }
+  });
+
   // server/profiles.js
   var require_profiles = __commonJS({
     "server/profiles.js"(exports, module) {
@@ -4641,6 +4705,8 @@ body{padding-bottom:84px}
     justone: require_justone(),
     quiz: require_quiz()
   };
+  var Waiting = require_waiting();
+  for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
   var PROFILES = require_profiles();
   var Tour = require_tournament();
   var Session = require_session();
@@ -4892,7 +4958,8 @@ body{padding-bottom:84px}
     if (room.tour && room.tour.phase !== "play") return "\u041A\u0430\u0442\u043A\u0430 \u043E\u043A\u043E\u043D\u0447\u0435\u043D\u0430 \u2014 \u0445\u043E\u0441\u0442 \u0437\u0430\u043F\u0443\u0441\u043A\u0430\u0435\u0442 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0443\u044E.";
     if (!g && room.suspended) return "\u0418\u0433\u0440\u0430 \u043D\u0430 \u043F\u0430\u0443\u0437\u0435 \u2014 \u0445\u043E\u0441\u0442 \u043C\u043E\u0436\u0435\u0442 \u0432\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F \u043A \u043D\u0435\u0439 \u0438\u0437 \u043B\u043E\u0431\u0431\u0438.";
     if (!g) return "\u0412\u044B \u0445\u043E\u0441\u0442 \u2014 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0434\u043D\u0443 \u0438\u0433\u0440\u0443 \u0438\u043B\u0438 \u0441\u043E\u0431\u0435\u0440\u0438\u0442\u0435 \u043C\u0430\u0440\u0430\u0444\u043E\u043D.";
-    const s = g.state;
+    if (!g.state.inner) return "\u0416\u0434\u0451\u043C \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u2014 \u043A\u043E\u0433\u0434\u0430 \u0432\u0441\u0435 \u0437\u0430\u0439\u0434\u0443\u0442, \u0445\u043E\u0441\u0442 \u0436\u043C\u0451\u0442 \xAB\u041D\u0430\u0447\u0430\u0442\u044C \u0438\u0433\u0440\u0443\xBB.";
+    const s = g.state.inner;
     const n = (id) => {
       var _a;
       return ((_a = room.players.get(id)) == null ? void 0 : _a.name) || "?";
@@ -6037,6 +6104,11 @@ window.RULES = {
     const a = prev.game, b = next.game;
     if (!b) return;
     if (!a || a.type !== b.type) return Sound.play('start');
+    // Ожидание игроков: звук только когда игра действительно началась
+    if (a.waiting || b.waiting) {
+      if (a.waiting && !b.waiting) Sound.play('start');
+      return;
+    }
     if (b.type === 'codenames') {
       const fresh = [];
       b.cards.forEach((c, i) => c.revealed && !a.cards[i]?.revealed && fresh.push(i));
@@ -6093,7 +6165,7 @@ window.RULES = {
     // Мою подсказку выбрали лучшей — сердечки
     if (st.game?.type === 'justone' && st.game.heart === st.me && S?.game?.type === 'justone' && S.game.heart !== st.me && !st.game.isGuesser) heartRain();
     // Первая начавшаяся партия Коднеймс — предложить включить свечение хода
-    if (((st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup')) || (st.game?.type === 'justone' && S?.game?.type !== 'justone')) && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
+    if (!st.game?.waiting && ((st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup')) || (st.game?.type === 'justone' && S?.game?.type !== 'justone')) && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
     // Партия Коднеймс закончилась — показываем итоги
     if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
       ui.showSum = true;
@@ -6350,7 +6422,7 @@ window.RULES = {
             <button class="btn sm ghost exit-btn" data-act="leave" title="Выйти из комнаты">${ic('logout', 16)}<span class="hide-m">Выйти</span></button>
           </div>
         </div>
-        ${g && g.type === 'codenames' ? renderClock(g) : g ? gameClock(g) : ''}
+        ${g && g.waiting ? '' : g && g.type === 'codenames' ? renderClock(g) : g ? gameClock(g) : ''}
       </header>
       ${!connected ? '<div class="offline">Нет соединения, переподключаемся…</div>' : ''}
       <main class="stage ${ui.enter ? 'enter' : ''}">
@@ -6501,7 +6573,9 @@ window.RULES = {
     // «+время» — кнопка с цифрой вместо иконки
     const plusT = (actName, sec) => `<button class="chat-fab ctl-fab plus-t" data-act="${actName}" data-tip="Добавить ${sec} секунд" aria-label="Добавить ${sec} секунд"><b>+${sec}</b></button>`;
     const items = [];
-    if (g.type === 'codenames') {
+    if (g.waiting) {
+      items.push(btn('wait-begin', 'play', 'Начать игру'));
+    } else if (g.type === 'codenames') {
       if (isPrep(g)) items.push(btn('cn-force', 'play', 'Начать без ожидания'));
       if (g.clock) items.push(btn('cn-pause', g.clock.paused ? 'play' : 'pause', g.clock.paused ? 'Продолжить таймер' : 'Пауза таймера', g.clock.paused ? 'hot' : ''));
       if (!g.winner) items.push(btn('cn-reset', 'reset', 'Перезапустить таймер'));
@@ -6762,10 +6836,31 @@ window.RULES = {
 
   // ---------- игры ----------
   function renderGame(g) {
+    if (g.waiting) return rWaiting(g);
     const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
+
+  // «Ждём игроков»: игра уже открыта, все по ссылке попадают сюда. Хост жмёт «Начать» — тут и проверяется минимум.
+  function rWaiting(g) {
+    const meta = gameMeta(g.type);
+    const ps = S.room.players;
+    const link = roomLink(S.room.code);
+    return `<section class="wait-screen">
+      <div class="card wait-card">
+        <div class="wait-ic">${gIcon(g.type, 34)}</div>
+        <h2>${esc(meta.title)}</h2>
+        <p class="wait-sub"><span class="wait-dots"><i></i><i></i><i></i></span>Ждём игроков</p>
+        ${g.need ? `<p class="wait-need">${esc(g.need)} · сейчас ${ps.length}</p>` : ''}
+        <div class="wait-people">${ps.map((p) => `<span class="wait-p ${p.connected ? '' : 'off'}">${avaHtml(p, 'md')}<span>${esc(p.name)}</span></span>`).join('')}</div>
+        <div class="wait-link"><span class="muted">Ссылка для друзей</span><button class="btn sm" data-act="copy">${ic('link', 16)}<span>${esc(link.replace(/^https?:\/\//, ''))}</span></button></div>
+        ${isHost()
+          ? `<button class="btn primary big" data-act="wait-begin">${ic('play', 18)} Начать игру</button>`
+          : `<p class="muted">Игру начнёт хост, когда все соберутся.</p>`}
+      </div>
+    </section>`;
+  }
 
   const timerHtml = (endsAt, total) => {
     if (!endsAt) return '';
@@ -7949,6 +8044,7 @@ window.RULES = {
     'qz-restart': () => act('restart'),
     'qz-add': () => act('addMe'),
     'qz-skip': () => act('skip'),
+    'wait-begin': () => act('begin'),
     'al-last': (d) => act('lastTo', { to: d.to === 'none' ? 'none' : Number(d.to) }),
     'jo-reject': () => act('reject'),
     'jo-heart': (d) => act('heart', { key: Number(d.key) }),

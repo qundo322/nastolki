@@ -500,6 +500,11 @@
     const a = prev.game, b = next.game;
     if (!b) return;
     if (!a || a.type !== b.type) return Sound.play('start');
+    // Ожидание игроков: звук только когда игра действительно началась
+    if (a.waiting || b.waiting) {
+      if (a.waiting && !b.waiting) Sound.play('start');
+      return;
+    }
     if (b.type === 'codenames') {
       const fresh = [];
       b.cards.forEach((c, i) => c.revealed && !a.cards[i]?.revealed && fresh.push(i));
@@ -556,7 +561,7 @@
     // Мою подсказку выбрали лучшей — сердечки
     if (st.game?.type === 'justone' && st.game.heart === st.me && S?.game?.type === 'justone' && S.game.heart !== st.me && !st.game.isGuesser) heartRain();
     // Первая начавшаяся партия Коднеймс — предложить включить свечение хода
-    if (((st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup')) || (st.game?.type === 'justone' && S?.game?.type !== 'justone')) && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
+    if (!st.game?.waiting && ((st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup')) || (st.game?.type === 'justone' && S?.game?.type !== 'justone')) && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
     // Партия Коднеймс закончилась — показываем итоги
     if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
       ui.showSum = true;
@@ -813,7 +818,7 @@
             <button class="btn sm ghost exit-btn" data-act="leave" title="Выйти из комнаты">${ic('logout', 16)}<span class="hide-m">Выйти</span></button>
           </div>
         </div>
-        ${g && g.type === 'codenames' ? renderClock(g) : g ? gameClock(g) : ''}
+        ${g && g.waiting ? '' : g && g.type === 'codenames' ? renderClock(g) : g ? gameClock(g) : ''}
       </header>
       ${!connected ? '<div class="offline">Нет соединения, переподключаемся…</div>' : ''}
       <main class="stage ${ui.enter ? 'enter' : ''}">
@@ -964,7 +969,9 @@
     // «+время» — кнопка с цифрой вместо иконки
     const plusT = (actName, sec) => `<button class="chat-fab ctl-fab plus-t" data-act="${actName}" data-tip="Добавить ${sec} секунд" aria-label="Добавить ${sec} секунд"><b>+${sec}</b></button>`;
     const items = [];
-    if (g.type === 'codenames') {
+    if (g.waiting) {
+      items.push(btn('wait-begin', 'play', 'Начать игру'));
+    } else if (g.type === 'codenames') {
       if (isPrep(g)) items.push(btn('cn-force', 'play', 'Начать без ожидания'));
       if (g.clock) items.push(btn('cn-pause', g.clock.paused ? 'play' : 'pause', g.clock.paused ? 'Продолжить таймер' : 'Пауза таймера', g.clock.paused ? 'hot' : ''));
       if (!g.winner) items.push(btn('cn-reset', 'reset', 'Перезапустить таймер'));
@@ -1225,10 +1232,31 @@
 
   // ---------- игры ----------
   function renderGame(g) {
+    if (g.waiting) return rWaiting(g);
     const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
+
+  // «Ждём игроков»: игра уже открыта, все по ссылке попадают сюда. Хост жмёт «Начать» — тут и проверяется минимум.
+  function rWaiting(g) {
+    const meta = gameMeta(g.type);
+    const ps = S.room.players;
+    const link = roomLink(S.room.code);
+    return `<section class="wait-screen">
+      <div class="card wait-card">
+        <div class="wait-ic">${gIcon(g.type, 34)}</div>
+        <h2>${esc(meta.title)}</h2>
+        <p class="wait-sub"><span class="wait-dots"><i></i><i></i><i></i></span>Ждём игроков</p>
+        ${g.need ? `<p class="wait-need">${esc(g.need)} · сейчас ${ps.length}</p>` : ''}
+        <div class="wait-people">${ps.map((p) => `<span class="wait-p ${p.connected ? '' : 'off'}">${avaHtml(p, 'md')}<span>${esc(p.name)}</span></span>`).join('')}</div>
+        <div class="wait-link"><span class="muted">Ссылка для друзей</span><button class="btn sm" data-act="copy">${ic('link', 16)}<span>${esc(link.replace(/^https?:\/\//, ''))}</span></button></div>
+        ${isHost()
+          ? `<button class="btn primary big" data-act="wait-begin">${ic('play', 18)} Начать игру</button>`
+          : `<p class="muted">Игру начнёт хост, когда все соберутся.</p>`}
+      </div>
+    </section>`;
+  }
 
   const timerHtml = (endsAt, total) => {
     if (!endsAt) return '';
@@ -2412,6 +2440,7 @@
     'qz-restart': () => act('restart'),
     'qz-add': () => act('addMe'),
     'qz-skip': () => act('skip'),
+    'wait-begin': () => act('begin'),
     'al-last': (d) => act('lastTo', { to: d.to === 'none' ? 'none' : Number(d.to) }),
     'jo-reject': () => act('reject'),
     'jo-heart': (d) => act('heart', { key: Number(d.key) }),

@@ -452,6 +452,32 @@ function bot(profile, name) {
   assert(h.st.room.players.length === 4, 'kicked');
   console.log('✓ Переподключение и кик');
 
+  // ---- Мало игроков: игра открывается в ожидании, ошибка — только при старте
+  {
+    const solo = bot(null, 'Соло');
+    await wait(200);
+    const rr = await solo.enter('createRoom');
+    assert(rr.ok, 'solo room');
+    await solo.call('selectGame', { type: 'quiz' });
+    assert((await solo.call('startGame', { settings: { rounds: 3 } })).ok, 'quiz opens with 1 player');
+    await wait(60);
+    assert(solo.st.game && solo.st.game.waiting && /минимум 2/.test(solo.st.game.need), 'waiting view');
+    const e1 = await solo.act('begin');
+    assert(e1.error && /минимум 2/.test(e1.error), 'begin errors while too few');
+    const friend = bot(null, 'Друг');
+    await wait(200);
+    assert((await friend.enter('joinRoom', rr.code)).ok, 'friend joins by link');
+    await wait(60);
+    assert(friend.st.game && friend.st.game.waiting, 'friend lands in waiting game');
+    assert((await friend.act('begin')).error, 'only host begins');
+    assert((await solo.act('begin')).ok, 'host begins');
+    await wait(60);
+    assert(friend.st.game.phase === 'answer' && friend.st.game.order.length === 2, 'game started for both');
+    solo.s.disconnect();
+    friend.s.disconnect();
+    console.log('✓ Ожидание игроков');
+  }
+
   console.log('\nВСЕ ТЕСТЫ ПРОШЛИ');
   process.exit(0);
 })().catch((e) => {
