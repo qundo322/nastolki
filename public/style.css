@@ -1616,3 +1616,43 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .qz-scale { position: relative; z-index: 0; }
 .qz-list .qz-r { text-align: left; }
 .qz-list .jb-n { text-align: left; }
+
+/* ============ v22: счётчик-ролик, вопросы двумя колонками, время в чате ============ */
+.qa-b { position: relative; }
+.roll { position: relative; display: inline-block; height: 1.1em; overflow: hidden; font-family: var(--display); font-size: 34px; font-weight: 700; line-height: 1.1; color: #fff; min-width: 1ch; text-align: center; vertical-align: middle; }
+.qa-b:not(.on) .roll { color: var(--text); }
+.roll > span { display: block; }
+.roll-o { position: absolute; inset: 0; animation: rollOut .42s cubic-bezier(.2,.8,.2,1) both; }
+.roll-n.in { animation: rollIn .42s cubic-bezier(.2,.8,.2,1.15) both; }
+.roll.down .roll-o { animation-name: rollOutD; }
+.roll.down .roll-n.in { animation-name: rollInD; }
+@keyframes rollIn { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rollOut { from { transform: none; opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+@keyframes rollInD { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rollOutD { from { transform: none; opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+.qa-b { gap: 4px; min-height: 120px; }
+.qa-b > b { font-size: 18px; }
+.qa-asker { justify-content: center; font-size: 18px; gap: 10px; margin-bottom: 0; }
+.qa-asker b { font-size: 20px; }
+/* вопросы двумя колонками */
+.qa-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.qa-col { border-radius: 14px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.qa-col.yes { border-top: 4px solid var(--green); }
+.qa-col.no { border-top: 4px solid var(--red); }
+.qa-col.idk { margin: 0 0 8px; border-top: 4px solid var(--line-strong); }
+.qa-ch { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.qa-ch b { margin-left: auto; font-family: var(--display); font-size: 18px; }
+.qa-col.yes .qa-ch { color: var(--green-text); }
+.qa-col.no .qa-ch { color: var(--red-text); }
+.qa-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+.qa-row:last-child { border-bottom: 0; }
+.qa-rq { font-weight: 700; font-size: 15px; line-height: 1.3; }
+.qa-rn { flex: none; font-size: 11px; font-weight: 800; color: var(--muted); }
+.qa-rn i { font-style: normal; }
+.qa-rn .y { color: var(--green-text); }
+.qa-rn .n { color: var(--red-text); }
+@media (max-width: 640px) { .qa-cols { grid-template-columns: 1fr; } }
+/* время в чате */
+.msg { position: relative; }
+.msg-t { margin-left: auto; flex: none; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; padding-left: 6px; }
+.msg > div { flex: 1; min-width: 0; }

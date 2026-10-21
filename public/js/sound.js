@@ -85,10 +85,11 @@
       noise(0.5, { gain: 0.25, from: 400, to: 80, q: 0.7 });
     },
     turn: () => noise(0.32, { gain: 0.12, from: 500, to: 4000 }),
+    // Ваш ход: короткий светлый перезвон
     myturn: () => {
-      noise(0.25, { gain: 0.08, from: 600, to: 3500 });
-      tone(N.G5, 0.12, { gain: 0.15, delay: 0.12 });
-      tone(N.C6, 0.2, { gain: 0.15, delay: 0.22 });
+      tone(N.E5, 0.12, { type: 'sine', gain: 0.14 });
+      tone(N.A5, 0.14, { type: 'sine', gain: 0.14, delay: 0.09 });
+      tone(N.E6, 0.28, { type: 'triangle', gain: 0.1, delay: 0.18 });
     },
     win: () => [N.C5, N.E5, N.G5, N.C6, N.E6].forEach((f, i) => tone(f, 0.22, { type: 'triangle', gain: 0.18, delay: i * 0.09 })),
     lose: () => [N.G4, N.E4, N.C4].forEach((f, i) => tone(f, 0.3, { type: 'triangle', gain: 0.16, delay: i * 0.14 })),
@@ -107,6 +108,11 @@
       tone(160, 0.12, { type: 'square', gain: 0.06, delay: 0.1 });
     },
     tick: () => tone(1800, 0.03, { type: 'sine', gain: 0.1 }),
+    // Мягкий «щелчок» счётчика голосов
+    count: () => {
+      noise(0.03, { gain: 0.07, from: 2500, to: 1800, q: 3 });
+      tone(1200, 0.05, { type: 'sine', gain: 0.07, to: 1500 });
+    },
     // Время вышло: короткий «гонг» — два низких тона с шумом
     timeup: () => {
       tone(523, 0.18, { type: 'square', gain: 0.07 });

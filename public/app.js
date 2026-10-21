@@ -531,6 +531,20 @@
       if (a.turnPid !== b.turnPid) Sound.play(b.turnPid === me ? 'myturn' : 'turn');
       if (b.finishOrder.length > a.finishOrder.length) Sound.play('good');
     }
+    // Начался ход у меня или у моей команды — короткий приятный сигнал (там, где выше его ещё нет)
+    const myTurn = (g) => {
+      if (!g) return false;
+      if (g.type === 'alias') return !['teams', 'over'].includes(g.phase) && (g.explainer === me || g.turnTeam === g.myTeam);
+      if (g.type === 'spyfall') return g.phase === 'play' && (g.asker === me || g.target === me);
+      if (g.type === 'justone') return g.phase === 'guess' && g.isGuesser;
+      if (g.type === 'quiz') return g.phase === 'answer' && g.round;
+      return false;
+    };
+    const was = myTurn(a);
+    const now2 = myTurn(b);
+    if (now2 && (!was || (b.type === 'quiz' && a.round !== b.round) || (b.type === 'alias' && a.turnTeam !== b.turnTeam))) setTimeout(() => Sound.play('myturn'), 120);
+    // Голос «да / нет / не знаю» в «Кто я?» — мягкий щелчок счётчика
+    if (b.type === 'whoami' && a.q && b.q && a.q.id === b.q.id && a.q.yes + a.q.no + a.q.idk !== b.q.yes + b.q.no + b.q.idk) Sound.play('count');
   }
 
   socket.on('state', (st) => {
@@ -871,7 +885,7 @@
         ui.chatOpen
           ? `<div class="chat-panel card">
               <div class="chat-h"><b>${ic('chat', 16)} Чат</b><button class="icon-x" data-act="chat" title="Свернуть">${ic('chevron', 18)}</button></div>
-              <div class="chat-log">${r.chat.length ? r.chat.map((m) => `<div class="msg">${pa(m.pid, 'xs')}<div><b>${esc(m.name)}</b> ${esc(m.text)}</div></div>`).join('') : '<div class="muted small">Сообщений пока нет</div>'}</div>
+              <div class="chat-log">${r.chat.length ? r.chat.map((m) => `<div class="msg">${pa(m.pid, 'xs')}<div><b>${esc(m.name)}</b> ${esc(m.text)}</div><time class="msg-t" title="${new Date(m.at).toLocaleString('ru-RU')}">${new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</time></div>`).join('') : '<div class="muted small">Сообщений пока нет</div>'}</div>
               <form data-form="chat" class="chat-form"><input class="inp" name="text" data-keep="chat" maxlength="300" placeholder="Сообщение…" autocomplete="off"/><button class="btn sm primary icon-btn" title="Отправить">${ic('send', 16)}</button></form>
             </div>`
           : ''
@@ -1854,7 +1868,19 @@
         <div class="qa-c-q">${x.text ? esc(x.text) : '<i>вопрос голосом</i>'}</div>
         <div class="qa-c-a">${live ? '<span class="qa-c-v">ждём ответы…</span>' : `<span class="qa-c-v">${AL[x.v] || '—'}</span>`}<span class="qa-c-n"><i class="y">${x.yes}</i><i class="n">${x.no}</i><i>${x.idk}</i></span></div>
       </div>`;
-    const qaCards = (list, extra = '') => `<div class="qa-grid">${list.map((x) => qaCard(x)).join('')}${extra}</div>`;
+    // «Мои вопросы и ответы» — две колонки: что про меня точно ДА и что точно НЕТ (+ «не знаю» отдельно)
+    const qaCards = (list, extra = '') => {
+      const row = (x) => `<div class="qa-row"><span class="qa-rq">${esc(x.text)}</span><span class="qa-rn" title="да / нет / не знаю"><i class="y">${x.yes}</i>·<i class="n">${x.no}</i>·<i>${x.idk}</i></span></div>`;
+      const yes = list.filter((x) => x.v === 'yes');
+      const no = list.filter((x) => x.v === 'no');
+      const idk = list.filter((x) => x.v !== 'yes' && x.v !== 'no');
+      return `<div class="qa-cols">
+          <div class="qa-col yes"><div class="qa-ch">${ic('check', 16)} Да — это про меня <b>${yes.length}</b></div>${yes.map(row).join('') || '<span class="muted small">пока пусто</span>'}</div>
+          <div class="qa-col no"><div class="qa-ch">${ic('x', 16)} Нет — это не я <b>${no.length}</b></div>${no.map(row).join('') || '<span class="muted small">пока пусто</span>'}</div>
+        </div>
+        ${idk.length ? `<div class="qa-col idk"><div class="qa-ch">${ic('question', 16)} Непонятно <b>${idk.length}</b></div>${idk.map(row).join('')}</div>` : ''}
+        ${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
+    };
     const q = g.q && g.q.asker === g.turnPid ? g.q : null;
     const asker = g.turnPid;
     const qVotes = (v) => (q ? Object.entries(q.who).filter(([, a]) => a === v).map(([id]) => `<span title="${nm(id)}">${pa(id, 'xs', 'round')}</span>`).join('') : '');
@@ -1869,11 +1895,11 @@
         </div>
         ${myQa.length ? `<div class="card qa-card"><div class="side-h">${ic('list', 16)} Ваши вопросы</div>${qaCards(myQa)}</div>` : ''}`;
     } else if (!over) {
-      qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 'sm', 'round')} Спрашивает <b>${nm(asker)}</b></div>
+      qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 32, 'round')}<span>Спрашивает <b>${nm(asker)}</b></span></div>
         ${
           q
             ? `<div class="qa-big">«${esc(q.text)}»</div>
-               <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}<small>${q[v]}</small></span></button>`).join('')}</div>`
+               <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b>${rollCount('q' + q.id + v, q[v])}<span class="qa-who">${qVotes(v)}</span></button>`).join('')}</div>`
             : `<div class="qa-big muted">Ждём вопрос…</div>`
         }
         ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)} · ${g.players[asker].qa.length}</summary>${qaCards(g.players[asker].qa)}</details>` : ''}
@@ -1894,6 +1920,20 @@
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
     </div>`;
+  }
+
+  // Счётчик, который «прокручивается»: новое число въезжает снизу, старое уходит вверх
+  const ROLL_MS = 420;
+  function rollCount(key, n) {
+    const st = (ui.roll = ui.roll || {});
+    const cur = st[key];
+    if (!cur) st[key] = { n, prev: n, at: 0 };
+    else if (cur.n !== n) st[key] = { n, prev: cur.n, at: now() };
+    const r = st[key];
+    const el = now() - r.at;
+    if (el >= ROLL_MS || r.prev === r.n) return `<span class="roll"><span class="roll-n">${n}</span></span>`;
+    const up = r.n > r.prev ? '' : ' down';
+    return `<span class="roll${up}"><span class="roll-o" style="animation-delay:-${el}ms">${r.prev}</span><span class="roll-n in" style="animation-delay:-${el}ms">${n}</span></span>`;
   }
 
   // ===== Намёк понял: всё по центру, главное действие — крупно =====

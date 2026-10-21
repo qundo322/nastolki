@@ -1624,6 +1624,46 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .qz-list .qz-r { text-align: left; }
 .qz-list .jb-n { text-align: left; }
 
+/* ============ v22: счётчик-ролик, вопросы двумя колонками, время в чате ============ */
+.qa-b { position: relative; }
+.roll { position: relative; display: inline-block; height: 1.1em; overflow: hidden; font-family: var(--display); font-size: 34px; font-weight: 700; line-height: 1.1; color: #fff; min-width: 1ch; text-align: center; vertical-align: middle; }
+.qa-b:not(.on) .roll { color: var(--text); }
+.roll > span { display: block; }
+.roll-o { position: absolute; inset: 0; animation: rollOut .42s cubic-bezier(.2,.8,.2,1) both; }
+.roll-n.in { animation: rollIn .42s cubic-bezier(.2,.8,.2,1.15) both; }
+.roll.down .roll-o { animation-name: rollOutD; }
+.roll.down .roll-n.in { animation-name: rollInD; }
+@keyframes rollIn { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rollOut { from { transform: none; opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+@keyframes rollInD { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rollOutD { from { transform: none; opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+.qa-b { gap: 4px; min-height: 120px; }
+.qa-b > b { font-size: 18px; }
+.qa-asker { justify-content: center; font-size: 18px; gap: 10px; margin-bottom: 0; }
+.qa-asker b { font-size: 20px; }
+/* вопросы двумя колонками */
+.qa-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.qa-col { border-radius: 14px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.qa-col.yes { border-top: 4px solid var(--green); }
+.qa-col.no { border-top: 4px solid var(--red); }
+.qa-col.idk { margin: 0 0 8px; border-top: 4px solid var(--line-strong); }
+.qa-ch { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.qa-ch b { margin-left: auto; font-family: var(--display); font-size: 18px; }
+.qa-col.yes .qa-ch { color: var(--green-text); }
+.qa-col.no .qa-ch { color: var(--red-text); }
+.qa-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+.qa-row:last-child { border-bottom: 0; }
+.qa-rq { font-weight: 700; font-size: 15px; line-height: 1.3; }
+.qa-rn { flex: none; font-size: 11px; font-weight: 800; color: var(--muted); }
+.qa-rn i { font-style: normal; }
+.qa-rn .y { color: var(--green-text); }
+.qa-rn .n { color: var(--red-text); }
+@media (max-width: 640px) { .qa-cols { grid-template-columns: 1fr; } }
+/* время в чате */
+.msg { position: relative; }
+.msg-t { margin-left: auto; flex: none; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; padding-left: 6px; }
+.msg > div { flex: 1; min-width: 0; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -5000,10 +5040,11 @@ body{padding-bottom:84px}
       noise(0.5, { gain: 0.25, from: 400, to: 80, q: 0.7 });
     },
     turn: () => noise(0.32, { gain: 0.12, from: 500, to: 4000 }),
+    // Ваш ход: короткий светлый перезвон
     myturn: () => {
-      noise(0.25, { gain: 0.08, from: 600, to: 3500 });
-      tone(N.G5, 0.12, { gain: 0.15, delay: 0.12 });
-      tone(N.C6, 0.2, { gain: 0.15, delay: 0.22 });
+      tone(N.E5, 0.12, { type: 'sine', gain: 0.14 });
+      tone(N.A5, 0.14, { type: 'sine', gain: 0.14, delay: 0.09 });
+      tone(N.E6, 0.28, { type: 'triangle', gain: 0.1, delay: 0.18 });
     },
     win: () => [N.C5, N.E5, N.G5, N.C6, N.E6].forEach((f, i) => tone(f, 0.22, { type: 'triangle', gain: 0.18, delay: i * 0.09 })),
     lose: () => [N.G4, N.E4, N.C4].forEach((f, i) => tone(f, 0.3, { type: 'triangle', gain: 0.16, delay: i * 0.14 })),
@@ -5022,6 +5063,11 @@ body{padding-bottom:84px}
       tone(160, 0.12, { type: 'square', gain: 0.06, delay: 0.1 });
     },
     tick: () => tone(1800, 0.03, { type: 'sine', gain: 0.1 }),
+    // Мягкий «щелчок» счётчика голосов
+    count: () => {
+      noise(0.03, { gain: 0.07, from: 2500, to: 1800, q: 3 });
+      tone(1200, 0.05, { type: 'sine', gain: 0.07, to: 1500 });
+    },
     // Время вышло: короткий «гонг» — два низких тона с шумом
     timeup: () => {
       tone(523, 0.18, { type: 'square', gain: 0.07 });
@@ -5757,6 +5803,20 @@ window.RULES = {
       if (a.turnPid !== b.turnPid) Sound.play(b.turnPid === me ? 'myturn' : 'turn');
       if (b.finishOrder.length > a.finishOrder.length) Sound.play('good');
     }
+    // Начался ход у меня или у моей команды — короткий приятный сигнал (там, где выше его ещё нет)
+    const myTurn = (g) => {
+      if (!g) return false;
+      if (g.type === 'alias') return !['teams', 'over'].includes(g.phase) && (g.explainer === me || g.turnTeam === g.myTeam);
+      if (g.type === 'spyfall') return g.phase === 'play' && (g.asker === me || g.target === me);
+      if (g.type === 'justone') return g.phase === 'guess' && g.isGuesser;
+      if (g.type === 'quiz') return g.phase === 'answer' && g.round;
+      return false;
+    };
+    const was = myTurn(a);
+    const now2 = myTurn(b);
+    if (now2 && (!was || (b.type === 'quiz' && a.round !== b.round) || (b.type === 'alias' && a.turnTeam !== b.turnTeam))) setTimeout(() => Sound.play('myturn'), 120);
+    // Голос «да / нет / не знаю» в «Кто я?» — мягкий щелчок счётчика
+    if (b.type === 'whoami' && a.q && b.q && a.q.id === b.q.id && a.q.yes + a.q.no + a.q.idk !== b.q.yes + b.q.no + b.q.idk) Sound.play('count');
   }
 
   socket.on('state', (st) => {
@@ -6097,7 +6157,7 @@ window.RULES = {
         ui.chatOpen
           ? `<div class="chat-panel card">
               <div class="chat-h"><b>${ic('chat', 16)} Чат</b><button class="icon-x" data-act="chat" title="Свернуть">${ic('chevron', 18)}</button></div>
-              <div class="chat-log">${r.chat.length ? r.chat.map((m) => `<div class="msg">${pa(m.pid, 'xs')}<div><b>${esc(m.name)}</b> ${esc(m.text)}</div></div>`).join('') : '<div class="muted small">Сообщений пока нет</div>'}</div>
+              <div class="chat-log">${r.chat.length ? r.chat.map((m) => `<div class="msg">${pa(m.pid, 'xs')}<div><b>${esc(m.name)}</b> ${esc(m.text)}</div><time class="msg-t" title="${new Date(m.at).toLocaleString('ru-RU')}">${new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</time></div>`).join('') : '<div class="muted small">Сообщений пока нет</div>'}</div>
               <form data-form="chat" class="chat-form"><input class="inp" name="text" data-keep="chat" maxlength="300" placeholder="Сообщение…" autocomplete="off"/><button class="btn sm primary icon-btn" title="Отправить">${ic('send', 16)}</button></form>
             </div>`
           : ''
@@ -7080,7 +7140,19 @@ window.RULES = {
         <div class="qa-c-q">${x.text ? esc(x.text) : '<i>вопрос голосом</i>'}</div>
         <div class="qa-c-a">${live ? '<span class="qa-c-v">ждём ответы…</span>' : `<span class="qa-c-v">${AL[x.v] || '—'}</span>`}<span class="qa-c-n"><i class="y">${x.yes}</i><i class="n">${x.no}</i><i>${x.idk}</i></span></div>
       </div>`;
-    const qaCards = (list, extra = '') => `<div class="qa-grid">${list.map((x) => qaCard(x)).join('')}${extra}</div>`;
+    // «Мои вопросы и ответы» — две колонки: что про меня точно ДА и что точно НЕТ (+ «не знаю» отдельно)
+    const qaCards = (list, extra = '') => {
+      const row = (x) => `<div class="qa-row"><span class="qa-rq">${esc(x.text)}</span><span class="qa-rn" title="да / нет / не знаю"><i class="y">${x.yes}</i>·<i class="n">${x.no}</i>·<i>${x.idk}</i></span></div>`;
+      const yes = list.filter((x) => x.v === 'yes');
+      const no = list.filter((x) => x.v === 'no');
+      const idk = list.filter((x) => x.v !== 'yes' && x.v !== 'no');
+      return `<div class="qa-cols">
+          <div class="qa-col yes"><div class="qa-ch">${ic('check', 16)} Да — это про меня <b>${yes.length}</b></div>${yes.map(row).join('') || '<span class="muted small">пока пусто</span>'}</div>
+          <div class="qa-col no"><div class="qa-ch">${ic('x', 16)} Нет — это не я <b>${no.length}</b></div>${no.map(row).join('') || '<span class="muted small">пока пусто</span>'}</div>
+        </div>
+        ${idk.length ? `<div class="qa-col idk"><div class="qa-ch">${ic('question', 16)} Непонятно <b>${idk.length}</b></div>${idk.map(row).join('')}</div>` : ''}
+        ${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
+    };
     const q = g.q && g.q.asker === g.turnPid ? g.q : null;
     const asker = g.turnPid;
     const qVotes = (v) => (q ? Object.entries(q.who).filter(([, a]) => a === v).map(([id]) => `<span title="${nm(id)}">${pa(id, 'xs', 'round')}</span>`).join('') : '');
@@ -7095,11 +7167,11 @@ window.RULES = {
         </div>
         ${myQa.length ? `<div class="card qa-card"><div class="side-h">${ic('list', 16)} Ваши вопросы</div>${qaCards(myQa)}</div>` : ''}`;
     } else if (!over) {
-      qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 'sm', 'round')} Спрашивает <b>${nm(asker)}</b></div>
+      qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 32, 'round')}<span>Спрашивает <b>${nm(asker)}</b></span></div>
         ${
           q
             ? `<div class="qa-big">«${esc(q.text)}»</div>
-               <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b><span class="qa-who">${qVotes(v)}<small>${q[v]}</small></span></button>`).join('')}</div>`
+               <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b>${rollCount('q' + q.id + v, q[v])}<span class="qa-who">${qVotes(v)}</span></button>`).join('')}</div>`
             : `<div class="qa-big muted">Ждём вопрос…</div>`
         }
         ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)} · ${g.players[asker].qa.length}</summary>${qaCards(g.players[asker].qa)}</details>` : ''}
@@ -7120,6 +7192,20 @@ window.RULES = {
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
     </div>`;
+  }
+
+  // Счётчик, который «прокручивается»: новое число въезжает снизу, старое уходит вверх
+  const ROLL_MS = 420;
+  function rollCount(key, n) {
+    const st = (ui.roll = ui.roll || {});
+    const cur = st[key];
+    if (!cur) st[key] = { n, prev: n, at: 0 };
+    else if (cur.n !== n) st[key] = { n, prev: cur.n, at: now() };
+    const r = st[key];
+    const el = now() - r.at;
+    if (el >= ROLL_MS || r.prev === r.n) return `<span class="roll"><span class="roll-n">${n}</span></span>`;
+    const up = r.n > r.prev ? '' : ' down';
+    return `<span class="roll${up}"><span class="roll-o" style="animation-delay:-${el}ms">${r.prev}</span><span class="roll-n in" style="animation-delay:-${el}ms">${n}</span></span>`;
   }
 
   // ===== Намёк понял: всё по центру, главное действие — крупно =====
