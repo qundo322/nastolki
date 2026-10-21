@@ -1732,6 +1732,14 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .ctl-fab[data-tip]::after { bottom: auto; top: 50%; left: auto; right: calc(100% + 12px); transform: translate(4px, -50%); }
 .ctl-fab[data-tip]:hover::after, .ctl-fab[data-tip]:focus-visible::after { transform: translate(0, -50%); }
 @media (max-width: 640px) { .ctl-row { max-width: none; border-radius: 26px; } }
+/* Кнопки хоста — раскрываются ВЛЕВО от шестерёнки (поверх остальных кнопок) */
+.ctl-row { bottom: auto; top: 50%; left: auto; right: calc(100% + 10px); transform: translateY(-50%); flex-direction: row-reverse; border-radius: 99px; }
+.ctl-row .ctl-sep { width: 1px; height: 26px; margin: 0 2px; }
+@keyframes dialIn { from { opacity: 0; transform: translateX(26px) scale(.5); } to { opacity: 1; transform: none; } }
+@keyframes dialOut { to { opacity: 0; transform: translateX(26px) scale(.5); } }
+.ctl-fab[data-tip]::after { top: auto; right: auto; bottom: calc(100% + 10px); left: 50%; transform: translate(-50%, 4px); }
+.ctl-fab[data-tip]:hover::after, .ctl-fab[data-tip]:focus-visible::after { transform: translate(-50%, 0); }
+@media (max-width: 640px) { .ctl-row { flex-wrap: wrap-reverse; max-width: calc(100vw - 110px); border-radius: 26px; } }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
