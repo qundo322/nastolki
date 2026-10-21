@@ -1682,6 +1682,10 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 @media (hover: none) { .ctl-fab[data-tip]:active::after { opacity: 1; transform: translate(-50%, 0); } }
 @media (max-width: 640px) { .chat-fab.ctl-fab { width: 42px; height: 42px; } .ctl-row { max-width: calc(100vw - 120px); border-radius: 22px; } }
 
+/* «Викторина»: текст нельзя выделить и скопировать */
+.room.game-quiz { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.room.game-quiz input, .room.game-quiz textarea { -webkit-user-select: text; user-select: text; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -7871,6 +7875,14 @@ window.RULES = {
     },
     true
   );
+  // «Викторина»: вопрос нельзя выделить, скопировать или вырезать (кроме своего поля ввода)
+  const quizLock = (e) => {
+    if (S?.game?.type !== 'quiz') return;
+    if (e.target.closest?.('input, textarea')) return;
+    e.preventDefault();
+    if (e.type === 'copy') toast('В «Викторине» копировать текст нельзя', 'info');
+  };
+  ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach((ev) => document.addEventListener(ev, quizLock));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum || ui.showTable)) {
       ui.showSum = false;

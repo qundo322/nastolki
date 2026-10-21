@@ -1674,3 +1674,7 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .chat-fab.gear.on { border-color: var(--accent); color: var(--accent-text); }
 @media (hover: none) { .ctl-fab[data-tip]:active::after { opacity: 1; transform: translate(-50%, 0); } }
 @media (max-width: 640px) { .chat-fab.ctl-fab { width: 42px; height: 42px; } .ctl-row { max-width: calc(100vw - 120px); border-radius: 22px; } }
+
+/* «Викторина»: текст нельзя выделить и скопировать */
+.room.game-quiz { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.room.game-quiz input, .room.game-quiz textarea { -webkit-user-select: text; user-select: text; }

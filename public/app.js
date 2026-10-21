@@ -2581,6 +2581,14 @@
     },
     true
   );
+  // «Викторина»: вопрос нельзя выделить, скопировать или вырезать (кроме своего поля ввода)
+  const quizLock = (e) => {
+    if (S?.game?.type !== 'quiz') return;
+    if (e.target.closest?.('input, textarea')) return;
+    e.preventDefault();
+    if (e.type === 'copy') toast('В «Викторине» копировать текст нельзя', 'info');
+  };
+  ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach((ev) => document.addEventListener(ev, quizLock));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum || ui.showTable)) {
       ui.showSum = false;
