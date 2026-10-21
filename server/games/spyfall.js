@@ -1,7 +1,6 @@
 const { LOCATIONS } = require('../words');
 const { shuffle, pick, clampInt } = require('../util');
 
-const GUESS_SECONDS = 60;
 
 const meta = {
   title: 'Шпион',
@@ -12,7 +11,7 @@ const meta = {
     'Каждый получает карточку с локацией и своей ролью, а шпион — только надпись «Вы шпион». Списка локаций нет — шпиону придётся догадаться по разговору.',
     'Вопросы идут по очереди: спрашивающий выбирает на сайте, кого спросить, тот отвечает вслух и жмёт «Ответил» — теперь спрашивает он. Сразу спросить того, кто только что спросил тебя, нельзя. Рядом с игроками видно, сколько вопросов им задали — молчуны подсвечены.',
     'Голосование: нажмите «Обвинить» напротив игрока. Когда за кого-то проголосовали все остальные — раунд заканчивается. Голос можно отозвать.',
-    'Если шпион уверен, он жмёт «Я знаю локацию»: у него минута, чтобы назвать её вслух в Discord. Мирные игроки решают кнопками «Шпион угадал» / «Шпион не угадал» — решает большинство. Голосование на это время замораживается.',
+    'Если шпион уверен, он жмёт «Я знаю локацию» и называет её вслух в Discord. Мирные игроки решают кнопками «Шпион угадал» / «Шпион не угадал» — решает большинство. Голосование на это время замораживается.',
     'Очки за раунд: шпион угадал локацию — шпиону +3. Обвинили невиновного — шпиону +2. Шпиона поймали голосованием или он ошибся с локацией — каждому мирному +1. Бонус: мирный, чей голос в конце раунда стоит на шпионе, — ещё +1.',
     'В марафоне раунд — это одна катка; места считаются по очкам раунда.',
   ],
@@ -125,10 +124,8 @@ function action(s, pid, msg, ctx) {
       if (s.phase !== 'play') return;
       if (!s.spies.includes(pid)) return 'Это кнопка шпиона';
       s.phase = 'guessing';
-      s.claim = { by: pid, endsAt: Date.now() + GUESS_SECONDS * 1000, judges: {}, timeUp: false };
-      ctx.setTimer('spy-guess', GUESS_SECONDS * 1000, () => {
-        if (s.claim) s.claim.timeUp = true;
-      });
+      // Шпион называет локацию вслух — без таймера, мирные решают кнопками
+      s.claim = { by: pid, judges: {} };
       return;
     }
     case 'judge': {
@@ -183,6 +180,7 @@ function view(s, pid) {
     phase: s.phase,
     round: s.round,
     endsAt: s.endsAt,
+    roundMs: s.minutes * 60000,
     inGame,
     isSpy,
     location: over || (inGame && !isSpy) ? s.location : null,
@@ -192,7 +190,7 @@ function view(s, pid) {
     spyCount: s.spies.length,
     participants: s.participants,
     votes: s.votes,
-    claim: s.claim ? { by: s.claim.by, endsAt: s.claim.endsAt, judges: s.claim.judges, timeUp: s.claim.timeUp } : null,
+    claim: s.claim ? { by: s.claim.by, judges: s.claim.judges } : null,
     result: s.result,
     roundPts: over ? s.roundPts : null,
     firstAsks: s.firstAsks,
@@ -206,6 +204,15 @@ function view(s, pid) {
 }
 
 function onLeave(s, pid, ctx) {
+  // Вышел или выгнан — больше не участвует в раунде
+  const wasSpy = s.spies.includes(pid);
+  if (!wasSpy || s.phase === 'over') {
+    s.participants = s.participants.filter((x) => x !== pid);
+    if (s.roles) delete s.roles[pid];
+  }
+  delete s.score[pid];
+  if (s.asked) delete s.asked[pid];
+  if (s.claim) delete s.claim.judges[pid];
   delete s.votes[pid];
   if (s.target === pid) s.target = null;
   if (s.asker === pid) {
@@ -235,12 +242,6 @@ function resume(s, ctx) {
   const gap = Date.now() - s._paused;
   s._paused = null;
   if (s.endsAt) s.endsAt += gap; // таймер раунда не тикает, пока игра на паузе
-  if (s.phase === 'guessing' && s.claim && !s.claim.timeUp) {
-    s.claim.endsAt += gap;
-    ctx.setTimer('spy-guess', Math.max(0, s.claim.endsAt - Date.now()), () => {
-      if (s.claim) s.claim.timeUp = true;
-    });
-  }
 }
 
 // Для номинаций марафона

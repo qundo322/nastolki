@@ -305,12 +305,16 @@ function onLeave(s, pid, ctx) {
   if (pid === s.guesser) {
     s.g = s.order.indexOf(pid) - 1;
     s.order = s.order.filter((x) => x !== pid);
+    delete s.points[pid];
+    delete s.hearts[pid];
     nextRound(s, ctx);
     return;
   }
   s.order = s.order.filter((x) => x !== pid);
   s.helpers = s.helpers.filter((x) => x !== pid);
   delete s.clues[pid];
+  delete s.points[pid];
+  delete s.hearts[pid];
   for (const v of [s.accept, s.reject, s.show]) if (v) delete v[pid];
   checkVotes(s, ctx);
 }

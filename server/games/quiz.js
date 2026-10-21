@@ -174,6 +174,10 @@ function view(s, pid) {
 
 function onLeave(s, pid, ctx) {
   s.order = s.order.filter((x) => x !== pid);
+  delete s.points[pid];
+  delete s.answers[pid];
+  delete s.wins[pid];
+  if (s.ready) delete s.ready[pid];
   if (s.phase === 'answer' && s.order.length && online(s, ctx).every((id) => s.answers[id] != null)) reveal(s, ctx);
 }
 const onPresence = (s, ctx) => {

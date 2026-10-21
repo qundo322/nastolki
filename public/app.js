@@ -640,6 +640,7 @@
     ui.gaAnim = false;
     ui.tabAnim = false;
     ui.ctlAnim = false;
+    ui.leaveAnim = false;
     restoreInputs(keep);
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
@@ -808,9 +809,10 @@
             ${sfxMenu()}
             ${themeMenu()}
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
+            <button class="btn sm ghost exit-btn" data-act="leave" title="Выйти из комнаты">${ic('logout', 16)}<span class="hide-m">Выйти</span></button>
           </div>
         </div>
-        ${g && g.type === 'codenames' ? renderClock(g) : ''}
+        ${g && g.type === 'codenames' ? renderClock(g) : g ? gameClock(g) : ''}
       </header>
       ${!connected ? '<div class="offline">Нет соединения, переподключаемся…</div>' : ''}
       <main class="stage ${ui.enter ? 'enter' : ''}">
@@ -819,6 +821,17 @@
       ${renderChat()}
       ${ui.showRules ? renderRules() : ''}
       ${renderTourModal()}
+      ${
+        ui.leaveAsk
+          ? `<div class="modal-bg ${ui.leaveAnim ? '' : 'still'}" data-act="leave-no"></div>
+        <div class="modal card leave-modal ${ui.leaveAnim ? '' : 'still'}" role="alertdialog" aria-modal="true" aria-label="Выйти из комнаты">
+          <div class="lm-ic">${ic('logout', 26)}</div>
+          <h3>Выйти из комнаты?</h3>
+          <p class="muted">${g ? 'Вы выйдете из текущей катки — вернуться в неё уже не получится, ваши очки в ней пропадут.' : 'Вернуться можно по той же ссылке.'}${isHost() ? ' Права хоста перейдут другому игроку.' : ''}</p>
+          <div class="lm-btns"><button class="btn ghost" data-act="leave-no">Остаться</button><button class="btn danger" data-act="leave-yes">${ic('logout', 16)} Выйти</button></div>
+        </div>`
+          : ''
+      }
       ${ui.glowAsk && g && ['codenames', 'justone'].includes(g.type) ? `<div class="glow-ask card ${ui.gaAnim ? 'anim' : ''}" role="dialog" aria-label="Свечение хода">
           <span class="ga-ic">${ic('sparkles', 20)}</span>
           <div class="ga-t"><b>Подсветить, чей ход?</b><span class="muted small">Мягкое мерцание по краю экрана: в Коднеймс — цветом команды с её стороны, в «Намёк понял» — сверху. Выберите силу, потом можно поменять в меню «Вид».</span></div>
@@ -868,7 +881,7 @@
           ? `<div class="pop people-pop ${ui.popAnim ? 'anim' : ''}">
               <div class="vp-h">Участники · ${r.players.length}${online.length !== r.players.length ? ` <span class="muted">(в сети ${online.length})</span>` : ''}</div>
               <div class="pp-list">${rows}</div>
-              ${!g && !tour() ? `<div class="vp-sep"></div><button class="pop-i danger" data-act="leave">${ic('logout', 16)}<span>Выйти из комнаты</span></button>` : ''}
+
             </div>`
           : ''
       }
@@ -896,8 +909,8 @@
         ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''}" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
         ${
           hostTools
-            ? `${ctlOpen ? renderControls(g) : ''}
-               <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="ctl-toggle" title="${ctlOpen ? 'Скрыть управление игрой' : 'Управление игрой (хост)'}" aria-expanded="${!!ctlOpen}">${ic(ctlOpen ? 'x' : 'gear', 22)}${g.clock?.paused && !ctlOpen ? '<i class="badge warn-b">II</i>' : ''}</button>`
+            ? `<div class="ctl-wrap">${ctlOpen || ui.ctlClosing ? renderControls(g) : ''}
+               <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="ctl-toggle" title="${ctlOpen ? 'Скрыть управление игрой' : 'Управление игрой (хост)'}" aria-expanded="${!!ctlOpen}">${ic(ctlOpen ? 'x' : 'gear', 22)}${g.clock?.paused && !ctlOpen ? '<i class="badge warn-b">II</i>' : ''}</button></div>`
             : ''
         }
         <button class="chat-fab" data-act="chat" title="${ui.chatOpen ? 'Свернуть чат' : 'Чат'}">${ic(ui.chatOpen ? 'x' : 'chat', 22)}${unread && !ui.chatOpen ? `<i class="badge">${unread > 9 ? '9+' : unread}</i>` : ''}</button>
@@ -976,7 +989,7 @@
     }
     items.push('<span class="ctl-sep"></span>');
     items.push(btn('stop', 'home', 'В лобби (пауза)'));
-    return `<div class="ctl-row ${ui.ctlAnim ? 'anim' : ''}" role="toolbar" aria-label="Управление игрой">${items.join('')}</div>`;
+    return `<div class="ctl-row ${ui.ctlAnim ? 'anim' : ''} ${ui.ctlClosing ? 'closing' : ''}" role="toolbar" aria-label="Управление игрой">${items.join('')}</div>`;
   }
 
   // ---------- лобби ----------
@@ -1427,6 +1440,23 @@
       </div>`;
   }
 
+  // Единая полоса таймера под шапкой — такая же, как в Коднеймс, для всех игр
+  function gameClock(g) {
+    let c = null;
+    if (g.type === 'alias' && g.phase === 'running' && g.endsAt) c = { ends: g.endsAt, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
+    else if (g.type === 'spyfall' && g.phase === 'play' && g.endsAt) c = { ends: g.endsAt, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
+    else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'задаёт вопрос' };
+    else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
+    else if (g.type === 'quiz' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
+    if (!c) return '';
+    const left = c.ends - now();
+    const w = Math.max(0, Math.min(100, (left / c.total) * 100));
+    return `<div class="clockbar t-any ${left < 10000 ? 'low' : ''}" ${c.tc ? `style="--tc:${c.tc}"` : ''} data-clock data-ends="${c.ends}" data-left="${left}" data-total="${c.total}" data-paused="0">
+      <div class="ck-fill" style="width:${w}%"></div>
+      <div class="ck-txt"><span class="ck-team">${esc(c.team || '')}</span><span class="ck-phase">${esc(c.phase || '')}</span><span class="ck-t">${fmt(left)}</span></div>
+    </div>`;
+  }
+
   function renderClock(g) {
     const c = g.clock;
     if (!c) {
@@ -1670,7 +1700,6 @@
       </div>`;
     } else if (g.phase === 'running') {
       center = `<div class="stage-card run">
-        ${timerHtml(g.endsAt, g.seconds)}
         ${g.word ? `<div class="mega-word">${esc(g.word)}</div>` : `<div class="mega-word hidden">?</div><p class="muted">Слушайте ${nm(g.explainer)} и угадывайте!</p>`}
         ${isExpl ? `<div class="mega-row"><button class="btn danger mega" data-act="al-skip">${ic('x', 26)} Пропуск${g.penalty ? ' −1' : ''}</button><button class="btn success mega" data-act="al-got">${ic('check', 26)} Угадали +1</button></div>` : ''}
         <div class="counters"><span>Угадано <b>${g.guessedNow}</b></span><span>Пропущено <b>${g.skippedNow}</b></span></div>
@@ -1760,7 +1789,6 @@
       claim = `<div class="card center big-pad claim">
         <div class="kicker">Шпион раскрылся</div>
         <h2 class="h2">${ic('target', 24)} ${nm(c.by)} называет локацию</h2>
-        ${c.timeUp ? `<p class="warn">${ic('clock', 16)} Минута вышла — решайте!</p>` : timerHtml(c.endsAt, 60)}
         ${me === c.by ? '<p>Говорите вслух в Discord — участники подтвердят.</p>' : '<p class="muted">Слушайте в Discord и решите, угадал ли он.</p>'}
         ${amJudge ? `<div class="row c"><button class="btn ${c.judges[me] === false ? 'danger' : 'ghost'}" data-act="spy-judge" data-ok="0">${ic('x', 16)} Не угадал</button><button class="btn ${c.judges[me] === true ? 'success' : 'ghost'}" data-act="spy-judge" data-ok="1">${ic('check', 16)} Шпион правильно ответил</button></div>` : ''}
         <p class="small muted">Угадал: <b>${yes}</b> · Не угадал: <b>${no}</b> · нужно ${need} из ${townIds.length}</p>
@@ -1810,9 +1838,10 @@
       : '';
     const score = Object.entries(g.score);
     return `<div class="narrow spyfall">
-      <div class="spy-top">${g.phase === 'play' ? timerHtml(g.endsAt, 0) : '<span></span>'}<span class="muted">Раунд ${g.round}</span></div>
+      <div class="spy-top"><span class="muted">Раунд ${g.round}</span></div>
       ${card}
-      ${g.phase === 'play' && g.isSpy ? `<div class="row c"><button class="btn primary big-w" data-act="spy-claim">${ic('target', 18)} Я знаю локацию</button></div><p class="center small muted">У вас будет минута, чтобы назвать её вслух.</p>` : ''}
+      ${over && canRestart() ? `<div class="row c"><button class="btn primary mega" data-act="spy-next">${ic('play', 20)} Следующая игра</button></div>` : over ? '<p class="center muted">Ждём, пока хост начнёт следующую игру</p>' : ''}
+      ${g.phase === 'play' && g.isSpy ? `<div class="row c"><button class="btn primary big-w" data-act="spy-claim">${ic('target', 18)} Я знаю локацию</button></div><p class="center small muted">Нажмите и назовите локацию вслух — мирные решат, угадали ли вы.</p>` : ''}
       ${claim}
       ${guessing ? '' : turnBox}
       ${roundTable}
@@ -1869,18 +1898,15 @@
         <div class="qa-c-q">${x.text ? esc(x.text) : '<i>вопрос голосом</i>'}</div>
         <div class="qa-c-a">${live ? '<span class="qa-c-v">ждём ответы…</span>' : `<span class="qa-c-v">${AL[x.v] || '—'}</span>`}<span class="qa-c-n"><i class="y">${x.yes}</i><i class="n">${x.no}</i><i>${x.idk}</i></span></div>
       </div>`;
-    // «Мои вопросы и ответы» — две колонки: что про меня точно ДА и что точно НЕТ (+ «не знаю» отдельно)
+    // «Мои вопросы и ответы» — по порядку, как задавались: номер, вопрос, итог цветной меткой
     const qaCards = (list, extra = '') => {
-      const row = (x) => `<div class="qa-row"><span class="qa-rq">${esc(x.text)}</span><span class="qa-rn" title="да / нет / не знаю"><i class="y">${x.yes}</i>·<i class="n">${x.no}</i>·<i>${x.idk}</i></span></div>`;
-      const yes = list.filter((x) => x.v === 'yes');
-      const no = list.filter((x) => x.v === 'no');
-      const idk = list.filter((x) => x.v !== 'yes' && x.v !== 'no');
-      return `<div class="qa-cols">
-          <div class="qa-col yes"><div class="qa-ch">${ic('check', 16)} Да — это про меня <b>${yes.length}</b></div>${yes.map(row).join('') || '<span class="muted small">пока пусто</span>'}</div>
-          <div class="qa-col no"><div class="qa-ch">${ic('x', 16)} Нет — это не я <b>${no.length}</b></div>${no.map(row).join('') || '<span class="muted small">пока пусто</span>'}</div>
-        </div>
-        ${idk.length ? `<div class="qa-col idk"><div class="qa-ch">${ic('question', 16)} Непонятно <b>${idk.length}</b></div>${idk.map(row).join('')}</div>` : ''}
-        ${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
+      const AL2 = { yes: 'Да', no: 'Нет', idk: '?' };
+      const rows = list
+        .map(
+          (x, i) => `<div class="qa-line v-${x.v || 'idk'}"><span class="ql-n">${i + 1}</span><span class="ql-q">${esc(x.text)}</span><span class="ql-v">${AL2[x.v] || '?'}</span><span class="ql-c" title="да / нет / не знаю"><i class="y">${x.yes}</i> <i class="n">${x.no}</i> <i>${x.idk}</i></span></div>`
+        )
+        .join('');
+      return `<div class="qa-lines">${rows || '<span class="muted small">Вопросов пока не было</span>'}</div>${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
     };
     const q = g.q && g.q.asker === g.turnPid ? g.q : null;
     const asker = g.turnPid;
@@ -1900,6 +1926,7 @@
         ${
           q
             ? `<div class="qa-big">«${esc(q.text)}»</div>
+               ${q.split ? `<p class="qa-split">${ic('alert', 15)} «Да» и «нет» поровну — договоритесь и переголосуйте</p>` : ''}
                <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b>${rollCount('q' + q.id + v, q[v])}<span class="qa-who">${qVotes(v)}</span></button>`).join('')}</div>`
             : `<div class="qa-big muted">Ждём вопрос…</div>`
         }
@@ -1913,7 +1940,6 @@
           ${!myState.guessed && !myState.gaveUp ? `<button class="btn success mega" data-act="who-guessed">${ic('check', 24)} Я угадал!</button><button class="btn ghost mega" data-act="who-giveup">${ic('flag', 22)} Сдаюсь</button>` : `<span class="muted">Вы уже ${myState.guessed ? 'угадали' : 'сдались'} — помогайте остальным</span>`}
         </div>`;
     return `<div class="who">
-      ${!over && g.qEnds ? `<div class="who-timer">${timerHtml(g.qEnds, 60)}</div>` : ''}
       <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута на вопрос. Большинство «нет» — ход переходит.</span>`}</div>
       <div class="call-grid">${tiles}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
@@ -1940,7 +1966,7 @@
   // ===== Намёк понял: всё по центру, главное действие — крупно =====
   function rJust(g) {
     const me = S.me;
-    const T = g.endsAt ? timerHtml(g.endsAt, (g.phaseMs || 30000) / 1000) : '';
+    const T = ''; // таймер — общей полосой под шапкой
     // Шапка: раунд, цель, кто угадывает — тремя плитками
     const head = `<div class="jo-top">
       <div class="jo-tile"><span class="jt-k">Раунд</span><b class="jt-v">${g.round}</b></div>
@@ -2065,7 +2091,7 @@
   }
   function rQuiz(g) {
     const me = S.me;
-    const T = g.endsAt ? timerHtml(g.endsAt, (g.phaseMs || 30000) / 1000) : '';
+    const T = ''; // таймер — общей полосой под шапкой
     const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1]);
     const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— ближе всех +1 · точно в цель ещё +1</span></div>
       ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.wins[id] ? `<span class="qz-w" title="Сколько раз был ближе всех">${ic('target', 14)}${g.wins[id]}</span>` : ''}<b class="jb-p">${n}</b></div>`).join('')}</div>`;
@@ -2372,6 +2398,14 @@
     'ctl-toggle': () => {
       ui.ctlOpen = !ui.ctlOpen;
       ui.ctlAnim = ui.ctlOpen;
+      // сворачивание: кнопки уезжают вниз в шестерёнку
+      if (!ui.ctlOpen) {
+        ui.ctlClosing = true;
+        setTimeout(() => {
+          ui.ctlClosing = false;
+          render();
+        }, 230);
+      }
       LS.set('pg_ctl', ui.ctlOpen ? '1' : '');
       render();
     },
@@ -2471,13 +2505,22 @@
         break;
       }
       case 'leave':
-        if (confirm('Выйти из комнаты?')) {
-          await emit('leaveRoom');
-          S = null;
-          syncRadio();
-          history.replaceState(null, '', '/');
-          render();
-        }
+        // Подтверждение — своим окном поверх всего
+        ui.leaveAsk = true;
+        ui.leaveAnim = true;
+        render();
+        break;
+      case 'leave-no':
+        ui.leaveAsk = false;
+        render();
+        break;
+      case 'leave-yes':
+        ui.leaveAsk = false;
+        await emit('leaveRoom');
+        S = null;
+        syncRadio();
+        history.replaceState(null, '', '/');
+        render();
         break;
     }
   });
@@ -2590,7 +2633,8 @@
   };
   ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach((ev) => document.addEventListener(ev, quizLock));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum || ui.showTable)) {
+    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum || ui.showTable || ui.leaveAsk)) {
+      ui.leaveAsk = false;
       ui.showSum = false;
       ui.showTable = false;
       ui.menu = null;

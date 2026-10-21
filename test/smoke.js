@@ -193,6 +193,17 @@ function bot(profile, name) {
   for (const b of w2o) await b.act('answer', { v: 'yes' });
   await wait(60);
   assert(g(h).turnPid === wAsk2.st.me && !g(h).q && g(h).players[wAsk2.st.me].qa.length === 1, 'all yes → same asker, next question');
+  // ничья «да»/«нет» — ждём
+  await wAsk2.act('ask', { text: 'Я из сериала?' });
+  await w2o[0].act('answer', { v: 'yes' });
+  await w2o[1].act('answer', { v: 'yes' });
+  await w2o[2].act('answer', { v: 'no' });
+  await w2o[3].act('answer', { v: 'no' });
+  await wait(60);
+  assert(g(h).turnPid === wAsk2.st.me && g(h).q && g(h).q.split, 'tie → wait for agreement');
+  await w2o[3].act('answer', { v: 'yes' });
+  await wait(60);
+  assert(!g(h).q && g(h).turnPid === wAsk2.st.me, 'tie resolved by change of vote');
   await wAsk2.act('ask', { text: 'Я из книги?' });
   for (const b of w2o) await b.act('answer', { v: 'no' });
   await wait(60);

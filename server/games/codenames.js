@@ -483,6 +483,7 @@ function view(s, pid, ctx) {
 
 function onLeave(s, pid, ctx) {
   delete s.team[pid];
+  if (s.ready) delete s.ready[pid];
   s.cards.forEach((c) => (c.marks = c.marks.filter((m) => m !== pid)));
   for (const c of ['red', 'blue']) if (s.captain[c] === pid) s.captain[c] = null;
   if (s.ready) delete s.ready[pid];

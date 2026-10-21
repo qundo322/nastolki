@@ -11,7 +11,7 @@ const meta = {
   rules: [
     'Каждому игроку достаётся персонаж: его видят все, кроме самого игрока. Персонажей раздают случайно или каждый загадывает персонажа соседу.',
     'В свой ход пиши вопросы, на которые можно ответить «да» или «нет». Остальные отвечают кнопками «Да / Нет / Не знаю» — вопрос и ответ попадают в твою историю.',
-    'Когда ответили все: большинство «да» — задавай следующий вопрос; большинство «нет» — ход переходит дальше. На каждый вопрос — минута, время вышло — ход переходит.',
+    'Когда ответили все: больше «да» — задавай следующий вопрос; больше «нет» — ход переходит дальше. Если «да» и «нет» поровну — ждём, пока игроки договорятся. На каждый вопрос — минута, время вышло — ход переходит.',
     'Думаешь, что знаешь ответ, — назови персонажа вслух. Угадал — нажми «Я угадал», и персонаж откроется тебе.',
     'Очки: угадал персонажа — +1. Бонус за скорость: первый угадавший +2, второй +1. Сдался — 0.',
   ],
@@ -60,9 +60,10 @@ function tally(q) {
   for (const v of Object.values(q.answers)) t[v]++;
   return t;
 }
+// Итог вопроса: больше «да» — да, больше «нет» — нет; иначе — непонятно
 function verdict(t) {
-  if (t.yes > t.no && t.yes >= t.idk) return 'yes';
-  if (t.no > t.yes && t.no >= t.idk) return 'no';
+  if (t.yes > t.no) return 'yes';
+  if (t.no > t.yes) return 'no';
   return t.yes || t.no || t.idk ? 'idk' : null;
 }
 function archive(s) {
@@ -97,7 +98,9 @@ function checkAnswers(s, ctx) {
   if (!q || s.phase !== 'play') return;
   const need = voters(s, ctx);
   if (!need.length || !need.every((id) => q.answers[id])) return;
-  const v = verdict(tally(q));
+  const t = tally(q);
+  if (t.yes === t.no && t.yes > 0) return; // «да» и «нет» поровну — ждём, пока договорятся
+  const v = verdict(t);
   if (v === 'no') advance(s, ctx); // «нет» — ход дальше
   else {
     archive(s); // «да» (или «не знаю») — следующий вопрос
@@ -221,7 +224,7 @@ function view(s, pid) {
     finishOrder: s.finishOrder,
     points: points(s),
     qEnds: s.phase === 'play' ? s.qEnds : null,
-    q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers } : null,
+    q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0 } : null,
     players: Object.fromEntries(
       Object.entries(s.a).map(([id, a]) => [
         id,
@@ -237,8 +240,38 @@ function view(s, pid) {
   };
 }
 
+// Вышел или выгнан — полностью убираем из катки
 function onLeave(s, pid, ctx) {
-  if (s.order[s.turn] === pid) advance(s, ctx);
+  if (!s.a[pid]) return;
+  const cur = s.order[s.turn];
+  const wasTurn = cur === pid;
+  if (wasTurn) archive(s);
+  // кому он должен был загадать — получает случайного персонажа
+  for (const a of Object.values(s.a)) if (a.writer === pid) {
+    a.writer = null;
+    if (!a.char) a.char = s.deck.draw();
+  }
+  const idx = s.order.indexOf(pid);
+  s.order = s.order.filter((x) => x !== pid);
+  delete s.a[pid];
+  s.finishOrder = s.finishOrder.filter((x) => x !== pid);
+  if (s.q) {
+    delete s.q.answers[pid];
+    if (s.q.asker === pid) s.q = null;
+  }
+  if (!s.order.length) return;
+  s.turn = wasTurn ? (idx - 1 + s.order.length) % s.order.length : Math.max(0, s.order.indexOf(cur));
+  if (s.phase === 'write' && Object.values(s.a).every((a) => a.char)) {
+    s.phase = 'play';
+    startQ(s, ctx);
+  }
+  if (s.phase === 'play' && Object.entries(s.a).every(([, x]) => x.guessedAt || x.gaveUp)) {
+    s.phase = 'over';
+    ctx.clearTimer('who-q');
+    s.qEnds = null;
+    return;
+  }
+  if (wasTurn) advance(s, ctx); // ход переходит следующему
   else checkAnswers(s, ctx);
 }
 const onPresence = (s, ctx) => checkAnswers(s, ctx);
