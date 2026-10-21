@@ -421,6 +421,18 @@ function action(s, pid, msg, ctx) {
       passTurn(s, ctx);
       return;
     }
+    case 'addTime': {
+      if (!ctx.isHost) return 'Только хост';
+      if (s.winner || !s.clock) return;
+      addClock(s, ctx, 30000);
+      return;
+    }
+    case 'clearVotes': {
+      if (!ctx.isHost) return 'Только хост';
+      cancelPending(s, ctx);
+      s.cards.forEach((c) => (c.marks = []));
+      return;
+    }
     case 'pauseClock': {
       if (!ctx.isHost) return 'Только хост';
       if (!s.clock) return;

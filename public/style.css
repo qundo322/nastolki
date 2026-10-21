@@ -1733,3 +1733,6 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .ctl-fab[data-tip]::after { top: auto; right: auto; bottom: calc(100% + 10px); left: 50%; transform: translate(-50%, 4px); }
 .ctl-fab[data-tip]:hover::after, .ctl-fab[data-tip]:focus-visible::after { transform: translate(-50%, 0); }
 @media (max-width: 640px) { .ctl-row { flex-wrap: wrap-reverse; max-width: calc(100vw - 110px); border-radius: 26px; } }
+.qa-b.pending { outline: 3px solid var(--accent); outline-offset: 2px; }
+.qa-b .pend { top: 8px; right: 8px; }
+.ctl-fab.plus-t b { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: -.02em; }

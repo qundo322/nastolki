@@ -129,6 +129,22 @@ function action(s, pid, msg, ctx) {
       else if (s.phase === 'reveal') advance(s, ctx);
       return;
     }
+    case 'addTime': {
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'answer') return;
+      const left = s.endsAt - Date.now() + 15000;
+      setTimer(s, ctx, left, () => reveal(s, ctx));
+      s.phaseMs = Math.max(left, s.seconds * 1000);
+      return;
+    }
+    case 'newQuestion': {
+      // Заменить текущий вопрос другим (номер раунда тот же)
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'answer') return;
+      s.round--;
+      startRound(s, ctx);
+      return;
+    }
     case 'restart': {
       if (!ctx.isHost) return 'Только хост';
       for (const id of Object.keys(s.points)) s.points[id] = 0;

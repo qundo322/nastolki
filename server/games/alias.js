@@ -68,6 +68,7 @@ function prepareTurn(s, ctx) {
 
 function endTimer(s) {
   if (s.phase !== 'running') return;
+  s.paused = false;
   s.phase = 'review';
   s.endsAt = null;
   if (s.word) s.turnWords.push({ w: s.word, ok: false, last: true });
@@ -109,6 +110,7 @@ function action(s, pid, msg, ctx) {
     case 'got':
     case 'skip': {
       if (!isExpl) return 'Это кнопки объясняющего';
+      if (s.paused) return 'Ход на паузе';
       if (s.phase === 'running') {
         s.turnWords.push({ w: s.word, ok: msg.type === 'got' });
         s.word = s.deck.draw();
@@ -171,6 +173,38 @@ function action(s, pid, msg, ctx) {
       prepareTurn(s, ctx);
       return;
     }
+    case 'addTime': {
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'running') return;
+      if (s.paused) s.pausedLeft += 15000;
+      else {
+        s.endsAt += 15000;
+        ctx.setTimer('turn', s.endsAt - Date.now(), () => endTimer(s));
+      }
+      s.seconds = Math.max(s.seconds, Math.ceil(((s.paused ? s.pausedLeft : s.endsAt - Date.now())) / 1000));
+      return;
+    }
+    case 'pauseTurn': {
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'running') return;
+      if (!s.paused) {
+        s.pausedLeft = Math.max(0, s.endsAt - Date.now());
+        s.paused = true;
+        ctx.clearTimer('turn');
+      } else {
+        s.paused = false;
+        s.endsAt = Date.now() + s.pausedLeft;
+        ctx.setTimer('turn', s.pausedLeft, () => endTimer(s));
+      }
+      return;
+    }
+    case 'newWord': {
+      // Хост меняет слово без очков и штрафа (например, слово непонятное)
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'running') return;
+      s.word = s.deck.draw();
+      return;
+    }
     case 'skipTurn': {
       if (!ctx.isHost) return 'Только хост';
       ctx.clearTimer('turn');
@@ -202,7 +236,9 @@ function view(s, pid) {
     phase: s.phase,
     turnTeam: s.turnTeam,
     explainer: s.explainer,
-    endsAt: s.endsAt,
+    endsAt: s.paused ? null : s.endsAt,
+    paused: !!s.paused,
+    pausedLeft: s.paused ? s.pausedLeft : null,
     seconds: s.seconds,
     target: s.target,
     penalty: s.penalty,

@@ -546,6 +546,7 @@
     if (now2 && (!was || (b.type === 'quiz' && a.round !== b.round) || (b.type === 'alias' && a.turnTeam !== b.turnTeam))) setTimeout(() => Sound.play('myturn'), 120);
     // Голос «да / нет / не знаю» в «Кто я?» — мягкий щелчок счётчика
     if (b.type === 'whoami' && a.q && b.q && a.q.id === b.q.id && a.q.yes + a.q.no + a.q.idk !== b.q.yes + b.q.no + b.q.idk) Sound.play('count');
+    if (b.type === 'whoami' && b.q?.pend && !a.q?.pend) Sound.play('vote');
   }
 
   socket.on('state', (st) => {
@@ -960,30 +961,55 @@
     const t = tour();
     // Кнопки хоста — круглые, как остальные; подпись — всплывающая подсказка над кнопкой
     const btn = (actName, icon, label, cls = '') => `<button class="chat-fab ctl-fab ${cls}" data-act="${actName}" data-tip="${label}" aria-label="${label}">${ic(icon, 20)}</button>`;
+    // «+время» — кнопка с цифрой вместо иконки
+    const plusT = (actName, sec) => `<button class="chat-fab ctl-fab plus-t" data-act="${actName}" data-tip="Добавить ${sec} секунд" aria-label="Добавить ${sec} секунд"><b>+${sec}</b></button>`;
     const items = [];
     if (g.type === 'codenames') {
       if (isPrep(g)) items.push(btn('cn-force', 'play', 'Начать без ожидания'));
       if (g.clock) items.push(btn('cn-pause', g.clock.paused ? 'play' : 'pause', g.clock.paused ? 'Продолжить таймер' : 'Пауза таймера', g.clock.paused ? 'hot' : ''));
       if (!g.winner) items.push(btn('cn-reset', 'reset', 'Перезапустить таймер'));
+      if (g.clock && !g.winner) items.push(plusT('h-addtime', 30));
+      if (g.step === 'guess' && !g.winner) items.push(btn('h-clearvotes', 'x', 'Снять все голоса агентов'));
       items.push(btn('cn-shuffle', 'shuffle', 'Перемешать команды'));
       if (!t) items.push(btn('cn-new', 'grid', 'Новая доска'));
       if (!g.winner) items.push(btn('cn-end', 'skip', 'Передать ход'));
     } else if (g.type === 'alias') {
+      if (g.phase === 'running') {
+        items.push(btn('h-pauseturn', g.paused ? 'play' : 'pause', g.paused ? 'Продолжить ход' : 'Пауза хода', g.paused ? 'hot' : ''));
+        items.push(plusT('h-addtime', 15));
+        items.push(btn('h-newword', 'reset', 'Заменить слово (без очков)'));
+      }
       if (['ready', 'running', 'review'].includes(g.phase)) items.push(btn('al-skipturn', 'skip', 'Пропустить ход'));
       if (g.phase === 'teams') items.push(btn('al-shuffle', 'shuffle', 'Перемешать команды'));
       if (!t) items.push(btn('al-restart', 'reset', 'Начать заново'));
     } else if (g.type === 'spyfall') {
+      if (g.phase === 'play') {
+        items.push(btn('h-pauseround', g.paused ? 'play' : 'pause', g.paused ? 'Продолжить раунд' : 'Пауза таймера раунда', g.paused ? 'hot' : ''));
+        items.push(plusT('h-addtime', 60));
+      }
       if (g.phase !== 'over') items.push(btn('spy-reveal', 'eye', 'Открыть карты'));
       if (!t) items.push(btn('spy-next', 'reset', 'Новый раунд'));
     } else if (g.type === 'whoami') {
-      if (g.phase === 'play') items.push(btn('who-next', 'skip', 'Передать ход'));
+      if (g.phase === 'play') {
+        items.push(plusT('h-addtime', 30));
+        if (g.q) items.push(btn('h-clearvotes', 'x', 'Сбросить ответы на вопрос'));
+        if (g.q) items.push(btn('h-skipq', 'reset', 'Не засчитывать вопрос'));
+        items.push(btn('who-next', 'skip', 'Передать ход'));
+      }
       if (g.phase === 'write') items.push(btn('who-force', 'play', 'Начать сейчас'));
     } else if (g.type === 'justone') {
       if (g.phase === 'clues') items.push(btn('jo-force', 'skip', 'Не ждать остальных'));
       if (g.phase === 'filter') items.push(btn('jo-force', 'play', 'Показать угадывающему сейчас'));
+      if (g.endsAt) items.push(plusT('h-addtime', 30));
+      if (['clues', 'filter'].includes(g.phase)) items.push(btn('h-newword', 'shuffle', 'Другое слово'));
+      if (g.phase !== 'over') items.push(btn('h-skipround', 'skip', 'Пропустить раунд (без очков)'));
       if (!t) items.push(btn('jo-restart', 'reset', 'Начать заново'));
     } else if (g.type === 'quiz') {
-      if (g.phase === 'answer') items.push(btn('qz-skip', 'skip', 'Показать ответ сейчас'));
+      if (g.phase === 'answer') {
+        items.push(plusT('h-addtime', 15));
+        items.push(btn('h-newq', 'shuffle', 'Другой вопрос'));
+        items.push(btn('qz-skip', 'skip', 'Показать ответ сейчас'));
+      }
       if (g.phase === 'reveal') items.push(btn('qz-skip', 'play', 'Следующий вопрос'));
       if (!t) items.push(btn('qz-restart', 'reset', 'Начать заново'));
     }
@@ -1443,17 +1469,17 @@
   // Единая полоса таймера под шапкой — такая же, как в Коднеймс, для всех игр
   function gameClock(g) {
     let c = null;
-    if (g.type === 'alias' && g.phase === 'running' && g.endsAt) c = { ends: g.endsAt, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
-    else if (g.type === 'spyfall' && g.phase === 'play' && g.endsAt) c = { ends: g.endsAt, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
+    if (g.type === 'alias' && g.phase === 'running' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
+    else if (g.type === 'spyfall' && g.phase === 'play' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
     else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'задаёт вопрос' };
     else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
     else if (g.type === 'quiz' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
     if (!c) return '';
-    const left = c.ends - now();
+    const left = c.paused ? c.left : c.ends - now();
     const w = Math.max(0, Math.min(100, (left / c.total) * 100));
-    return `<div class="clockbar t-any ${left < 10000 ? 'low' : ''}" ${c.tc ? `style="--tc:${c.tc}"` : ''} data-clock data-ends="${c.ends}" data-left="${left}" data-total="${c.total}" data-paused="0">
+    return `<div class="clockbar t-any ${c.paused ? 'paused' : ''} ${!c.paused && left < 10000 ? 'low' : ''}" ${c.tc ? `style="--tc:${c.tc}"` : ''} data-clock data-ends="${c.ends || 0}" data-left="${left}" data-total="${c.total}" data-paused="${c.paused ? 1 : 0}">
       <div class="ck-fill" style="width:${w}%"></div>
-      <div class="ck-txt"><span class="ck-team">${esc(c.team || '')}</span><span class="ck-phase">${esc(c.phase || '')}</span><span class="ck-t">${fmt(left)}</span></div>
+      <div class="ck-txt"><span class="ck-team">${esc(c.team || '')}</span><span class="ck-phase">${esc(c.phase || '')}</span>${c.paused ? `<span class="ck-p">${ic('pause', 12)} пауза</span>` : ''}<span class="ck-t">${fmt(left)}</span></div>
     </div>`;
   }
 
@@ -1926,8 +1952,9 @@
         ${
           q
             ? `<div class="qa-big">«${esc(q.text)}»</div>
+               ${q.pend ? `<p class="qa-split">${ic('clock', 15)} ${q.pend.v === 'no' ? 'Ответ «нет» — ход перейдёт' : 'Засчитываем — следующий вопрос'} через 2 секунды. Можно передумать.</p>` : ''}
                ${q.split ? `<p class="qa-split">${ic('alert', 15)} «Да» и «нет» поровну — договоритесь и переголосуйте</p>` : ''}
-               <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b>${rollCount('q' + q.id + v, q[v])}<span class="qa-who">${qVotes(v)}</span></button>`).join('')}</div>`
+               <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''} ${q.pend && q.pend.v === v ? 'pending' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b>${rollCount('q' + q.id + v, q[v])}<span class="qa-who">${qVotes(v)}</span>${q.pend && q.pend.v === v ? `<span class="pend" style="--d:${q.pend.ms}ms;--e:-${Math.max(0, q.pend.ms - (q.pend.at - now()))}ms">${ring('fill')}</span>` : ''}</button>`).join('')}</div>`
             : `<div class="qa-big muted">Ждём вопрос…</div>`
         }
         ${g.players[asker]?.qa?.length ? `<details class="qa-hist"><summary>Что уже спросил ${nm(asker)} · ${g.players[asker].qa.length}</summary>${qaCards(g.players[asker].qa)}</details>` : ''}
@@ -2395,6 +2422,14 @@
     // марафон
     'tour-next': () => emit('tourNext'),
     'tour-end': () => emit('tourEnd'),
+    'h-addtime': () => act('addTime'),
+    'h-clearvotes': () => act('clearVotes'),
+    'h-pauseturn': () => act('pauseTurn'),
+    'h-pauseround': () => act('pauseRound'),
+    'h-newword': () => act('newWord'),
+    'h-skipq': () => act('skipQ'),
+    'h-skipround': () => act('skipRound'),
+    'h-newq': () => act('newQuestion'),
     'ctl-toggle': () => {
       ui.ctlOpen = !ui.ctlOpen;
       ui.ctlAnim = ui.ctlOpen;

@@ -192,6 +192,8 @@ function bot(profile, name) {
   await wAsk2.act('ask', { text: 'Я живой?' });
   for (const b of w2o) await b.act('answer', { v: 'yes' });
   await wait(60);
+  assert(g(h).q && g(h).q.pend && g(h).q.pend.v === 'yes', '2s countdown before counting');
+  await wait(2100);
   assert(g(h).turnPid === wAsk2.st.me && !g(h).q && g(h).players[wAsk2.st.me].qa.length === 1, 'all yes → same asker, next question');
   // ничья «да»/«нет» — ждём
   await wAsk2.act('ask', { text: 'Я из сериала?' });
@@ -202,11 +204,11 @@ function bot(profile, name) {
   await wait(60);
   assert(g(h).turnPid === wAsk2.st.me && g(h).q && g(h).q.split, 'tie → wait for agreement');
   await w2o[3].act('answer', { v: 'yes' });
-  await wait(60);
+  await wait(2200);
   assert(!g(h).q && g(h).turnPid === wAsk2.st.me, 'tie resolved by change of vote');
   await wAsk2.act('ask', { text: 'Я из книги?' });
   for (const b of w2o) await b.act('answer', { v: 'no' });
-  await wait(60);
+  await wait(2200);
   assert(g(h).turnPid !== wAsk2.st.me, 'all no → turn passes');
   for (const b of bots) await b.act('guessed');
   await wait(100);
@@ -286,6 +288,12 @@ function bot(profile, name) {
   await hs3[0].act('reject');
   await wait(80);
   assert(g(h).round === r0 + 1 && g(h).phase === 'clues', 'all rejected → next round');
+  {
+    const rr = g(h).round;
+    await h.act('skipRound');
+    await wait(50);
+    assert(g(h).round === rr + 1 && g(h).phase === 'clues', 'host skips round');
+  }
   console.log('✓ Намёк понял (таймеры, одно слово, решения всеми)');
   await h.call('stopGame');
 
@@ -294,6 +302,17 @@ function bot(profile, name) {
   assert((await h.call('startGame', { settings: { rounds: 3, seconds: 30 } })).ok, 'quiz start');
   await wait(80);
   assert(g(h).phase === 'answer' && g(h).q.text && g(h).q.answer === null, 'answer hidden while answering');
+  {
+    const e0 = g(h).endsAt;
+    assert((await bots[1].act('addTime')).error, 'only host adds time');
+    await h.act('addTime');
+    await wait(50);
+    assert(g(h).endsAt >= e0 + 14000, 'host +15s');
+    const q0 = g(h).q.text;
+    await h.act('newQuestion');
+    await wait(50);
+    assert(g(h).round === 1 && g(h).q.text !== q0, 'host replaces question');
+  }
   // правильный ответ узнаём через хост-«показать» в следующем раунде нельзя — считаем по результату
   assert((await bots[0].act('answer', { v: 'abc' })).error, 'only numbers');
   await bots[0].act('answer', { v: '1' });

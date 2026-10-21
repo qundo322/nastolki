@@ -39,6 +39,7 @@ function deal(s, ctx) {
   s.roundPts = {};
   s.endsAt = Date.now() + s.minutes * 60000;
   s.round++;
+  s.roundPaused = false;
   s.firstAsks = pick(ids);
   // Очередь вопросов: спрашивающий выбирает, кого спросить; ответивший спрашивает следующим
   s.asker = s.firstAsks;
@@ -161,6 +162,26 @@ function action(s, pid, msg, ctx) {
       finish(s, 'reveal', 'Хост открыл карты — без очков', ctx);
       return;
     }
+    case 'addTime': {
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'play') return;
+      if (s.roundPaused) s.roundLeft += 60000;
+      else s.endsAt += 60000;
+      s.minutes += 1;
+      return;
+    }
+    case 'pauseRound': {
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'play') return;
+      if (!s.roundPaused) {
+        s.roundLeft = Math.max(0, s.endsAt - Date.now());
+        s.roundPaused = true;
+      } else {
+        s.roundPaused = false;
+        s.endsAt = Date.now() + s.roundLeft;
+      }
+      return;
+    }
     case 'next': {
       if (!ctx.isHost) return 'Только хост';
       if (ctx.players().length < 3) return 'Нужно минимум 3 игрока';
@@ -179,7 +200,9 @@ function view(s, pid) {
   return {
     phase: s.phase,
     round: s.round,
-    endsAt: s.endsAt,
+    endsAt: s.roundPaused ? null : s.endsAt,
+    paused: !!s.roundPaused,
+    pausedLeft: s.roundPaused ? s.roundLeft : null,
     roundMs: s.minutes * 60000,
     inGame,
     isSpy,

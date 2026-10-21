@@ -182,6 +182,32 @@ function action(s, pid, msg, ctx) {
       else if (s.phase === 'filter') toGuess(s, ctx);
       return;
     }
+    case 'addTime': {
+      if (!ctx.isHost) return 'Только хост';
+      if (!s.endsAt) return;
+      const left = s.endsAt - Date.now() + 30000;
+      const ph = s.phase;
+      setPhase(s, ctx, ph, left);
+      s.phaseMs = Math.max(left, s.phaseMs || 0);
+      return;
+    }
+    case 'newWord': {
+      // Другое слово тому же угадывающему, подсказки пишутся заново
+      if (!ctx.isHost) return 'Только хост';
+      if (!['clues', 'filter'].includes(s.phase)) return 'Слово можно сменить, пока пишут подсказки';
+      s.word = s.deck.draw();
+      s.clues = {};
+      s.show = {};
+      setPhase(s, ctx, 'clues', CLUE_MS);
+      return;
+    }
+    case 'skipRound': {
+      // Раунд без очков — угадывать будет следующий
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase === 'over') return;
+      nextRound(s, ctx);
+      return;
+    }
     case 'toggle': {
       if (s.phase !== 'filter' || !isHelper) return;
       const c = s.clues[msg.pid];

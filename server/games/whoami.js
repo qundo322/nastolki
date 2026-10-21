@@ -69,6 +69,7 @@ function verdict(t) {
 function archive(s) {
   const q = s.q;
   s.q = null;
+  s.pend = null;
   if (!q || !Object.keys(q.answers).length) return;
   const t = tally(q);
   const a = s.a[q.asker];
@@ -93,19 +94,35 @@ function startQ(s, ctx) {
 }
 // Кто должен ответить: все в игре и в сети, кроме спрашивающего
 const voters = (s, ctx) => Object.keys(s.a).filter((id) => id !== s.order[s.turn] && ctx.room.players.get(id) && ctx.room.players.get(id).connected !== false);
+const PEND_MS = 2000; // как открытие карточки в Коднеймс: 2 секунды, чтобы успеть передумать
+function cancelPend(s, ctx) {
+  if (s.pend) {
+    s.pend = null;
+    ctx.clearTimer('who-pend');
+  }
+}
+// Ответили все → решение («да» — следующий вопрос, «нет» — ход дальше) засчитывается через 2 секунды
 function checkAnswers(s, ctx) {
   const q = s.q;
-  if (!q || s.phase !== 'play') return;
+  if (!q || s.phase !== 'play') return cancelPend(s, ctx);
   const need = voters(s, ctx);
-  if (!need.length || !need.every((id) => q.answers[id])) return;
+  if (!need.length || !need.every((id) => q.answers[id])) return cancelPend(s, ctx);
   const t = tally(q);
-  if (t.yes === t.no && t.yes > 0) return; // «да» и «нет» поровну — ждём, пока договорятся
+  if (t.yes === t.no && t.yes > 0) return cancelPend(s, ctx); // поровну — ждём, пока договорятся
   const v = verdict(t);
-  if (v === 'no') advance(s, ctx); // «нет» — ход дальше
-  else {
-    archive(s); // «да» (или «не знаю») — следующий вопрос
-    startQ(s, ctx);
-  }
+  if (s.pend && s.pend.qid === q.id && s.pend.v === v) return; // отсчёт уже идёт
+  cancelPend(s, ctx);
+  s.pend = { qid: q.id, v, at: Date.now() + PEND_MS, ms: PEND_MS };
+  ctx.setTimer('who-pend', PEND_MS, () => {
+    if (!s.pend || !s.q || s.q.id !== s.pend.qid) return;
+    const fin = s.pend.v;
+    s.pend = null;
+    if (fin === 'no') advance(s, ctx); // «нет» — ход дальше
+    else {
+      archive(s); // «да» (или «не знаю») — следующий вопрос
+      startQ(s, ctx);
+    }
+  });
 }
 
 function advance(s, ctx) {
@@ -175,6 +192,29 @@ function action(s, pid, msg, ctx) {
       checkAnswers(s, ctx);
       return;
     }
+    case 'addTime': {
+      if (!ctx.isHost) return 'Только хост';
+      if (s.phase !== 'play' || !s.qEnds) return;
+      s.qEnds += 30000;
+      ctx.setTimer('who-q', s.qEnds - Date.now(), () => s.phase === 'play' && advance(s, ctx));
+      return;
+    }
+    case 'clearVotes': {
+      if (!ctx.isHost) return 'Только хост';
+      if (!s.q) return;
+      s.q.answers = {};
+      cancelPend(s, ctx);
+      return;
+    }
+    case 'skipQ': {
+      // Вопрос не засчитывается (например, непонятный) — спрашивающий задаёт новый
+      if (!ctx.isHost) return 'Только хост';
+      if (!s.q) return;
+      s.q = null;
+      cancelPend(s, ctx);
+      startQ(s, ctx);
+      return;
+    }
     case 'next': {
       if (s.phase !== 'play') return;
       if (s.order[s.turn] !== pid && !ctx.isHost) return 'Передать ход может игрок, который ходит';
@@ -224,7 +264,7 @@ function view(s, pid) {
     finishOrder: s.finishOrder,
     points: points(s),
     qEnds: s.phase === 'play' ? s.qEnds : null,
-    q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0 } : null,
+    q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0, pend: s.pend && s.pend.qid === s.q.id ? { v: s.pend.v, at: s.pend.at, ms: s.pend.ms } : null } : null,
     players: Object.fromEntries(
       Object.entries(s.a).map(([id, a]) => [
         id,
