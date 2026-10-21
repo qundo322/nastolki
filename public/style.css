@@ -1007,3 +1007,5 @@ div.clue { cursor: default; }
 .ja-votes { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .ja-votes .ava-wrap:not(.is-ready) .ava { opacity: 0.4; filter: grayscale(0.6); }
 .btn.ja-on { background: transparent; color: var(--green-text); box-shadow: inset 0 0 0 2px var(--green); border-color: transparent; }
+.clockbar.over .ck-fill { background: var(--red, #e5484d); }
+.clockbar.over .ck-phase { color: var(--red-text); font-weight: 800; }

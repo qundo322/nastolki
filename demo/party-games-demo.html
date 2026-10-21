@@ -1014,6 +1014,8 @@ div.clue { cursor: default; }
 .ja-votes { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .ja-votes .ava-wrap:not(.is-ready) .ava { opacity: 0.4; filter: grayscale(0.6); }
 .btn.ja-on { background: transparent; color: var(--green-text); box-shadow: inset 0 0 0 2px var(--green); border-color: transparent; }
+.clockbar.over .ck-fill { background: var(--red, #e5484d); }
+.clockbar.over .ck-phase { color: var(--red-text); font-weight: 800; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -1212,7 +1214,7 @@ body{padding-bottom:84px}
           "\u0412 \u0441\u0432\u043E\u0439 \u0445\u043E\u0434 \u043A\u0430\u043F\u0438\u0442\u0430\u043D \u043F\u0438\u0448\u0435\u0442 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443 \u2014 \u043E\u0434\u043D\u043E \u0441\u043B\u043E\u0432\u043E \u2014 \u0438 \u0443\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442, \u043A \u043A\u0430\u043A\u0438\u043C \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430\u043C \u043E\u043D\u0430 \u043E\u0442\u043D\u043E\u0441\u0438\u0442\u0441\u044F. \u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u044D\u0442\u043E \u043E\u0434\u043D\u043E \u0441\u043B\u043E\u0432\u043E \u0441 \u0441\u0438\u043B\u043E\u0439 1. \u041A\u043D\u043E\u043F\u043A\u0430 \xAB+\xBB \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u0435\u0449\u0451 \u043E\u0434\u043D\u043E. \u0421\u0438\u043B\u0443 \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u043C\u043E\u0436\u043D\u043E \u043C\u0435\u043D\u044F\u0442\u044C \u043E\u0442 0 \u0434\u043E 1 (\u0434\u043E \u0441\u043E\u0442\u044B\u0445): 1 \u2014 \u0442\u043E\u0447\u043D\u043E \u043F\u043E\u0434\u0445\u043E\u0434\u0438\u0442, 0.73 \u2014 \u043F\u043E\u0434\u0445\u043E\u0434\u0438\u0442 \u043D\u0430 73%. \u041F\u0440\u0438\u043C\u0435\u0440: \xAB\u042F\u0431\u043B\u043E\u043A\u043E (1) (1) (0.73)\xBB.",
           "\u0412 \u0442\u0435\u0447\u0435\u043D\u0438\u0435 15 \u0441\u0435\u043A\u0443\u043D\u0434 \u043F\u043E\u0441\u043B\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0438 \u043A\u0430\u043F\u0438\u0442\u0430\u043D \u043C\u043E\u0436\u0435\u0442 \u0438\u0441\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443, \u0435\u0441\u043B\u0438 \u043E\u0448\u0438\u0431\u0441\u044F.",
           "\u0412\u0441\u0435 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 \u043E\u0441\u0442\u0430\u044E\u0442\u0441\u044F \u0432 \u043F\u0430\u043D\u0435\u043B\u044F\u0445 \u043A\u043E\u043C\u0430\u043D\u0434. \u041A\u0430\u043F\u0438\u0442\u0430\u043D \u043C\u043E\u0436\u0435\u0442 \u0437\u0430\u0447\u0435\u0440\u043A\u043D\u0443\u0442\u044C \u043B\u044E\u0431\u043E\u0435 \u0447\u0438\u0441\u043B\u043E \u0432 \u0441\u0432\u043E\u0438\u0445 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0430\u0445 \u2014 \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, \u043A\u043E\u0433\u0434\u0430 \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u043E\u0442\u0433\u0430\u0434\u0430\u043B\u0430 \u044D\u0442\u043E \u0441\u043B\u043E\u0432\u043E \u0438\u043B\u0438 \u043A\u043E\u0433\u0434\u0430 \u0435\u0433\u043E \u043B\u0443\u0447\u0448\u0435 \u0437\u0430\u0431\u044B\u0442\u044C.",
-          "\u0412\u0440\u0435\u043C\u044F: \u043D\u0430 \u0441\u0430\u043C\u044B\u0439 \u043F\u0435\u0440\u0432\u044B\u0439 \u0445\u043E\u0434 \u043A\u0430\u043F\u0438\u0442\u0430\u043D\u0443 \u0434\u0430\u0451\u0442\u0441\u044F 2 \u043C\u0438\u043D\u0443\u0442\u044B, \u0434\u0430\u043B\u044C\u0448\u0435 \u2014 1 \u043C\u0438\u043D\u0443\u0442\u0430. \u041A\u043E\u043C\u0430\u043D\u0434\u0435 \u043D\u0430 \u043E\u0442\u0433\u0430\u0434\u044B\u0432\u0430\u043D\u0438\u0435 \u2014 1 \u043C\u0438\u043D\u0443\u0442\u0430, \u0437\u0430 \u043A\u0430\u0436\u0434\u043E\u0435 \u0432\u0435\u0440\u043D\u043E \u043E\u0442\u043A\u0440\u044B\u0442\u043E\u0435 \u0441\u043B\u043E\u0432\u043E +15 \u0441\u0435\u043A\u0443\u043D\u0434. \u0412\u0440\u0435\u043C\u044F \u0432\u044B\u0448\u043B\u043E \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442 \u0441\u043E\u043F\u0435\u0440\u043D\u0438\u043A\u0430\u043C.",
+          "\u0412\u0440\u0435\u043C\u044F: \u043D\u0430 \u0441\u0430\u043C\u044B\u0439 \u043F\u0435\u0440\u0432\u044B\u0439 \u0445\u043E\u0434 \u043A\u0430\u043F\u0438\u0442\u0430\u043D\u0443 \u0434\u0430\u0451\u0442\u0441\u044F 2 \u043C\u0438\u043D\u0443\u0442\u044B, \u0434\u0430\u043B\u044C\u0448\u0435 \u2014 1 \u043C\u0438\u043D\u0443\u0442\u0430. \u041A\u043E\u043C\u0430\u043D\u0434\u0435 \u043D\u0430 \u043E\u0442\u0433\u0430\u0434\u044B\u0432\u0430\u043D\u0438\u0435 \u2014 1 \u043C\u0438\u043D\u0443\u0442\u0430, \u0437\u0430 \u043A\u0430\u0436\u0434\u043E\u0435 \u0432\u0435\u0440\u043D\u043E \u043E\u0442\u043A\u0440\u044B\u0442\u043E\u0435 \u0441\u043B\u043E\u0432\u043E +15 \u0441\u0435\u043A\u0443\u043D\u0434. \u0415\u0441\u043B\u0438 \u043A\u0430\u043F\u0438\u0442\u0430\u043D \u043D\u0435 \u0443\u043B\u043E\u0436\u0438\u043B\u0441\u044F, \u0435\u0433\u043E \u0432\u0440\u0435\u043C\u044F \u043D\u0435 \u0441\u0433\u043E\u0440\u0430\u0435\u0442: \u0434\u0430\u043B\u044C\u0448\u0435 \u043E\u043D \u0434\u0443\u043C\u0430\u0435\u0442 \u0437\u0430 \u0441\u0447\u0451\u0442 \u043C\u0438\u043D\u0443\u0442\u044B \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u043D\u0430 \u043E\u0442\u0433\u0430\u0434\u044B\u0432\u0430\u043D\u0438\u0435 \u2014 \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C, \u0441\u0442\u043E\u043B\u044C\u043A\u043E \u0438 \u0431\u0443\u0434\u0435\u0442 \u043D\u0430 \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u043D\u0438\u0435. \u0412\u0440\u0435\u043C\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0432\u044B\u0448\u043B\u043E \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442 \u0441\u043E\u043F\u0435\u0440\u043D\u0438\u043A\u0430\u043C.",
           "\u0410\u0433\u0435\u043D\u0442\u044B \u0433\u043E\u043B\u043E\u0441\u0443\u044E\u0442 \u0437\u0430 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0443 \u043A\u043B\u0438\u043A\u043E\u043C (\u043A\u043B\u0438\u043A \u0435\u0449\u0451 \u0440\u0430\u0437 \u2014 \u0441\u043D\u044F\u0442\u044C \u0433\u043E\u043B\u043E\u0441). \u041D\u0430 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0435 \u0432\u0438\u0434\u043D\u044B \u0430\u0432\u0430\u0442\u0430\u0440\u044B \u0442\u0435\u0445, \u043A\u0442\u043E \u0437\u0430 \u043D\u0435\u0451 \u043F\u0440\u043E\u0433\u043E\u043B\u043E\u0441\u043E\u0432\u0430\u043B. \u041A\u043E\u0433\u0434\u0430 \u0432\u0441\u0435 \u0430\u0433\u0435\u043D\u0442\u044B \u0445\u043E\u0434\u044F\u0449\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u0432\u044B\u0431\u0440\u0430\u043B\u0438 \u043E\u0434\u043D\u0443 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0443, \u043E\u043D\u0430 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 2 \u0441\u0435\u043A\u0443\u043D\u0434\u044B; \u0435\u0441\u043B\u0438 \u043A\u0442\u043E-\u0442\u043E \u043F\u0435\u0440\u0435\u0434\u0443\u043C\u0430\u043B \u2014 \u043E\u0442\u0441\u0447\u0451\u0442 \u043E\u0442\u043C\u0435\u043D\u044F\u0435\u0442\u0441\u044F.",
           "\u0421\u0432\u043E\u044F \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u2014 \u043C\u043E\u0436\u043D\u043E \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442\u044C \u0438\u043B\u0438 \u043D\u0430\u0436\u0430\u0442\u044C \xAB\u041F\u0435\u0440\u0435\u0434\u0430\u0442\u044C \u0445\u043E\u0434\xBB. \u041D\u0435\u0439\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u0438\u043B\u0438 \u0447\u0443\u0436\u0430\u044F \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442 \u0441\u043E\u043F\u0435\u0440\u043D\u0438\u043A\u0430\u043C. \u0427\u0451\u0440\u043D\u0430\u044F \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 (\u0443\u0431\u0438\u0439\u0446\u0430) \u2014 \u043C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u043E\u0435 \u043F\u043E\u0440\u0430\u0436\u0435\u043D\u0438\u0435.",
           "\u041F\u043E\u0431\u0435\u0436\u0434\u0430\u0435\u0442 \u043A\u043E\u043C\u0430\u043D\u0434\u0430, \u043F\u0435\u0440\u0432\u043E\u0439 \u043E\u0442\u043A\u0440\u044B\u0432\u0448\u0430\u044F \u0432\u0441\u0435 \u0441\u0432\u043E\u0438 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0438. \u041D\u0430\u0447\u0438\u043D\u0430\u044E\u0449\u0430\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u0438\u0449\u0435\u0442 9 \u0441\u043B\u043E\u0432, \u0432\u0442\u043E\u0440\u0430\u044F \u2014 8.",
@@ -1266,7 +1268,14 @@ body{padding-bottom:84px}
         ctx.setTimer("cn-clock", c.endsAt - Date.now(), () => onTimeout(s, ctx));
       }
       function onTimeout(s, ctx) {
+        var _a;
         if (s.winner) return;
+        if (s.step === "clue" && !((_a = s.clock) == null ? void 0 : _a.over)) {
+          startClock(s, ctx, GUESS_MS);
+          s.clock.over = true;
+          s.log.push({ kind: "overtime", team: s.turn, by: TN[s.turn] });
+          return;
+        }
         s.log.push({ kind: "timeout", team: s.turn, by: TN[s.turn] });
         passTurn(s, ctx);
       }
@@ -1399,7 +1408,7 @@ body{padding-bottom:84px}
       }
       var clueText = (c) => `${c.word} ${c.slots.map((x) => `(${x.v})`).join(" ")}`;
       function action(s, pid, msg, ctx) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         const name = ((_a = ctx.room.players.get(pid)) == null ? void 0 : _a.name) || "?";
         switch (msg.type) {
           case "join": {
@@ -1455,7 +1464,8 @@ body{padding-bottom:84px}
             s.step = "guess";
             s.firstClue = false;
             s.log.push({ kind: "clue", team: s.turn, text: clueText(s.clue), by: name });
-            startClock(s, ctx, GUESS_MS);
+            if ((_c = s.clock) == null ? void 0 : _c.over) s.clock.over = "guess";
+            else startClock(s, ctx, GUESS_MS);
             return;
           }
           case "editClue": {
@@ -1511,7 +1521,7 @@ body{padding-bottom:84px}
           case "resetClock": {
             if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
             if (s.winner || !s.clock) return;
-            const wasPaused = (_c = s.clock) == null ? void 0 : _c.paused;
+            const wasPaused = (_d = s.clock) == null ? void 0 : _d.paused;
             startClock(s, ctx, s.step === "clue" ? clueTime(s) : GUESS_MS);
             if (wasPaused) pauseClock(s, ctx);
             return;
@@ -1546,7 +1556,7 @@ body{padding-bottom:84px}
           pending: s.pending,
           ready: s.ready || {},
           needs: setup || s.winner ? setupNeeds(s, ctx) : [],
-          clock: c ? { endsAt: c.endsAt, total: c.total, paused: c.paused, left: c.paused ? c.left : Math.max(0, c.endsAt - Date.now()) } : null,
+          clock: c ? { endsAt: c.endsAt, total: c.total, over: c.over || false, paused: c.paused, left: c.paused ? c.left : Math.max(0, c.endsAt - Date.now()) } : null,
           log: s.log.slice(-40),
           cards: s.cards.map((x) => ({
             w: setup ? "" : x.w,
@@ -3225,12 +3235,14 @@ window.RULES = {
     points: [
       ['2 мин', 'на самую первую подсказку капитана'],
       ['1 мин', 'на каждую следующую подсказку'],
+      ['−время', 'капитан не уложился — дальше думает за счёт минуты команды'],
       ['1 мин', 'команде на отгадывание'],
       ['+15 сек', 'за каждую верно открытую карточку'],
     ],
     win: 'Команда, которая первой откроет все свои карточки (у начинающих их 9, у вторых — 8). Или та, чьи соперники открыли убийцу.',
     tips: [
-      'Закончилось время — ход переходит соперникам автоматически.',
+      'Капитан долго думает — ворует время у своей команды: после его минуты начинает тикать минута на отгадывание.',
+      'Закончилось время команды — ход переходит соперникам автоматически.',
       'Все подсказки висят в панели команды. Капитан может зачеркнуть цифру, когда слово уже отгадали.',
       'Сменить команду или уступить место капитана можно только между партиями.',
       'В марафоне каждый игрок победившей команды получает +3.',
@@ -4391,10 +4403,11 @@ window.RULES = {
       const n = pool.filter((id) => g.ready[id]).length;
       return `<div class="clockbar idle"><div class="ck-txt">${ic(g.winner ? 'trophy' : 'users', 14)}<span>${g.winner ? 'Партия окончена' : 'Подготовка к партии'}</span>${isPrep(g) ? `<span class="ck-phase">готовы ${n} из ${pool.length}</span>` : ''}</div></div>`;
     }
-    const phase = g.step === 'clue' ? 'капитан думает' : 'команда отгадывает';
+    // Капитан не уложился — тикает уже время команды
+    const phase = g.step === 'clue' ? (c.over ? 'капитан тратит время команды' : 'капитан думает') : c.over ? 'команда отгадывает (время урезано)' : 'команда отгадывает';
     const left = c.paused ? c.left : c.endsAt - now();
     const w = Math.max(0, Math.min(100, (left / c.total) * 100));
-    return `<div class="clockbar t-${g.turn} ${c.paused ? 'paused' : ''} ${!c.paused && left < 10000 ? 'low' : ''}" data-clock data-ends="${c.endsAt}" data-left="${c.left}" data-total="${c.total}" data-paused="${c.paused ? 1 : 0}">
+    return `<div class="clockbar t-${g.turn} ${c.over && g.step === 'clue' ? 'over' : ''} ${c.paused ? 'paused' : ''} ${!c.paused && left < 10000 ? 'low' : ''}" data-clock data-ends="${c.endsAt}" data-left="${c.left}" data-total="${c.total}" data-paused="${c.paused ? 1 : 0}">
       <div class="ck-fill" style="width:${w}%"></div>
       <div class="ck-txt"><span class="ck-team">${TN[g.turn]}</span><span class="ck-phase">${phase}</span>${c.paused ? `<span class="ck-p">${ic('pause', 12)} пауза</span>` : ''}<span class="ck-t">${fmt(left)}</span></div>
     </div>`;
@@ -4537,7 +4550,9 @@ window.RULES = {
                       ? `${ic('pencil', 14)} ${esc(l.by)} исправил: <b>${esc(l.text)}</b>`
                       : l.kind === 'pass'
                         ? `${ic('skip', 14)} ${esc(l.by)} передал ход`
-                        : l.kind === 'timeout'
+                        : l.kind === 'overtime'
+                          ? `${ic('clock', 14)} ${esc(l.by)}: капитан думает за счёт времени команды`
+                          : l.kind === 'timeout'
                           ? `${ic('clock', 14)} ${esc(l.by)}: время вышло`
                           : `${ic('grid', 14)} ${esc(l.by)} открыли <b>${esc(l.text)}</b> <span class="sw c-${l.color}"></span>`
                 }</div>`

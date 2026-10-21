@@ -1042,10 +1042,11 @@
       const n = pool.filter((id) => g.ready[id]).length;
       return `<div class="clockbar idle"><div class="ck-txt">${ic(g.winner ? 'trophy' : 'users', 14)}<span>${g.winner ? 'Партия окончена' : 'Подготовка к партии'}</span>${isPrep(g) ? `<span class="ck-phase">готовы ${n} из ${pool.length}</span>` : ''}</div></div>`;
     }
-    const phase = g.step === 'clue' ? 'капитан думает' : 'команда отгадывает';
+    // Капитан не уложился — тикает уже время команды
+    const phase = g.step === 'clue' ? (c.over ? 'капитан тратит время команды' : 'капитан думает') : c.over ? 'команда отгадывает (время урезано)' : 'команда отгадывает';
     const left = c.paused ? c.left : c.endsAt - now();
     const w = Math.max(0, Math.min(100, (left / c.total) * 100));
-    return `<div class="clockbar t-${g.turn} ${c.paused ? 'paused' : ''} ${!c.paused && left < 10000 ? 'low' : ''}" data-clock data-ends="${c.endsAt}" data-left="${c.left}" data-total="${c.total}" data-paused="${c.paused ? 1 : 0}">
+    return `<div class="clockbar t-${g.turn} ${c.over && g.step === 'clue' ? 'over' : ''} ${c.paused ? 'paused' : ''} ${!c.paused && left < 10000 ? 'low' : ''}" data-clock data-ends="${c.endsAt}" data-left="${c.left}" data-total="${c.total}" data-paused="${c.paused ? 1 : 0}">
       <div class="ck-fill" style="width:${w}%"></div>
       <div class="ck-txt"><span class="ck-team">${TN[g.turn]}</span><span class="ck-phase">${phase}</span>${c.paused ? `<span class="ck-p">${ic('pause', 12)} пауза</span>` : ''}<span class="ck-t">${fmt(left)}</span></div>
     </div>`;
@@ -1188,7 +1189,9 @@
                       ? `${ic('pencil', 14)} ${esc(l.by)} исправил: <b>${esc(l.text)}</b>`
                       : l.kind === 'pass'
                         ? `${ic('skip', 14)} ${esc(l.by)} передал ход`
-                        : l.kind === 'timeout'
+                        : l.kind === 'overtime'
+                          ? `${ic('clock', 14)} ${esc(l.by)}: капитан думает за счёт времени команды`
+                          : l.kind === 'timeout'
                           ? `${ic('clock', 14)} ${esc(l.by)}: время вышло`
                           : `${ic('grid', 14)} ${esc(l.by)} открыли <b>${esc(l.text)}</b> <span class="sw c-${l.color}"></span>`
                 }</div>`
