@@ -1374,3 +1374,32 @@ h1, h2, h3, h4, .h2, .tp-name, .gname, .mega-word, .qa-big, .rl-hero h3, .nom-t,
 @media (max-width: 640px) { .glow-ask { flex-wrap: wrap; bottom: 70px; } .ga-t { flex-basis: calc(100% - 60px); } }
 .cn-card { min-width: 0; }
 .cn-card .w.phrase { font-size: 0.8em; }
+
+/* ============ v18: форма капитана — под панелью своей команды ============ */
+.cn-col { position: sticky; top: 96px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 116px); overflow-y: auto; scrollbar-width: thin; }
+.cn-col > .cn-side { position: static; max-height: none; overflow: visible; }
+.cform.side { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; border-radius: var(--radius); background: var(--surface); border: 2px solid var(--accent-line); box-shadow: 0 0 0 4px var(--accent-soft); }
+.cf-head { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--accent-text); margin-bottom: 2px; }
+.cform.side .cf-l { margin-top: 4px; }
+.cform.side .cf-hint { margin: -4px 0 0; font-size: 12px; color: var(--faint); }
+.cform.side .clue-word { height: 52px; font-size: 20px; font-weight: 800; text-transform: uppercase; padding: 0 12px; width: 100%; }
+.cform.side .clue-word::placeholder { text-transform: none; font-size: 15px; font-weight: 600; }
+.cform.side .slots { display: flex; flex-direction: column; gap: 6px; height: auto; overflow: visible; flex-wrap: nowrap; }
+.cform.side .slot { width: 100%; height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; border-radius: 11px; background: var(--surface-2); border: 1px solid var(--line-strong); }
+.cform.side .slot input[type='range'] { flex: 1; width: auto; min-width: 0; }
+.cform.side .slot .slot-v { width: 52px; height: 32px; padding: 0; font-size: 15px; text-align: center; font-weight: 800; }
+.cform.side .slot-x { width: 24px; height: 24px; padding: 0; flex: none; }
+.cform.side .add-slot { height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 11px; border: 1.5px dashed var(--accent-line); background: transparent; color: var(--accent-text); font: inherit; font-weight: 800; cursor: pointer; }
+.cform.side .add-slot:hover { background: var(--accent-soft); }
+.cform.side .cf-pv { height: auto; min-height: 24px; white-space: normal; flex-wrap: wrap; }
+.cform.side .cf-btns { margin-top: 6px; }
+.cform.side .cf-go { height: 48px; }
+.cn-clue.cap-turn { border-color: var(--accent-line); }
+.cn-clue.cap-turn .cl-word { color: var(--accent-text); display: inline-flex; align-items: center; gap: 8px; }
+@media (max-width: 760px) { .cn-col { position: static; max-height: none; overflow: visible; } .cn-col.t-blue { order: 2; } }
+
+/* Карточка держит размер: текст не растягивает ряд, отсчёт — внутри угла */
+.cn-card { overflow: hidden; }
+.cn-card .pend { top: 6px; right: 6px; width: 30px; height: 30px; }
+.cform.side .add-slot { width: 100%; flex: none; white-space: nowrap; padding: 0 12px; }
+.cn-col { max-height: calc(100vh - 96px - 84px); }

@@ -561,6 +561,10 @@
     const sk = screenKey();
     ui.enter = sk !== ui.lastScreen;
     ui.lastScreen = sk;
+    // Прокрутка колонок команд сохраняется между перерисовками
+    const colScroll = {};
+    $app.querySelectorAll('.cn-col').forEach((el) => (colScroll[el.className] = el.scrollTop));
+    const hadForm = !!$app.querySelector('.cform.side');
     const rb = $app.querySelector('.rl-body');
     const rulesScroll = rb && rb.dataset.g === String(ui.showRules) ? rb.scrollTop : 0;
     $app.innerHTML = S ? renderRoom() : renderHome();
@@ -579,8 +583,31 @@
     }
     const c = $app.querySelector('.chat-log');
     if (c) c.scrollTop = nearBottom ? c.scrollHeight : chatScroll;
+    $app.querySelectorAll('.cn-col').forEach((el) => {
+      if (colScroll[el.className] != null) el.scrollTop = colScroll[el.className];
+    });
+    const form = $app.querySelector('.cform.side');
+    if (form && !hadForm) {
+      const col = form.closest('.cn-col');
+      if (col) col.scrollTo({ top: col.scrollHeight, behavior: 'smooth' }); // форма появилась — показать её
+    }
     fitBoard();
+    fitWords();
     tick();
+  }
+
+  // Слово не влезает в карточку даже с переносами — уменьшаем шрифт только этой карточки
+  function fitWords() {
+    $app.querySelectorAll('.cn-card .w').forEach((w) => {
+      const card = w.parentElement;
+      w.style.fontSize = '';
+      const room = card.clientHeight - 6;
+      let k = w.classList.contains('phrase') ? 0.8 : 1;
+      while (w.scrollHeight > room && k > 0.56) {
+        k -= 0.06;
+        w.style.fontSize = k + 'em';
+      }
+    });
   }
 
   // Ключ «экрана»: когда он меняется — плавно проявляем новую сцену
@@ -614,7 +641,10 @@
   let fitT;
   window.addEventListener('resize', () => {
     clearTimeout(fitT);
-    fitT = setTimeout(fitBoard, 80);
+    fitT = setTimeout(() => {
+      fitBoard();
+      fitWords();
+    }, 80);
   });
 
   // ---------- конструктор аватара ----------
@@ -1305,22 +1335,19 @@
       )
       .join('');
     const word = mode === 'edit' ? esc(g.clue.word) : '';
-    return `<form class="cn-clue cform t-${g.turn}" data-form="clue" data-mode="${mode}">
-      <div class="cf-col cf-word">
-        <label class="cf-l"><b>1</b> Слово-подсказка</label>
-        <input class="inp clue-word" name="word" data-keep="cn-clue${mode === 'edit' ? '-e' : ''}" data-preview="1" value="${word}" placeholder="Одно слово" maxlength="30" autocomplete="off" required/>
-      </div>
-      <div class="cf-col cf-slots">
-        <label class="cf-l"><b>2</b> К скольким карточкам · сила <span class="cf-hint" title="1 — точно про это слово, 0.5 — подходит наполовину">1 = точно, 0.5 = наполовину</span></label>
-        <div class="slots">${slots}${n < 9 ? `<button type="button" class="add-slot" data-act="cn-sadd" title="Добавить карточку">${ic('plus', 16)}<span>карточка</span></button>` : ''}</div>
-      </div>
-      <div class="cf-col cf-send">
-        <label class="cf-l"><b>3</b> Агенты увидят</label>
-        <div class="cf-pv" id="cn-preview">${cluePreview()}</div>
-        <div class="cf-btns">
-          ${mode === 'edit' ? `<button type="button" class="btn ghost" data-act="cn-edit-cancel">Отмена</button>` : ''}
-          <button class="btn primary cf-go">${mode === 'edit' ? `${ic('check', 16)} Сохранить` : `${ic('send', 16)} Отправить`}</button>
-        </div>
+    return `<form class="cform side t-${g.turn}" data-form="clue" data-mode="${mode}">
+      <div class="cf-head">${ic('crown', 15)} ${mode === 'edit' ? 'Исправить подсказку' : 'Ваша подсказка'}</div>
+      <label class="cf-l"><b>1</b> Слово</label>
+      <input class="inp clue-word" name="word" data-keep="cn-clue${mode === 'edit' ? '-e' : ''}" data-preview="1" value="${word}" placeholder="Одно слово" maxlength="30" autocomplete="off" required/>
+      <label class="cf-l"><b>2</b> Карточки и сила</label>
+      <div class="cf-hint">1 — точно про это слово, 0.5 — подходит наполовину</div>
+      <div class="slots">${slots}</div>
+      ${n < 9 ? `<button type="button" class="add-slot" data-act="cn-sadd">${ic('plus', 15)} Ещё карточка</button>` : ''}
+      <label class="cf-l"><b>3</b> Агенты увидят</label>
+      <div class="cf-pv" id="cn-preview">${cluePreview()}</div>
+      <div class="cf-btns">
+        ${mode === 'edit' ? `<button type="button" class="btn ghost" data-act="cn-edit-cancel">Отмена</button>` : ''}
+        <button class="btn primary cf-go">${mode === 'edit' ? `${ic('check', 16)} Сохранить` : `${ic('send', 16)} Отправить`}</button>
       </div>
     </form>`;
   }
@@ -1379,6 +1406,18 @@
     </aside>`;
   }
 
+  // Колонка команды: панель + (для капитана, чей ход) форма подсказки под ней — центр с полем не меняется
+  function sideCol(g, t) {
+    const me = S.me;
+    const amCapHere = g.captain[t] === me;
+    let form = '';
+    if (amCapHere && !g.winner && g.turn === t) {
+      if (g.step === 'clue') form = clueForm(g, 'new');
+      else if (g.step === 'guess' && ui.cnEdit && g.clue && g.clue.by === me && now() < g.clue.editUntil) form = clueForm(g, 'edit');
+    }
+    return `<div class="cn-col t-${t}">${teamPanel(g, t)}${form}</div>`;
+  }
+
   function rCodenames(g) {
     const me = S.me;
     const myTeam = g.team[me];
@@ -1410,9 +1449,8 @@
     else if (g.step === 'clue')
       status =
         amCap && myTurn
-          ? clueForm(g, 'new')
+          ? `<div class="cn-clue t-${g.turn} cap-turn"><div class="cl-main"><span class="cl-label">Ваш ход, капитан</span><span class="cl-word sm">${ic(g.turn === 'red' ? 'back' : 'send', 18)} Напишите подсказку в панели ${g.turn === 'red' ? 'слева' : 'справа'}</span></div></div>`
           : `<div class="cn-clue t-${g.turn}"><div class="cl-main"><span class="cl-label">Ход ${TNg[g.turn]}</span><span class="cl-word sm muted">${g.captain[g.turn] ? `${nm(g.captain[g.turn])} придумывает подсказку…` : 'Нужен капитан — нажмите «Стать капитаном» в панели команды'}</span></div></div>`;
-    else if (ui.cnEdit && g.clue.by === me && now() < g.clue.editUntil) status = clueForm(g, 'edit');
     else {
       const c = g.clue;
       const canEdit = c.by === me && now() < c.editUntil;
@@ -1440,7 +1478,7 @@
     const glow = !g.winner && g.step !== 'setup' ? `<div class="turn-glow g-${g.turn}" aria-hidden="true"></div>` : '';
     return `${glow}
       <div class="cn">
-        ${teamPanel(g, 'red')}
+        ${sideCol(g, 'red')}
         <section class="cn-center">
           <div class="cn-status">${status}</div>
           <div class="cn-board ${amCap ? 'captain own-' + myTeam : ''} ${amCap || g.winner ? 'allcolors' : ''}">${cards}</div>
@@ -1465,7 +1503,7 @@
             )
             .join('') || '<div class="muted small">Пока пусто</div>'}</details>
         </section>
-        ${teamPanel(g, 'blue')}
+        ${sideCol(g, 'blue')}
       </div>`;
   }
 
