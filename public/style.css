@@ -1080,3 +1080,39 @@ div.clue { cursor: default; }
 @media (prefers-reduced-motion: reduce) { .rbub { animation: none; } }
 .sum-i > svg { vertical-align: -2px; margin-right: 4px; }
 .sum-i .who-n { vertical-align: -5px; }
+
+/* Итоги Коднеймс — окно */
+.modal.sum-modal { width: min(820px, calc(100vw - 24px)); }
+.modal.still, .modal-bg.still { animation: none; }
+.sum-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.sum-meta span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); padding: 5px 10px; border-radius: 99px; }
+.sum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.sum-c { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.sum-ic { flex: none; width: 36px; height: 36px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; }
+.sum-c.bad .sum-ic { background: var(--red); color: #fff; }
+.sum-t { font-family: var(--display); font-size: 14px; margin-bottom: 3px; }
+.sum-b { font-size: 14px; line-height: 1.5; }
+.sum-b .who-n { vertical-align: -5px; font-weight: 700; }
+.sum-open { margin-top: 2px; align-self: flex-start; }
+
+/* Радио комнаты: сейчас играет + очередь */
+#lofi { width: 320px; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.lofi-now { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
+.ln-k { flex: none; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: 2px 6px; border-radius: 6px; }
+.ln-t { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ln-by { flex: none; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
+.lofi-ctl { display: flex; align-items: center; gap: 6px; }
+.lofi-ctl input[type=range] { flex: 1; min-width: 60px; }
+.lofi-host { display: inline-flex; gap: 2px; }
+.lofi-queue { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
+.lq-h { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; display: flex; gap: 6px; }
+.lq-i { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }
+.lq-n { flex: none; width: 18px; text-align: center; color: var(--muted); font-weight: 800; font-size: 12px; }
+.lq-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lq-by { flex: none; display: inline-flex; }
+.lq-ctl { flex: none; display: inline-flex; }
+.lq-ctl .icon-x { width: 24px; height: 24px; padding: 0; }
+.lq-ctl .icon-x[disabled] { opacity: .3; }
+.lofi-add { display: flex; gap: 6px; }
+.lofi-add .inp { flex: 1; min-width: 0; padding: 8px 10px; font-size: 13px; }
+#lofi.mini .lofi-queue, #lofi.mini .lofi-add, #lofi.mini .lofi-now, #lofi.mini .lofi-host { display: none; }

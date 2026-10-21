@@ -1088,6 +1088,42 @@ div.clue { cursor: default; }
 .sum-i > svg { vertical-align: -2px; margin-right: 4px; }
 .sum-i .who-n { vertical-align: -5px; }
 
+/* Итоги Коднеймс — окно */
+.modal.sum-modal { width: min(820px, calc(100vw - 24px)); }
+.modal.still, .modal-bg.still { animation: none; }
+.sum-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.sum-meta span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); padding: 5px 10px; border-radius: 99px; }
+.sum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.sum-c { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.sum-ic { flex: none; width: 36px; height: 36px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; }
+.sum-c.bad .sum-ic { background: var(--red); color: #fff; }
+.sum-t { font-family: var(--display); font-size: 14px; margin-bottom: 3px; }
+.sum-b { font-size: 14px; line-height: 1.5; }
+.sum-b .who-n { vertical-align: -5px; font-weight: 700; }
+.sum-open { margin-top: 2px; align-self: flex-start; }
+
+/* Радио комнаты: сейчас играет + очередь */
+#lofi { width: 320px; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.lofi-now { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
+.ln-k { flex: none; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: 2px 6px; border-radius: 6px; }
+.ln-t { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ln-by { flex: none; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
+.lofi-ctl { display: flex; align-items: center; gap: 6px; }
+.lofi-ctl input[type=range] { flex: 1; min-width: 60px; }
+.lofi-host { display: inline-flex; gap: 2px; }
+.lofi-queue { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
+.lq-h { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; display: flex; gap: 6px; }
+.lq-i { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }
+.lq-n { flex: none; width: 18px; text-align: center; color: var(--muted); font-weight: 800; font-size: 12px; }
+.lq-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lq-by { flex: none; display: inline-flex; }
+.lq-ctl { flex: none; display: inline-flex; }
+.lq-ctl .icon-x { width: 24px; height: 24px; padding: 0; }
+.lq-ctl .icon-x[disabled] { opacity: .3; }
+.lofi-add { display: flex; gap: 6px; }
+.lofi-add .inp { flex: 1; min-width: 0; padding: 8px 10px; font-size: 13px; }
+#lofi.mini .lofi-queue, #lofi.mini .lofi-add, #lofi.mini .lofi-now, #lofi.mini .lofi-host { display: none; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -1369,7 +1405,8 @@ body{padding-bottom:84px}
         s.pending = null;
         s.firstClue = true;
         s.ready = {};
-        s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} };
+        s.turnAt = Date.now();
+        s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {}, lead: {}, flips: {}, think: {}, gifts: { red: 0, blue: 0 }, neutral: { red: 0, blue: 0 }, fast: null, startAt: Date.now(), turns: 1 };
         ctx.clearTimer("cn-reveal");
         startClock(s, ctx, FIRST_CLUE_MS);
       }
@@ -1394,7 +1431,27 @@ body{padding-bottom:84px}
           sniper: top(st.right),
           miss: top(st.wrong),
           assassin: st.assassin,
-          clues: s.clues.length
+          clues: s.clues.length,
+          lead: top(st.lead || {}),
+          waverer: top(st.flips || {}),
+          // Дольше всех думал / быстрее всех — по среднему времени капитана на подсказку
+          slowCap: (() => {
+            const e = Object.entries(st.think || {}).sort((a, b) => b[1].max - a[1].max)[0];
+            return e ? { pid: e[0], ms: e[1].max } : null;
+          })(),
+          fastCap: (() => {
+            const e = Object.entries(st.think || {}).map(([id, t]) => [id, t.sum / t.n]).sort((a, b) => a[1] - b[1])[0];
+            return e && Object.keys(st.think).length > 1 ? { pid: e[0], ms: Math.round(e[1]) } : null;
+          })(),
+          fast: st.fast,
+          bold: (() => {
+            const c = s.clues.slice().sort((a, b) => b.slots.length - a.slots.length || (b.hits || 0) - (a.hits || 0))[0];
+            return c && c.slots.length >= 3 ? { text: clueText(c), by: c.by, n: c.slots.length, hits: c.hits || 0 } : null;
+          })(),
+          gifts: st.gifts,
+          neutral: st.neutral,
+          duration: (st.endAt || Date.now()) - (st.startAt || Date.now()),
+          turns: st.turns || 1
         };
       }
       function stats(s) {
@@ -1456,6 +1513,8 @@ body{padding-bottom:84px}
         s.turn = enemy(s.turn);
         s.step = "clue";
         s.clue = null;
+        s.turnAt = Date.now();
+        if (s.st) s.st.turns++;
         startClock(s, ctx, clueTime(s));
       }
       function reveal(s, i, ctx) {
@@ -1463,13 +1522,21 @@ body{padding-bottom:84px}
         if (!c || c.revealed) return;
         s.pending = null;
         c.revealed = true;
-        const st = s.st || (s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} });
+        const st = s.st || (s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {}, lead: {}, flips: {}, think: {}, gifts: { red: 0, blue: 0 }, neutral: { red: 0, blue: 0 }, fast: null, startAt: Date.now(), turns: 1 });
         const own = c.color === s.turn;
         for (const id of c.marks) {
           const bag = own ? st.right : st.wrong;
           bag[id] = (bag[id] || 0) + 1;
         }
         if (c.color === "assassin") st.assassin = [...c.marks];
+        if (own && c.first) st.lead[c.first] = (st.lead[c.first] || 0) + 1;
+        if (c.color === enemy(s.turn)) st.gifts[s.turn]++;
+        if (c.color === "neutral") st.neutral[s.turn]++;
+        if (own && s.clue && s.clue.at && !s.clue.firstHit) {
+          s.clue.firstHit = true;
+          const ms = Date.now() - s.clue.at;
+          if (!st.fast || ms < st.fast.ms) st.fast = { ms, team: s.turn, word: c.w, by: c.first || null };
+        }
         if (own && s.clue) {
           s.clue.hits = (s.clue.hits || 0) + 1;
           const cap = s.clue.by;
@@ -1483,6 +1550,7 @@ body{padding-bottom:84px}
         } else if (!left(s, "red")) s.winner = "red";
         else if (!left(s, "blue")) s.winner = "blue";
         if (s.winner) {
+          st.endAt = Date.now();
           s.ready = {};
           return stopClock(s, ctx);
         }
@@ -1563,7 +1631,12 @@ body{padding-bottom:84px}
             if (s.step !== "clue") return "\u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0430 \u0443\u0436\u0435 \u0434\u0430\u043D\u0430";
             const p = parseClue(msg);
             if (p.error) return p.error;
-            s.clue = { id: s.clues.length, word: p.word, slots: p.slots, team: s.turn, by: pid, editUntil: Date.now() + EDIT_MS };
+            s.clue = { id: s.clues.length, word: p.word, slots: p.slots, team: s.turn, by: pid, editUntil: Date.now() + EDIT_MS, at: Date.now() };
+            if (s.st && s.turnAt) {
+              const think = Date.now() - s.turnAt;
+              const prev = s.st.think[pid];
+              s.st.think[pid] = { max: Math.max((prev == null ? void 0 : prev.max) || 0, think), sum: ((prev == null ? void 0 : prev.sum) || 0) + think, n: ((prev == null ? void 0 : prev.n) || 0) + 1 };
+            }
             s.clues.push(s.clue);
             s.step = "guess";
             s.firstClue = false;
@@ -1601,8 +1674,11 @@ body{padding-bottom:84px}
             const c = s.cards[msg.i];
             if (!c || c.revealed) return;
             const had = c.marks.includes(pid);
+            const wasOn = s.cards.some((x) => x.marks.includes(pid));
             s.cards.forEach((x) => x.marks = x.marks.filter((m) => m !== pid));
             if (!had) c.marks.push(pid);
+            if (!had && !c.marks.some((m) => m !== pid)) c.first = pid;
+            if (s.st && wasOn) s.st.flips[pid] = (s.st.flips[pid] || 0) + 1;
             checkConsensus(s, ctx);
             return;
           }
@@ -2801,6 +2877,111 @@ body{padding-bottom:84px}
     }
   });
 
+  // server/radio.js
+  var require_radio = __commonJS({
+    "server/radio.js"(exports, module) {
+      var DEFAULT = { vid: "rFZHOHl-L8A", title: "\u041B\u043E\u0444\u0438-\u0440\u0430\u0434\u0438\u043E", live: true };
+      var MAX_QUEUE = 50;
+      var ytId = (url) => {
+        const s = String(url || "").trim();
+        const m = s.match(/(?:youtu\.be\/|[?&]v=|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/) || s.match(/^([\w-]{11})$/);
+        return m ? m[1] : null;
+      };
+      var seq = 0;
+      var nid = () => (Date.now().toString(36) + (seq++).toString(36)).slice(-10);
+      function make() {
+        return { cur: { id: nid(), ...DEFAULT, by: null, startedAt: Date.now() }, queue: [] };
+      }
+      function get(room2) {
+        return room2.radio || (room2.radio = make());
+      }
+      function play(r, item) {
+        r.cur = { id: nid(), vid: item.vid, title: item.title || "\u0422\u0440\u0435\u043A", live: !!item.live, by: item.by || null, startedAt: Date.now(), tried: item.tried };
+      }
+      function next(r) {
+        const item = r.queue.shift();
+        if (item) play(r, item);
+        else play(r, DEFAULT);
+      }
+      function handle2(room2, pid, msg, isHost) {
+        const r = get(room2);
+        const op2 = msg && msg.op;
+        if (op2 === "add" || op2 === "now") {
+          const vid = ytId(msg.url);
+          if (!vid) return "\u041D\u0443\u0436\u043D\u0430 \u0441\u0441\u044B\u043B\u043A\u0430 \u043D\u0430 YouTube";
+          const item = { qid: nid(), vid, title: String(msg.title || "").slice(0, 120) || "\u0422\u0440\u0435\u043A", by: pid, live: false };
+          if (op2 === "now") {
+            if (!isHost) return "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u0441\u0440\u0430\u0437\u0443 \u043C\u043E\u0436\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442 \u2014 \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0432 \u043E\u0447\u0435\u0440\u0435\u0434\u044C";
+            play(r, item);
+            return;
+          }
+          if (r.queue.length >= MAX_QUEUE) return "\u041E\u0447\u0435\u0440\u0435\u0434\u044C \u0437\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0430";
+          if (r.queue.some((x) => x.vid === vid) || r.cur.vid === vid) return "\u042D\u0442\u043E\u0442 \u0442\u0440\u0435\u043A \u0443\u0436\u0435 \u0432 \u043E\u0447\u0435\u0440\u0435\u0434\u0438";
+          r.queue.push(item);
+          if (r.cur.live && r.cur.vid === DEFAULT.vid) next(r);
+          return;
+        }
+        if (op2 === "ended") {
+          if (msg.id !== r.cur.id || r.cur.live) return;
+          if (Date.now() - r.cur.startedAt < 5e3) return;
+          next(r);
+          return;
+        }
+        if (op2 === "broken") {
+          if (msg.id !== r.cur.id) return;
+          next(r);
+          return;
+        }
+        if (op2 === "title") {
+          const t = String(msg.title || "").slice(0, 120);
+          if (!t) return;
+          if (r.cur.id === msg.id && (!r.cur.title || r.cur.title === "\u0422\u0440\u0435\u043A")) r.cur.title = t;
+          return;
+        }
+        if (!isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442 \u043C\u043E\u0436\u0435\u0442 \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0442\u044C \u043E\u0447\u0435\u0440\u0435\u0434\u044C\u044E";
+        if (op2 === "skip") return next(r);
+        if (op2 === "remove") {
+          r.queue = r.queue.filter((x) => x.qid !== msg.qid);
+          return;
+        }
+        if (op2 === "move") {
+          const i = r.queue.findIndex((x) => x.qid === msg.qid);
+          const j = i + (Number(msg.d) < 0 ? -1 : 1);
+          if (i < 0 || j < 0 || j >= r.queue.length) return;
+          [r.queue[i], r.queue[j]] = [r.queue[j], r.queue[i]];
+          return;
+        }
+        if (op2 === "lofi") {
+          play(r, DEFAULT);
+          return;
+        }
+        return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u0440\u0430\u0434\u0438\u043E";
+      }
+      function view(room2) {
+        const r = get(room2);
+        return { cur: { id: r.cur.id, vid: r.cur.vid, title: r.cur.title, live: r.cur.live, by: r.cur.by, startedAt: r.cur.startedAt }, queue: r.queue.map(({ qid, vid, title, by }) => ({ qid, vid, title, by })) };
+      }
+      async function fetchTitle(vid) {
+        try {
+          const ctl = new AbortController();
+          const t = setTimeout(() => ctl.abort(), 4e3);
+          const res = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent("https://www.youtube.com/watch?v=" + vid)}`, { signal: ctl.signal });
+          clearTimeout(t);
+          if (!res.ok) return null;
+          const j = await res.json();
+          return j && j.title ? String(j.title).slice(0, 120) : null;
+        } catch {
+          return null;
+        }
+      }
+      function untitled(room2) {
+        const r = get(room2);
+        return [r.cur, ...r.queue].filter((x) => !x.live && (!x.title || x.title === "\u0422\u0440\u0435\u043A") && !x.tried);
+      }
+      module.exports = { handle: handle2, view, get, ytId, fetchTitle, untitled, DEFAULT };
+    }
+  });
+
   // demo/entry.js
   var GAMES = {
     codenames: require_codenames(),
@@ -2812,6 +2993,7 @@ body{padding-bottom:84px}
   var PROFILES = require_profiles();
   var Tour = require_tournament();
   var Session = require_session();
+  var Radio = require_radio();
   window.AVATAR_BASE = null;
   var META = Object.entries(GAMES).map(([id, g]) => ({ id, ...g.meta }));
   var origFetch = window.fetch ? window.fetch.bind(window) : null;
@@ -2893,6 +3075,7 @@ body{padding-bottom:84px}
         players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile, avatar: p.avatar })),
         chat: room.chat.slice(-50),
         reactions: Session.publicReactions(room),
+        radio: Radio.view(room),
         tour: Tour.publicTour(room.tour),
         suspended: Session.publicSuspended(room)
       },
@@ -2947,6 +3130,8 @@ body{padding-bottom:84px}
         return;
       case "react":
         return Session.react(room, pid, msg.r);
+      case "radio":
+        return Radio.handle(room, pid, msg, room.hostId === pid);
       case "leaveRoom":
         removePlayer(pid);
         return;
@@ -3784,11 +3969,10 @@ window.RULES = {
     );
   const act = (type, extra = {}) => emit('action', { type, ...extra });
 
-  // ---------- лофи-радио (YouTube) ----------
-  // У каждого игрока своё: играет только у того, кто включил.
-  const DEFAULT_LOFI = 'https://www.youtube.com/live/rFZHOHl-L8A';
+  // ---------- общее радио комнаты (YouTube) ----------
+  // Что играет — общее для всей комнаты (сервер). Слушать или нет и громкость — у каждого свои.
   const ytId = (url) => {
-    const m = String(url || '').match(/(?:youtu\.be\/|v=|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/) || String(url || '').match(/^([\w-]{11})$/);
+    const m = String(url || '').match(/(?:youtu\.be\/|[?&]v=|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/) || String(url || '').match(/^([\w-]{11})$/);
     return m ? m[1] : null;
   };
   const music = {
@@ -3796,10 +3980,12 @@ window.RULES = {
     playing: false,
     open: false,
     vol: Number(LS.get('pg_lofi_vol', '40')),
-    url: LS.get('pg_lofi_url', '') || DEFAULT_LOFI,
     player: null,
+    ready: false,
+    curId: null,
     apiReady: null,
   };
+  const radio = () => S?.room?.radio || null;
   function loadYT() {
     if (music.apiReady) return music.apiReady;
     music.apiReady = new Promise((res, rej) => {
@@ -3820,72 +4006,125 @@ window.RULES = {
   const dock = document.createElement('div');
   dock.id = 'lofi';
   dock.hidden = true;
-  dock.innerHTML = `<div class="lofi-head"><b class="lofi-title" data-lofi="expand" title="Показать плеер">${ic('headphones', 16)} Лофи-радио</b><span class="lofi-state muted small"></span><button class="icon-x" data-lofi="close" title="Выключить">${ic('x', 16)}</button></div>
+  dock.innerHTML = `<div class="lofi-head"><b class="lofi-title" data-lofi="expand" title="Показать плеер">${ic('headphones', 16)} Радио комнаты</b><span class="lofi-state muted small"></span><button class="icon-x" data-lofi="close" title="Выключить у себя">${ic('x', 16)}</button></div>
     <div class="lofi-video"><div id="lofi-player"></div></div>
+    <div class="lofi-now"></div>
     <div class="lofi-ctl">
-      <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть">${ic('pause', 16)}</button>
+      <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть (только у вас)">${ic('pause', 16)}</button>
       <input type="range" min="0" max="100" step="1" data-lofi="vol" aria-label="Громкость"/>
+      <span class="lofi-host"></span>
       <button class="btn sm ghost icon-btn" data-lofi="min" title="Свернуть">${ic('chevron', 16)}</button>
     </div>
-    <button class="link-btn small" data-lofi="url">другая трансляция…</button>`;
+    <div class="lofi-queue"></div>
+    <form class="lofi-add" data-lofi-form><input class="inp" name="url" placeholder="Ссылка на YouTube" autocomplete="off"/><button class="btn sm primary" title="Добавить в очередь">${ic('plus', 16)} В очередь</button></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
+  const rEmit = (op, x = {}) => emit('radio', { op, ...x });
 
   function syncMusicUI() {
-    dock.hidden = !music.on;
+    const r = radio();
+    dock.hidden = !music.on || !r;
     dock.classList.toggle('mini', !music.open);
     dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
     const hb = document.querySelector('[data-act="lofi"]');
-    if (hb) hb.classList.toggle('on', music.playing);
+    if (hb) hb.classList.toggle('on', music.on && music.playing);
+    if (!r) return;
+    const host = isHost();
+    const c = r.cur;
+    dock.querySelector('.lofi-now').innerHTML = `<span class="ln-k">${c.live ? 'Эфир' : 'Сейчас'}</span><span class="ln-t" title="${esc(c.title)}">${esc(c.title)}</span>${c.by ? `<span class="ln-by">${pa(c.by, 'xs', 'round')}${nm(c.by)}</span>` : ''}`;
+    dock.querySelector('.lofi-host').innerHTML = host
+      ? `<button class="btn sm ghost icon-btn" data-lofi="skip" title="Следующий трек (для всех)">${ic('skip', 16)}</button>${c.live ? '' : `<button class="btn sm ghost icon-btn" data-lofi="lofi" title="Вернуть лофи-эфир">${ic('music', 16)}</button>`}`
+      : '';
+    const q = r.queue;
+    dock.querySelector('.lofi-queue').innerHTML = `<div class="lq-h">Очередь <span class="muted">${q.length || 'пусто'}</span></div>${q
+      .map(
+        (x, i) => `<div class="lq-i"><span class="lq-n">${i + 1}</span><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
+          host
+            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="up" data-q="${x.qid}" ${i === 0 ? 'disabled' : ''} title="Выше">${ic('up', 14)}</button><button class="icon-x" data-lofi="down" data-q="${x.qid}" ${i === q.length - 1 ? 'disabled' : ''} title="Ниже">${ic('down', 14)}</button><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="Убрать">${ic('x', 14)}</button></span>`
+            : ''
+        }</div>`
+      )
+      .join('')}${q.length ? '' : `<div class="muted small">${c.live ? 'Добавьте трек — он включится сразу, лофи уступит.' : 'После текущего трека вернётся лофи-эфир.'}</div>`}`;
   }
-  async function startMusic() {
-    const id = ytId(music.url) || ytId(DEFAULT_LOFI);
-    music.on = true;
-    music.open = true;
+
+  // Подстроиться под то, что сейчас играет в комнате
+  async function syncRadio() {
+    const r = radio();
+    if (!r) {
+      if (music.on) stopMusic();
+      return;
+    }
     syncMusicUI();
+    if (!music.on || r.cur.id === music.curId) return;
+    music.curId = r.cur.id;
+    const c = r.cur;
+    const at = c.live ? 0 : Math.max(0, (now() - c.startedAt) / 1000);
     try {
       await loadYT();
-      if (music.player) {
-        music.player.loadVideoById(id);
+      if (music.player && music.ready) {
+        music.player.loadVideoById({ videoId: c.vid, startSeconds: at > 3 ? at : 0 });
         return;
       }
+      if (music.player) return; // ещё создаётся — onReady подхватит текущий трек
       music.player = new YT.Player('lofi-player', {
-        videoId: id,
+        videoId: c.vid,
         width: '100%',
         height: '100%',
-        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
+        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, start: Math.floor(at > 3 ? at : 0) },
         events: {
           onReady: (e) => {
+            music.ready = true;
             e.target.setVolume(music.vol);
+            const rr = radio();
+            if (rr && rr.cur.vid !== c.vid) {
+              music.curId = null;
+              return syncRadio();
+            }
             e.target.playVideo();
           },
           onStateChange: (e) => {
             music.playing = e.data === 1 || e.data === 3;
+            if (e.data === 0) rEmit('ended', { id: music.curId }); // трек доиграл — дальше по очереди у всех
+            if (e.data === 1) {
+              const rr = radio();
+              const t = e.target.getVideoData?.().title;
+              if (rr && t && rr.cur.id === music.curId && (!rr.cur.title || rr.cur.title === 'Трек')) rEmit('title', { id: music.curId, title: t });
+            }
             syncMusicUI();
           },
-          onError: () => toast('Трансляция недоступна — попробуйте другую ссылку'),
+          onError: () => {
+            toast('Трек недоступен — переключаем дальше');
+            rEmit('broken', { id: music.curId });
+          },
         },
       });
     } catch {
-      document.getElementById('lofi-player').outerHTML = `<iframe id="lofi-player" src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      document.getElementById('lofi-player').outerHTML = `<iframe id="lofi-player" src="https://www.youtube.com/embed/${c.vid}?autoplay=1&playsinline=1&start=${Math.floor(at)}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
       music.playing = true;
       syncMusicUI();
     }
   }
+  function startMusic() {
+    music.on = true;
+    music.open = true;
+    music.curId = null;
+    syncRadio();
+  }
   function stopMusic() {
     try {
-      music.player && music.player.stopVideo();
+      music.player && music.ready && music.player.stopVideo();
     } catch {}
     const f = document.querySelector('iframe#lofi-player');
     if (f && !music.player) f.src = 'about:blank';
     music.on = false;
     music.playing = false;
+    music.curId = null;
     syncMusicUI();
   }
   dock.addEventListener('click', (e) => {
     const b = e.target.closest('[data-lofi]');
-    if (!b) return;
+    if (!b || b.disabled) return;
     const a = b.dataset.lofi;
     if (a === 'close') stopMusic();
     else if (a === 'expand') {
@@ -3895,20 +4134,23 @@ window.RULES = {
       music.open = false;
       syncMusicUI();
     } else if (a === 'toggle') {
-      if (!music.player) return;
+      if (!music.player || !music.ready) return;
       music.playing ? music.player.pauseVideo() : music.player.playVideo();
-    } else if (a === 'url') {
-      const u = prompt('Ссылка на YouTube-трансляцию или видео:', music.url);
-      if (u === null) return;
-      if (!u.trim()) {
-        music.url = DEFAULT_LOFI;
-        LS.set('pg_lofi_url', '');
-      } else if (!ytId(u)) return toast('Не похоже на ссылку YouTube');
-      else {
-        music.url = u.trim();
-        LS.set('pg_lofi_url', music.url);
-      }
-      startMusic();
+    } else if (a === 'skip') rEmit('skip');
+    else if (a === 'lofi') rEmit('lofi');
+    else if (a === 'rm') rEmit('remove', { qid: b.dataset.q });
+    else if (a === 'up' || a === 'down') rEmit('move', { qid: b.dataset.q, d: a === 'up' ? -1 : 1 });
+  });
+  dock.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const inp = e.target.querySelector('input');
+    const u = inp.value.trim();
+    if (!u) return;
+    if (!ytId(u)) return toast('Не похоже на ссылку YouTube');
+    const r = await rEmit('add', { url: u });
+    if (!r.error) {
+      inp.value = '';
+      toast('Добавлено в очередь', 'ok');
     }
   });
   dock.addEventListener('input', (e) => {
@@ -3916,7 +4158,7 @@ window.RULES = {
     music.vol = Number(e.target.value);
     LS.set('pg_lofi_vol', String(music.vol));
     try {
-      music.player && music.player.setVolume(music.vol);
+      music.player && music.ready && music.player.setVolume(music.vol);
     } catch {}
   });
 
@@ -3957,6 +4199,7 @@ window.RULES = {
   });
   socket.on('kicked', () => {
     S = null;
+    syncRadio();
     history.replaceState(null, '', '/');
     toast('Вы покинули комнату', 'info');
     render();
@@ -4009,6 +4252,12 @@ window.RULES = {
     offset = st.serverNow - Date.now();
     const prevKey = S?.game ? S.game.type + (S.game.round || '') : null;
     detectEvents(S, st);
+    // Партия Коднеймс закончилась — показываем итоги
+    if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
+      ui.showSum = true;
+      ui.sumAnim = true;
+    }
+    if (st.game?.type !== 'codenames' || !st.game.winner) ui.showSum = false;
     // Новые реакции: звук и перерисовка, когда пузырь должен исчезнуть
     for (const x of st.room.reactions || []) {
       if (seenReact.has(x.id)) continue;
@@ -4017,6 +4266,7 @@ window.RULES = {
       setTimeout(() => render(), 2700);
     }
     S = st;
+    syncRadio();
     if (location.pathname !== `/r/${st.room.code}`) history.replaceState(null, '', `/r/${st.room.code}`);
     if (!S.game && !ui.selected) ui.selected = S.room.gameType;
     if (S.room.gameType !== ui.selected && !isHost()) ui.selected = S.room.gameType;
@@ -4084,6 +4334,7 @@ window.RULES = {
     $app.innerHTML = S ? renderRoom() : renderHome();
     ui.popAnim = false;
     ui.rulesAnim = false;
+    ui.sumAnim = false;
     restoreInputs(keep);
     const rb2 = $app.querySelector('.rl-body');
     if (rb2) {
@@ -4221,7 +4472,7 @@ window.RULES = {
           <div class="gtitle">${title}</div>
           <div class="top-actions">
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
-            <button class="btn sm ghost icon-btn lofi-btn ${music.playing ? 'on' : ''}" data-act="lofi" title="Лофи-радио">${ic('headphones')}</button>
+            <button class="btn sm ghost icon-btn lofi-btn ${music.playing ? 'on' : ''}" data-act="lofi" title="Радио комнаты — у всех играет одно и то же">${ic('headphones')}</button>
             ${sfxMenu()}
             ${themeMenu()}
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
@@ -4236,6 +4487,7 @@ window.RULES = {
       </main>
       ${renderChat()}
       ${ui.showRules ? renderRules() : ''}
+      ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
       ${ui.avEdit ? renderAvatarModal() : ''}
     </div>`;
   }
@@ -4726,14 +4978,35 @@ window.RULES = {
   const prepPool = (g) => Object.keys(g.team).filter((id) => player(id)?.connected);
   const isPrep = (g) => g.step === 'setup' || (g.winner && !tour());
 
-  // Итоги партии Коднеймс — повод посмеяться
-  function cnSummary(x) {
-    const items = [];
-    if (x.bestClue) items.push(`<span class="sum-i">${ic('star', 14)} Лучшая подсказка: <b>${esc(x.bestClue.text)}</b> от ${nm(x.bestClue.by)} — ${x.bestClue.hits} ${plural(x.bestClue.hits, 'слово', 'слова', 'слов')}</span>`);
-    if (x.sniper) items.push(`<span class="sum-i">${ic('target', 14)} Снайпер: ${who(x.sniper.pid)} — ${x.sniper.n} ${plural(x.sniper.n, 'верный голос', 'верных голоса', 'верных голосов')}</span>`);
-    if (x.miss) items.push(`<span class="sum-i bad">${ic('x', 14)} Мимо кассы: ${who(x.miss.pid)} — ${x.miss.n} ${plural(x.miss.n, 'чужая карточка', 'чужие карточки', 'чужих карточек')}</span>`);
-    if (x.assassin?.length) items.push(`<span class="sum-i bad">${ic('alert', 14)} Убийцу открыли: ${x.assassin.map((id) => who(id)).join(', ')}</span>`);
-    return items.length ? `<span class="cn-sum">${items.join('')}</span>` : '';
+  // Итоги партии Коднеймс — окно с карточками, открывается само после победы
+  const mmss = (ms) => {
+    const t = Math.round(ms / 1000);
+    return t < 60 ? `${t} сек` : `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+  };
+  function cnSummaryModal(g) {
+    const x = g.summary;
+    if (!x) return '';
+    const card = (icon, title, body, cls = '') => `<div class="sum-c ${cls}"><span class="sum-ic">${ic(icon, 18)}</span><div><div class="sum-t">${title}</div><div class="sum-b">${body}</div></div></div>`;
+    const cards = [];
+    if (x.bestClue) cards.push(card('star', 'Лучшая подсказка', `<b>${esc(x.bestClue.text)}</b> — ${who(x.bestClue.by)} · открыли ${x.bestClue.hits} ${plural(x.bestClue.hits, 'слово', 'слова', 'слов')}`));
+    if (x.bold) cards.push(card('sparkles', 'Самая смелая', `<b>${esc(x.bold.text)}</b> — ${who(x.bold.by)} замахнулся на ${x.bold.n} ${plural(x.bold.n, 'слово', 'слова', 'слов')}, вышло ${x.bold.hits}`));
+    if (x.fast) cards.push(card('clock', 'Молния', `${TN[x.fast.team]} нашли <b>${esc(x.fast.word)}</b> за ${mmss(x.fast.ms)} после подсказки`));
+    if (x.sniper) cards.push(card('target', 'Снайпер', `${who(x.sniper.pid)} — ${x.sniper.n} ${plural(x.sniper.n, 'верный голос', 'верных голоса', 'верных голосов')}`));
+    if (x.lead) cards.push(card('flag', 'Заводила', `${who(x.lead.pid)} первым тыкал в правильную карточку ${x.lead.n} ${plural(x.lead.n, 'раз', 'раза', 'раз')}`));
+    if (x.slowCap && x.slowCap.ms > 20000) cards.push(card('pause', 'Философ', `${who(x.slowCap.pid)} думал над подсказкой ${mmss(x.slowCap.ms)}`));
+    if (x.fastCap) cards.push(card('skip', 'Скорострел', `${who(x.fastCap.pid)} — в среднем ${mmss(x.fastCap.ms)} на подсказку`));
+    if (x.waverer && x.waverer.n >= 2) cards.push(card('reset', 'Сомневающийся', `${who(x.waverer.pid)} передумал ${x.waverer.n} ${plural(x.waverer.n, 'раз', 'раза', 'раз')}`));
+    if (x.miss) cards.push(card('x', 'Мимо кассы', `${who(x.miss.pid)} — ${x.miss.n} ${plural(x.miss.n, 'голос', 'голоса', 'голосов')} за чужие карточки`, 'bad'));
+    const gift = x.gifts && (x.gifts.red || x.gifts.blue) ? (x.gifts.red >= x.gifts.blue ? 'red' : 'blue') : null;
+    if (gift) cards.push(card('heart', 'Щедрые', `${TN[gift]} открыли соперникам ${x.gifts[gift]} ${plural(x.gifts[gift], 'карточку', 'карточки', 'карточек')}`, 'bad'));
+    if (x.assassin?.length) cards.push(card('alert', 'Нашли убийцу', x.assassin.map((id) => who(id)).join(', '), 'bad'));
+    return `<div class="modal-bg ${ui.sumAnim ? '' : 'still'}" data-act="cn-sum"></div>
+      <div class="modal card sum-modal ${ui.sumAnim ? '' : 'still'}" role="dialog" aria-modal="true">
+        <div class="modal-h"><b>${ic('trophy', 18)} Итоги партии — победили ${TN[g.winner].toLowerCase()}${g.reason === 'assassin' ? ' (соперники открыли убийцу)' : ''}</b><button class="icon-x" data-act="cn-sum">${ic('x', 18)}</button></div>
+        <div class="sum-meta"><span>${ic('clock', 14)} ${mmss(x.duration)}</span><span>${ic('skip', 14)} ${x.turns} ${plural(x.turns, 'ход', 'хода', 'ходов')}</span><span>${ic('chat', 14)} ${x.clues} ${plural(x.clues, 'подсказка', 'подсказки', 'подсказок')}</span>${x.neutral ? `<span>Нейтральных открыто: ${x.neutral.red + x.neutral.blue}</span>` : ''}</div>
+        <div class="sum-grid">${cards.join('') || '<p class="muted">Слишком короткая партия для итогов</p>'}</div>
+        <div class="row end"><button class="btn primary" data-act="cn-sum">Дальше</button></div>
+      </div>`;
   }
 
   function renderClock(g) {
@@ -4833,7 +5106,7 @@ window.RULES = {
         <div class="rb-txt">
           <b>${head}</b>
           <span class="muted small">${g.winner ? 'Можно поменять команду или уступить место капитана. ' : ''}Выберите роль и нажмите «Готов» — партия начнётся, когда готовы все.${g.needs.length ? ` <span class="warn-t">Не хватает: ${g.needs.join(', ')}</span>` : ''}</span>
-          ${g.winner && g.summary ? cnSummary(g.summary) : ''}
+          ${g.winner && g.summary ? `<button class="btn ghost sm sum-open" data-act="cn-sum">${ic('star', 15)} Итоги партии</button>` : ''}
           <span class="rb-list">${pool.map((id) => `<span class="ava-wrap ${g.ready[id] ? 'is-ready' : ''}" title="${nm(id)}${g.ready[id] ? ' — готов' : ''}">${pa(id, 'sm', 'round')}${g.ready[id] ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span>`).join('')}<span class="muted small">${n}/${pool.length}</span></span>
         </div>
         <div class="rb-actions">
@@ -5367,6 +5640,11 @@ window.RULES = {
     'who-force': () => act('forceStart'),
     'who-next': () => act('next'),
     'who-ans': (d) => act('answer', { v: d.v }),
+    'cn-sum': () => {
+      ui.showSum = !ui.showSum;
+      ui.sumAnim = ui.showSum;
+      render();
+    },
     react: (d) => {
       ui.menu = null;
       emit('react', { r: d.r });
@@ -5489,6 +5767,7 @@ window.RULES = {
         if (confirm('Выйти из комнаты?')) {
           await emit('leaveRoom');
           S = null;
+          syncRadio();
           history.replaceState(null, '', '/');
           render();
         }
@@ -5593,7 +5872,8 @@ window.RULES = {
     true
   );
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules)) {
+    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum)) {
+      ui.showSum = false;
       ui.menu = null;
       ui.avEdit = null;
       ui.showRules = false;

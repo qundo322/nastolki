@@ -108,8 +108,9 @@ function newBoard(s, ctx) {
   s.pending = null;
   s.firstClue = true;
   s.ready = {};
+  s.turnAt = Date.now();
   // Статистика партии для итогов
-  s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} };
+  s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {}, lead: {}, flips: {}, think: {}, gifts: { red: 0, blue: 0 }, neutral: { red: 0, blue: 0 }, fast: null, startAt: Date.now(), turns: 1 };
   ctx.clearTimer('cn-reveal');
   startClock(s, ctx, FIRST_CLUE_MS);
 }
@@ -139,6 +140,26 @@ function summary(s) {
     miss: top(st.wrong),
     assassin: st.assassin,
     clues: s.clues.length,
+    lead: top(st.lead || {}),
+    waverer: top(st.flips || {}),
+    // Дольше всех думал / быстрее всех — по среднему времени капитана на подсказку
+    slowCap: (() => {
+      const e = Object.entries(st.think || {}).sort((a, b) => b[1].max - a[1].max)[0];
+      return e ? { pid: e[0], ms: e[1].max } : null;
+    })(),
+    fastCap: (() => {
+      const e = Object.entries(st.think || {}).map(([id, t]) => [id, t.sum / t.n]).sort((a, b) => a[1] - b[1])[0];
+      return e && Object.keys(st.think).length > 1 ? { pid: e[0], ms: Math.round(e[1]) } : null;
+    })(),
+    fast: st.fast,
+    bold: (() => {
+      const c = s.clues.slice().sort((a, b) => b.slots.length - a.slots.length || (b.hits || 0) - (a.hits || 0))[0];
+      return c && c.slots.length >= 3 ? { text: clueText(c), by: c.by, n: c.slots.length, hits: c.hits || 0 } : null;
+    })(),
+    gifts: st.gifts,
+    neutral: st.neutral,
+    duration: (st.endAt || Date.now()) - (st.startAt || Date.now()),
+    turns: st.turns || 1,
   };
 }
 // Для номинаций марафона
@@ -196,6 +217,8 @@ function passTurn(s, ctx) {
   s.turn = enemy(s.turn);
   s.step = 'clue';
   s.clue = null;
+  s.turnAt = Date.now();
+  if (s.st) s.st.turns++;
   startClock(s, ctx, clueTime(s));
 }
 
@@ -205,13 +228,23 @@ function reveal(s, i, ctx) {
   s.pending = null;
   c.revealed = true;
   // Кто голосовал за открытую карточку
-  const st = s.st || (s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {} });
+  const st = s.st || (s.st = { right: {}, wrong: {}, assassin: [], capHits: {}, opened: {}, lead: {}, flips: {}, think: {}, gifts: { red: 0, blue: 0 }, neutral: { red: 0, blue: 0 }, fast: null, startAt: Date.now(), turns: 1 });
   const own = c.color === s.turn;
   for (const id of c.marks) {
     const bag = own ? st.right : st.wrong;
     bag[id] = (bag[id] || 0) + 1;
   }
   if (c.color === 'assassin') st.assassin = [...c.marks];
+  // Заводила: первым проголосовал за свою карточку
+  if (own && c.first) st.lead[c.first] = (st.lead[c.first] || 0) + 1;
+  if (c.color === enemy(s.turn)) st.gifts[s.turn]++;
+  if (c.color === 'neutral') st.neutral[s.turn]++;
+  // Самое быстрое попадание после подсказки
+  if (own && s.clue && s.clue.at && !s.clue.firstHit) {
+    s.clue.firstHit = true;
+    const ms = Date.now() - s.clue.at;
+    if (!st.fast || ms < st.fast.ms) st.fast = { ms, team: s.turn, word: c.w, by: c.first || null };
+  }
   if (own && s.clue) {
     s.clue.hits = (s.clue.hits || 0) + 1;
     const cap = s.clue.by;
@@ -225,6 +258,7 @@ function reveal(s, i, ctx) {
   } else if (!left(s, 'red')) s.winner = 'red';
   else if (!left(s, 'blue')) s.winner = 'blue';
   if (s.winner) {
+    st.endAt = Date.now();
     s.ready = {}; // после партии — снова распределяемся и жмём «Готов»
     return stopClock(s, ctx);
   }
@@ -311,7 +345,12 @@ function action(s, pid, msg, ctx) {
       if (s.step !== 'clue') return 'Подсказка уже дана';
       const p = parseClue(msg);
       if (p.error) return p.error;
-      s.clue = { id: s.clues.length, word: p.word, slots: p.slots, team: s.turn, by: pid, editUntil: Date.now() + EDIT_MS };
+      s.clue = { id: s.clues.length, word: p.word, slots: p.slots, team: s.turn, by: pid, editUntil: Date.now() + EDIT_MS, at: Date.now() };
+      if (s.st && s.turnAt) {
+        const think = Date.now() - s.turnAt;
+        const prev = s.st.think[pid];
+        s.st.think[pid] = { max: Math.max(prev?.max || 0, think), sum: (prev?.sum || 0) + think, n: (prev?.n || 0) + 1 };
+      }
       s.clues.push(s.clue);
       s.step = 'guess';
       s.firstClue = false;
@@ -350,8 +389,11 @@ function action(s, pid, msg, ctx) {
       const c = s.cards[msg.i];
       if (!c || c.revealed) return;
       const had = c.marks.includes(pid);
+      const wasOn = s.cards.some((x) => x.marks.includes(pid));
       s.cards.forEach((x) => (x.marks = x.marks.filter((m) => m !== pid)));
       if (!had) c.marks.push(pid);
+      if (!had && !c.marks.some((m) => m !== pid)) c.first = pid;
+      if (s.st && wasOn) s.st.flips[pid] = (s.st.flips[pid] || 0) + 1; // передумал
       checkConsensus(s, ctx);
       return;
     }

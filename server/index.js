@@ -17,6 +17,7 @@ const GAMES = {
 const PROFILES = require('./profiles');
 const Tour = require('./tournament');
 const Session = require('./session');
+const Radio = require('./radio');
 
 const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS_PER_ROOM = Number(process.env.MAX_PLAYERS || 20);
@@ -117,6 +118,7 @@ function publicRoom(room) {
       .map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile || null, avatar: p.avatar || null })),
     chat: room.chat.slice(-50),
     reactions: Session.publicReactions(room),
+    radio: Radio.view(room),
     tour: Tour.publicTour(room.tour),
     suspended: Session.publicSuspended(room),
   };
@@ -300,6 +302,22 @@ io.on('connection', (socket) => {
   }));
 
   socket.on('react', inRoom((room, pid, { r }) => Session.react(room, pid, r)));
+
+  // Общее радио комнаты
+  socket.on('radio', inRoom((room, pid, msg) => {
+    const err = Radio.handle(room, pid, msg, room.hostId === pid);
+    if (err) return err;
+    for (const item of Radio.untitled(room)) {
+      item.tried = true;
+      Radio.fetchTitle(item.vid).then((t) => {
+        if (!t) return;
+        item.title = t;
+        const r = Radio.get(room);
+        if (r.cur.vid === item.vid && (!r.cur.title || r.cur.title === 'Трек')) r.cur.title = t;
+        broadcast(room);
+      });
+    }
+  }));
 
   socket.on('kick', hostOnly((room, pid, { target }) => {
     if (target === pid) return 'Нельзя выгнать себя';

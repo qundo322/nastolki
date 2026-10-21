@@ -159,11 +159,10 @@
     );
   const act = (type, extra = {}) => emit('action', { type, ...extra });
 
-  // ---------- лофи-радио (YouTube) ----------
-  // У каждого игрока своё: играет только у того, кто включил.
-  const DEFAULT_LOFI = 'https://www.youtube.com/live/rFZHOHl-L8A';
+  // ---------- общее радио комнаты (YouTube) ----------
+  // Что играет — общее для всей комнаты (сервер). Слушать или нет и громкость — у каждого свои.
   const ytId = (url) => {
-    const m = String(url || '').match(/(?:youtu\.be\/|v=|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/) || String(url || '').match(/^([\w-]{11})$/);
+    const m = String(url || '').match(/(?:youtu\.be\/|[?&]v=|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/) || String(url || '').match(/^([\w-]{11})$/);
     return m ? m[1] : null;
   };
   const music = {
@@ -171,10 +170,12 @@
     playing: false,
     open: false,
     vol: Number(LS.get('pg_lofi_vol', '40')),
-    url: LS.get('pg_lofi_url', '') || DEFAULT_LOFI,
     player: null,
+    ready: false,
+    curId: null,
     apiReady: null,
   };
+  const radio = () => S?.room?.radio || null;
   function loadYT() {
     if (music.apiReady) return music.apiReady;
     music.apiReady = new Promise((res, rej) => {
@@ -195,72 +196,125 @@
   const dock = document.createElement('div');
   dock.id = 'lofi';
   dock.hidden = true;
-  dock.innerHTML = `<div class="lofi-head"><b class="lofi-title" data-lofi="expand" title="Показать плеер">${ic('headphones', 16)} Лофи-радио</b><span class="lofi-state muted small"></span><button class="icon-x" data-lofi="close" title="Выключить">${ic('x', 16)}</button></div>
+  dock.innerHTML = `<div class="lofi-head"><b class="lofi-title" data-lofi="expand" title="Показать плеер">${ic('headphones', 16)} Радио комнаты</b><span class="lofi-state muted small"></span><button class="icon-x" data-lofi="close" title="Выключить у себя">${ic('x', 16)}</button></div>
     <div class="lofi-video"><div id="lofi-player"></div></div>
+    <div class="lofi-now"></div>
     <div class="lofi-ctl">
-      <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть">${ic('pause', 16)}</button>
+      <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть (только у вас)">${ic('pause', 16)}</button>
       <input type="range" min="0" max="100" step="1" data-lofi="vol" aria-label="Громкость"/>
+      <span class="lofi-host"></span>
       <button class="btn sm ghost icon-btn" data-lofi="min" title="Свернуть">${ic('chevron', 16)}</button>
     </div>
-    <button class="link-btn small" data-lofi="url">другая трансляция…</button>`;
+    <div class="lofi-queue"></div>
+    <form class="lofi-add" data-lofi-form><input class="inp" name="url" placeholder="Ссылка на YouTube" autocomplete="off"/><button class="btn sm primary" title="Добавить в очередь">${ic('plus', 16)} В очередь</button></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
+  const rEmit = (op, x = {}) => emit('radio', { op, ...x });
 
   function syncMusicUI() {
-    dock.hidden = !music.on;
+    const r = radio();
+    dock.hidden = !music.on || !r;
     dock.classList.toggle('mini', !music.open);
     dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
     const hb = document.querySelector('[data-act="lofi"]');
-    if (hb) hb.classList.toggle('on', music.playing);
+    if (hb) hb.classList.toggle('on', music.on && music.playing);
+    if (!r) return;
+    const host = isHost();
+    const c = r.cur;
+    dock.querySelector('.lofi-now').innerHTML = `<span class="ln-k">${c.live ? 'Эфир' : 'Сейчас'}</span><span class="ln-t" title="${esc(c.title)}">${esc(c.title)}</span>${c.by ? `<span class="ln-by">${pa(c.by, 'xs', 'round')}${nm(c.by)}</span>` : ''}`;
+    dock.querySelector('.lofi-host').innerHTML = host
+      ? `<button class="btn sm ghost icon-btn" data-lofi="skip" title="Следующий трек (для всех)">${ic('skip', 16)}</button>${c.live ? '' : `<button class="btn sm ghost icon-btn" data-lofi="lofi" title="Вернуть лофи-эфир">${ic('music', 16)}</button>`}`
+      : '';
+    const q = r.queue;
+    dock.querySelector('.lofi-queue').innerHTML = `<div class="lq-h">Очередь <span class="muted">${q.length || 'пусто'}</span></div>${q
+      .map(
+        (x, i) => `<div class="lq-i"><span class="lq-n">${i + 1}</span><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
+          host
+            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="up" data-q="${x.qid}" ${i === 0 ? 'disabled' : ''} title="Выше">${ic('up', 14)}</button><button class="icon-x" data-lofi="down" data-q="${x.qid}" ${i === q.length - 1 ? 'disabled' : ''} title="Ниже">${ic('down', 14)}</button><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="Убрать">${ic('x', 14)}</button></span>`
+            : ''
+        }</div>`
+      )
+      .join('')}${q.length ? '' : `<div class="muted small">${c.live ? 'Добавьте трек — он включится сразу, лофи уступит.' : 'После текущего трека вернётся лофи-эфир.'}</div>`}`;
   }
-  async function startMusic() {
-    const id = ytId(music.url) || ytId(DEFAULT_LOFI);
-    music.on = true;
-    music.open = true;
+
+  // Подстроиться под то, что сейчас играет в комнате
+  async function syncRadio() {
+    const r = radio();
+    if (!r) {
+      if (music.on) stopMusic();
+      return;
+    }
     syncMusicUI();
+    if (!music.on || r.cur.id === music.curId) return;
+    music.curId = r.cur.id;
+    const c = r.cur;
+    const at = c.live ? 0 : Math.max(0, (now() - c.startedAt) / 1000);
     try {
       await loadYT();
-      if (music.player) {
-        music.player.loadVideoById(id);
+      if (music.player && music.ready) {
+        music.player.loadVideoById({ videoId: c.vid, startSeconds: at > 3 ? at : 0 });
         return;
       }
+      if (music.player) return; // ещё создаётся — onReady подхватит текущий трек
       music.player = new YT.Player('lofi-player', {
-        videoId: id,
+        videoId: c.vid,
         width: '100%',
         height: '100%',
-        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
+        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, start: Math.floor(at > 3 ? at : 0) },
         events: {
           onReady: (e) => {
+            music.ready = true;
             e.target.setVolume(music.vol);
+            const rr = radio();
+            if (rr && rr.cur.vid !== c.vid) {
+              music.curId = null;
+              return syncRadio();
+            }
             e.target.playVideo();
           },
           onStateChange: (e) => {
             music.playing = e.data === 1 || e.data === 3;
+            if (e.data === 0) rEmit('ended', { id: music.curId }); // трек доиграл — дальше по очереди у всех
+            if (e.data === 1) {
+              const rr = radio();
+              const t = e.target.getVideoData?.().title;
+              if (rr && t && rr.cur.id === music.curId && (!rr.cur.title || rr.cur.title === 'Трек')) rEmit('title', { id: music.curId, title: t });
+            }
             syncMusicUI();
           },
-          onError: () => toast('Трансляция недоступна — попробуйте другую ссылку'),
+          onError: () => {
+            toast('Трек недоступен — переключаем дальше');
+            rEmit('broken', { id: music.curId });
+          },
         },
       });
     } catch {
-      document.getElementById('lofi-player').outerHTML = `<iframe id="lofi-player" src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      document.getElementById('lofi-player').outerHTML = `<iframe id="lofi-player" src="https://www.youtube.com/embed/${c.vid}?autoplay=1&playsinline=1&start=${Math.floor(at)}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
       music.playing = true;
       syncMusicUI();
     }
   }
+  function startMusic() {
+    music.on = true;
+    music.open = true;
+    music.curId = null;
+    syncRadio();
+  }
   function stopMusic() {
     try {
-      music.player && music.player.stopVideo();
+      music.player && music.ready && music.player.stopVideo();
     } catch {}
     const f = document.querySelector('iframe#lofi-player');
     if (f && !music.player) f.src = 'about:blank';
     music.on = false;
     music.playing = false;
+    music.curId = null;
     syncMusicUI();
   }
   dock.addEventListener('click', (e) => {
     const b = e.target.closest('[data-lofi]');
-    if (!b) return;
+    if (!b || b.disabled) return;
     const a = b.dataset.lofi;
     if (a === 'close') stopMusic();
     else if (a === 'expand') {
@@ -270,20 +324,23 @@
       music.open = false;
       syncMusicUI();
     } else if (a === 'toggle') {
-      if (!music.player) return;
+      if (!music.player || !music.ready) return;
       music.playing ? music.player.pauseVideo() : music.player.playVideo();
-    } else if (a === 'url') {
-      const u = prompt('Ссылка на YouTube-трансляцию или видео:', music.url);
-      if (u === null) return;
-      if (!u.trim()) {
-        music.url = DEFAULT_LOFI;
-        LS.set('pg_lofi_url', '');
-      } else if (!ytId(u)) return toast('Не похоже на ссылку YouTube');
-      else {
-        music.url = u.trim();
-        LS.set('pg_lofi_url', music.url);
-      }
-      startMusic();
+    } else if (a === 'skip') rEmit('skip');
+    else if (a === 'lofi') rEmit('lofi');
+    else if (a === 'rm') rEmit('remove', { qid: b.dataset.q });
+    else if (a === 'up' || a === 'down') rEmit('move', { qid: b.dataset.q, d: a === 'up' ? -1 : 1 });
+  });
+  dock.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const inp = e.target.querySelector('input');
+    const u = inp.value.trim();
+    if (!u) return;
+    if (!ytId(u)) return toast('Не похоже на ссылку YouTube');
+    const r = await rEmit('add', { url: u });
+    if (!r.error) {
+      inp.value = '';
+      toast('Добавлено в очередь', 'ok');
     }
   });
   dock.addEventListener('input', (e) => {
@@ -291,7 +348,7 @@
     music.vol = Number(e.target.value);
     LS.set('pg_lofi_vol', String(music.vol));
     try {
-      music.player && music.player.setVolume(music.vol);
+      music.player && music.ready && music.player.setVolume(music.vol);
     } catch {}
   });
 
@@ -332,6 +389,7 @@
   });
   socket.on('kicked', () => {
     S = null;
+    syncRadio();
     history.replaceState(null, '', '/');
     toast('Вы покинули комнату', 'info');
     render();
@@ -384,6 +442,12 @@
     offset = st.serverNow - Date.now();
     const prevKey = S?.game ? S.game.type + (S.game.round || '') : null;
     detectEvents(S, st);
+    // Партия Коднеймс закончилась — показываем итоги
+    if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
+      ui.showSum = true;
+      ui.sumAnim = true;
+    }
+    if (st.game?.type !== 'codenames' || !st.game.winner) ui.showSum = false;
     // Новые реакции: звук и перерисовка, когда пузырь должен исчезнуть
     for (const x of st.room.reactions || []) {
       if (seenReact.has(x.id)) continue;
@@ -392,6 +456,7 @@
       setTimeout(() => render(), 2700);
     }
     S = st;
+    syncRadio();
     if (location.pathname !== `/r/${st.room.code}`) history.replaceState(null, '', `/r/${st.room.code}`);
     if (!S.game && !ui.selected) ui.selected = S.room.gameType;
     if (S.room.gameType !== ui.selected && !isHost()) ui.selected = S.room.gameType;
@@ -459,6 +524,7 @@
     $app.innerHTML = S ? renderRoom() : renderHome();
     ui.popAnim = false;
     ui.rulesAnim = false;
+    ui.sumAnim = false;
     restoreInputs(keep);
     const rb2 = $app.querySelector('.rl-body');
     if (rb2) {
@@ -596,7 +662,7 @@
           <div class="gtitle">${title}</div>
           <div class="top-actions">
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
-            <button class="btn sm ghost icon-btn lofi-btn ${music.playing ? 'on' : ''}" data-act="lofi" title="Лофи-радио">${ic('headphones')}</button>
+            <button class="btn sm ghost icon-btn lofi-btn ${music.playing ? 'on' : ''}" data-act="lofi" title="Радио комнаты — у всех играет одно и то же">${ic('headphones')}</button>
             ${sfxMenu()}
             ${themeMenu()}
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
@@ -611,6 +677,7 @@
       </main>
       ${renderChat()}
       ${ui.showRules ? renderRules() : ''}
+      ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
       ${ui.avEdit ? renderAvatarModal() : ''}
     </div>`;
   }
@@ -1101,14 +1168,35 @@
   const prepPool = (g) => Object.keys(g.team).filter((id) => player(id)?.connected);
   const isPrep = (g) => g.step === 'setup' || (g.winner && !tour());
 
-  // Итоги партии Коднеймс — повод посмеяться
-  function cnSummary(x) {
-    const items = [];
-    if (x.bestClue) items.push(`<span class="sum-i">${ic('star', 14)} Лучшая подсказка: <b>${esc(x.bestClue.text)}</b> от ${nm(x.bestClue.by)} — ${x.bestClue.hits} ${plural(x.bestClue.hits, 'слово', 'слова', 'слов')}</span>`);
-    if (x.sniper) items.push(`<span class="sum-i">${ic('target', 14)} Снайпер: ${who(x.sniper.pid)} — ${x.sniper.n} ${plural(x.sniper.n, 'верный голос', 'верных голоса', 'верных голосов')}</span>`);
-    if (x.miss) items.push(`<span class="sum-i bad">${ic('x', 14)} Мимо кассы: ${who(x.miss.pid)} — ${x.miss.n} ${plural(x.miss.n, 'чужая карточка', 'чужие карточки', 'чужих карточек')}</span>`);
-    if (x.assassin?.length) items.push(`<span class="sum-i bad">${ic('alert', 14)} Убийцу открыли: ${x.assassin.map((id) => who(id)).join(', ')}</span>`);
-    return items.length ? `<span class="cn-sum">${items.join('')}</span>` : '';
+  // Итоги партии Коднеймс — окно с карточками, открывается само после победы
+  const mmss = (ms) => {
+    const t = Math.round(ms / 1000);
+    return t < 60 ? `${t} сек` : `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+  };
+  function cnSummaryModal(g) {
+    const x = g.summary;
+    if (!x) return '';
+    const card = (icon, title, body, cls = '') => `<div class="sum-c ${cls}"><span class="sum-ic">${ic(icon, 18)}</span><div><div class="sum-t">${title}</div><div class="sum-b">${body}</div></div></div>`;
+    const cards = [];
+    if (x.bestClue) cards.push(card('star', 'Лучшая подсказка', `<b>${esc(x.bestClue.text)}</b> — ${who(x.bestClue.by)} · открыли ${x.bestClue.hits} ${plural(x.bestClue.hits, 'слово', 'слова', 'слов')}`));
+    if (x.bold) cards.push(card('sparkles', 'Самая смелая', `<b>${esc(x.bold.text)}</b> — ${who(x.bold.by)} замахнулся на ${x.bold.n} ${plural(x.bold.n, 'слово', 'слова', 'слов')}, вышло ${x.bold.hits}`));
+    if (x.fast) cards.push(card('clock', 'Молния', `${TN[x.fast.team]} нашли <b>${esc(x.fast.word)}</b> за ${mmss(x.fast.ms)} после подсказки`));
+    if (x.sniper) cards.push(card('target', 'Снайпер', `${who(x.sniper.pid)} — ${x.sniper.n} ${plural(x.sniper.n, 'верный голос', 'верных голоса', 'верных голосов')}`));
+    if (x.lead) cards.push(card('flag', 'Заводила', `${who(x.lead.pid)} первым тыкал в правильную карточку ${x.lead.n} ${plural(x.lead.n, 'раз', 'раза', 'раз')}`));
+    if (x.slowCap && x.slowCap.ms > 20000) cards.push(card('pause', 'Философ', `${who(x.slowCap.pid)} думал над подсказкой ${mmss(x.slowCap.ms)}`));
+    if (x.fastCap) cards.push(card('skip', 'Скорострел', `${who(x.fastCap.pid)} — в среднем ${mmss(x.fastCap.ms)} на подсказку`));
+    if (x.waverer && x.waverer.n >= 2) cards.push(card('reset', 'Сомневающийся', `${who(x.waverer.pid)} передумал ${x.waverer.n} ${plural(x.waverer.n, 'раз', 'раза', 'раз')}`));
+    if (x.miss) cards.push(card('x', 'Мимо кассы', `${who(x.miss.pid)} — ${x.miss.n} ${plural(x.miss.n, 'голос', 'голоса', 'голосов')} за чужие карточки`, 'bad'));
+    const gift = x.gifts && (x.gifts.red || x.gifts.blue) ? (x.gifts.red >= x.gifts.blue ? 'red' : 'blue') : null;
+    if (gift) cards.push(card('heart', 'Щедрые', `${TN[gift]} открыли соперникам ${x.gifts[gift]} ${plural(x.gifts[gift], 'карточку', 'карточки', 'карточек')}`, 'bad'));
+    if (x.assassin?.length) cards.push(card('alert', 'Нашли убийцу', x.assassin.map((id) => who(id)).join(', '), 'bad'));
+    return `<div class="modal-bg ${ui.sumAnim ? '' : 'still'}" data-act="cn-sum"></div>
+      <div class="modal card sum-modal ${ui.sumAnim ? '' : 'still'}" role="dialog" aria-modal="true">
+        <div class="modal-h"><b>${ic('trophy', 18)} Итоги партии — победили ${TN[g.winner].toLowerCase()}${g.reason === 'assassin' ? ' (соперники открыли убийцу)' : ''}</b><button class="icon-x" data-act="cn-sum">${ic('x', 18)}</button></div>
+        <div class="sum-meta"><span>${ic('clock', 14)} ${mmss(x.duration)}</span><span>${ic('skip', 14)} ${x.turns} ${plural(x.turns, 'ход', 'хода', 'ходов')}</span><span>${ic('chat', 14)} ${x.clues} ${plural(x.clues, 'подсказка', 'подсказки', 'подсказок')}</span>${x.neutral ? `<span>Нейтральных открыто: ${x.neutral.red + x.neutral.blue}</span>` : ''}</div>
+        <div class="sum-grid">${cards.join('') || '<p class="muted">Слишком короткая партия для итогов</p>'}</div>
+        <div class="row end"><button class="btn primary" data-act="cn-sum">Дальше</button></div>
+      </div>`;
   }
 
   function renderClock(g) {
@@ -1208,7 +1296,7 @@
         <div class="rb-txt">
           <b>${head}</b>
           <span class="muted small">${g.winner ? 'Можно поменять команду или уступить место капитана. ' : ''}Выберите роль и нажмите «Готов» — партия начнётся, когда готовы все.${g.needs.length ? ` <span class="warn-t">Не хватает: ${g.needs.join(', ')}</span>` : ''}</span>
-          ${g.winner && g.summary ? cnSummary(g.summary) : ''}
+          ${g.winner && g.summary ? `<button class="btn ghost sm sum-open" data-act="cn-sum">${ic('star', 15)} Итоги партии</button>` : ''}
           <span class="rb-list">${pool.map((id) => `<span class="ava-wrap ${g.ready[id] ? 'is-ready' : ''}" title="${nm(id)}${g.ready[id] ? ' — готов' : ''}">${pa(id, 'sm', 'round')}${g.ready[id] ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span>`).join('')}<span class="muted small">${n}/${pool.length}</span></span>
         </div>
         <div class="rb-actions">
@@ -1742,6 +1830,11 @@
     'who-force': () => act('forceStart'),
     'who-next': () => act('next'),
     'who-ans': (d) => act('answer', { v: d.v }),
+    'cn-sum': () => {
+      ui.showSum = !ui.showSum;
+      ui.sumAnim = ui.showSum;
+      render();
+    },
     react: (d) => {
       ui.menu = null;
       emit('react', { r: d.r });
@@ -1864,6 +1957,7 @@
         if (confirm('Выйти из комнаты?')) {
           await emit('leaveRoom');
           S = null;
+          syncRadio();
           history.replaceState(null, '', '/');
           render();
         }
@@ -1968,7 +2062,8 @@
     true
   );
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules)) {
+    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum)) {
+      ui.showSum = false;
       ui.menu = null;
       ui.avEdit = null;
       ui.showRules = false;

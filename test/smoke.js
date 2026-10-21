@@ -279,7 +279,7 @@ function bot(profile, name) {
   t = h.st.room.tour;
   assert(t.phase === 'between', 'between after codenames');
   const sm = g(h).summary;
-  assert(sm && sm.assassin.length === ag.length && sm.miss, 'codenames summary: assassin openers');
+  assert(sm && sm.assassin.length === ag.length && sm.miss && sm.turns >= 1 && sm.duration > 0 && sm.slowCap && sm.lead === null, 'codenames summary ' + JSON.stringify(sm));
   const winners = Object.keys(g(h).team).filter((id) => g(h).team[id] === g(h).winner);
   assert(winners.every((id) => t.totals[id] === 3), 'winners +3');
   assert((await bots[1].call('tourNext')).error, 'only host next');
@@ -306,6 +306,42 @@ function bot(profile, name) {
   await wait(100);
   assert(!h.st.room.tour, 'tour closed');
   console.log('✓ Марафон');
+
+  // ---- Радио комнаты: общее, с очередью
+  {
+    const guest = bots[1];
+    let r = h.st.room.radio;
+    assert(r.cur.live && r.cur.vid === 'rFZHOHl-L8A', 'default lofi');
+    assert((await guest.call('radio', { op: 'add', url: 'не ссылка' })).error, 'bad url');
+    assert((await guest.call('radio', { op: 'add', url: 'https://youtu.be/dQw4w9WgXcQ' })).ok, 'add 1');
+    await wait(80);
+    r = h.st.room.radio;
+    assert(r.cur.vid === 'dQw4w9WgXcQ' && !r.queue.length && r.cur.by === guest.st.me, 'first track replaces lofi for everyone');
+    assert(bots[2].st.room.radio.cur.vid === 'dQw4w9WgXcQ', 'same for others');
+    await guest.call('radio', { op: 'add', url: 'https://www.youtube.com/watch?v=aaaaaaaaaaa' });
+    await bots[2].call('radio', { op: 'add', url: 'https://www.youtube.com/watch?v=bbbbbbbbbbb' });
+    await wait(80);
+    r = h.st.room.radio;
+    assert(r.cur.vid === 'dQw4w9WgXcQ' && r.queue.length === 2, 'queued, current not interrupted');
+    assert((await guest.call('radio', { op: 'add', url: 'https://youtu.be/aaaaaaaaaaa' })).error, 'no duplicates');
+    assert((await guest.call('radio', { op: 'remove', qid: r.queue[0].qid })).error, 'only host removes');
+    assert((await guest.call('radio', { op: 'now', url: 'https://youtu.be/ccccccccccc' })).error, 'only host plays now');
+    await h.call('radio', { op: 'move', qid: r.queue[1].qid, d: -1 });
+    await wait(80);
+    assert(h.st.room.radio.queue[0].vid === 'bbbbbbbbbbb', 'host reorders');
+    await guest.call('radio', { op: 'ended', id: 'wrong' });
+    await guest.call('radio', { op: 'ended', id: h.st.room.radio.cur.id }); // слишком рано (<5 c) — игнор
+    await wait(80);
+    assert(h.st.room.radio.cur.vid === 'dQw4w9WgXcQ', 'early/stale ended ignored');
+    await h.call('radio', { op: 'skip' });
+    await wait(80);
+    assert(h.st.room.radio.cur.vid === 'bbbbbbbbbbb' && h.st.room.radio.queue.length === 1, 'skip → next in queue');
+    await h.call('radio', { op: 'remove', qid: h.st.room.radio.queue[0].qid });
+    await h.call('radio', { op: 'skip' });
+    await wait(80);
+    assert(h.st.room.radio.cur.live, 'empty queue → back to lofi');
+    console.log('✓ Радио комнаты');
+  }
 
   // ---- реконнект по профилю и кик
   const yan = bots[3];
