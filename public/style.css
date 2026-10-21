@@ -1756,3 +1756,46 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .wait-link { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; }
 .wait-link .btn span { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wait-card .btn.big { width: 100%; margin-top: 6px; }
+
+/* ---------- v24: «Ответ большинства» ---------- */
+.mj-form .big-inp { text-align: center; }
+.mj-task { font-size: 18px; }
+.mj-groups { width: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.mj-g { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px 14px 12px; border-radius: 16px; background: var(--surface-2); border: 2px solid transparent; text-align: left; animation: mjIn .45s cubic-bezier(.2, .9, .3, 1.2) both; transition: border-color .15s, transform .15s; }
+.mj-g.host { cursor: pointer; }
+.mj-g.host:hover { border-color: var(--line-strong); }
+.mj-g.major { background: var(--accent-soft); border-color: var(--accent-line); }
+.mj-g.sel, .mj-s.sel { border-color: var(--accent) !important; transform: translateY(-2px); box-shadow: 0 0 0 4px var(--accent-soft); }
+@keyframes mjIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+.mj-badge { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--accent-ink); background: var(--accent); padding: 3px 9px; border-radius: 999px; }
+.mj-txt { font-family: var(--display); font-weight: 700; font-size: 24px; line-height: 1.15; overflow-wrap: anywhere; }
+.mj-txt i { color: var(--faint); font-style: normal; font-weight: 400; }
+.mj-ppl { display: flex; flex-wrap: wrap; gap: 6px; }
+.mj-p { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 999px; background: var(--surface-3); font-size: 13px; }
+.mj-x { display: grid; place-items: center; width: 20px; height: 20px; margin-right: -6px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.mj-x:hover { background: var(--red-soft); color: var(--red-text); }
+.mj-foot { display: flex; align-items: baseline; gap: 6px; margin-top: auto; }
+.mj-n { font-family: var(--display); font-size: 30px; line-height: 1; }
+.mj-g.major .mj-n { color: var(--accent-text); }
+.mj-pts { margin-left: auto; font-size: 14px; color: var(--green-text); }
+.mj-none { font-size: 18px; color: var(--muted); margin: 8px 0; }
+.mj-solo { width: 100%; text-align: left; }
+.mj-solo .side-h { margin-bottom: 8px; }
+.mj-solo-l { display: flex; flex-wrap: wrap; gap: 8px; }
+.mj-s { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--surface-2); border: 2px solid transparent; font-size: 15px; }
+.mj-s.host { cursor: pointer; }
+.mj-s.host:hover { border-color: var(--line-strong); }
+.mj-tip { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; justify-content: center; }
+.mj-tip.on { color: var(--accent-text); font-weight: 600; }
+
+/* ---------- v24: готовые марафоны и оценка времени ---------- */
+.m-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.m-pre { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--text); cursor: pointer; text-align: left; transition: border-color .15s, background .15s, transform .15s; }
+.m-pre b { font-size: 16px; }
+.m-pre span { font-size: 13px; color: var(--muted); }
+.m-pre:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+.m-pre.on { border-color: var(--accent); background: var(--accent-soft); }
+.m-pre.on span { color: var(--accent-text); }
+.m-est { white-space: nowrap; margin-right: 4px; }
+.m-total { color: var(--accent-text); }
+@media (max-width: 560px) { .m-presets { grid-template-columns: 1fr; } .m-pre { flex-direction: row; justify-content: space-between; align-items: center; } }

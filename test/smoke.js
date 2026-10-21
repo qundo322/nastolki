@@ -343,6 +343,51 @@ function bot(profile, name) {
   console.log('✓ Викторина');
   await h.call('stopGame');
 
+  // ---- Ответ большинства: совпадения приносят очки, хост склеивает похожие
+  await h.call('selectGame', { type: 'majority' });
+  assert((await h.call('startGame', { settings: { rounds: 3, seconds: 30 } })).ok, 'majority start');
+  await wait(60);
+  {
+    const ps = bots.filter((b) => g(b).order.includes(b.st.me));
+    assert(ps.length >= 4, 'majority players');
+    assert(g(h).phase === 'answer' && typeof g(h).q === 'string', 'majority question');
+    assert((await ps[0].act('answer', { text: '   ' })).error, 'empty answer rejected');
+    // «Свечи» / «свечку» / «СВЕЧИ!» — одна группа; «фонарик» и «павербанк» — отдельно
+    const texts = ['Свечи', 'свечку', 'СВЕЧИ!', 'фонарик', 'павербанк'];
+    for (let i = 0; i < ps.length - 1; i++) await ps[i].act('answer', { text: texts[i] });
+    await wait(60);
+    assert(g(h).phase === 'answer' && g(h).answered.length === ps.length - 1, 'waits for everyone');
+    assert(!JSON.stringify(g(ps[1])).includes('Свечи'), 'answers are secret');
+    await ps[ps.length - 1].act('answer', { text: texts[ps.length - 1] });
+    await wait(60);
+    assert(g(h).phase === 'review', 'all answered → review');
+    const big = g(h).groups[0];
+    assert(big.pids.length === 3 && big.major, 'similar answers grouped, majority marked');
+    assert(g(h).preview[ps[0].st.me] === 3, '2 matches + majority bonus = 3');
+    // хост склеивает «фонарик» с «павербанком»
+    const solo = g(h).groups.filter((x) => x.pids.length === 1);
+    assert((await ps[1].act('merge', { a: solo[0].pids[0], b: solo[1].pids[0] })).error || ps[1] === h, 'only host merges');
+    await h.act('merge', { a: solo[0].pids[0], b: solo[1].pids[0] });
+    await wait(40);
+    assert(g(h).groups.length === 2 && g(h).groups[1].pids.length === 2, 'host merged groups');
+    await h.act('split', { a: solo[0].pids[0] });
+    await wait(40);
+    assert(g(h).groups.length === 3, 'host split answer back');
+    for (const b of ps) await b.act('ready');
+    await wait(60);
+    assert(g(h).round === 2 && g(h).phase === 'answer' && g(h).points[ps[0].st.me] === 3, 'points applied, next question');
+    await h.act('skip');
+    await wait(40);
+    assert(g(h).phase === 'review', 'host opens answers');
+    await h.act('skip');
+    await h.act('skip');
+    await h.act('skip');
+    await wait(60);
+    assert(g(h).phase === 'over', 'majority over');
+  }
+  console.log('✓ Ответ большинства');
+  await h.call('stopGame');
+
   // ---- Марафон
   const plan = [
     { type: 'codenames', rounds: 1 },

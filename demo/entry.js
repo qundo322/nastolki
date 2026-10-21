@@ -6,6 +6,7 @@ const GAMES = {
   whoami: require('../server/games/whoami'),
   justone: require('../server/games/justone'),
   quiz: require('../server/games/quiz'),
+  majority: require('../server/games/majority'),
 };
 
 const Waiting = require('../server/waiting');
@@ -304,6 +305,12 @@ function hint() {
       return s.phase === 'write' ? 'Каждый загадывает персонажа соседу — переключайтесь по игрокам.' : `Ходит ${n(s.order[s.turn])}.`;
     case 'quiz':
       return s.phase === 'answer' ? 'Ответ — число. Переключайтесь по игрокам и ответьте за каждого.' : '';
+    case 'majority':
+      return s.phase === 'answer'
+        ? 'Переключайтесь по игрокам и ответьте за каждого — совпадения приносят очки.'
+        : s.phase === 'review'
+          ? 'Хост может склеить похожие ответы: нажмите на группу, потом на ту, куда её добавить.'
+          : '';
     case 'justone':
       return s.phase === 'result' && s.correct && !s.heart
         ? `${n(s.guesser)} отмечает лучшую подсказку.`

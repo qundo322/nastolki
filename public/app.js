@@ -51,9 +51,9 @@
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
     cnEdit: false, // капитан исправляет подсказку
     mode: 'single',
-    mOrder: ['codenames', 'justone', 'whoami', 'spyfall', 'alias'],
-    mOn: { codenames: true, justone: true, whoami: true, spyfall: true },
-    mRounds: { codenames: 2, justone: 1, whoami: 1, spyfall: 3, alias: 1 },
+    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone'],
+    mOn: { codenames: true, quiz: true, majority: true, spyfall: true },
+    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1 },
     mOpen: {},
     showTable: false,
     ctlOpen: LS.get('pg_ctl', '') === '1',
@@ -533,6 +533,9 @@
     } else if (b.type === 'spyfall') {
       if (a.phase !== 'over' && b.phase === 'over') Sound.play(b.result?.winner === 'spy' ? (b.spies?.includes(me) ? 'win' : 'lose') : b.result?.winner === 'town' ? (b.spies?.includes(me) ? 'lose' : 'win') : 'turn');
       if (a.phase !== 'guessing' && b.phase === 'guessing') Sound.play('myturn');
+    } else if (b.type === 'majority') {
+      if (a.phase === 'answer' && b.phase === 'review') Sound.play(b.preview?.[me] ? 'good' : 'turn');
+      if (b.phase === 'over' && a.phase !== 'over') Sound.play((b.winners || []).includes(me) ? 'win' : 'lose');
     } else if (b.type === 'whoami') {
       if (a.turnPid !== b.turnPid) Sound.play(b.turnPid === me ? 'myturn' : 'turn');
       if (b.finishOrder.length > a.finishOrder.length) Sound.play('good');
@@ -543,12 +546,12 @@
       if (g.type === 'alias') return !['teams', 'over'].includes(g.phase) && (g.explainer === me || g.turnTeam === g.myTeam);
       if (g.type === 'spyfall') return g.phase === 'play' && (g.asker === me || g.target === me);
       if (g.type === 'justone') return g.phase === 'guess' && g.isGuesser;
-      if (g.type === 'quiz') return g.phase === 'answer' && g.round;
+      if (g.type === 'quiz' || g.type === 'majority') return g.phase === 'answer' && g.round;
       return false;
     };
     const was = myTurn(a);
     const now2 = myTurn(b);
-    if (now2 && (!was || (b.type === 'quiz' && a.round !== b.round) || (b.type === 'alias' && a.turnTeam !== b.turnTeam))) setTimeout(() => Sound.play('myturn'), 120);
+    if (now2 && (!was || (['quiz', 'majority'].includes(b.type) && a.round !== b.round) || (b.type === 'alias' && a.turnTeam !== b.turnTeam))) setTimeout(() => Sound.play('myturn'), 120);
     // Голос «да / нет / не знаю» в «Кто я?» — мягкий щелчок счётчика
     if (b.type === 'whoami' && a.q && b.q && a.q.id === b.q.id && a.q.yes + a.q.no + a.q.idk !== b.q.yes + b.q.no + b.q.idk) Sound.play('count');
     if (b.type === 'whoami' && b.q?.pend && !a.q?.pend) Sound.play('vote');
@@ -746,6 +749,11 @@
   }
 
   // ---------- вход ----------
+  // «Коднеймс, Элиас, …, Викторина и Ответ большинства» — всегда по актуальному каталогу
+  function gamesLine() {
+    const t = (GAMES.length ? GAMES.map((g) => g.title) : ['Коднеймс', 'Элиас', 'Шпион', 'Кто я?', 'Намёк понял', 'Викторина', 'Ответ большинства']).map((x) => x.replace(/\?$/, ''));
+    return esc(t.length > 1 ? t.slice(0, -1).join(', ') + ' и ' + t[t.length - 1] : t[0]);
+  }
   function renderHome() {
     const code = codeFromUrl();
     const sel = ui.homeSel;
@@ -753,7 +761,7 @@
     const hero = `<div class="home-hero">
         <div class="logo-mark">${ic('dice', 40)}</div>
         <h1>Экранки <span>а не настолки — для своих</span></h1>
-        <p class="lead">Коднеймс, Элиас, Шпион, Кто я и Намёк понял — по одной или марафоном с турнирной таблицей.</p>
+        <p class="lead">${gamesLine()} — по одной или марафоном с турнирной таблицей.</p>
       </div>`;
     if (ui.homeStep === 'avatar' && sel) {
       const name = sel === 'new' ? LS.get('pg_name', '') : PROFILES.find((p) => p.id === sel)?.name;
@@ -1019,6 +1027,14 @@
       }
       if (g.phase === 'reveal') items.push(btn('qz-skip', 'play', 'Следующий вопрос'));
       if (!t) items.push(btn('qz-restart', 'reset', 'Начать заново'));
+    } else if (g.type === 'majority') {
+      if (g.endsAt) items.push(plusT('h-addtime', 15));
+      if (g.phase === 'answer') {
+        items.push(btn('h-newq', 'shuffle', 'Другой вопрос'));
+        items.push(btn('mj-skip', 'skip', 'Открыть ответы сейчас'));
+      }
+      if (g.phase === 'review') items.push(btn('mj-skip', 'play', 'Следующий вопрос'));
+      if (!t) items.push(btn('mj-restart', 'reset', 'Начать заново'));
     }
     items.push('<span class="ctl-sep"></span>');
     items.push(btn('stop', 'home', 'В лобби (пауза)'));
@@ -1088,19 +1104,73 @@
   }
 
   // ---------- марафон ----------
+  // Примерная длительность одной катки (минуты) — с учётом выбранных настроек
+  const setv = (id, key) => {
+    const m = gameMeta(id);
+    const def = (m.settings || []).find((x) => x.key === key)?.default;
+    return Number(ui.settings[id + '__' + key] ?? def) || 0;
+  };
+  const EST = {
+    codenames: () => 15,
+    alias: (id) => 20 * (setv(id, 'target') || 40) / 40 * (setv(id, 'teams') || 2) / 2,
+    spyfall: (id) => (setv(id, 'minutes') || 8) + 2,
+    whoami: () => 15,
+    justone: (id) => setv(id, 'target') || 15,
+    quiz: (id) => ((setv(id, 'rounds') || 15) * ((setv(id, 'seconds') || 30) + 12)) / 60,
+    majority: (id) => ((setv(id, 'rounds') || 10) * ((setv(id, 'seconds') || 45) + 20)) / 60,
+  };
+  const estMin = (id) => (EST[id] ? EST[id](id) : 15);
+  function fmtDur(min) {
+    const m = min >= 30 ? Math.round(min / 5) * 5 : Math.max(1, Math.round(min));
+    if (m < 60) return `${m} мин`;
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return r ? `${h} ч ${r} мин` : `${h} ч`;
+  }
+  // Готовые марафоны: состав можно поменять после выбора
+  const PRESETS = [
+    { id: 'warm', title: 'Разминка', sub: '≈ 20 минут', plan: [['majority', 1], ['spyfall', 1]] },
+    { id: 'hour', title: 'На час', sub: '≈ 1 час', plan: [['codenames', 2], ['quiz', 1], ['majority', 1], ['spyfall', 1]] },
+    { id: 'evening', title: 'Весь вечер', sub: '≈ 2–2,5 часа', plan: [['codenames', 3], ['alias', 1], ['spyfall', 2], ['whoami', 1], ['justone', 1], ['quiz', 1], ['majority', 1]] },
+  ];
+  const presetOn = (pr) => {
+    const on = ui.mOrder.filter((id) => ui.mOn[id]);
+    return on.length === pr.plan.length && pr.plan.every(([id, n], k) => on[k] === id && (ui.mRounds[id] || 1) === n);
+  };
+  function applyPreset(pr) {
+    ui.mOn = {};
+    for (const [id, n] of pr.plan) {
+      ui.mOn[id] = true;
+      ui.mRounds[id] = n;
+    }
+    const ids = pr.plan.map(([id]) => id);
+    ui.mOrder = [...ids, ...ui.mOrder.filter((id) => !ids.includes(id))];
+  }
   function renderTourBuilder() {
+    // все игры каталога — в конструкторе (новые добавляются в конец)
+    const known = GAMES.map((x) => x.id);
+    if (known.length) ui.mOrder = [...ui.mOrder.filter((id) => known.includes(id)), ...known.filter((id) => !ui.mOrder.includes(id))];
     let total = 0;
+    let mins = 0;
+    const presets = `<div class="m-presets">${PRESETS.map((pr) => {
+      const t = pr.plan.reduce((a, [id, n]) => a + estMin(id) * n, 0);
+      const n = pr.plan.reduce((a, [, k]) => a + k, 0);
+      return `<button type="button" class="m-pre ${presetOn(pr) ? 'on' : ''}" data-act="m-preset" data-id="${pr.id}"><b>${esc(pr.title)}</b><span>${fmtDur(t)} · ${n} ${plural(n, 'катка', 'катки', 'каток')}</span></button>`;
+    }).join('')}</div>`;
     const rows = ui.mOrder
       .map((id, k) => {
         const m = gameMeta(id);
         const on = !!ui.mOn[id];
         const rounds = ui.mRounds[id] || 1;
-        if (on) total += rounds;
+        if (on) {
+          total += rounds;
+          mins += estMin(id) * rounds;
+        }
         return `<div class="mrow ${on ? 'on' : ''}">
           <div class="mhead">
             <label class="mcheck"><input type="checkbox" data-mon="${id}" ${on ? 'checked' : ''}/><span class="mname">${gIcon(id)} ${esc(m.title)}</span></label>
             <div class="mctl">
-              ${on ? `<span class="muted small hide-m">каток</span><div class="stepper"><button type="button" data-act="m-rounds" data-id="${id}" data-d="-1">−</button><b>${rounds}</b><button type="button" data-act="m-rounds" data-id="${id}" data-d="1">+</button></div>` : ''}
+              ${on ? `<span class="m-est muted small" title="Примерно на ${rounds} ${plural(rounds, 'катку', 'катки', 'каток')}">≈ ${fmtDur(estMin(id) * rounds)}</span><span class="muted small hide-m">каток</span><div class="stepper"><button type="button" data-act="m-rounds" data-id="${id}" data-d="-1">−</button><b>${rounds}</b><button type="button" data-act="m-rounds" data-id="${id}" data-d="1">+</button></div>` : ''}
               <button type="button" class="icon-x mv" data-act="m-move" data-id="${id}" data-d="-1" ${k === 0 ? 'disabled' : ''} title="Выше">${ic('up', 16)}</button>
               <button type="button" class="icon-x mv" data-act="m-move" data-id="${id}" data-d="1" ${k === ui.mOrder.length - 1 ? 'disabled' : ''} title="Ниже">${ic('down', 16)}</button>
             </div>
@@ -1110,9 +1180,10 @@
       })
       .join('');
     return `<form data-form="tour" class="card tour-form">
-        <div class="settings-h"><b>${ic('trophy')} Марафон</b><span class="muted small">Отметьте игры, задайте порядок и число каток</span></div>
+        <div class="settings-h"><b>${ic('trophy')} Марафон</b><span class="muted small">Возьмите готовый или соберите свой: игры, порядок, число каток</span></div>
+        ${presets}
         ${rows}
-        <div class="mfoot"><span>Всего: <b>${total}</b> ${plural(total, 'катка', 'катки', 'каток')}</span><button class="btn primary" type="submit" ${total ? '' : 'disabled'}>${ic('trophy', 16)} Начать марафон</button></div>
+        <div class="mfoot"><span>Всего: <b>${total}</b> ${plural(total, 'катка', 'катки', 'каток')}${total ? ` · <b class="m-total">≈ ${fmtDur(mins)}</b>` : ''}</span><button class="btn primary" type="submit" ${total ? '' : 'disabled'}>${ic('trophy', 16)} Начать марафон</button></div>
         <p class="small muted mnote">За каждую катку: 1-е место — 3 очка, 2-е — 2, 3-е — 1. Турнирная таблица откроется после последней катки.</p>
       </form>`;
   }
@@ -1233,7 +1304,7 @@
   // ---------- игры ----------
   function renderGame(g) {
     if (g.waiting) return rWaiting(g);
-    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz }[g.type];
+    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
@@ -1502,6 +1573,7 @@
     else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'задаёт вопрос' };
     else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
     else if (g.type === 'quiz' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
+    else if (g.type === 'majority' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 45000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'тайные ответы' : 'разбор совпадений' };
     if (!c) return '';
     const left = c.paused ? c.left : c.ends - now();
     const w = Math.max(0, Math.min(100, (left / c.total) * 100));
@@ -2217,6 +2289,67 @@
     }
     return `<div class="narrow quiz">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
   }
+  // ---------- Ответ большинства ----------
+  function rMajority(g) {
+    const me = S.me;
+    const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1]);
+    const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— +1 за каждое совпадение · большинству ещё +1</span></div>
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span><b class="jb-p">${n}</b></div>`).join('')}</div>`;
+    const head = `<div class="jo-top qz-head">
+      <div class="jo-tile"><span class="jt-k">Вопрос</span><b class="jt-v">${g.round}<small>из ${g.rounds}</small></b></div>
+      <div class="jo-tile wide"><span class="jt-k">Задача</span><b class="jt-v mj-task">${g.phase === 'review' ? 'Кто с кем совпал?' : 'Ответь, как ответит большинство'}</b></div>
+    </div>`;
+    if (!g.inGame) return `<div class="narrow quiz">${head}<div class="stage-card"><button class="btn primary mega" data-act="mj-add">Присоединиться</button></div>${board}</div>`;
+    let body = '';
+    if (g.phase === 'answer') {
+      const ready = `<div class="jo-ready"><span class="muted small">Ответили ${g.answered.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.answered.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.answered.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>`;
+      body = `<div class="stage-card qz-card">
+        <div class="qz-q">${esc(g.q)}</div>
+        <form data-form="mj-answer" class="big-form qz-form mj-form"><input class="inp big-inp" name="text" data-keep="mj-t" maxlength="40" autocomplete="off" placeholder="Ваш ответ" required/><button class="btn primary mega">${g.mine != null ? 'Изменить' : 'Ответить'}</button></form>
+        ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ваш ответ: <b>${esc(g.mine)}</b> <span class="muted">— никто его не видит до конца раунда</span></div>` : '<p class="muted small">Одно-два слова. Пишите то, что напишут остальные.</p>'}
+        ${ready}</div>`;
+    } else if (g.phase === 'review') {
+      const host = isHost();
+      const sel = ui.mjSel && g.groups.some((x) => x.pids.includes(ui.mjSel)) ? ui.mjSel : null;
+      const pairs = g.groups.filter((x) => x.pids.length > 1);
+      const t0 = (ui.mjStart = ui.mjStart || {})[g.round] || (ui.mjStart[g.round] = now());
+      const el = now() - t0;
+      const solo = g.groups.filter((x) => x.pids.length === 1);
+      const groupCard = (x, i) => {
+        const on = sel && x.pids.includes(sel);
+        const pts = g.preview[x.pids[0]] || 0;
+        return `<div class="mj-g ${x.major ? 'major' : ''} ${on ? 'sel' : ''} ${host ? 'host' : ''}" ${host ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''} style="animation-delay:${i * 90 - el}ms">
+          ${x.major ? `<span class="mj-badge">${ic('crown', 14)} Ответ большинства</span>` : ''}
+          <div class="mj-txt">${x.texts.map(esc).join(' <i>/</i> ')}</div>
+          <div class="mj-ppl">${x.pids.map((p) => `<span class="mj-p">${pa(p, 26, 'round')}<small>${nm(p)}</small>${host && x.pids.length > 1 ? `<button class="mj-x" data-act="mj-split" data-id="${p}" title="Отделить этот ответ">${ic('x', 12)}</button>` : ''}</span>`).join('')}</div>
+          <div class="mj-foot"><b class="mj-n">${x.pids.length}</b><span class="muted small">${plural(x.pids.length, 'игрок', 'игрока', 'игроков')}</span>${pts ? `<b class="mj-pts">+${pts} каждому</b>` : ''}</div>
+        </div>`;
+      };
+      const soloList = solo.length
+        ? `<div class="mj-solo"><div class="side-h small">Без пары <span class="muted">— 0 очков</span></div><div class="mj-solo-l">${solo
+            .map((x) => `<span class="mj-s ${sel && x.pids.includes(sel) ? 'sel' : ''} ${host ? 'host' : ''}" ${host ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''}>${pa(x.pids[0], 22, 'round')}<b>${esc(x.texts[0])}</b></span>`)
+            .join('')}</div></div>`
+        : '';
+      const iReady = g.ready.includes(me);
+      const tip = host
+        ? sel
+          ? `<div class="mj-tip on">${ic('link', 16)} Теперь нажмите на ответ, с которым склеить, или на тот же — отменить</div>`
+          : '<div class="mj-tip">Похожие ответы разошлись? Нажмите на один, потом на другой — они склеятся.</div>'
+        : '<div class="mj-tip">Похожие ответы хост может склеить вручную</div>';
+      body = `<div class="stage-card qz-card">
+        <div class="qz-q sm">${esc(g.q)}</div>
+        ${pairs.length ? `<div class="mj-groups">${pairs.map(groupCard).join('')}</div>` : '<p class="mj-none">Ни одного совпадения — все ответили по-разному!</p>'}
+        ${soloList}
+        ${tip}
+        <div class="row c"><button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="mj-ready">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button><span class="muted small">${g.ready.length}/${g.order.length} готовы</span></div>
+      </div>`;
+    } else if (g.phase === 'over') {
+      body = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победа: ${(g.winners || []).map(nm).join(', ')}!</h2>
+        ${canRestart() ? `<button class="btn primary big-w" data-act="mj-restart">${ic('reset', 18)} Ещё раз</button>` : ''}</div>`;
+    }
+    return `<div class="narrow quiz majority">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
+  }
+
   // Бегущее число на шкале: каждый кадр — по текущему элементу (переживает перерисовки)
   let qzRaf = 0;
   function qzLoop() {
@@ -2439,6 +2572,26 @@
     'qz-ready': () => act('ready'),
     'qz-restart': () => act('restart'),
     'qz-add': () => act('addMe'),
+    'mj-add': () => act('addMe'),
+    'mj-ready': () => act('ready'),
+    'mj-restart': () => act('restart'),
+    'mj-skip': () => act('skip'),
+    'mj-pick': (d) => {
+      // хост склеивает группы: первый клик — выбрать, второй — куда добавить
+      if (!ui.mjSel) ui.mjSel = d.id;
+      else {
+        const g = S.game;
+        const ga = g.groups.find((x) => x.pids.includes(ui.mjSel));
+        const gb = g.groups.find((x) => x.pids.includes(d.id));
+        if (ga && gb && ga !== gb) act('merge', { a: ui.mjSel, b: d.id });
+        ui.mjSel = null;
+      }
+      render();
+    },
+    'mj-split': (d) => {
+      ui.mjSel = null;
+      act('split', { a: d.id });
+    },
     'qz-skip': () => act('skip'),
     'wait-begin': () => act('begin'),
     'al-last': (d) => act('lastTo', { to: d.to === 'none' ? 'none' : Number(d.to) }),
@@ -2484,6 +2637,11 @@
     },
     'm-rounds': (d) => {
       ui.mRounds[d.id] = Math.min(10, Math.max(1, (ui.mRounds[d.id] || 1) + Number(d.d)));
+      render();
+    },
+    'm-preset': (d) => {
+      const pr = PRESETS.find((x) => x.id === d.id);
+      if (pr) applyPreset(pr);
       render();
     },
     'm-move': (d) => {
@@ -2659,6 +2817,9 @@
       if (!r.error) clear();
     } else if (kind === 'who-ask') {
       const r = await act('ask', { text: fd.get('text') });
+      if (!r.error) clear();
+    } else if (kind === 'mj-answer') {
+      const r = await act('answer', { text: fd.get('text') });
       if (!r.error) clear();
     } else if (kind === 'qz-answer') {
       const r = await act('answer', { v: fd.get('v') });

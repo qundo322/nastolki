@@ -59,6 +59,8 @@
     mute: '<path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M22 9l-6 6M16 9l6 6"/>',
     hash: '<path d="M5 9h15M4 15h15M10 3 8 21M16 3l-2 18"/>',
     music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+    herd: '<circle cx="12" cy="6.5" r="3"/><circle cx="5" cy="9" r="2.4"/><circle cx="19" cy="9" r="2.4"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0M1.5 19a3.6 3.6 0 0 1 5-3.3M22.5 19a3.6 3.6 0 0 0-5-3.3"/>',
+    minus: '<path d="M5 12h14"/>',
   };
   // Упрощённые версии для мелких размеров (≤ 15 px): меньше деталей, заливка и жирные линии — читается как корона капитана
   const F = 'fill="currentColor" stroke="none"';
@@ -97,6 +99,7 @@
     book: `<path d="M2 4h6.5A3.5 3.5 0 0 1 12 7.5V21a3 3 0 0 0-3-3H2z" ${F}/><path d="M22 4h-6.5A3.5 3.5 0 0 0 12 7.5V21a3 3 0 0 1 3-3h7z" ${F}/>`,
     hash: '<path d="M5 9h15M4 15h15M10 3 8 21M16 3l-2 18"/>',
     music: `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3.5" ${F}/><circle cx="18" cy="16" r="3.5" ${F}/>`,
+    herd: `<circle cx="12" cy="6.5" r="3.5" ${F}/><circle cx="4.5" cy="9.5" r="2.6" ${F}/><circle cx="19.5" cy="9.5" r="2.6" ${F}/><path d="M5.5 21a6.5 6.5 0 0 1 13 0z" ${F}/>`,
   };
   window.ic = (name, size = 18, cls = '') => {
     const small = size <= 15;
@@ -104,5 +107,5 @@
     const sw = small ? 2.7 : 2;
     return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   };
-  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash' };
+  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', majority: 'herd' };
 })();
