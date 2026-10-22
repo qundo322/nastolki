@@ -1977,3 +1977,17 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .sl input:active::-webkit-slider-thumb { transform: scale(1.15); }
 .sl input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent-soft), 0 1px 4px rgba(0, 0, 0, .35); }
 .glow-ask-f .sl { min-width: 0; }
+
+/* ---------- свои подсказки вместо браузерных title ---------- */
+.ctl-fab[data-tip]::after { content: none !important; }
+.ui-tip { --ax: 50%; position: fixed; z-index: 300; left: 0; top: 0; max-width: 280px; padding: 6px 10px; border-radius: 9px; pointer-events: none;
+  background: var(--surface-3); color: var(--text); border: 1px solid var(--line-strong); font-size: 12px; font-weight: 700; line-height: 1.35; text-align: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .3); opacity: 0; transform: translateY(4px) scale(.98); transition: opacity .14s ease, transform .14s ease; }
+.ui-tip::after { content: ''; position: absolute; left: var(--ax); top: 100%; width: 8px; height: 8px; margin-left: -4px; margin-top: -4px; transform: rotate(45deg);
+  background: inherit; border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.ui-tip.below { transform: translateY(-4px) scale(.98); }
+.ui-tip.below::after { top: auto; bottom: 100%; margin-top: 0; margin-bottom: -4px; border: 0; border-left: 1px solid var(--line-strong); border-top: 1px solid var(--line-strong); }
+.ui-tip.on { opacity: 1; transform: none; }
+[data-theme='light'] .ui-tip { background: #1b1b22; color: #fff; border-color: #1b1b22; box-shadow: 0 8px 22px rgba(16, 16, 28, .22); }
+[data-theme='light'] .ui-tip::after { border-color: #1b1b22; }
+@media (prefers-reduced-motion: reduce) { .ui-tip { transition: none; } }

@@ -1985,6 +1985,20 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .sl input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent-soft), 0 1px 4px rgba(0, 0, 0, .35); }
 .glow-ask-f .sl { min-width: 0; }
 
+/* ---------- свои подсказки вместо браузерных title ---------- */
+.ctl-fab[data-tip]::after { content: none !important; }
+.ui-tip { --ax: 50%; position: fixed; z-index: 300; left: 0; top: 0; max-width: 280px; padding: 6px 10px; border-radius: 9px; pointer-events: none;
+  background: var(--surface-3); color: var(--text); border: 1px solid var(--line-strong); font-size: 12px; font-weight: 700; line-height: 1.35; text-align: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .3); opacity: 0; transform: translateY(4px) scale(.98); transition: opacity .14s ease, transform .14s ease; }
+.ui-tip::after { content: ''; position: absolute; left: var(--ax); top: 100%; width: 8px; height: 8px; margin-left: -4px; margin-top: -4px; transform: rotate(45deg);
+  background: inherit; border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.ui-tip.below { transform: translateY(-4px) scale(.98); }
+.ui-tip.below::after { top: auto; bottom: 100%; margin-top: 0; margin-bottom: -4px; border: 0; border-left: 1px solid var(--line-strong); border-top: 1px solid var(--line-strong); }
+.ui-tip.on { opacity: 1; transform: none; }
+[data-theme='light'] .ui-tip { background: #1b1b22; color: #fff; border-color: #1b1b22; box-shadow: 0 8px 22px rgba(16, 16, 28, .22); }
+[data-theme='light'] .ui-tip::after { border-color: #1b1b22; }
+@media (prefers-reduced-motion: reduce) { .ui-tip { transition: none; } }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -6484,6 +6498,79 @@ void main(){
       stop();
     }
   }
+  // ---------- 3. Подсказки вместо браузерных title ----------
+  // Любой элемент с title или data-tip показывает аккуратный пузырь. title переносим в data-tip,
+  // чтобы браузер не показывал свой системный тултип (работает и после перерисовок).
+  const tip = document.createElement('div');
+  tip.className = 'ui-tip';
+  tip.setAttribute('role', 'tooltip');
+  let tipFor = null;
+  let tipT = 0;
+  const tipHost = (t) => {
+    const el = t && t.closest && t.closest('[title], [data-tip]');
+    if (!el || el.closest('[data-real]') === el) return null; // аватары с реальным именем — свой пузырь
+    if (el.hasAttribute('title')) {
+      const v = el.getAttribute('title');
+      el.removeAttribute('title');
+      if (v && !el.dataset.tip) el.dataset.tip = v;
+    }
+    return el.dataset.tip ? el : null;
+  };
+  function tipShow(el) {
+    if (!tip.isConnected) document.body.appendChild(tip);
+    tipFor = el;
+    tip.textContent = el.dataset.tip;
+    tip.classList.remove('on', 'below');
+    tip.style.left = '0px';
+    tip.style.top = '0px';
+    const r = el.getBoundingClientRect();
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    let left = Math.max(8, Math.min(innerWidth - tw - 8, r.left + r.width / 2 - tw / 2));
+    let top = r.top - th - 9;
+    if (top < 6) {
+      top = r.bottom + 9;
+      tip.classList.add('below');
+    }
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    tip.style.setProperty('--ax', r.left + r.width / 2 - left + 'px'); // стрелочка — над центром элемента
+    requestAnimationFrame(() => tip.classList.add('on'));
+  }
+  function tipHide() {
+    clearTimeout(tipT);
+    tipFor = null;
+    tip.classList.remove('on');
+  }
+  document.addEventListener('mouseover', (e) => {
+    const el = tipHost(e.target);
+    if (el === tipFor) return;
+    tipHide();
+    if (el) tipT = setTimeout(() => el.isConnected && tipShow(el), 260);
+  });
+  document.addEventListener('focusin', (e) => {
+    const el = e.target.matches && e.target.matches(':focus-visible') ? tipHost(e.target) : null;
+    if (el) tipShow(el);
+  });
+  document.addEventListener('focusout', tipHide);
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') {
+      // на телефоне — подсказка по касанию у круглых кнопок без текста
+      const el = tipHost(e.target);
+      tipHide();
+      if (el && el.matches('.ctl-fab, .chat-fab, .icon-btn, .icon-x, .tt-hit')) {
+        tipShow(el);
+        tipT = setTimeout(tipHide, 1600);
+      }
+      return;
+    }
+    tipHide();
+  });
+  addEventListener('scroll', tipHide, true);
+  addEventListener('blur', tipHide);
+  // элемент пропал при перерисовке — прячем пузырь
+  setInterval(() => tipFor && !tipFor.isConnected && tipHide(), 400);
+
   window.FX = { setWave };
 })();
 

@@ -211,5 +211,78 @@ void main(){
       stop();
     }
   }
+  // ---------- 3. Подсказки вместо браузерных title ----------
+  // Любой элемент с title или data-tip показывает аккуратный пузырь. title переносим в data-tip,
+  // чтобы браузер не показывал свой системный тултип (работает и после перерисовок).
+  const tip = document.createElement('div');
+  tip.className = 'ui-tip';
+  tip.setAttribute('role', 'tooltip');
+  let tipFor = null;
+  let tipT = 0;
+  const tipHost = (t) => {
+    const el = t && t.closest && t.closest('[title], [data-tip]');
+    if (!el || el.closest('[data-real]') === el) return null; // аватары с реальным именем — свой пузырь
+    if (el.hasAttribute('title')) {
+      const v = el.getAttribute('title');
+      el.removeAttribute('title');
+      if (v && !el.dataset.tip) el.dataset.tip = v;
+    }
+    return el.dataset.tip ? el : null;
+  };
+  function tipShow(el) {
+    if (!tip.isConnected) document.body.appendChild(tip);
+    tipFor = el;
+    tip.textContent = el.dataset.tip;
+    tip.classList.remove('on', 'below');
+    tip.style.left = '0px';
+    tip.style.top = '0px';
+    const r = el.getBoundingClientRect();
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    let left = Math.max(8, Math.min(innerWidth - tw - 8, r.left + r.width / 2 - tw / 2));
+    let top = r.top - th - 9;
+    if (top < 6) {
+      top = r.bottom + 9;
+      tip.classList.add('below');
+    }
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    tip.style.setProperty('--ax', r.left + r.width / 2 - left + 'px'); // стрелочка — над центром элемента
+    requestAnimationFrame(() => tip.classList.add('on'));
+  }
+  function tipHide() {
+    clearTimeout(tipT);
+    tipFor = null;
+    tip.classList.remove('on');
+  }
+  document.addEventListener('mouseover', (e) => {
+    const el = tipHost(e.target);
+    if (el === tipFor) return;
+    tipHide();
+    if (el) tipT = setTimeout(() => el.isConnected && tipShow(el), 260);
+  });
+  document.addEventListener('focusin', (e) => {
+    const el = e.target.matches && e.target.matches(':focus-visible') ? tipHost(e.target) : null;
+    if (el) tipShow(el);
+  });
+  document.addEventListener('focusout', tipHide);
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') {
+      // на телефоне — подсказка по касанию у круглых кнопок без текста
+      const el = tipHost(e.target);
+      tipHide();
+      if (el && el.matches('.ctl-fab, .chat-fab, .icon-btn, .icon-x, .tt-hit')) {
+        tipShow(el);
+        tipT = setTimeout(tipHide, 1600);
+      }
+      return;
+    }
+    tipHide();
+  });
+  addEventListener('scroll', tipHide, true);
+  addEventListener('blur', tipHide);
+  // элемент пропал при перерисовке — прячем пузырь
+  setInterval(() => tipFor && !tipFor.isConnected && tipHide(), 400);
+
   window.FX = { setWave };
 })();
