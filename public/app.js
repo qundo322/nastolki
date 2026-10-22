@@ -1962,12 +1962,22 @@
       <p class="cn-wait small muted">${amAgentNow ? `Кликните по карточке, чтобы проголосовать. Когда все агенты (${g.agentsNow}) выберут одну — через 2 секунды она откроется.` : myTurn && amCap ? 'Ваша команда выбирает карточки' : `Отгадывают ${TNg[g.turn]}`}</p>`;
     }
 
+    // Капитанский вид «по цветам»: свои → соперники → нейтральные → убийца (пока наведена кнопка)
+    const canSort = amCap && g.step !== 'setup' && !g.winner;
+    if (!canSort) ui.cnSort = false;
+    if (canSort) {
+      const other = myTeam === 'red' ? 'blue' : 'red';
+      const sw = (t) => `<i style="background:var(--cn-${t})"></i>`;
+      const sortBtn = `<button type="button" class="cn-sort ${ui.cnSort ? 'on' : ''}" data-cn-sort aria-pressed="${!!ui.cnSort}" title="Наведите — карточки встанут по цветам: ваши, соперников, нейтральные, убийца">
+          <span class="cs-sw">${sw(myTeam)}${sw(other)}${sw('neu')}${sw('ass')}</span><span class="cs-t"><b>По цветам</b><small>${matchMedia('(hover: hover)').matches ? 'наведите' : 'нажмите'}</small></span></button>`;
+      status = status.replace('<div class="cl-main">', sortBtn + '<div class="cl-main">');
+    }
     const cards = g.cards
       .map((c, i) => {
         const pend = g.pending && g.pending.i === i;
         const elapsed = pend ? Math.max(0, g.pending.ms - (g.pending.at - now())) : 0;
         if (g.step === 'setup') return `<div class="cn-card blank" style="--i:${i}">${ic('grid', 18)}</div>`;
-        return `<button class="cn-card ${c.color ? 'c-' + c.color : ''} ${c.revealed ? 'rev' : ''} ${c.marks.includes(me) ? 'mine' : ''} ${pend ? 'pending' : ''} ${ui.flip && ui.flip.has(i) ? 'flip' : ''} ${ui.enter && g.step === 'clue' ? 'deal' : ''}" style="--i:${i};${ui.flip && ui.flip.has(i) ? `--fd:-${Date.now() - ui.flip.get(i)}ms` : ''}" data-act="cn-mark" data-i="${i}">
+        return `<button class="cn-card ${c.color ? 'c-' + c.color : ''} ${c.revealed ? 'rev' : ''} ${c.marks.includes(me) ? 'mine' : ''} ${pend ? 'pending' : ''} ${ui.flip && ui.flip.has(i) ? 'flip' : ''} ${ui.enter && g.step === 'clue' ? 'deal' : ''}" style="--i:${i};${ui.flip && ui.flip.has(i) ? `--fd:-${Date.now() - ui.flip.get(i)}ms` : ''}${ui.cnSort ? `;order:${cnRank(c, i, myTeam)}` : ''}" data-act="cn-mark" data-i="${i}">
           <span class="w ${/\s/.test(c.w) ? 'phrase' : ''}" lang="ru">${hy(c.w)}</span>
           ${c.marks.length ? `<span class="marks">${c.marks.map((m) => pa(m, 'xs')).join('')}</span>` : ''}
           ${pend ? `<span class="pend" style="--d:${g.pending.ms}ms;--e:-${elapsed}ms">${ring('fill')}</span>` : ''}
@@ -1980,7 +1990,7 @@
         ${sideCol(g, 'red')}
         <section class="cn-center">
           <div class="cn-status">${status}</div>
-          <div class="cn-board ${amCap ? 'captain own-' + myTeam : ''} ${amCap || g.winner ? 'allcolors' : ''}">${cards}</div>
+          <div class="cn-board ${amCap ? 'captain own-' + myTeam : ''} ${amCap || g.winner ? 'allcolors' : ''} ${ui.cnSort ? 'sorted' : ''}">${cards}</div>
           <details class="log card"><summary>${ic('list', 16)} Журнал ходов</summary>${g.log
             .slice()
             .reverse()
@@ -2564,6 +2574,61 @@
     }
     return `<div class="narrow quiz majority">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
   }
+
+  // ---------- Коднеймс: капитанский вид «по цветам» ----------
+  // Порядок: свои → соперников → нейтральные → убийца; внутри группы открытые — в конце
+  function cnRank(c, i, myTeam) {
+    const other = myTeam === 'red' ? 'blue' : 'red';
+    const g = c.color === myTeam ? 0 : c.color === other ? 1 : c.color === 'neutral' ? 2 : 3;
+    return g * 100 + (c.revealed ? 50 : 0) + i;
+  }
+  // Переключение с анимацией FLIP: запоминаем, где были карточки, ставим новый порядок,
+  // и плавно «доезжаем» из старых мест в новые
+  function cnSortSet(on) {
+    on = !!on;
+    if (!!ui.cnSort === on) return;
+    const g = S?.game;
+    const board = $app.querySelector('.cn-board');
+    const btn = $app.querySelector('[data-cn-sort]');
+    if (!g || g.type !== 'codenames' || !board || !btn) return;
+    const myTeam = g.team[S.me];
+    const cards = [...board.querySelectorAll('.cn-card[data-i]')];
+    const first = cards.map((el) => el.getBoundingClientRect());
+    ui.cnSort = on;
+    cards.forEach((el) => (el.style.order = on ? String(cnRank(g.cards[Number(el.dataset.i)], Number(el.dataset.i), myTeam)) : ''));
+    board.classList.toggle('sorted', on);
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', String(on));
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    cards.forEach((el, k) => {
+      const a = first[k];
+      const b = el.getBoundingClientRect();
+      const dx = a.left - b.left;
+      const dy = a.top - b.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      el.animate(
+        [
+          { transform: `translate(${dx}px, ${dy}px)`, zIndex: 3 },
+          { transform: `translate(${dx * 0.1}px, ${dy * 0.1}px) scale(1.04)`, zIndex: 3, offset: 0.75 },
+          { transform: 'none', zIndex: 3 },
+        ],
+        { duration: 460, easing: 'cubic-bezier(.2, .85, .25, 1)', delay: (Number(el.dataset.i) % 5) * 12 + Math.floor(Number(el.dataset.i) / 5) * 10 }
+      );
+    });
+  }
+  // Мышь: вид держится, пока курсор на кнопке. Палец: касание включает/выключает.
+  document.addEventListener('mouseover', (e) => {
+    const onBtn = e.target.closest && e.target.closest('[data-cn-sort]');
+    if (onBtn) cnSortSet(true);
+    else if (ui.cnSort && !ui.cnSortPin) cnSortSet(false);
+  });
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-cn-sort]');
+    if (!b) return;
+    if (matchMedia('(hover: hover)').matches) return;
+    ui.cnSortPin = !ui.cnSort;
+    cnSortSet(!ui.cnSort);
+  });
 
   // Бегущее число на шкале: каждый кадр — по текущему элементу (переживает перерисовки)
   let qzRaf = 0;

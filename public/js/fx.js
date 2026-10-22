@@ -13,9 +13,14 @@
   let mcEl = null;
   let mcPress = false;
   function mcApply(el, px, py) {
-    const rx = (0.5 - py) * 2 * MC_TILT;
-    const ry = (px - 0.5) * 2 * MC_TILT;
-    el.style.transform = `perspective(720px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-2px) scale(${mcPress ? 0.98 : 1.015})`;
+    // Карточки Коднеймс низкие и мелкие — тот же угол на них почти не виден,
+    // поэтому им наклон сильнее и перспектива ближе (на глаз — как у карточек игр в лобби)
+    const cn = el.classList.contains('cn-card');
+    const tilt = cn ? 10 : MC_TILT;
+    const persp = cn ? 480 : 720;
+    const rx = (0.5 - py) * 2 * tilt;
+    const ry = (px - 0.5) * 2 * tilt;
+    el.style.transform = `perspective(${persp}px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-2px) scale(${mcPress ? 0.98 : cn ? 1.03 : 1.015})`;
     el.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
     el.style.setProperty('--my', (py * 100).toFixed(1) + '%');
   }
