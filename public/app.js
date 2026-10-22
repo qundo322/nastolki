@@ -2732,13 +2732,6 @@
       qBox = `<div class="card who-ask">
           <div class="wa-k">${ic('mic', 16)} Ваш вопрос</div>
           <form data-form="who-ask" class="wa-form"><input class="inp wa-inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Я человек? Я из фильма?" autocomplete="off" required/><button class="btn primary mega">${ic('send', 20)} Спросить</button></form>
-          ${(() => {
-            // Подсказки, что спросить: убираем уже заданные
-            const asked = new Set(myQa.map((x) => String(x.text || '').toLowerCase().replace(/[^а-яёa-z0-9]/g, '')));
-            const list = WHO_SUGG.filter((t) => !asked.has(t.toLowerCase().replace(/[^а-яёa-z0-9]/g, '')));
-            const open = ui.waSugg ?? myQa.length < 3;
-            return list.length ? `<div class="wa-sugg ${open ? 'open' : ''}"><button type="button" class="wa-sugg-t" data-act="who-sugg-t">${ic('bulb', 15)} Не знаете, что спросить? ${ic(open ? 'up' : 'down', 14)}</button>${open ? `<div class="wa-chips">${list.map((t) => `<button type="button" class="wa-chip" data-act="who-sugg" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>` : '';
-          })()}
           ${q ? `<div class="wa-live"><span class="wa-q">«${esc(q.text)}»</span><span class="qa-t"><b class="y">Да ${q.yes}</b><b class="n">Нет ${q.no}</b><b>Не знаю ${q.idk}</b></span></div><p class="muted small center">Ответили все: «да» — спрашивайте дальше, «нет» — ход переходит</p>` : ''}
         </div>
         ${myQa.length ? `<div class="card qa-card"><div class="side-h">${ic('list', 16)} Ваши вопросы</div>${qaCards(myQa)}</div>` : ''}`;
@@ -2760,7 +2753,20 @@
           ${g.turnPid === me ? `<button class="btn primary mega" data-act="who-next">${ic('skip', 24)} Передать ход</button>` : ''}
           ${!myState.guessed && !myState.gaveUp ? `<button class="btn success mega" data-act="who-guessed">${ic('check', 24)} Я угадал!</button><button class="btn ghost mega" data-act="who-giveup">${ic('flag', 22)} Сдаюсь</button>` : `<span class="muted">Вы уже ${myState.guessed ? 'угадали' : 'сдались'} — помогайте остальным</span>`}
         </div>`;
-    return `<div class="who who2 ${ui.enter ? 'enter' : ''}">
+    // Справа — список «Не знаете, что спросить?» (только тому, кто сейчас спрашивает); уже заданные скрываем
+    let sugg = '';
+    if (!over && asker === me) {
+      const norm = (t) => String(t || '').toLowerCase().replace(/[^а-яёa-z0-9]/g, '');
+      const asked = new Set(myQa.map((x) => norm(x.text)));
+      const list = WHO_SUGG.filter((t) => !asked.has(norm(t)));
+      if (list.length)
+        sugg = `<aside class="who-sugg" data-scroll="who-sugg">
+          <div class="side-h">${ic('bulb', 16)} Не знаете, что спросить?</div>
+          <p class="muted small">Нажмите — вопрос появится в поле, его можно поправить</p>
+          <div class="ws-list">${list.map((t) => `<button type="button" class="ws-item" data-act="who-sugg" data-t="${esc(t)}"><span>${esc(t)}</span>${ic('chevron', 14)}</button>`).join('')}</div>
+        </aside>`;
+    }
+    return `<div class="who who2 ${sugg ? 'has-sugg' : ''} ${ui.enter ? 'enter' : ''}">
       <aside class="who-players" data-scroll="who-players">
         <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
         <div class="who-list">${tiles}</div>
@@ -2772,6 +2778,7 @@
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
       </div>
+      ${sugg}
     </div>`;
   }
 
@@ -3339,11 +3346,6 @@
     'spy-next': () => act('next'),
     // кто я
     'who-random': () => act('randomFor'),
-    'who-sugg-t': () => {
-      const myQa = S?.game?.players?.[S.me]?.qa || [];
-      ui.waSugg = !(ui.waSugg ?? myQa.length < 3);
-      render();
-    },
     'who-sugg': (d) => {
       const inp = $app.querySelector('input[data-keep="who-ask"]');
       if (!inp) return;
