@@ -2730,8 +2730,7 @@
         ${
           q
             ? `<div class="qa-big">«${esc(q.text)}»</div>
-               ${q.pend ? `<p class="qa-split">${ic('clock', 15)} ${q.pend.v === 'no' ? 'Ответ «нет» — ход перейдёт' : 'Засчитываем — следующий вопрос'} через 2 секунды. Можно передумать.</p>` : ''}
-               ${q.split ? `<p class="qa-split">${ic('alert', 15)} «Да» и «нет» поровну — договоритесь и переголосуйте</p>` : ''}
+               <div class="qa-note">${q.pend ? `<p class="qa-split">${ic('clock', 15)} ${q.pend.v === 'no' ? 'Ответ «нет» — ход перейдёт' : 'Засчитываем — следующий вопрос'} через 2 секунды. Можно передумать.</p>` : q.split ? `<p class="qa-split">${ic('alert', 15)} «Да» и «нет» поровну — договоритесь и переголосуйте</p>` : ''}</div>
                <div class="qa-btns">${['yes', 'no', 'idk'].map((v) => `<button class="btn qa-b qa-${v} ${q.mine === v ? 'on' : ''} ${q.pend && q.pend.v === v ? 'pending' : ''}" data-act="who-ans" data-v="${v}"><b>${AL[v]}</b>${rollCount('q' + q.id + v, q[v])}<span class="qa-who">${qVotes(v)}</span>${q.pend && q.pend.v === v ? `<span class="pend" style="--d:${q.pend.ms}ms;--e:-${Math.max(0, q.pend.ms - (q.pend.at - now()))}ms">${ring('fill')}</span>` : ''}</button>`).join('')}</div>`
             : `<div class="qa-big muted">Ждём вопрос…</div>`
         }

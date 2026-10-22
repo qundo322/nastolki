@@ -2530,3 +2530,14 @@ html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 
 .ww-dots i:nth-child(2) { animation-delay: .15s; }
 .ww-dots i:nth-child(3) { animation-delay: .3s; }
 @keyframes wwDot { 0%, 60%, 100% { opacity: .3; translate: 0 0; } 30% { opacity: 1; translate: 0 -3px; } }
+
+/* Колонки игроков: место под полосу прокрутки зарезервировано заранее — при перерисовке
+   полоса не появляется/пропадает и карточки не «прыгают» по ширине */
+.who-players, .spy-players { overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.who-players::-webkit-scrollbar, .spy-players::-webkit-scrollbar { width: 6px; }
+.who-players::-webkit-scrollbar-thumb, .spy-players::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 6px; }
+.wt-img:hover { scale: 1.6; transform-origin: right center; }
+/* Место под полосу прокрутки страницы зарезервировано всегда: когда страница становится чуть выше экрана
+   (например, появилась строка «засчитываем через 2 секунды»), ничего не сдвигается вбок */
+html { scrollbar-gutter: stable; }
+.qa-note { min-height: 26px; margin: -6px 0 8px; display: flex; align-items: center; justify-content: center; } .qa-note .qa-split { margin: 0; }
