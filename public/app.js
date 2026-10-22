@@ -1839,7 +1839,7 @@
       <label class="cf-l"><b>1</b> Слово</label>
       <input class="inp clue-word" name="word" data-keep="cn-clue${mode === 'edit' ? '-e' : ''}" data-preview="1" value="${word}" placeholder="Одно слово" maxlength="30" autocomplete="off" required/>
       <label class="cf-l"><b>2</b> Карточки и сила</label>
-      <div class="cf-hint">1 — точно про это слово, 0.5 — наполовину, −1 — точно НЕ это. Жёлтая нить связывает силы: 1+1</div>
+      <div class="cf-hint">1 — точно про это слово, 0.5 — наполовину, −1 — точно НЕ это. Цветная нить связывает силы: 1+1</div>
       <div class="slots">${slots}</div>
       ${n < 9 ? `<button type="button" class="add-slot" data-act="cn-sadd">${ic('plus', 15)} Ещё карточка</button>` : ''}
       <label class="cf-l"><b>3</b> Агенты увидят</label>

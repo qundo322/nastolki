@@ -47,10 +47,14 @@
       const r = m.getBoundingClientRect();
       const dx = e.clientX - (r.left + r.width / 2);
       const dy = e.clientY - (r.top + r.height / 2);
-      // широкие кнопки тянем слабее по горизонтали, чтобы не «уплывали»
-      const kx = MAG_K * Math.min(1, 160 / r.width);
-      const tx = clamp(dx * kx, -MAG_MAX, MAG_MAX);
-      const ty = clamp(dy * MAG_K, -MAG_MAX * 0.7, MAG_MAX * 0.7);
+      // Чем меньше кнопка, тем слабее магнит — иначе в маленькие трудно попасть.
+      // Сила и предел растут с высотой кнопки: 28px → ~1.5px, 44px → ~4px, 56px+ → 7px.
+      const size = Math.min(r.height, r.width);
+      const f = clamp((size - 22) / 34, 0.12, 1);
+      const max = MAG_MAX * f;
+      const kx = MAG_K * f * Math.min(1, 160 / r.width); // широкие — слабее по горизонтали
+      const tx = clamp(dx * kx, -max, max);
+      const ty = clamp(dy * MAG_K * f, -max * 0.7, max * 0.7);
       m.classList.add('mag');
       m.style.translate = `${tx.toFixed(2)}px ${ty.toFixed(2)}px`;
       m.style.setProperty('--mag-x', (tx * 0.45).toFixed(2) + 'px');
@@ -82,9 +86,9 @@
   // ---------- 3. Голографические волны (WebGL) ----------
   // Цвета под тему: фон, три цвета переливов, сила
   const PAL = {
-    dark: { bg: '#0e0d13', a: '#8a5cff', b: '#26c2f0', c: '#f2c14b', k: 1.15, hl: 0.09 },
-    oled: { bg: '#000000', a: '#7a4cf5', b: '#1fa8d8', c: '#e0ae35', k: 0.7, hl: 0.06 },
-    light: { bg: '#f3f1ec', a: '#9d86ff', b: '#5fc4f5', c: '#f5bf45', k: 0.85, hl: 0.35 },
+    dark: { bg: '#0e0d13', a: '#8b5cff', b: '#ff6ec7', c: '#4f7dff', k: 1.15, hl: 0.08 },
+    oled: { bg: '#000000', a: '#7a4cf5', b: '#e85fb8', c: '#3f68e8', k: 0.7, hl: 0.05 },
+    light: { bg: '#f5f5f7', a: '#b79bff', b: '#ff9fd6', c: '#9db4ff', k: 0.8, hl: 0.4 },
   };
   const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
   const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
