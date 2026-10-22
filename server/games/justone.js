@@ -1,5 +1,5 @@
 const { WORDS } = require('../words');
-const { shuffle, Deck, norm, clampInt, customWords } = require('../util');
+const { shuffle, Deck, norm, clampInt, customWords, countLabel } = require('../util');
 
 // Время фаз
 const CLUE_MS = 60000; // написать подсказку
@@ -10,6 +10,7 @@ const meta = {
   title: 'Намёк понял',
   emoji: '💡',
   players: '3–20',
+  content: countLabel(WORDS.length, 'слово', 'слова', 'слов'),
   short: 'Все пишут по одной подсказке, одинаковые сгорают. Угадал — и выбери лучшую подсказку.',
   rules: [
     'Один игрок угадывает, остальные видят загаданное слово и за минуту пишут по одной подсказке — одно слово (буквы и цифры, можно через дефис). Подсказку нельзя заменить после отправки.',

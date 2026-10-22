@@ -1,5 +1,5 @@
 const QUESTIONS = require('../quiz_questions');
-const { shuffle, Deck, clampInt } = require('../util');
+const { shuffle, Deck, clampInt, countLabel } = require('../util');
 
 // «Викторина»: ответ — число, балл получает тот, кто ближе всех к правильному
 const REVEAL_MS = 15000; // сколько показываем результат раунда
@@ -8,6 +8,7 @@ const meta = {
   title: 'Викторина',
   emoji: '🔢',
   players: '2–20',
+  content: countLabel(QUESTIONS.length, 'вопрос', 'вопроса', 'вопросов'),
   short: 'Ответ — всегда число. Кто ближе всех к правде — получает балл. Точное попадание — бонус.',
   rules: [
     'Каждый раунд — вопрос, ответ на который число: год, высота, количество.',

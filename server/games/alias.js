@@ -1,5 +1,5 @@
 const { WORDS } = require('../words');
-const { shuffle, Deck, clampInt, customWords } = require('../util');
+const { shuffle, Deck, clampInt, customWords, countLabel } = require('../util');
 
 const TEAM_NAMES = ['Совы', 'Еноты', 'Лисы', 'Бобры', 'Пумы'];
 
@@ -7,6 +7,7 @@ const meta = {
   title: 'Элиас',
   emoji: '🎩',
   players: '4–20',
+  content: countLabel(WORDS.length, 'слово', 'слова', 'слов'),
   short: 'Объясни команде как можно больше слов за минуту, не называя однокоренных.',
   rules: [
     'Игроки делятся на команды. В свой ход объясняющий видит слово и объясняет его своей команде голосом — без однокоренных слов, переводов и подсказок по буквам.',

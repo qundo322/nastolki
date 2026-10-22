@@ -1,5 +1,5 @@
 const { WORDS } = require('../words');
-const { shuffle, customWords } = require('../util');
+const { shuffle, customWords, countLabel } = require('../util');
 
 const REVEAL_DELAY = 2000; // все агенты на одной карточке → через 2 с она открывается
 const FIRST_CLUE_MS = 120000; // самый первый ход капитана
@@ -13,6 +13,7 @@ const meta = {
   title: 'Коднеймс',
   emoji: '🕵️',
   players: '4–20',
+  content: countLabel(WORDS.length, 'слово', 'слова', 'слов'),
   short: 'Капитаны дают подсказку из одного слова, команда ищет свои карточки на поле 5×5.',
   rules: [
     'Две команды — красные и синие. У каждой есть капитан, который видит цвета всех карточек.',

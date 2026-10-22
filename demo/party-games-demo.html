@@ -1674,10 +1674,10 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 
 /* Выход */
 .exit-btn:hover { color: var(--red-text); border-color: color-mix(in srgb, var(--red) 50%, transparent); }
-.modal.leave-modal { width: min(420px, calc(100vw - 24px)); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 26px 24px 22px; }
+.modal.leave-modal, .modal.ask-modal { width: min(420px, calc(100vw - 24px)); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 26px 24px 22px; }
 .lm-ic { width: 56px; height: 56px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red-text); }
-.leave-modal h3 { margin: 4px 0 0; font-family: var(--display); font-size: 22px; }
-.leave-modal p { margin: 0; line-height: 1.45; }
+.leave-modal h3, .ask-modal h3 { margin: 4px 0 0; font-family: var(--display); font-size: 22px; }
+.leave-modal p, .ask-modal p { margin: 0; line-height: 1.45; }
 .lm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px; }
 .lm-btns .btn { justify-content: center; height: 46px; }
 
@@ -1784,7 +1784,7 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 
 /* Аватар: фото поверх инициалов (если картинка не загрузится — останутся инициалы) */
 .ava > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-.ava.ring { box-shadow: 0 0 0 2px var(--ring); }
+.ava.tring { box-shadow: 0 0 0 2px var(--ring); }
 .ava[data-real] { cursor: help; }
 
 /* Блок «Аватар» на входе и в профиле */
@@ -1820,6 +1820,117 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .home-card .code-row { display: flex; gap: 8px; }
 .home-card .code-row .code-inp { flex: 1; min-width: 0; text-align: center; letter-spacing: .3em; text-transform: uppercase; }
 .home-card .code-row .btn { flex: none; }
+.gfoot { margin-top: auto; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+/* своё окно подтверждения */
+.modal.ask-modal { z-index: 131; }
+.ask-modal + .modal-bg, .modal-bg:has(+ .ask-modal) { z-index: 130; }
+.ask-modal .lm-ic { background: var(--accent-soft); color: var(--accent-text); }
+.ask-modal .lm-ic.danger { background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red-text); }
+.ask-modal .lm-btns:has(> :only-child) { grid-template-columns: 1fr; }
+.ask-val { width: 100%; text-align: center; font-weight: 700; }
+
+/* ============================================================
+   v26: эффекты — магнитные кнопки, магические карточки, переключатель темы, фейдер, голографический фон
+   ============================================================ */
+
+/* ---- голографические волны (вход и лобби) ---- */
+#app { position: relative; z-index: 1; }
+.holo-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .9s ease; display: block; }
+.holo-bg.on { opacity: 1; }
+/* поверх волн шапка и подложки чуть прозрачнее и с размытием — волны просвечивают */
+html.holo .topbar { backdrop-filter: blur(14px) saturate(1.2); }
+html.holo .home-card { background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(18px) saturate(1.3); }
+html.holo .in-lobby .card { background: color-mix(in srgb, var(--surface) 86%, transparent); backdrop-filter: blur(16px) saturate(1.25); }
+html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--surface) 84%, transparent); backdrop-filter: blur(14px); }
+
+/* ---- магнитные кнопки: возврат пружиной, внутри — лёгкий параллакс ---- */
+.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn {
+  transition-property: transform, background, background-color, border-color, box-shadow, filter, color, opacity, translate;
+  transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .6s;
+  transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.3, 1.7, .55, 1);
+}
+.mag { transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .16s; transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.2, .8, .3, 1); }
+:is(.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn) > :is(svg, span, b) { translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: translate .6s cubic-bezier(.3, 1.7, .55, 1); }
+.mag > :is(svg, span, b) { transition: translate .16s cubic-bezier(.2, .8, .3, 1); }
+
+/* ---- магические карточки: наклон, прожектор, светящийся край (вдвое мягче оригинала) ---- */
+.mc-on { position: relative; z-index: 2; transition: transform .1s ease-out, background .12s, border-color .12s, box-shadow .2s, opacity .2s !important; will-change: transform; }
+.mc-on::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .13), rgba(255, 255, 255, .04) 35%, transparent 62%);
+}
+[data-theme='light'] .mc-on::after { background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .6), rgba(255, 255, 255, .15) 35%, transparent 62%); }
+.mc-on:not(.flip)::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 2;
+  background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 70%, transparent), transparent 62%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+}
+.cn-card.mc-on { box-shadow: 0 10px 22px rgba(0, 0, 0, .28), 0 3px 0 var(--cn-edge); }
+.gcard.mc-on, .m-pre.mc-on, .mj-g.mc-on, .spy-card.mc-on { box-shadow: 0 14px 30px rgba(0, 0, 0, .25); }
+
+/* ---- переключатель темы: день · ночь · OLED ---- */
+.tt { --w: 84px; --h: 34px; --k: 26px; position: relative; flex: none; width: var(--w); height: var(--h); border-radius: 999px; overflow: hidden; isolation: isolate;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, .35), 0 0 0 1px var(--line); }
+.tt-sky, .tt-sky > i { position: absolute; inset: 0; }
+.tt-sky > i { transition: opacity .55s ease; opacity: 0; }
+.tt-day { background:
+  radial-gradient(8px 5px at 62% 70%, #fff 98%, transparent), radial-gradient(10px 6px at 70% 62%, #fff 98%, transparent), radial-gradient(7px 5px at 78% 70%, #fff 98%, transparent),
+  radial-gradient(6px 4px at 86% 36%, rgba(255,255,255,.9) 98%, transparent), radial-gradient(8px 5px at 92% 42%, rgba(255,255,255,.9) 98%, transparent),
+  linear-gradient(180deg, #5db8ff, #b9e3ff); }
+.tt-night { background:
+  radial-gradient(1px 1px at 12% 30%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 22% 66%, #fff 99%, transparent), radial-gradient(1px 1px at 30% 24%, #fff 99%, transparent),
+  radial-gradient(1.4px 1.4px at 74% 30%, #fff 99%, transparent), radial-gradient(1px 1px at 84% 64%, #fff 99%, transparent), radial-gradient(1px 1px at 91% 26%, #fff 99%, transparent),
+  linear-gradient(180deg, #121836, #2b2f63); }
+.tt-black { background: radial-gradient(1px 1px at 16% 40%, rgba(255,255,255,.55) 99%, transparent), radial-gradient(1px 1px at 30% 66%, rgba(255,255,255,.4) 99%, transparent), radial-gradient(1px 1px at 46% 30%, rgba(255,255,255,.45) 99%, transparent), #000; }
+.tt[data-t='light'] .tt-day, .tt[data-t='dark'] .tt-night, .tt[data-t='oled'] .tt-black { opacity: 1; }
+.tt-night::after { content: ''; position: absolute; inset: 0; background: radial-gradient(1.3px 1.3px at 18% 46%, #fff 99%, transparent), radial-gradient(1.3px 1.3px at 80% 46%, #fff 99%, transparent); animation: ttTw 2.4s ease-in-out infinite; }
+@keyframes ttTw { 50% { opacity: .2; } }
+.tt-knob { position: absolute; z-index: 2; top: calc((var(--h) - var(--k)) / 2); left: 4px; width: var(--k); height: var(--k); border-radius: 50%; pointer-events: none;
+  transition: left .6s cubic-bezier(.3, 1.6, .5, 1), background .45s, box-shadow .45s, transform .6s cubic-bezier(.3, 1.6, .5, 1); }
+.tt-knob > i { position: absolute; border-radius: 50%; background: rgba(140, 150, 185, .55); opacity: 0; transition: opacity .4s; }
+.tt-knob > i:nth-child(1) { width: 6px; height: 6px; left: 6px; top: 6px; }
+.tt-knob > i:nth-child(2) { width: 4px; height: 4px; left: 15px; top: 14px; }
+.tt-knob > i:nth-child(3) { width: 3px; height: 3px; left: 8px; top: 17px; }
+.tt[data-t='light'] .tt-knob { left: 4px; transform: rotate(0deg); background: radial-gradient(circle at 35% 35%, #fff8d6, #ffd23f 58%, #f6a821); box-shadow: 0 0 0 3px rgba(255, 220, 90, .3), 0 0 14px 3px rgba(255, 196, 40, .65); }
+.tt[data-t='dark'] .tt-knob { left: calc(50% - var(--k) / 2); transform: rotate(200deg); background: radial-gradient(circle at 35% 35%, #ffffff, #e3e7f3 55%, #b7bfd8); box-shadow: 0 0 12px rgba(200, 212, 255, .45); }
+.tt[data-t='dark'] .tt-knob > i { opacity: 1; }
+.tt[data-t='oled'] .tt-knob { left: calc(100% - var(--k) - 4px); transform: rotate(380deg); background: #000; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .85), 0 0 10px rgba(255, 255, 255, .22); }
+.tt[data-t='oled'] .tt-knob > i:nth-child(1) { opacity: 1; background: #fff; width: 4px; height: 4px; left: 11px; top: 11px; }
+.tt-hit { position: absolute; z-index: 3; top: 0; bottom: 0; width: 33.34%; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 999px; }
+.tt-hit.h0 { left: 0; } .tt-hit.h1 { left: 33.33%; } .tt-hit.h2 { right: 0; }
+.tt-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tt:hover { box-shadow: inset 0 1px 4px rgba(0, 0, 0, .35), 0 0 0 1px var(--line-strong); }
+.home-top .tt { --w: 96px; --h: 38px; --k: 30px; }
+@media (max-width: 640px) { .topbar .tt { --w: 66px; --h: 30px; --k: 22px; } .tt-knob > i:nth-child(2) { left: 12px; top: 11px; } }
+@media (prefers-reduced-motion: reduce) { .tt-knob, .tt-sky > i { transition: none; } .tt-night::after { animation: none; } }
+
+/* ---- фейдер силы свечения ---- */
+.fader { --v: 0%; display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
+.fader-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.fader-v { font-size: 13px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
+.fader-track { position: relative; height: 26px; display: flex; align-items: center; }
+.fader-track::before { content: ''; position: absolute; left: 0; right: 0; height: 8px; border-radius: 99px; background: var(--surface-3); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); }
+.fader-track::after { content: ''; position: absolute; left: 0; width: var(--v); height: 8px; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 35%, transparent), var(--accent)); box-shadow: 0 0 calc(var(--v) / 6) color-mix(in srgb, var(--accent) 60%, transparent); }
+.fader input { -webkit-appearance: none; appearance: none; position: relative; z-index: 1; width: 100%; height: 26px; margin: 0; background: transparent; cursor: pointer; }
+.fader input::-webkit-slider-runnable-track { height: 26px; background: transparent; }
+.fader input::-moz-range-track { height: 26px; background: transparent; }
+/* ручка — как у микшерного фейдера: прямоугольная «шапка» с риской */
+.fader input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
+  background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+.fader input::-moz-range-thumb { width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
+  background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+.fader input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fader-scale { display: flex; justify-content: space-between; padding: 0 7px; margin-top: -4px; }
+.fader-scale i { width: 1px; height: 6px; background: var(--line-strong); }
+.fader-scale i:nth-child(5n + 1) { height: 9px; background: var(--faint); }
+.glow-ask-f { flex: none; width: 280px; }
+.glow-ask-f .fader { min-width: 0; }
+@media (max-width: 640px) { .glow-ask-f { width: 100%; } }
+
+/* ---- свечение хода: пятно растёт вместе с фейдером ---- */
+.turn-glow.g-red, .turn-glow.g-blue { width: calc(42vw * var(--glow-s, 1)); }
+.turn-glow.g-top-y, .turn-glow.g-top-b { height: calc(45vh * var(--glow-s, 1)); }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -1992,7 +2103,11 @@ body{padding-bottom:84px}
         return Math.min(max, Math.max(min, n));
       };
       var customWords = (text) => [...new Set(String(text || "").split(/[,\n;]/).map((w) => w.trim()).filter((w) => w && w.length <= 40))];
-      module.exports = { shuffle, pick, norm, Deck, clampInt, customWords };
+      function countLabel(n, one, few, many) {
+        const f = n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
+        return `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\xA0")} ${f}`;
+      }
+      module.exports = { shuffle, pick, norm, Deck, clampInt, customWords, countLabel };
     }
   });
 
@@ -2000,7 +2115,7 @@ body{padding-bottom:84px}
   var require_codenames = __commonJS({
     "server/games/codenames.js"(exports, module) {
       var { WORDS } = require_words();
-      var { shuffle, customWords } = require_util();
+      var { shuffle, customWords, countLabel } = require_util();
       var REVEAL_DELAY = 2e3;
       var FIRST_CLUE_MS = 12e4;
       var CLUE_MS = 6e4;
@@ -2012,6 +2127,7 @@ body{padding-bottom:84px}
         title: "\u041A\u043E\u0434\u043D\u0435\u0439\u043C\u0441",
         emoji: "\u{1F575}\uFE0F",
         players: "4\u201320",
+        content: countLabel(WORDS.length, "\u0441\u043B\u043E\u0432\u043E", "\u0441\u043B\u043E\u0432\u0430", "\u0441\u043B\u043E\u0432"),
         short: "\u041A\u0430\u043F\u0438\u0442\u0430\u043D\u044B \u0434\u0430\u044E\u0442 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443 \u0438\u0437 \u043E\u0434\u043D\u043E\u0433\u043E \u0441\u043B\u043E\u0432\u0430, \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u0438\u0449\u0435\u0442 \u0441\u0432\u043E\u0438 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0438 \u043D\u0430 \u043F\u043E\u043B\u0435 5\xD75.",
         rules: [
           "\u0414\u0432\u0435 \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u2014 \u043A\u0440\u0430\u0441\u043D\u044B\u0435 \u0438 \u0441\u0438\u043D\u0438\u0435. \u0423 \u043A\u0430\u0436\u0434\u043E\u0439 \u0435\u0441\u0442\u044C \u043A\u0430\u043F\u0438\u0442\u0430\u043D, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0432\u0438\u0434\u0438\u0442 \u0446\u0432\u0435\u0442\u0430 \u0432\u0441\u0435\u0445 \u043A\u0430\u0440\u0442\u043E\u0447\u0435\u043A.",
@@ -2504,12 +2620,13 @@ body{padding-bottom:84px}
   var require_alias = __commonJS({
     "server/games/alias.js"(exports, module) {
       var { WORDS } = require_words();
-      var { shuffle, Deck, clampInt, customWords } = require_util();
+      var { shuffle, Deck, clampInt, customWords, countLabel } = require_util();
       var TEAM_NAMES = ["\u0421\u043E\u0432\u044B", "\u0415\u043D\u043E\u0442\u044B", "\u041B\u0438\u0441\u044B", "\u0411\u043E\u0431\u0440\u044B", "\u041F\u0443\u043C\u044B"];
       var meta = {
         title: "\u042D\u043B\u0438\u0430\u0441",
         emoji: "\u{1F3A9}",
         players: "4\u201320",
+        content: countLabel(WORDS.length, "\u0441\u043B\u043E\u0432\u043E", "\u0441\u043B\u043E\u0432\u0430", "\u0441\u043B\u043E\u0432"),
         short: "\u041E\u0431\u044A\u044F\u0441\u043D\u0438 \u043A\u043E\u043C\u0430\u043D\u0434\u0435 \u043A\u0430\u043A \u043C\u043E\u0436\u043D\u043E \u0431\u043E\u043B\u044C\u0448\u0435 \u0441\u043B\u043E\u0432 \u0437\u0430 \u043C\u0438\u043D\u0443\u0442\u0443, \u043D\u0435 \u043D\u0430\u0437\u044B\u0432\u0430\u044F \u043E\u0434\u043D\u043E\u043A\u043E\u0440\u0435\u043D\u043D\u044B\u0445.",
         rules: [
           "\u0418\u0433\u0440\u043E\u043A\u0438 \u0434\u0435\u043B\u044F\u0442\u0441\u044F \u043D\u0430 \u043A\u043E\u043C\u0430\u043D\u0434\u044B. \u0412 \u0441\u0432\u043E\u0439 \u0445\u043E\u0434 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u044E\u0449\u0438\u0439 \u0432\u0438\u0434\u0438\u0442 \u0441\u043B\u043E\u0432\u043E \u0438 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u0435\u0442 \u0435\u0433\u043E \u0441\u0432\u043E\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u0435 \u0433\u043E\u043B\u043E\u0441\u043E\u043C \u2014 \u0431\u0435\u0437 \u043E\u0434\u043D\u043E\u043A\u043E\u0440\u0435\u043D\u043D\u044B\u0445 \u0441\u043B\u043E\u0432, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u043E\u0432 \u0438 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043E\u043A \u043F\u043E \u0431\u0443\u043A\u0432\u0430\u043C.",
@@ -2780,11 +2897,12 @@ body{padding-bottom:84px}
   var require_spyfall = __commonJS({
     "server/games/spyfall.js"(exports, module) {
       var { LOCATIONS } = require_words();
-      var { shuffle, pick, clampInt } = require_util();
+      var { shuffle, pick, clampInt, countLabel } = require_util();
       var meta = {
         title: "\u0428\u043F\u0438\u043E\u043D",
         emoji: "\u{1F576}\uFE0F",
         players: "3\u201320",
+        content: countLabel(LOCATIONS.length, "\u043B\u043E\u043A\u0430\u0446\u0438\u044F", "\u043B\u043E\u043A\u0430\u0446\u0438\u0438", "\u043B\u043E\u043A\u0430\u0446\u0438\u0439"),
         short: "\u0412\u0441\u0435 \u0437\u043D\u0430\u044E\u0442 \u043B\u043E\u043A\u0430\u0446\u0438\u044E, \u043A\u0440\u043E\u043C\u0435 \u0448\u043F\u0438\u043E\u043D\u0430. \u0412\u044B\u0447\u0438\u0441\u043B\u0438\u0442\u0435 \u0435\u0433\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C\u0438 \u2014 \u0438\u043B\u0438 \u043E\u043D \u0432\u044B\u0447\u0438\u0441\u043B\u0438\u0442 \u043C\u0435\u0441\u0442\u043E.",
         rules: [
           "\u041A\u0430\u0436\u0434\u044B\u0439 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0443 \u0441 \u043B\u043E\u043A\u0430\u0446\u0438\u0435\u0439 \u0438 \u0441\u0432\u043E\u0435\u0439 \u0440\u043E\u043B\u044C\u044E, \u0430 \u0448\u043F\u0438\u043E\u043D \u2014 \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430\u0434\u043F\u0438\u0441\u044C \xAB\u0412\u044B \u0448\u043F\u0438\u043E\u043D\xBB. \u0421\u043F\u0438\u0441\u043A\u0430 \u043B\u043E\u043A\u0430\u0446\u0438\u0439 \u043D\u0435\u0442 \u2014 \u0448\u043F\u0438\u043E\u043D\u0443 \u043F\u0440\u0438\u0434\u0451\u0442\u0441\u044F \u0434\u043E\u0433\u0430\u0434\u0430\u0442\u044C\u0441\u044F \u043F\u043E \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u0443.",
@@ -3052,12 +3170,13 @@ body{padding-bottom:84px}
   var require_whoami = __commonJS({
     "server/games/whoami.js"(exports, module) {
       var { CHARACTERS } = require_words();
-      var { shuffle, Deck } = require_util();
+      var { shuffle, Deck, countLabel } = require_util();
       var Q_MS = 6e4;
       var meta = {
         title: "\u041A\u0442\u043E \u044F?",
         emoji: "\u{1F914}",
         players: "3\u201320",
+        content: countLabel(CHARACTERS.length, "\u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436", "\u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430", "\u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0435\u0439"),
         short: "\u0423 \u0442\u0435\u0431\u044F \u043D\u0430 \u043B\u0431\u0443 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436 \u2014 \u0432\u0441\u0435 \u0435\u0433\u043E \u0432\u0438\u0434\u044F\u0442, \u043A\u0440\u043E\u043C\u0435 \u0442\u0435\u0431\u044F. \u0423\u0433\u0430\u0434\u0430\u0439 \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C\u0438 \xAB\u0434\u0430/\u043D\u0435\u0442\xBB.",
         rules: [
           "\u041A\u0430\u0436\u0434\u043E\u043C\u0443 \u0438\u0433\u0440\u043E\u043A\u0443 \u0434\u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436: \u0435\u0433\u043E \u0432\u0438\u0434\u044F\u0442 \u0432\u0441\u0435, \u043A\u0440\u043E\u043C\u0435 \u0441\u0430\u043C\u043E\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430. \u041F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0435\u0439 \u0440\u0430\u0437\u0434\u0430\u044E\u0442 \u0441\u043B\u0443\u0447\u0430\u0439\u043D\u043E \u0438\u043B\u0438 \u043A\u0430\u0436\u0434\u044B\u0439 \u0437\u0430\u0433\u0430\u0434\u044B\u0432\u0430\u0435\u0442 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u0441\u043E\u0441\u0435\u0434\u0443.",
@@ -3385,7 +3504,7 @@ body{padding-bottom:84px}
   var require_justone = __commonJS({
     "server/games/justone.js"(exports, module) {
       var { WORDS } = require_words();
-      var { shuffle, Deck, norm, clampInt, customWords } = require_util();
+      var { shuffle, Deck, norm, clampInt, customWords, countLabel } = require_util();
       var CLUE_MS = 6e4;
       var FILTER_MS = 3e4;
       var RESULT_MS = 3e4;
@@ -3393,6 +3512,7 @@ body{padding-bottom:84px}
         title: "\u041D\u0430\u043C\u0451\u043A \u043F\u043E\u043D\u044F\u043B",
         emoji: "\u{1F4A1}",
         players: "3\u201320",
+        content: countLabel(WORDS.length, "\u0441\u043B\u043E\u0432\u043E", "\u0441\u043B\u043E\u0432\u0430", "\u0441\u043B\u043E\u0432"),
         short: "\u0412\u0441\u0435 \u043F\u0438\u0448\u0443\u0442 \u043F\u043E \u043E\u0434\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0435, \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u044B\u0435 \u0441\u0433\u043E\u0440\u0430\u044E\u0442. \u0423\u0433\u0430\u0434\u0430\u043B \u2014 \u0438 \u0432\u044B\u0431\u0435\u0440\u0438 \u043B\u0443\u0447\u0448\u0443\u044E \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443.",
         rules: [
           "\u041E\u0434\u0438\u043D \u0438\u0433\u0440\u043E\u043A \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u0435\u0442, \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u0432\u0438\u0434\u044F\u0442 \u0437\u0430\u0433\u0430\u0434\u0430\u043D\u043D\u043E\u0435 \u0441\u043B\u043E\u0432\u043E \u0438 \u0437\u0430 \u043C\u0438\u043D\u0443\u0442\u0443 \u043F\u0438\u0448\u0443\u0442 \u043F\u043E \u043E\u0434\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0435 \u2014 \u043E\u0434\u043D\u043E \u0441\u043B\u043E\u0432\u043E (\u0431\u0443\u043A\u0432\u044B \u0438 \u0446\u0438\u0444\u0440\u044B, \u043C\u043E\u0436\u043D\u043E \u0447\u0435\u0440\u0435\u0437 \u0434\u0435\u0444\u0438\u0441). \u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443 \u043D\u0435\u043B\u044C\u0437\u044F \u0437\u0430\u043C\u0435\u043D\u0438\u0442\u044C \u043F\u043E\u0441\u043B\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0438.",
@@ -4250,12 +4370,13 @@ body{padding-bottom:84px}
   var require_quiz = __commonJS({
     "server/games/quiz.js"(exports, module) {
       var QUESTIONS = require_quiz_questions();
-      var { shuffle, Deck, clampInt } = require_util();
+      var { shuffle, Deck, clampInt, countLabel } = require_util();
       var REVEAL_MS = 15e3;
       var meta = {
         title: "\u0412\u0438\u043A\u0442\u043E\u0440\u0438\u043D\u0430",
         emoji: "\u{1F522}",
         players: "2\u201320",
+        content: countLabel(QUESTIONS.length, "\u0432\u043E\u043F\u0440\u043E\u0441", "\u0432\u043E\u043F\u0440\u043E\u0441\u0430", "\u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432"),
         short: "\u041E\u0442\u0432\u0435\u0442 \u2014 \u0432\u0441\u0435\u0433\u0434\u0430 \u0447\u0438\u0441\u043B\u043E. \u041A\u0442\u043E \u0431\u043B\u0438\u0436\u0435 \u0432\u0441\u0435\u0445 \u043A \u043F\u0440\u0430\u0432\u0434\u0435 \u2014 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u0431\u0430\u043B\u043B. \u0422\u043E\u0447\u043D\u043E\u0435 \u043F\u043E\u043F\u0430\u0434\u0430\u043D\u0438\u0435 \u2014 \u0431\u043E\u043D\u0443\u0441.",
         rules: [
           "\u041A\u0430\u0436\u0434\u044B\u0439 \u0440\u0430\u0443\u043D\u0434 \u2014 \u0432\u043E\u043F\u0440\u043E\u0441, \u043E\u0442\u0432\u0435\u0442 \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0447\u0438\u0441\u043B\u043E: \u0433\u043E\u0434, \u0432\u044B\u0441\u043E\u0442\u0430, \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E.",
@@ -4781,12 +4902,13 @@ body{padding-bottom:84px}
   var require_majority = __commonJS({
     "server/games/majority.js"(exports, module) {
       var QUESTIONS = require_majority_questions();
-      var { shuffle, Deck, clampInt } = require_util();
+      var { shuffle, Deck, clampInt, countLabel } = require_util();
       var REVIEW_MS = 3e4;
       var meta = {
         title: "\u041E\u0442\u0432\u0435\u0442 \u0431\u043E\u043B\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u0430",
         emoji: "\u{1F465}",
         players: "3\u201320",
+        content: countLabel(QUESTIONS.length, "\u0432\u043E\u043F\u0440\u043E\u0441", "\u0432\u043E\u043F\u0440\u043E\u0441\u0430", "\u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432"),
         short: "\u041F\u0440\u043E\u0441\u0442\u043E\u0439 \u0432\u043E\u043F\u0440\u043E\u0441 \u2014 \u0442\u0430\u0439\u043D\u044B\u0439 \u043E\u0442\u0432\u0435\u0442. \u0421\u043E\u0432\u043F\u0430\u043B \u0441 \u0434\u0440\u0443\u0433\u0438\u043C\u0438 \u2014 \u043F\u043E\u043B\u0443\u0447\u0438\u043B \u043E\u0447\u043A\u0438. \u0414\u0443\u043C\u0430\u0439, \u043A\u0430\u043A \u0432\u0441\u0435!",
         rules: [
           "\u041F\u043E\u044F\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u043F\u0440\u043E\u0441\u0442\u043E\u0439 \u0432\u043E\u043F\u0440\u043E\u0441: \xAB\u0427\u0442\u043E \u043F\u0435\u0440\u0432\u044B\u043C \u043F\u043E\u043A\u0443\u043F\u0430\u044E\u0442 \u043F\u0435\u0440\u0435\u0434 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435\u043C \u0441\u0432\u0435\u0442\u0430?\xBB. \u041F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u043E\u0433\u043E \u043E\u0442\u0432\u0435\u0442\u0430 \u043D\u0435\u0442.",
@@ -5782,6 +5904,248 @@ body{padding-bottom:84px}
 })();
 
 ;
+/* Эффекты интерфейса:
+   1) магнитные кнопки — кнопка слегка тянется к курсору, текст/иконка внутри — чуть дальше (параллакс);
+   2) «магические» карточки — лёгкий 3D-наклон за курсором, блик-прожектор и светящийся край;
+   3) голографические волны — фон на WebGL для входа и лобби (цвета под тему).
+   Всё работает через делегирование на document, поэтому переживает перерисовки innerHTML.
+   Только мышь (на телефонах эффекты не нужны) и только если не включено «меньше анимации». */
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  // ---------- 1. Магнитные кнопки ----------
+  const MAG = '.btn:not([disabled]), .chat-fab, .ctl-fab, .icon-b:not([disabled]), .exit-btn, .code-btn';
+  const MAG_K = 0.24; // сила притяжения (доля расстояния до центра)
+  const MAG_MAX = 7; // не дальше, px
+  let magEl = null;
+  function magRelease(el) {
+    el.classList.remove('mag');
+    el.style.translate = '';
+    el.style.removeProperty('--mag-x');
+    el.style.removeProperty('--mag-y');
+  }
+  // ---------- 2. Магические карточки ----------
+  const MC = '.cn-card:not(.rev):not(.blank), .gcard:not([disabled]), button.jc, .rw, .m-pre, .mj-g.host, .mj-s.host, .spy-card';
+  const MC_TILT = 6; // градусов — вдвое мягче оригинала
+  let mcEl = null;
+  let mcPress = false;
+  function mcApply(el, px, py) {
+    const rx = (0.5 - py) * 2 * MC_TILT;
+    const ry = (px - 0.5) * 2 * MC_TILT;
+    el.style.transform = `perspective(720px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-2px) scale(${mcPress ? 0.98 : 1.015})`;
+    el.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+    el.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+  }
+  function mcRelease(el) {
+    el.classList.remove('mc-on');
+    el.style.transform = '';
+  }
+
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || reduce.matches) return;
+    const t = e.target.closest ? e.target : null;
+    // магнит
+    const m = t && t.closest(MAG);
+    if (magEl && magEl !== m) magRelease(magEl);
+    magEl = m;
+    if (m && !m.closest('.crop-box')) {
+      const r = m.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2);
+      const dy = e.clientY - (r.top + r.height / 2);
+      // широкие кнопки тянем слабее по горизонтали, чтобы не «уплывали»
+      const kx = MAG_K * Math.min(1, 160 / r.width);
+      const tx = clamp(dx * kx, -MAG_MAX, MAG_MAX);
+      const ty = clamp(dy * MAG_K, -MAG_MAX * 0.7, MAG_MAX * 0.7);
+      m.classList.add('mag');
+      m.style.translate = `${tx.toFixed(2)}px ${ty.toFixed(2)}px`;
+      m.style.setProperty('--mag-x', (tx * 0.45).toFixed(2) + 'px');
+      m.style.setProperty('--mag-y', (ty * 0.45).toFixed(2) + 'px');
+    }
+    // карточка
+    const c = t && t.closest(MC);
+    if (mcEl && mcEl !== c) mcRelease(mcEl);
+    mcEl = c;
+    if (c) {
+      const r = c.getBoundingClientRect();
+      c.classList.add('mc-on');
+      mcApply(c, clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1));
+    }
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || !mcEl) return;
+    mcPress = true;
+    const r = mcEl.getBoundingClientRect();
+    mcApply(mcEl, clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1));
+  });
+  document.addEventListener('pointerup', () => (mcPress = false));
+  document.addEventListener('mouseleave', () => {
+    if (magEl) magRelease(magEl);
+    if (mcEl) mcRelease(mcEl);
+    magEl = mcEl = null;
+  });
+
+  // ---------- 3. Голографические волны (WebGL) ----------
+  // Цвета под тему: фон, три цвета переливов, сила
+  const PAL = {
+    dark: { bg: '#0e0d13', a: '#8a5cff', b: '#26c2f0', c: '#f2c14b', k: 1.15, hl: 0.09 },
+    oled: { bg: '#000000', a: '#7a4cf5', b: '#1fa8d8', c: '#e0ae35', k: 0.7, hl: 0.06 },
+    light: { bg: '#f3f1ec', a: '#9d86ff', b: '#5fc4f5', c: '#f5bf45', k: 0.85, hl: 0.35 },
+  };
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const FS = `precision mediump float;
+uniform vec2 R;uniform float T;uniform vec2 M;uniform vec3 C0,C1,C2,C3;uniform float K,HL,LIGHT;
+float h21(vec2 p){return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453);}
+vec3 irid(float h){
+  float a=.5+.5*sin(6.2832*h), b=.5+.5*sin(6.2832*h+2.1), c=.5+.5*sin(6.2832*h+4.2);
+  vec3 col=mix(mix(C1,C2,a),C3,b*b*.5);
+  return mix(col,vec3(1.,.36,.66),c*c*c*.42); // розовый перелив — как у голограммы
+}
+void main(){
+  vec2 uv=gl_FragCoord.xy/R; float asp=R.x/R.y;
+  vec2 q=vec2(uv.x*asp,uv.y);
+  vec3 col=C0;
+  float t=T*.22;
+  for(int i=0;i<5;i++){
+    float fi=float(i);
+    float x=q.x;
+    // мышь мягко «поднимает» волны рядом с собой
+    float pull=(M.y-.5)*.22*exp(-pow((uv.x-M.x)*2.4,2.));
+    float y=.5+.17*sin(x*1.35+t*1.1+fi*1.27)+.07*sin(x*2.9-t*1.5+fi*2.3)+.03*sin(x*6.1+t*2.+fi)+(fi-2.)*.085+pull;
+    float w=.055+.03*sin(t*1.3+fi*1.7+x*.7);
+    float d=(uv.y-y)/w;
+    float band=exp(-d*d*.9);
+    float core=exp(-d*d*6.);
+    float h=x*.42+fi*.19+t*.35+d*.12+(M.x-.5)*.15;
+    vec3 c=irid(h);
+    float a=band*(.46-fi*.05)*K;
+    col=mix(col,c,clamp(a,0.,1.));
+    // металлический блик по гребню
+    col+=vec3(1.)*core*HL*K*(.55+.45*sin(x*3.+t*3.+fi));
+  }
+  // виньетка — края темнее (в светлой теме — светлее)
+  float v=smoothstep(1.25,.25,length((uv-.5)*vec2(1.15,1.)));
+  col=mix(C0,col,mix(.35,1.,v));
+  col+=(h21(gl_FragCoord.xy+T)-.5)/255.*2.; // дизеринг против ступенек
+  gl_FragColor=vec4(col,1.);
+}`;
+  let gl = null;
+  let prog = null;
+  let U = {};
+  let canvas = null;
+  let raf = 0;
+  let on = false;
+  let pal = PAL.dark;
+  let last = 0;
+  const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+  const t0 = performance.now();
+  function init() {
+    if (canvas) return !!gl;
+    canvas = document.createElement('canvas');
+    canvas.className = 'holo-bg';
+    canvas.setAttribute('aria-hidden', 'true');
+    document.body.prepend(canvas);
+    gl = canvas.getContext('webgl', { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: 'low-power' });
+    if (!gl) return false;
+    const sh = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    };
+    try {
+      prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+      gl.linkProgram(prog);
+      gl.useProgram(prog);
+    } catch (err) {
+      console.warn('holo', err);
+      gl = null;
+      return false;
+    }
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    for (const n of ['R', 'T', 'M', 'C0', 'C1', 'C2', 'C3', 'K', 'HL', 'LIGHT']) U[n] = gl.getUniformLocation(prog, n);
+    addEventListener('resize', size);
+    addEventListener('pointermove', (e) => {
+      mouse.tx = e.clientX / innerWidth;
+      mouse.ty = 1 - e.clientY / innerHeight;
+    });
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : on && loop()));
+    size();
+    return true;
+  }
+  function size() {
+    if (!canvas) return;
+    // волны мягкие — рисуем в половинном разрешении, браузер сам растянет
+    const s = Math.min(1, 900 / Math.max(innerWidth, innerHeight)) * 0.75;
+    canvas.width = Math.max(2, Math.round(innerWidth * s));
+    canvas.height = Math.max(2, Math.round(innerHeight * s));
+    if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
+    if (on) frame(performance.now(), true);
+  }
+  function frame(now, force) {
+    if (!gl) return;
+    if (!force && now - last < 33) return; // ~30 кадров/с хватает
+    last = now;
+    mouse.x += (mouse.tx - mouse.x) * 0.05;
+    mouse.y += (mouse.ty - mouse.y) * 0.05;
+    gl.uniform2f(U.R, canvas.width, canvas.height);
+    gl.uniform1f(U.T, reduce.matches ? 8 : (now - t0) / 1000);
+    gl.uniform2f(U.M, mouse.x, mouse.y);
+    gl.uniform3fv(U.C0, hex(pal.bg));
+    gl.uniform3fv(U.C1, hex(pal.a));
+    gl.uniform3fv(U.C2, hex(pal.b));
+    gl.uniform3fv(U.C3, hex(pal.c));
+    gl.uniform1f(U.K, pal.k);
+    gl.uniform1f(U.HL, pal.hl);
+    gl.uniform1f(U.LIGHT, pal === PAL.light ? 1 : 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  function loop() {
+    cancelAnimationFrame(raf);
+    if (reduce.matches) return frame(performance.now(), true);
+    const step = (now) => {
+      frame(now);
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+  function stop() {
+    cancelAnimationFrame(raf);
+    raf = 0;
+  }
+  // Включить/выключить фон и обновить цвета темы
+  function setWave(want, theme) {
+    pal = PAL[theme] || PAL.dark;
+    if (want && !init()) return;
+    if (!canvas) return;
+    document.documentElement.classList.toggle('holo', !!want && !!gl);
+    if (want === on) {
+      if (on) frame(performance.now(), true);
+      return;
+    }
+    on = !!want;
+    if (on) {
+      canvas.classList.add('on');
+      frame(performance.now(), true);
+      loop();
+    } else {
+      canvas.classList.remove('on');
+      stop();
+    }
+  }
+  window.FX = { setWave };
+})();
+
+;
 /* Звуки интерфейса: синтез через WebAudio, без файлов. Sound.play('click'), Sound.vol / Sound.setVol(0..100). */
 (() => {
   let ctx = null;
@@ -6155,6 +6519,7 @@ window.RULES = {
   let connected = false;
   const ui = {
     crop: null, // кадрирование загруженного фото: {src, w, h, z, x, y}
+    ask: null, // своё окно подтверждения вместо браузерного confirm()
     meEdit: false, // окно «Мой профиль» в комнате
     selected: null,
     settings: {},
@@ -6188,43 +6553,73 @@ window.RULES = {
       THEMES.some((t) => t.id === saved) ? saved : window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
     );
   }
-  const themeIcon = () => THEMES.find((t) => t.id === theme())?.icon || 'moon';
   // Настройки вида: свечение хода и размер слов на карточках Коднеймс (у каждого свои)
   const VIEW = {
-    // Сила свечения хода: 0 — выкл (по умолчанию, предложим при старте партии), 1 — слабое, 2 — среднее, 3 — сильное
+    // Сила свечения хода, 0–100 (фейдер). 0 — выкл (по умолчанию, предложим при старте партии).
+    // Прежние «Слабое / Среднее / Сильное» = 20 / 30 / 50; новый максимум примерно вдвое сильнее.
     glow: (() => {
-      const v = LS.get('pg_glow', '0');
-      return v === '1' && !LS.get('pg_glow_lvl', '') ? 2 : Number(LS.get('pg_glow_lvl', '0')) || 0;
+      const v = LS.get('pg_glow_v', '');
+      if (v !== '') return Math.max(0, Math.min(100, Number(v) || 0));
+      const lvl = Number(LS.get('pg_glow_lvl', '')) || (LS.get('pg_glow', '0') === '1' ? 2 : 0);
+      return [0, 20, 30, 50][lvl] || 0;
     })(),
     fs: Number(LS.get('pg_cnfs', '36')) || 36,
   };
   const FS_OPTS = [24, 30, 36, 42];
   function applyView() {
-    document.documentElement.dataset.glow = VIEW.glow ? 'on' : 'off';
-    const GL = [null, ['0.55', '20%'], ['0.9', '30%'], ['1', '50%']][VIEW.glow];
-    if (GL) {
-      document.documentElement.style.setProperty('--glow-k', GL[0]);
-      document.documentElement.style.setProperty('--glow-a', GL[1]);
+    const v = VIEW.glow;
+    const st = document.documentElement.style;
+    document.documentElement.dataset.glow = v ? 'on' : 'off';
+    if (v) {
+      st.setProperty('--glow-k', String(Math.min(1, 0.35 + v / 80))); // яркость пульса
+      st.setProperty('--glow-a', Math.round(10 + v * 0.9) + '%'); // насыщенность цвета
+      st.setProperty('--glow-s', String(0.85 + v / 100)); // размер пятна
     }
     document.documentElement.style.setProperty('--cn-fs', String(VIEW.fs));
   }
   applyView();
-  const themeMenu = () => `<div class="menu-wrap" data-pop>
-      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: тема, свечение, размер слов">${ic(themeIcon())}</button>
+  // Фейдер силы свечения (в меню «Вид» и в предложении при старте партии)
+  const glowLabel = (v) => (v ? (v <= 25 ? 'слабое' : v <= 45 ? 'среднее' : v <= 70 ? 'сильное' : 'максимум') + ` · ${v}%` : 'выкл');
+  const glowFader = () => `<div class="fader" style="--v:${VIEW.glow}%">
+      <div class="fader-top"><span class="muted small">Свечение хода</span><b class="fader-v" data-glow-label>${glowLabel(VIEW.glow)}</b></div>
+      <div class="fader-track"><input type="range" min="0" max="100" step="1" value="${VIEW.glow}" data-glow-fader aria-label="Сила свечения хода" /></div>
+      <div class="fader-scale" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>`;
+  // Переключатель темы на три положения: светлая · тёмная · OLED
+  const TT = [
+    { id: 'light', name: 'Светлая тема' },
+    { id: 'dark', name: 'Тёмная тема' },
+    { id: 'oled', name: 'Чёрная тема для OLED' },
+  ];
+  const themeToggle = () => `<div class="tt" data-t="${theme()}" role="radiogroup" aria-label="Тема">
+      <span class="tt-sky" aria-hidden="true"><i class="tt-day"></i><i class="tt-night"></i><i class="tt-black"></i></span>
+      <span class="tt-knob" aria-hidden="true"><i></i><i></i><i></i></span>
+      ${TT.map((t, i) => `<button type="button" class="tt-hit h${i}" data-act="set-theme" data-t="${t.id}" role="radio" aria-checked="${theme() === t.id}" title="${t.name}" aria-label="${t.name}"></button>`).join('')}
+    </div>`;
+  // Меню «Вид»: свечение хода и размер слов
+  const viewMenu = () => `<div class="menu-wrap" data-pop>
+      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: свечение хода, размер слов">${ic('palette')}</button>
       ${
         ui.menu === 'theme'
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
-              <div class="vp-h">Тема</div>
-              ${THEMES.map((t) => `<button class="pop-i ${theme() === t.id ? 'on' : ''}" data-act="set-theme" data-t="${t.id}">${ic(t.icon, 16)}<span>${t.name}</span>${theme() === t.id ? ic('check', 16, 'tick') : ''}</button>`).join('')}
+              ${glowFader()}
               <div class="vp-sep"></div>
-              <div class="vp-h">Свечение хода</div>
-              <div class="vp-seg glow-seg">${['Выкл', 'Слабое', 'Среднее', 'Сильное'].map((t, i) => `<button class="${VIEW.glow === i ? 'on' : ''}" data-act="view-glow" data-n="${i}">${t}</button>`).join('')}</div>
               <div class="vp-h">Размер слов на карточках</div>
               <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
             </div>`
           : ''
       }
     </div>`;
+  // Фейдер двигаем без перерисовки — сразу видно силу свечения
+  document.addEventListener('input', (e) => {
+    if (!e.target.matches('[data-glow-fader]')) return;
+    VIEW.glow = Number(e.target.value) || 0;
+    applyView();
+    LS.set('pg_glow_v', String(VIEW.glow));
+    document.querySelectorAll('.fader').forEach((f) => f.style.setProperty('--v', VIEW.glow + '%'));
+    document.querySelectorAll('[data-glow-label]').forEach((l) => (l.textContent = glowLabel(VIEW.glow)));
+    document.querySelectorAll('[data-glow-fader]').forEach((r) => r !== e.target && (r.value = VIEW.glow));
+  });
 
   // ---------- громкость звуков интерфейса ----------
   const sfxMenu = () => `<div class="menu-wrap" data-pop>
@@ -6280,7 +6675,7 @@ window.RULES = {
     const team = p?.id ? bgFor(p.id) : null;
     const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" onerror="this.remove()">` : '';
     const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
-    return `<span class="ava ${size} ${cls} ${team ? 'ring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
+    return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -6790,12 +7185,15 @@ window.RULES = {
       const col = form.closest('.cn-col');
       if (col) col.scrollTo({ top: col.scrollHeight, behavior: 'smooth' }); // форма появилась — показать её
     }
+    syncWave();
     fitBoard();
     fitWords();
     if ($app.querySelector('.qz-reveal')) qzLoop();
     tick();
   }
 
+  // Голографические волны — только на входе и в лобби (в игре фон спокойный)
+  const syncWave = () => window.FX && FX.setWave(!S || !S.game, theme());
   // Слово не влезает в карточку даже с переносами — уменьшаем шрифт только этой карточки
   function fitWords() {
     $app.querySelectorAll('.cn-card .w').forEach((w) => {
@@ -6857,7 +7255,7 @@ window.RULES = {
     const code = codeFromUrl();
     const photo = myPhoto();
     const nick = LS.get('pg_name', '');
-    const header = `<div class="home-top">${themeMenu()}</div>`;
+    const header = `<div class="home-top">${themeToggle()}</div>`;
     const hero = `<div class="home-hero">
         <div class="logo-mark">${ic('dice', 40)}</div>
         <h1>Экранки <span>а не настолки — для своих</span></h1>
@@ -6881,7 +7279,8 @@ window.RULES = {
         ${connected ? '' : '<p class="muted small">Подключаемся к серверу…</p>'}
       </form>
     </main>
-    ${ui.crop ? renderCrop() : ''}`;
+    ${ui.crop ? renderCrop() : ''}
+    ${ui.ask ? renderAsk() : ''}`;
   }
   // Круг с фото + кнопки «Загрузить / Убрать» (на входе и в «Моём профиле»)
   function photoBlock(photo, nick) {
@@ -6892,6 +7291,37 @@ window.RULES = {
         <div class="ph-btns"><button type="button" class="btn sm" data-act="photo-pick">${ic('upload', 15)} ${photo ? 'Заменить' : 'Загрузить фото'}</button>${photo ? `<button type="button" class="btn sm ghost" data-act="photo-del">Убрать</button>` : ''}</div>
       </div>
     </div>`;
+  }
+
+  // ---------- подтверждение действий — своим окном, а не браузерным confirm() ----------
+  // ask({ title, text, ok, danger, icon, value }) → Promise<boolean>
+  function ask(o) {
+    if (ui.ask) ui.ask.resolve(false);
+    return new Promise((resolve) => {
+      ui.ask = { ...o, resolve, anim: true };
+      ui.menu = null;
+      render();
+      if (ui.ask) ui.ask.anim = false;
+      setTimeout(() => document.querySelector('.ask-modal [data-act="ask-yes"]')?.focus(), 30);
+    });
+  }
+  function askDone(v) {
+    const a = ui.ask;
+    if (!a) return;
+    ui.ask = null;
+    render();
+    a.resolve(v);
+  }
+  function renderAsk() {
+    const a = ui.ask;
+    return `<div class="modal-bg ${a.anim ? '' : 'still'}" data-act="ask-no"></div>
+      <div class="modal card ask-modal ${a.anim ? '' : 'still'}" role="alertdialog" aria-modal="true" aria-label="${esc(a.title)}">
+        <div class="lm-ic ${a.danger ? 'danger' : ''}">${ic(a.icon || 'question', 26)}</div>
+        <h3>${esc(a.title)}</h3>
+        ${a.text ? `<p class="muted">${esc(a.text)}</p>` : ''}
+        ${a.value != null ? `<input class="inp ask-val" readonly value="${esc(a.value)}" onfocus="this.select()">` : ''}
+        <div class="lm-btns">${a.noCancel ? '' : `<button class="btn ghost" data-act="ask-no">${esc(a.cancel || 'Отмена')}</button>`}<button class="btn ${a.danger ? 'danger' : 'primary'}" data-act="ask-yes">${esc(a.ok || 'Да')}</button></div>
+      </div>`;
   }
 
   // ---------- кадрирование фото под круг ----------
@@ -7089,7 +7519,8 @@ window.RULES = {
           <div class="top-actions">
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
             ${sfxMenu()}
-            ${themeMenu()}
+            ${themeToggle()}
+            ${viewMenu()}
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
             <button class="btn sm ghost exit-btn" data-act="leave" title="Выйти из комнаты">${ic('logout', 16)}<span class="hide-m">Выйти</span></button>
           </div>
@@ -7116,13 +7547,14 @@ window.RULES = {
       }
       ${ui.glowAsk && g && ['codenames', 'justone'].includes(g.type) ? `<div class="glow-ask card ${ui.gaAnim ? 'anim' : ''}" role="dialog" aria-label="Свечение хода">
           <span class="ga-ic">${ic('sparkles', 20)}</span>
-          <div class="ga-t"><b>Подсветить, чей ход?</b><span class="muted small">Мягкое мерцание по краю экрана: в Коднеймс — цветом команды с её стороны, в «Намёк понял» — сверху. Выберите силу, потом можно поменять в меню «Вид».</span></div>
-<div class="vp-seg glow-seg">${['Выкл', 'Слабое', 'Среднее', 'Сильное'].map((t, i) => `<button class="${VIEW.glow === i ? 'on' : ''}" data-act="view-glow" data-n="${i}">${t}</button>`).join('')}</div>
+          <div class="ga-t"><b>Подсветить, чей ход?</b><span class="muted small">Мягкое мерцание по краю экрана: в Коднеймс — цветом команды с её стороны, в «Намёк понял» — сверху. Подвиньте фейдер — потом можно поменять в меню «Вид».</span></div>
+<div class="glow-ask-f">${glowFader()}</div>
           <button class="btn sm primary" data-act="glow-ok">Готово</button>
         </div>` : ''}
       ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
       ${ui.meEdit ? renderMeModal() : ''}
       ${ui.crop ? renderCrop() : ''}
+      ${ui.ask ? renderAsk() : ''}
     </div>`;
   }
 
@@ -7351,7 +7783,7 @@ window.RULES = {
       <span class="gemoji">${gIcon(g.id, 28)}</span>
       <span class="gname">${esc(g.title)}</span>
       <span class="gshort">${esc(g.short)}</span>
-      <span class="gplayers">${ic('users', 14)} ${esc(g.players)}</span>
+      <span class="gfoot"><span class="gplayers">${ic('users', 14)} ${esc(g.players)}</span>${g.content ? `<span class="gplayers gcontent">${ic('book', 14)} ${esc(g.content)}</span>` : ''}</span>
     </button>`;
 
   function renderSetting(s, prefix = '') {
@@ -8666,6 +9098,8 @@ window.RULES = {
 
   // ---------- обработчики ----------
   const ACTIONS = {
+    'ask-yes': () => askDone(true),
+    'ask-no': () => askDone(false),
     // фото и профиль
     'photo-pick': () => fileInp.click(),
     'photo-del': () => setPhoto(null).then(render),
@@ -8708,12 +9142,15 @@ window.RULES = {
     'set-theme': (d) => {
       document.documentElement.setAttribute('data-theme', d.t);
       LS.set('pg_theme', d.t);
-      render();
+      document.querySelectorAll('.tt').forEach((el) => {
+        el.dataset.t = d.t;
+        el.querySelectorAll('.tt-hit').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.t === d.t)));
+      });
+      syncWave();
     },
     'view-glow': (d) => {
       VIEW.glow = Number(d.n) || 0;
-      LS.set('pg_glow_lvl', String(VIEW.glow));
-      LS.set('pg_glow', VIEW.glow ? '1' : '0');
+      LS.set('pg_glow_v', String(VIEW.glow));
       applyView();
       render();
     },
@@ -8744,8 +9181,8 @@ window.RULES = {
     'cn-cap': (d) => act('join', { team: d.team, captain: true }),
     'cn-mark': (d) => act('mark', { i: Number(d.i) }),
     'cn-end': () => act('endTurn'),
-    'cn-new': () => confirm('Разложить новую доску?') && act('newBoard'),
-    'cn-shuffle': () => confirm('Перемешать команды и назначить капитанов случайно?') && act('shuffleTeams'),
+    'cn-new': async () => (await ask({ title: 'Разложить новую доску?', text: 'Текущая партия закончится, карточки будут новые.', ok: 'Новая доска', icon: 'grid' })) && act('newBoard'),
+    'cn-shuffle': async () => (await ask({ title: 'Перемешать команды?', text: 'Игроки разойдутся по командам случайно, капитаны тоже назначатся случайно.', ok: 'Перемешать', icon: 'shuffle' })) && act('shuffleTeams'),
     'cn-pause': () => act('pauseClock'),
     'cn-ready': async () => {
       const was = S.game.ready[S.me];
@@ -8793,14 +9230,14 @@ window.RULES = {
     'al-toggle': (d) => act('toggle', { i: Number(d.i) }),
     'al-confirm': () => act('confirm'),
     'al-skipturn': () => act('skipTurn'),
-    'al-restart': () => confirm('Начать заново? Счёт обнулится.') && act('restart'),
+    'al-restart': async () => (await ask({ title: 'Начать заново?', text: 'Счёт всех команд обнулится.', ok: 'Начать заново', danger: true, icon: 'reset' })) && act('restart'),
     // шпион
     'spy-hide': () => {
       ui.hideCard = !ui.hideCard;
       render();
     },
     'spy-vote': (d) => act('vote', { target: d.pid }),
-    'spy-claim': () => confirm('У вас будет минута, чтобы назвать локацию вслух. Начинаем?') && act('claim'),
+    'spy-claim': async () => (await ask({ title: 'Назвать локацию?', text: 'Скажите локацию вслух — мирные решат, угадали вы или нет.', ok: 'Называю', icon: 'spy' })) && act('claim'),
     'spy-judge': (d) => act('judge', { ok: d.ok === '1' }),
     'spy-reveal': () => act('reveal'),
     'spy-next': () => act('next'),
@@ -8816,8 +9253,8 @@ window.RULES = {
     },
     'spy-ask': (d) => act('askWho', { target: d.pid }),
     'spy-answered': () => act('answered'),
-    'who-guessed': () => confirm('Вы назвали персонажа и вам подтвердили?') && act('guessed'),
-    'who-giveup': () => confirm('Сдаться и узнать персонажа?') && act('giveUp'),
+    'who-guessed': async () => (await ask({ title: 'Вы угадали?', text: 'Вы назвали персонажа вслух, и остальные подтвердили?', ok: 'Да, угадал', icon: 'check' })) && act('guessed'),
+    'who-giveup': async () => (await ask({ title: 'Сдаться?', text: 'Персонаж откроется, очков за него не будет.', ok: 'Сдаться', danger: true, icon: 'flag' })) && act('giveUp'),
     'who-add': () => act('addMe'),
     // намёк понял
     'jo-toggle': (d) => act('toggle', { pid: d.pid }),
@@ -8932,7 +9369,7 @@ window.RULES = {
           await navigator.clipboard.writeText(link);
           toast('Ссылка скопирована', 'ok');
         } catch {
-          prompt('Скопируйте ссылку:', link);
+          ask({ title: 'Скопируйте ссылку', text: 'Браузер не дал скопировать автоматически — выделите и скопируйте вручную.', value: link, ok: 'Готово', noCancel: true, icon: 'link' });
         }
         break;
       }
@@ -8957,7 +9394,7 @@ window.RULES = {
         render();
         break;
       case 'stop':
-        if (confirm('Уйти в лобби? Игра встанет на паузу — к ней можно будет вернуться.')) emit('stopGame');
+        if (await ask({ title: 'Уйти в лобби?', text: 'Игра встанет на паузу — к ней можно будет вернуться.', ok: 'В лобби', icon: 'home' })) emit('stopGame');
         break;
       case 'pick':
         ui.selected = d.id;
@@ -8966,11 +9403,11 @@ window.RULES = {
         break;
       case 'kick':
         ui.menu = null;
-        if (confirm('Выгнать игрока?')) emit('kick', { target: d.pid });
+        if (await ask({ title: `Выгнать ${player(d.pid)?.name || 'игрока'}?`, text: 'Игрок пропадёт из комнаты и из текущей катки. Вернуться он сможет по ссылке.', ok: 'Выгнать', danger: true, icon: 'x' })) emit('kick', { target: d.pid });
         break;
       case 'makeHost':
         ui.menu = null;
-        if (confirm('Передать права хоста?')) emit('makeHost', { target: d.pid });
+        if (await ask({ title: `Сделать хостом ${player(d.pid)?.name || 'игрока'}?`, text: 'Он будет запускать игры и управлять комнатой, а вы станете обычным игроком.', ok: 'Передать', icon: 'crown' })) emit('makeHost', { target: d.pid });
         break;
       case 'leave':
         // Подтверждение — своим окном поверх всего
@@ -9038,11 +9475,11 @@ window.RULES = {
         emit('chat', { text });
       }
     } else if (kind === 'start') {
-      if (S.room.suspended && !confirm('Игра на паузе будет удалена. Начать новую?')) return;
+      if (S.room.suspended && !(await ask({ title: 'Начать новую игру?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'play' }))) return;
       const r = await emit('startGame', { settings: collectSettings(fd, gameMeta(ui.selected)) });
       if (!r.error) f.querySelectorAll('textarea').forEach((t) => (t.value = ''));
     } else if (kind === 'tour') {
-      if (S.room.suspended && !confirm('Игра на паузе будет удалена. Начать марафон?')) return;
+      if (S.room.suspended && !(await ask({ title: 'Начать марафон?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'trophy' }))) return;
       const plan = ui.mOrder.filter((id) => ui.mOn[id]).map((id) => ({ type: id, rounds: ui.mRounds[id] || 1, settings: collectSettings(fd, gameMeta(id), id + '__') }));
       const r = await emit('startTour', { plan });
       if (!r.error) ui.showTable = false;
@@ -9104,6 +9541,7 @@ window.RULES = {
   };
   ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach((ev) => document.addEventListener(ev, quizLock));
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && ui.ask) return askDone(false);
     if (e.key === 'Escape' && (ui.menu || ui.crop || ui.meEdit || ui.showRules || ui.showSum || ui.showTable || ui.leaveAsk)) {
       ui.leaveAsk = false;
       ui.showSum = false;

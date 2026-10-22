@@ -1,5 +1,5 @@
 const QUESTIONS = require('../majority_questions');
-const { shuffle, Deck, clampInt } = require('../util');
+const { shuffle, Deck, clampInt, countLabel } = require('../util');
 
 // «Ответ большинства»: все тайно отвечают на простой вопрос. Совпал с другими — получил очки.
 const REVIEW_MS = 30000; // время на разбор ответов (хост может склеить похожие)
@@ -8,6 +8,7 @@ const meta = {
   title: 'Ответ большинства',
   emoji: '👥',
   players: '3–20',
+  content: countLabel(QUESTIONS.length, 'вопрос', 'вопроса', 'вопросов'),
   short: 'Простой вопрос — тайный ответ. Совпал с другими — получил очки. Думай, как все!',
   rules: [
     'Появляется простой вопрос: «Что первым покупают перед отключением света?». Правильного ответа нет.',

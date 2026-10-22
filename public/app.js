@@ -31,6 +31,7 @@
   let connected = false;
   const ui = {
     crop: null, // кадрирование загруженного фото: {src, w, h, z, x, y}
+    ask: null, // своё окно подтверждения вместо браузерного confirm()
     meEdit: false, // окно «Мой профиль» в комнате
     selected: null,
     settings: {},
@@ -64,43 +65,73 @@
       THEMES.some((t) => t.id === saved) ? saved : window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
     );
   }
-  const themeIcon = () => THEMES.find((t) => t.id === theme())?.icon || 'moon';
   // Настройки вида: свечение хода и размер слов на карточках Коднеймс (у каждого свои)
   const VIEW = {
-    // Сила свечения хода: 0 — выкл (по умолчанию, предложим при старте партии), 1 — слабое, 2 — среднее, 3 — сильное
+    // Сила свечения хода, 0–100 (фейдер). 0 — выкл (по умолчанию, предложим при старте партии).
+    // Прежние «Слабое / Среднее / Сильное» = 20 / 30 / 50; новый максимум примерно вдвое сильнее.
     glow: (() => {
-      const v = LS.get('pg_glow', '0');
-      return v === '1' && !LS.get('pg_glow_lvl', '') ? 2 : Number(LS.get('pg_glow_lvl', '0')) || 0;
+      const v = LS.get('pg_glow_v', '');
+      if (v !== '') return Math.max(0, Math.min(100, Number(v) || 0));
+      const lvl = Number(LS.get('pg_glow_lvl', '')) || (LS.get('pg_glow', '0') === '1' ? 2 : 0);
+      return [0, 20, 30, 50][lvl] || 0;
     })(),
     fs: Number(LS.get('pg_cnfs', '36')) || 36,
   };
   const FS_OPTS = [24, 30, 36, 42];
   function applyView() {
-    document.documentElement.dataset.glow = VIEW.glow ? 'on' : 'off';
-    const GL = [null, ['0.55', '20%'], ['0.9', '30%'], ['1', '50%']][VIEW.glow];
-    if (GL) {
-      document.documentElement.style.setProperty('--glow-k', GL[0]);
-      document.documentElement.style.setProperty('--glow-a', GL[1]);
+    const v = VIEW.glow;
+    const st = document.documentElement.style;
+    document.documentElement.dataset.glow = v ? 'on' : 'off';
+    if (v) {
+      st.setProperty('--glow-k', String(Math.min(1, 0.35 + v / 80))); // яркость пульса
+      st.setProperty('--glow-a', Math.round(10 + v * 0.9) + '%'); // насыщенность цвета
+      st.setProperty('--glow-s', String(0.85 + v / 100)); // размер пятна
     }
     document.documentElement.style.setProperty('--cn-fs', String(VIEW.fs));
   }
   applyView();
-  const themeMenu = () => `<div class="menu-wrap" data-pop>
-      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: тема, свечение, размер слов">${ic(themeIcon())}</button>
+  // Фейдер силы свечения (в меню «Вид» и в предложении при старте партии)
+  const glowLabel = (v) => (v ? (v <= 25 ? 'слабое' : v <= 45 ? 'среднее' : v <= 70 ? 'сильное' : 'максимум') + ` · ${v}%` : 'выкл');
+  const glowFader = () => `<div class="fader" style="--v:${VIEW.glow}%">
+      <div class="fader-top"><span class="muted small">Свечение хода</span><b class="fader-v" data-glow-label>${glowLabel(VIEW.glow)}</b></div>
+      <div class="fader-track"><input type="range" min="0" max="100" step="1" value="${VIEW.glow}" data-glow-fader aria-label="Сила свечения хода" /></div>
+      <div class="fader-scale" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>`;
+  // Переключатель темы на три положения: светлая · тёмная · OLED
+  const TT = [
+    { id: 'light', name: 'Светлая тема' },
+    { id: 'dark', name: 'Тёмная тема' },
+    { id: 'oled', name: 'Чёрная тема для OLED' },
+  ];
+  const themeToggle = () => `<div class="tt" data-t="${theme()}" role="radiogroup" aria-label="Тема">
+      <span class="tt-sky" aria-hidden="true"><i class="tt-day"></i><i class="tt-night"></i><i class="tt-black"></i></span>
+      <span class="tt-knob" aria-hidden="true"><i></i><i></i><i></i></span>
+      ${TT.map((t, i) => `<button type="button" class="tt-hit h${i}" data-act="set-theme" data-t="${t.id}" role="radio" aria-checked="${theme() === t.id}" title="${t.name}" aria-label="${t.name}"></button>`).join('')}
+    </div>`;
+  // Меню «Вид»: свечение хода и размер слов
+  const viewMenu = () => `<div class="menu-wrap" data-pop>
+      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: свечение хода, размер слов">${ic('palette')}</button>
       ${
         ui.menu === 'theme'
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
-              <div class="vp-h">Тема</div>
-              ${THEMES.map((t) => `<button class="pop-i ${theme() === t.id ? 'on' : ''}" data-act="set-theme" data-t="${t.id}">${ic(t.icon, 16)}<span>${t.name}</span>${theme() === t.id ? ic('check', 16, 'tick') : ''}</button>`).join('')}
+              ${glowFader()}
               <div class="vp-sep"></div>
-              <div class="vp-h">Свечение хода</div>
-              <div class="vp-seg glow-seg">${['Выкл', 'Слабое', 'Среднее', 'Сильное'].map((t, i) => `<button class="${VIEW.glow === i ? 'on' : ''}" data-act="view-glow" data-n="${i}">${t}</button>`).join('')}</div>
               <div class="vp-h">Размер слов на карточках</div>
               <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
             </div>`
           : ''
       }
     </div>`;
+  // Фейдер двигаем без перерисовки — сразу видно силу свечения
+  document.addEventListener('input', (e) => {
+    if (!e.target.matches('[data-glow-fader]')) return;
+    VIEW.glow = Number(e.target.value) || 0;
+    applyView();
+    LS.set('pg_glow_v', String(VIEW.glow));
+    document.querySelectorAll('.fader').forEach((f) => f.style.setProperty('--v', VIEW.glow + '%'));
+    document.querySelectorAll('[data-glow-label]').forEach((l) => (l.textContent = glowLabel(VIEW.glow)));
+    document.querySelectorAll('[data-glow-fader]').forEach((r) => r !== e.target && (r.value = VIEW.glow));
+  });
 
   // ---------- громкость звуков интерфейса ----------
   const sfxMenu = () => `<div class="menu-wrap" data-pop>
@@ -156,7 +187,7 @@
     const team = p?.id ? bgFor(p.id) : null;
     const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" onerror="this.remove()">` : '';
     const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
-    return `<span class="ava ${size} ${cls} ${team ? 'ring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
+    return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -666,12 +697,15 @@
       const col = form.closest('.cn-col');
       if (col) col.scrollTo({ top: col.scrollHeight, behavior: 'smooth' }); // форма появилась — показать её
     }
+    syncWave();
     fitBoard();
     fitWords();
     if ($app.querySelector('.qz-reveal')) qzLoop();
     tick();
   }
 
+  // Голографические волны — только на входе и в лобби (в игре фон спокойный)
+  const syncWave = () => window.FX && FX.setWave(!S || !S.game, theme());
   // Слово не влезает в карточку даже с переносами — уменьшаем шрифт только этой карточки
   function fitWords() {
     $app.querySelectorAll('.cn-card .w').forEach((w) => {
@@ -733,7 +767,7 @@
     const code = codeFromUrl();
     const photo = myPhoto();
     const nick = LS.get('pg_name', '');
-    const header = `<div class="home-top">${themeMenu()}</div>`;
+    const header = `<div class="home-top">${themeToggle()}</div>`;
     const hero = `<div class="home-hero">
         <div class="logo-mark">${ic('dice', 40)}</div>
         <h1>Экранки <span>а не настолки — для своих</span></h1>
@@ -757,7 +791,8 @@
         ${connected ? '' : '<p class="muted small">Подключаемся к серверу…</p>'}
       </form>
     </main>
-    ${ui.crop ? renderCrop() : ''}`;
+    ${ui.crop ? renderCrop() : ''}
+    ${ui.ask ? renderAsk() : ''}`;
   }
   // Круг с фото + кнопки «Загрузить / Убрать» (на входе и в «Моём профиле»)
   function photoBlock(photo, nick) {
@@ -768,6 +803,37 @@
         <div class="ph-btns"><button type="button" class="btn sm" data-act="photo-pick">${ic('upload', 15)} ${photo ? 'Заменить' : 'Загрузить фото'}</button>${photo ? `<button type="button" class="btn sm ghost" data-act="photo-del">Убрать</button>` : ''}</div>
       </div>
     </div>`;
+  }
+
+  // ---------- подтверждение действий — своим окном, а не браузерным confirm() ----------
+  // ask({ title, text, ok, danger, icon, value }) → Promise<boolean>
+  function ask(o) {
+    if (ui.ask) ui.ask.resolve(false);
+    return new Promise((resolve) => {
+      ui.ask = { ...o, resolve, anim: true };
+      ui.menu = null;
+      render();
+      if (ui.ask) ui.ask.anim = false;
+      setTimeout(() => document.querySelector('.ask-modal [data-act="ask-yes"]')?.focus(), 30);
+    });
+  }
+  function askDone(v) {
+    const a = ui.ask;
+    if (!a) return;
+    ui.ask = null;
+    render();
+    a.resolve(v);
+  }
+  function renderAsk() {
+    const a = ui.ask;
+    return `<div class="modal-bg ${a.anim ? '' : 'still'}" data-act="ask-no"></div>
+      <div class="modal card ask-modal ${a.anim ? '' : 'still'}" role="alertdialog" aria-modal="true" aria-label="${esc(a.title)}">
+        <div class="lm-ic ${a.danger ? 'danger' : ''}">${ic(a.icon || 'question', 26)}</div>
+        <h3>${esc(a.title)}</h3>
+        ${a.text ? `<p class="muted">${esc(a.text)}</p>` : ''}
+        ${a.value != null ? `<input class="inp ask-val" readonly value="${esc(a.value)}" onfocus="this.select()">` : ''}
+        <div class="lm-btns">${a.noCancel ? '' : `<button class="btn ghost" data-act="ask-no">${esc(a.cancel || 'Отмена')}</button>`}<button class="btn ${a.danger ? 'danger' : 'primary'}" data-act="ask-yes">${esc(a.ok || 'Да')}</button></div>
+      </div>`;
   }
 
   // ---------- кадрирование фото под круг ----------
@@ -965,7 +1031,8 @@
           <div class="top-actions">
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
             ${sfxMenu()}
-            ${themeMenu()}
+            ${themeToggle()}
+            ${viewMenu()}
             <button class="btn sm code-btn" data-act="copy" title="Скопировать ссылку на комнату">${ic('link', 16)}<span>${esc(r.code)}</span></button>
             <button class="btn sm ghost exit-btn" data-act="leave" title="Выйти из комнаты">${ic('logout', 16)}<span class="hide-m">Выйти</span></button>
           </div>
@@ -992,13 +1059,14 @@
       }
       ${ui.glowAsk && g && ['codenames', 'justone'].includes(g.type) ? `<div class="glow-ask card ${ui.gaAnim ? 'anim' : ''}" role="dialog" aria-label="Свечение хода">
           <span class="ga-ic">${ic('sparkles', 20)}</span>
-          <div class="ga-t"><b>Подсветить, чей ход?</b><span class="muted small">Мягкое мерцание по краю экрана: в Коднеймс — цветом команды с её стороны, в «Намёк понял» — сверху. Выберите силу, потом можно поменять в меню «Вид».</span></div>
-<div class="vp-seg glow-seg">${['Выкл', 'Слабое', 'Среднее', 'Сильное'].map((t, i) => `<button class="${VIEW.glow === i ? 'on' : ''}" data-act="view-glow" data-n="${i}">${t}</button>`).join('')}</div>
+          <div class="ga-t"><b>Подсветить, чей ход?</b><span class="muted small">Мягкое мерцание по краю экрана: в Коднеймс — цветом команды с её стороны, в «Намёк понял» — сверху. Подвиньте фейдер — потом можно поменять в меню «Вид».</span></div>
+<div class="glow-ask-f">${glowFader()}</div>
           <button class="btn sm primary" data-act="glow-ok">Готово</button>
         </div>` : ''}
       ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
       ${ui.meEdit ? renderMeModal() : ''}
       ${ui.crop ? renderCrop() : ''}
+      ${ui.ask ? renderAsk() : ''}
     </div>`;
   }
 
@@ -1227,7 +1295,7 @@
       <span class="gemoji">${gIcon(g.id, 28)}</span>
       <span class="gname">${esc(g.title)}</span>
       <span class="gshort">${esc(g.short)}</span>
-      <span class="gplayers">${ic('users', 14)} ${esc(g.players)}</span>
+      <span class="gfoot"><span class="gplayers">${ic('users', 14)} ${esc(g.players)}</span>${g.content ? `<span class="gplayers gcontent">${ic('book', 14)} ${esc(g.content)}</span>` : ''}</span>
     </button>`;
 
   function renderSetting(s, prefix = '') {
@@ -2542,6 +2610,8 @@
 
   // ---------- обработчики ----------
   const ACTIONS = {
+    'ask-yes': () => askDone(true),
+    'ask-no': () => askDone(false),
     // фото и профиль
     'photo-pick': () => fileInp.click(),
     'photo-del': () => setPhoto(null).then(render),
@@ -2584,12 +2654,15 @@
     'set-theme': (d) => {
       document.documentElement.setAttribute('data-theme', d.t);
       LS.set('pg_theme', d.t);
-      render();
+      document.querySelectorAll('.tt').forEach((el) => {
+        el.dataset.t = d.t;
+        el.querySelectorAll('.tt-hit').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.t === d.t)));
+      });
+      syncWave();
     },
     'view-glow': (d) => {
       VIEW.glow = Number(d.n) || 0;
-      LS.set('pg_glow_lvl', String(VIEW.glow));
-      LS.set('pg_glow', VIEW.glow ? '1' : '0');
+      LS.set('pg_glow_v', String(VIEW.glow));
       applyView();
       render();
     },
@@ -2620,8 +2693,8 @@
     'cn-cap': (d) => act('join', { team: d.team, captain: true }),
     'cn-mark': (d) => act('mark', { i: Number(d.i) }),
     'cn-end': () => act('endTurn'),
-    'cn-new': () => confirm('Разложить новую доску?') && act('newBoard'),
-    'cn-shuffle': () => confirm('Перемешать команды и назначить капитанов случайно?') && act('shuffleTeams'),
+    'cn-new': async () => (await ask({ title: 'Разложить новую доску?', text: 'Текущая партия закончится, карточки будут новые.', ok: 'Новая доска', icon: 'grid' })) && act('newBoard'),
+    'cn-shuffle': async () => (await ask({ title: 'Перемешать команды?', text: 'Игроки разойдутся по командам случайно, капитаны тоже назначатся случайно.', ok: 'Перемешать', icon: 'shuffle' })) && act('shuffleTeams'),
     'cn-pause': () => act('pauseClock'),
     'cn-ready': async () => {
       const was = S.game.ready[S.me];
@@ -2669,14 +2742,14 @@
     'al-toggle': (d) => act('toggle', { i: Number(d.i) }),
     'al-confirm': () => act('confirm'),
     'al-skipturn': () => act('skipTurn'),
-    'al-restart': () => confirm('Начать заново? Счёт обнулится.') && act('restart'),
+    'al-restart': async () => (await ask({ title: 'Начать заново?', text: 'Счёт всех команд обнулится.', ok: 'Начать заново', danger: true, icon: 'reset' })) && act('restart'),
     // шпион
     'spy-hide': () => {
       ui.hideCard = !ui.hideCard;
       render();
     },
     'spy-vote': (d) => act('vote', { target: d.pid }),
-    'spy-claim': () => confirm('У вас будет минута, чтобы назвать локацию вслух. Начинаем?') && act('claim'),
+    'spy-claim': async () => (await ask({ title: 'Назвать локацию?', text: 'Скажите локацию вслух — мирные решат, угадали вы или нет.', ok: 'Называю', icon: 'spy' })) && act('claim'),
     'spy-judge': (d) => act('judge', { ok: d.ok === '1' }),
     'spy-reveal': () => act('reveal'),
     'spy-next': () => act('next'),
@@ -2692,8 +2765,8 @@
     },
     'spy-ask': (d) => act('askWho', { target: d.pid }),
     'spy-answered': () => act('answered'),
-    'who-guessed': () => confirm('Вы назвали персонажа и вам подтвердили?') && act('guessed'),
-    'who-giveup': () => confirm('Сдаться и узнать персонажа?') && act('giveUp'),
+    'who-guessed': async () => (await ask({ title: 'Вы угадали?', text: 'Вы назвали персонажа вслух, и остальные подтвердили?', ok: 'Да, угадал', icon: 'check' })) && act('guessed'),
+    'who-giveup': async () => (await ask({ title: 'Сдаться?', text: 'Персонаж откроется, очков за него не будет.', ok: 'Сдаться', danger: true, icon: 'flag' })) && act('giveUp'),
     'who-add': () => act('addMe'),
     // намёк понял
     'jo-toggle': (d) => act('toggle', { pid: d.pid }),
@@ -2808,7 +2881,7 @@
           await navigator.clipboard.writeText(link);
           toast('Ссылка скопирована', 'ok');
         } catch {
-          prompt('Скопируйте ссылку:', link);
+          ask({ title: 'Скопируйте ссылку', text: 'Браузер не дал скопировать автоматически — выделите и скопируйте вручную.', value: link, ok: 'Готово', noCancel: true, icon: 'link' });
         }
         break;
       }
@@ -2833,7 +2906,7 @@
         render();
         break;
       case 'stop':
-        if (confirm('Уйти в лобби? Игра встанет на паузу — к ней можно будет вернуться.')) emit('stopGame');
+        if (await ask({ title: 'Уйти в лобби?', text: 'Игра встанет на паузу — к ней можно будет вернуться.', ok: 'В лобби', icon: 'home' })) emit('stopGame');
         break;
       case 'pick':
         ui.selected = d.id;
@@ -2842,11 +2915,11 @@
         break;
       case 'kick':
         ui.menu = null;
-        if (confirm('Выгнать игрока?')) emit('kick', { target: d.pid });
+        if (await ask({ title: `Выгнать ${player(d.pid)?.name || 'игрока'}?`, text: 'Игрок пропадёт из комнаты и из текущей катки. Вернуться он сможет по ссылке.', ok: 'Выгнать', danger: true, icon: 'x' })) emit('kick', { target: d.pid });
         break;
       case 'makeHost':
         ui.menu = null;
-        if (confirm('Передать права хоста?')) emit('makeHost', { target: d.pid });
+        if (await ask({ title: `Сделать хостом ${player(d.pid)?.name || 'игрока'}?`, text: 'Он будет запускать игры и управлять комнатой, а вы станете обычным игроком.', ok: 'Передать', icon: 'crown' })) emit('makeHost', { target: d.pid });
         break;
       case 'leave':
         // Подтверждение — своим окном поверх всего
@@ -2914,11 +2987,11 @@
         emit('chat', { text });
       }
     } else if (kind === 'start') {
-      if (S.room.suspended && !confirm('Игра на паузе будет удалена. Начать новую?')) return;
+      if (S.room.suspended && !(await ask({ title: 'Начать новую игру?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'play' }))) return;
       const r = await emit('startGame', { settings: collectSettings(fd, gameMeta(ui.selected)) });
       if (!r.error) f.querySelectorAll('textarea').forEach((t) => (t.value = ''));
     } else if (kind === 'tour') {
-      if (S.room.suspended && !confirm('Игра на паузе будет удалена. Начать марафон?')) return;
+      if (S.room.suspended && !(await ask({ title: 'Начать марафон?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'trophy' }))) return;
       const plan = ui.mOrder.filter((id) => ui.mOn[id]).map((id) => ({ type: id, rounds: ui.mRounds[id] || 1, settings: collectSettings(fd, gameMeta(id), id + '__') }));
       const r = await emit('startTour', { plan });
       if (!r.error) ui.showTable = false;
@@ -2980,6 +3053,7 @@
   };
   ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach((ev) => document.addEventListener(ev, quizLock));
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && ui.ask) return askDone(false);
     if (e.key === 'Escape' && (ui.menu || ui.crop || ui.meEdit || ui.showRules || ui.showSum || ui.showTable || ui.leaveAsk)) {
       ui.leaveAsk = false;
       ui.showSum = false;

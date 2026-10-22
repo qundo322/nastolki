@@ -1667,10 +1667,10 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 
 /* Выход */
 .exit-btn:hover { color: var(--red-text); border-color: color-mix(in srgb, var(--red) 50%, transparent); }
-.modal.leave-modal { width: min(420px, calc(100vw - 24px)); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 26px 24px 22px; }
+.modal.leave-modal, .modal.ask-modal { width: min(420px, calc(100vw - 24px)); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 26px 24px 22px; }
 .lm-ic { width: 56px; height: 56px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red-text); }
-.leave-modal h3 { margin: 4px 0 0; font-family: var(--display); font-size: 22px; }
-.leave-modal p { margin: 0; line-height: 1.45; }
+.leave-modal h3, .ask-modal h3 { margin: 4px 0 0; font-family: var(--display); font-size: 22px; }
+.leave-modal p, .ask-modal p { margin: 0; line-height: 1.45; }
 .lm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px; }
 .lm-btns .btn { justify-content: center; height: 46px; }
 
@@ -1777,7 +1777,7 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 
 /* Аватар: фото поверх инициалов (если картинка не загрузится — останутся инициалы) */
 .ava > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-.ava.ring { box-shadow: 0 0 0 2px var(--ring); }
+.ava.tring { box-shadow: 0 0 0 2px var(--ring); }
 .ava[data-real] { cursor: help; }
 
 /* Блок «Аватар» на входе и в профиле */
@@ -1813,3 +1813,114 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .home-card .code-row { display: flex; gap: 8px; }
 .home-card .code-row .code-inp { flex: 1; min-width: 0; text-align: center; letter-spacing: .3em; text-transform: uppercase; }
 .home-card .code-row .btn { flex: none; }
+.gfoot { margin-top: auto; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+/* своё окно подтверждения */
+.modal.ask-modal { z-index: 131; }
+.ask-modal + .modal-bg, .modal-bg:has(+ .ask-modal) { z-index: 130; }
+.ask-modal .lm-ic { background: var(--accent-soft); color: var(--accent-text); }
+.ask-modal .lm-ic.danger { background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red-text); }
+.ask-modal .lm-btns:has(> :only-child) { grid-template-columns: 1fr; }
+.ask-val { width: 100%; text-align: center; font-weight: 700; }
+
+/* ============================================================
+   v26: эффекты — магнитные кнопки, магические карточки, переключатель темы, фейдер, голографический фон
+   ============================================================ */
+
+/* ---- голографические волны (вход и лобби) ---- */
+#app { position: relative; z-index: 1; }
+.holo-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .9s ease; display: block; }
+.holo-bg.on { opacity: 1; }
+/* поверх волн шапка и подложки чуть прозрачнее и с размытием — волны просвечивают */
+html.holo .topbar { backdrop-filter: blur(14px) saturate(1.2); }
+html.holo .home-card { background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(18px) saturate(1.3); }
+html.holo .in-lobby .card { background: color-mix(in srgb, var(--surface) 86%, transparent); backdrop-filter: blur(16px) saturate(1.25); }
+html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--surface) 84%, transparent); backdrop-filter: blur(14px); }
+
+/* ---- магнитные кнопки: возврат пружиной, внутри — лёгкий параллакс ---- */
+.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn {
+  transition-property: transform, background, background-color, border-color, box-shadow, filter, color, opacity, translate;
+  transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .6s;
+  transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.3, 1.7, .55, 1);
+}
+.mag { transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .16s; transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.2, .8, .3, 1); }
+:is(.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn) > :is(svg, span, b) { translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: translate .6s cubic-bezier(.3, 1.7, .55, 1); }
+.mag > :is(svg, span, b) { transition: translate .16s cubic-bezier(.2, .8, .3, 1); }
+
+/* ---- магические карточки: наклон, прожектор, светящийся край (вдвое мягче оригинала) ---- */
+.mc-on { position: relative; z-index: 2; transition: transform .1s ease-out, background .12s, border-color .12s, box-shadow .2s, opacity .2s !important; will-change: transform; }
+.mc-on::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .13), rgba(255, 255, 255, .04) 35%, transparent 62%);
+}
+[data-theme='light'] .mc-on::after { background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .6), rgba(255, 255, 255, .15) 35%, transparent 62%); }
+.mc-on:not(.flip)::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 2;
+  background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 70%, transparent), transparent 62%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+}
+.cn-card.mc-on { box-shadow: 0 10px 22px rgba(0, 0, 0, .28), 0 3px 0 var(--cn-edge); }
+.gcard.mc-on, .m-pre.mc-on, .mj-g.mc-on, .spy-card.mc-on { box-shadow: 0 14px 30px rgba(0, 0, 0, .25); }
+
+/* ---- переключатель темы: день · ночь · OLED ---- */
+.tt { --w: 84px; --h: 34px; --k: 26px; position: relative; flex: none; width: var(--w); height: var(--h); border-radius: 999px; overflow: hidden; isolation: isolate;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, .35), 0 0 0 1px var(--line); }
+.tt-sky, .tt-sky > i { position: absolute; inset: 0; }
+.tt-sky > i { transition: opacity .55s ease; opacity: 0; }
+.tt-day { background:
+  radial-gradient(8px 5px at 62% 70%, #fff 98%, transparent), radial-gradient(10px 6px at 70% 62%, #fff 98%, transparent), radial-gradient(7px 5px at 78% 70%, #fff 98%, transparent),
+  radial-gradient(6px 4px at 86% 36%, rgba(255,255,255,.9) 98%, transparent), radial-gradient(8px 5px at 92% 42%, rgba(255,255,255,.9) 98%, transparent),
+  linear-gradient(180deg, #5db8ff, #b9e3ff); }
+.tt-night { background:
+  radial-gradient(1px 1px at 12% 30%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 22% 66%, #fff 99%, transparent), radial-gradient(1px 1px at 30% 24%, #fff 99%, transparent),
+  radial-gradient(1.4px 1.4px at 74% 30%, #fff 99%, transparent), radial-gradient(1px 1px at 84% 64%, #fff 99%, transparent), radial-gradient(1px 1px at 91% 26%, #fff 99%, transparent),
+  linear-gradient(180deg, #121836, #2b2f63); }
+.tt-black { background: radial-gradient(1px 1px at 16% 40%, rgba(255,255,255,.55) 99%, transparent), radial-gradient(1px 1px at 30% 66%, rgba(255,255,255,.4) 99%, transparent), radial-gradient(1px 1px at 46% 30%, rgba(255,255,255,.45) 99%, transparent), #000; }
+.tt[data-t='light'] .tt-day, .tt[data-t='dark'] .tt-night, .tt[data-t='oled'] .tt-black { opacity: 1; }
+.tt-night::after { content: ''; position: absolute; inset: 0; background: radial-gradient(1.3px 1.3px at 18% 46%, #fff 99%, transparent), radial-gradient(1.3px 1.3px at 80% 46%, #fff 99%, transparent); animation: ttTw 2.4s ease-in-out infinite; }
+@keyframes ttTw { 50% { opacity: .2; } }
+.tt-knob { position: absolute; z-index: 2; top: calc((var(--h) - var(--k)) / 2); left: 4px; width: var(--k); height: var(--k); border-radius: 50%; pointer-events: none;
+  transition: left .6s cubic-bezier(.3, 1.6, .5, 1), background .45s, box-shadow .45s, transform .6s cubic-bezier(.3, 1.6, .5, 1); }
+.tt-knob > i { position: absolute; border-radius: 50%; background: rgba(140, 150, 185, .55); opacity: 0; transition: opacity .4s; }
+.tt-knob > i:nth-child(1) { width: 6px; height: 6px; left: 6px; top: 6px; }
+.tt-knob > i:nth-child(2) { width: 4px; height: 4px; left: 15px; top: 14px; }
+.tt-knob > i:nth-child(3) { width: 3px; height: 3px; left: 8px; top: 17px; }
+.tt[data-t='light'] .tt-knob { left: 4px; transform: rotate(0deg); background: radial-gradient(circle at 35% 35%, #fff8d6, #ffd23f 58%, #f6a821); box-shadow: 0 0 0 3px rgba(255, 220, 90, .3), 0 0 14px 3px rgba(255, 196, 40, .65); }
+.tt[data-t='dark'] .tt-knob { left: calc(50% - var(--k) / 2); transform: rotate(200deg); background: radial-gradient(circle at 35% 35%, #ffffff, #e3e7f3 55%, #b7bfd8); box-shadow: 0 0 12px rgba(200, 212, 255, .45); }
+.tt[data-t='dark'] .tt-knob > i { opacity: 1; }
+.tt[data-t='oled'] .tt-knob { left: calc(100% - var(--k) - 4px); transform: rotate(380deg); background: #000; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .85), 0 0 10px rgba(255, 255, 255, .22); }
+.tt[data-t='oled'] .tt-knob > i:nth-child(1) { opacity: 1; background: #fff; width: 4px; height: 4px; left: 11px; top: 11px; }
+.tt-hit { position: absolute; z-index: 3; top: 0; bottom: 0; width: 33.34%; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 999px; }
+.tt-hit.h0 { left: 0; } .tt-hit.h1 { left: 33.33%; } .tt-hit.h2 { right: 0; }
+.tt-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tt:hover { box-shadow: inset 0 1px 4px rgba(0, 0, 0, .35), 0 0 0 1px var(--line-strong); }
+.home-top .tt { --w: 96px; --h: 38px; --k: 30px; }
+@media (max-width: 640px) { .topbar .tt { --w: 66px; --h: 30px; --k: 22px; } .tt-knob > i:nth-child(2) { left: 12px; top: 11px; } }
+@media (prefers-reduced-motion: reduce) { .tt-knob, .tt-sky > i { transition: none; } .tt-night::after { animation: none; } }
+
+/* ---- фейдер силы свечения ---- */
+.fader { --v: 0%; display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
+.fader-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.fader-v { font-size: 13px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
+.fader-track { position: relative; height: 26px; display: flex; align-items: center; }
+.fader-track::before { content: ''; position: absolute; left: 0; right: 0; height: 8px; border-radius: 99px; background: var(--surface-3); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); }
+.fader-track::after { content: ''; position: absolute; left: 0; width: var(--v); height: 8px; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 35%, transparent), var(--accent)); box-shadow: 0 0 calc(var(--v) / 6) color-mix(in srgb, var(--accent) 60%, transparent); }
+.fader input { -webkit-appearance: none; appearance: none; position: relative; z-index: 1; width: 100%; height: 26px; margin: 0; background: transparent; cursor: pointer; }
+.fader input::-webkit-slider-runnable-track { height: 26px; background: transparent; }
+.fader input::-moz-range-track { height: 26px; background: transparent; }
+/* ручка — как у микшерного фейдера: прямоугольная «шапка» с риской */
+.fader input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
+  background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+.fader input::-moz-range-thumb { width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
+  background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+.fader input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fader-scale { display: flex; justify-content: space-between; padding: 0 7px; margin-top: -4px; }
+.fader-scale i { width: 1px; height: 6px; background: var(--line-strong); }
+.fader-scale i:nth-child(5n + 1) { height: 9px; background: var(--faint); }
+.glow-ask-f { flex: none; width: 280px; }
+.glow-ask-f .fader { min-width: 0; }
+@media (max-width: 640px) { .glow-ask-f { width: 100%; } }
+
+/* ---- свечение хода: пятно растёт вместе с фейдером ---- */
+.turn-glow.g-red, .turn-glow.g-blue { width: calc(42vw * var(--glow-s, 1)); }
+.turn-glow.g-top-y, .turn-glow.g-top-b { height: calc(45vh * var(--glow-s, 1)); }

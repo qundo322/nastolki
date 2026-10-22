@@ -42,4 +42,10 @@ const clampInt = (v, min, max, def) => {
 const customWords = (text) =>
   [...new Set(String(text || '').split(/[,\n;]/).map((w) => w.trim()).filter((w) => w && w.length <= 40))];
 
-module.exports = { shuffle, pick, norm, Deck, clampInt, customWords };
+// «1 088 слов», «500 вопросов» — подпись объёма для карточки игры
+function countLabel(n, one, few, many) {
+  const f = n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
+  return `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')} ${f}`;
+}
+
+module.exports = { shuffle, pick, norm, Deck, clampInt, customWords, countLabel };

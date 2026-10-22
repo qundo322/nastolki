@@ -1,11 +1,12 @@
 const { LOCATIONS } = require('../words');
-const { shuffle, pick, clampInt } = require('../util');
+const { shuffle, pick, clampInt, countLabel } = require('../util');
 
 
 const meta = {
   title: 'Шпион',
   emoji: '🕶️',
   players: '3–20',
+  content: countLabel(LOCATIONS.length, 'локация', 'локации', 'локаций'),
   short: 'Все знают локацию, кроме шпиона. Вычислите его вопросами — или он вычислит место.',
   rules: [
     'Каждый получает карточку с локацией и своей ролью, а шпион — только надпись «Вы шпион». Списка локаций нет — шпиону придётся догадаться по разговору.',

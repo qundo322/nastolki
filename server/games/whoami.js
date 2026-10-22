@@ -1,5 +1,5 @@
 const { CHARACTERS } = require('../words');
-const { shuffle, Deck } = require('../util');
+const { shuffle, Deck, countLabel } = require('../util');
 
 const Q_MS = 60000; // минута на один вопрос
 
@@ -7,6 +7,7 @@ const meta = {
   title: 'Кто я?',
   emoji: '🤔',
   players: '3–20',
+  content: countLabel(CHARACTERS.length, 'персонаж', 'персонажа', 'персонажей'),
   short: 'У тебя на лбу персонаж — все его видят, кроме тебя. Угадай вопросами «да/нет».',
   rules: [
     'Каждому игроку достаётся персонаж: его видят все, кроме самого игрока. Персонажей раздают случайно или каждый загадывает персонажа соседу.',
