@@ -2,7 +2,8 @@ const QUESTIONS = require('../quiz_questions');
 const { shuffle, Deck, clampInt, countLabel } = require('../util');
 
 // «Викторина»: ответ — число, балл получает тот, кто ближе всех к правильному
-const REVEAL_MS = 15000; // сколько показываем результат раунда
+const REVEAL_MS = 15000; // сколько показываем результат раунда (вместе с отсчётом)
+const NEXT_MS = 5000; // отсчёт перед следующим вопросом
 
 const meta = {
   title: 'Викторина',
@@ -30,6 +31,13 @@ const parseNum = (v) => {
   const n = Number(t);
   return Number.isFinite(n) && Math.abs(n) < 1e12 ? n : null;
 };
+
+// Подсказка «сколько знаков»: 1492 → XXXX, 3.14 → X,XX, −40 → −XX
+function mask(a) {
+  const t = String(Math.abs(a));
+  const [i, f] = t.split('.');
+  return (a < 0 ? '−' : '') + 'X'.repeat(i.length) + (f ? ',' + 'X'.repeat(f.length) : '');
+}
 
 function create(ctx, st) {
   const ids = ctx.players().map((p) => p.id);
@@ -62,6 +70,7 @@ function startRound(s, ctx) {
   s.q = { cat, text: q, answer: a, unit };
   s.answers = {};
   s.res = null;
+  s.nextAt = null;
   s.phase = 'answer';
   setTimer(s, ctx, s.seconds * 1000, () => reveal(s, ctx));
 }
@@ -87,11 +96,20 @@ function reveal(s, ctx) {
   s.history.push({ q: s.q.text, answer: a, unit: s.q.unit, winners });
   s.phase = 'reveal';
   s.ready = {};
-  setTimer(s, ctx, REVEAL_MS, () => advance(s, ctx));
+  s.nextAt = null;
+  setTimer(s, ctx, REVEAL_MS - NEXT_MS, () => soon(s, ctx));
+}
+
+// Отсчёт 5 секунд до следующего вопроса — чтобы все успели перевести дух
+function soon(s, ctx) {
+  if (s.phase !== 'reveal' || s.nextAt) return;
+  setTimer(s, ctx, NEXT_MS, () => advance(s, ctx));
+  s.nextAt = s.endsAt;
 }
 
 function advance(s, ctx) {
   if (s.phase !== 'reveal') return;
+  s.nextAt = null;
   if (s.round >= s.rounds) {
     s.phase = 'over';
     ctx.clearTimer('quiz');
@@ -119,15 +137,15 @@ function action(s, pid, msg, ctx) {
     }
     case 'ready': {
       // «Дальше»: когда готовы все — следующий вопрос раньше таймера
-      if (s.phase !== 'reveal') return;
+      if (s.phase !== 'reveal' || s.nextAt) return;
       s.ready[pid] = !s.ready[pid];
-      if (online(s, ctx).every((id) => s.ready[id])) advance(s, ctx);
+      if (online(s, ctx).every((id) => s.ready[id])) soon(s, ctx);
       return;
     }
     case 'skip': {
       if (!ctx.isHost) return 'Только хост';
       if (s.phase === 'answer') reveal(s, ctx);
-      else if (s.phase === 'reveal') advance(s, ctx);
+      else if (s.phase === 'reveal') s.nextAt ? advance(s, ctx) : soon(s, ctx);
       return;
     }
     case 'addTime': {
@@ -175,7 +193,8 @@ function view(s, pid) {
     rounds: s.rounds,
     endsAt: s.endsAt,
     phaseMs: s.phaseMs,
-    q: s.q ? { cat: s.q.cat, text: s.q.text, unit: s.q.unit, answer: showAll ? s.q.answer : null } : null,
+    q: s.q ? { cat: s.q.cat, text: s.q.text, unit: s.q.unit, answer: showAll ? s.q.answer : null, mask: mask(s.q.answer) } : null,
+    nextAt: s.nextAt || null,
     answered: Object.keys(s.answers || {}),
     mine: s.answers?.[pid] ?? null,
     res: showAll ? s.res : null,
@@ -210,11 +229,16 @@ function resume(s, ctx) {
   const left = s._left;
   s._left = null;
   if (s.phase === 'answer') setTimer(s, ctx, left, () => reveal(s, ctx));
-  else if (s.phase === 'reveal') setTimer(s, ctx, left, () => advance(s, ctx));
+  else if (s.phase === 'reveal') {
+    if (s.nextAt) {
+      setTimer(s, ctx, left, () => advance(s, ctx));
+      s.nextAt = s.endsAt;
+    } else setTimer(s, ctx, left, () => soon(s, ctx));
+  }
 }
 
 const isOver = (s) => s.phase === 'over';
 const results = (s) => ({ ...s.points });
 const stats = (s) => ({ quiz: { ...s.wins } });
 
-module.exports = { meta, create, action, view, onLeave, onPresence, isOver, results, stats, pause, resume, parseNum };
+module.exports = { meta, create, action, view, onLeave, onPresence, isOver, results, stats, pause, resume, parseNum, mask };

@@ -252,6 +252,11 @@ function bot(name, real = '') {
   assert((await helpers[0].act('clue', { text: 'другое' })).error, 'no replacing');
   await wait(100);
   assert(g(h).phase === 'filter' && g(h).phaseMs === 30000, 'filter timer 30s');
+  {
+    const cs = g(helpers[1]).clues;
+    const a = cs.find((c) => c.pid === helpers[0].st.me), b = cs.find((c) => c.pid === helpers[1].st.me);
+    assert(a.first && !a.removed && b.removed && b.beat === helpers[0].st.me, 'first writer keeps duplicate clue');
+  }
   await helpers[0].act('filterDone');
   await wait(50);
   assert(g(h).phase === 'filter' && g(h).show.length === 1, 'show needs everyone');
@@ -266,7 +271,7 @@ function bot(name, real = '') {
   await guesser.act('next');
   await wait(100);
   const P = g(h).points;
-  assert(P[guesser.st.me] === 2 && P[helpers[2].st.me] === 4 && P[helpers[3].st.me] === 1 && P[helpers[0].st.me] === 0, 'justone points ' + JSON.stringify(P));
+  assert(P[guesser.st.me] === 2 && P[helpers[2].st.me] === 4 && P[helpers[3].st.me] === 1 && P[helpers[0].st.me] === 1 && P[helpers[1].st.me] === 0, 'justone points (first writer keeps dup) ' + JSON.stringify(P));
   assert(g(h).phase === 'over' && g(h).winners[0] === helpers[2].st.me, 'target reached');
   assert(g(h).hearts[helpers[2].st.me] === 1, 'hearts counted');
   // неточный ответ засчитывается, только когда «за» все подсказчики
@@ -347,16 +352,18 @@ function bot(name, real = '') {
   const best = Math.min(...R.list.map((x) => x.diff));
   assert(R.winners.every((id) => R.list.find((x) => x.pid === id).diff === best), 'closest wins');
   assert(R.winners.every((id) => g(h).points[id] >= 1), 'winners got points');
+  assert(g(h).q.mask && /^−?X+(,X+)?$/.test(g(h).q.mask), 'answer mask XXX');
   for (const b of bots) await b.act('ready');
   await wait(80);
-  assert(g(h).round === 2 && g(h).phase === 'answer', 'all ready → next question');
+  assert(g(h).phase === 'reveal' && g(h).nextAt > Date.now() + 3000, 'all ready → 5s countdown');
+  assert((await bots[0].act('ready')) && g(h).ready.length === 5, 'ready locked during countdown');
+  await h.act('skip');
   await wait(60);
+  assert(g(h).round === 2 && g(h).phase === 'answer', 'next question after countdown');
   await h.act('skip');
   await wait(50);
   assert(g(h).phase === 'reveal' && g(h).res.list.length === 0, 'host can reveal early');
-  await h.act('skip');
-  await h.act('skip');
-  await h.act('skip');
+  for (let k = 0; k < 5; k++) await h.act('skip');
   await wait(50);
   assert(g(h).phase === 'over', 'game over after rounds');
   console.log('✓ Викторина');
@@ -394,13 +401,14 @@ function bot(name, real = '') {
     assert(g(h).groups.length === 3, 'host split answer back');
     for (const b of ps) await b.act('ready');
     await wait(60);
+    assert(g(h).phase === 'review' && g(h).nextAt, 'majority countdown');
+    await h.act('skip');
+    await wait(60);
     assert(g(h).round === 2 && g(h).phase === 'answer' && g(h).points[ps[0].st.me] === 3, 'points applied, next question');
     await h.act('skip');
     await wait(40);
     assert(g(h).phase === 'review', 'host opens answers');
-    await h.act('skip');
-    await h.act('skip');
-    await h.act('skip');
+    for (let k = 0; k < 5; k++) await h.act('skip');
     await wait(60);
     assert(g(h).phase === 'over', 'majority over');
   }

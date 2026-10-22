@@ -1,5 +1,6 @@
 const { CHARACTERS } = require('../words');
 const { shuffle, Deck, countLabel } = require('../util');
+const Avatars = require('../avatars'); // картинки персонажей хранятся там же, где аватарки
 
 const Q_MS = 60000; // минута на один вопрос
 
@@ -150,6 +151,7 @@ function action(s, pid, msg, ctx) {
       if (!text) return 'Введите персонажа';
       if (s.a[target].char) return 'Персонаж уже загадан';
       s.a[target].char = text;
+      s.a[target].img = Avatars.clean(msg.img); // необязательная картинка персонажа
       if (Object.values(s.a).every((a) => a.char)) {
         s.phase = 'play';
         startQ(s, ctx);
@@ -271,6 +273,7 @@ function view(s, pid) {
         id,
         {
           char: s.phase === 'write' ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== 'over' ? null : a.char,
+          img: s.phase === 'write' ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== 'over' ? null : a.img || null,
           writer: a.writer,
           guessed: !!a.guessedAt,
           gaveUp: !!a.gaveUp,

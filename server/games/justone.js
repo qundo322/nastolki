@@ -14,7 +14,7 @@ const meta = {
   short: 'Все пишут по одной подсказке, одинаковые сгорают. Угадал — и выбери лучшую подсказку.',
   rules: [
     'Один игрок угадывает, остальные видят загаданное слово и за минуту пишут по одной подсказке — одно слово (буквы и цифры, можно через дефис). Подсказку нельзя заменить после отправки.',
-    'Затем за 30 секунд подсказчики вычёркивают одинаковые и однокоренные подсказки (совпадения отмечаются автоматически). Подсказки уходят угадывающему, когда «Показать» нажмут все подсказчики или выйдет время.',
+    'Затем за 30 секунд подсказчики вычёркивают одинаковые и однокоренные подсказки. Совпадения отмечаются автоматически: кто написал такую подсказку первым — сохраняет её и получает медаль «первым», у остальных она сгорает. Подсказки уходят угадывающему, когда «Показать» нажмут все подсказчики или выйдет время.',
     'Угадывающий видит оставшиеся подсказки анонимно и пишет ответ. Угадал — за 30 секунд отмечает лучшую подсказку сердечком.',
     'Ответ не совпал точь-в-точь? Подсказчики решают: «Засчитать» или «Не засчитывать» — решение принимается, когда так нажмут все. За 30 секунд не договорились — не засчитано.',
     'Очки, если слово угадано: угадывающему +2; каждому, чья подсказка не сгорела, +1; автору лучшей подсказки — ещё +3.',
@@ -98,8 +98,16 @@ function autoDupes(s) {
     const key = k.length > 4 ? k.slice(0, 5) : k; // грубая проверка на однокоренные
     (groups[key] = groups[key] || []).push(id);
   }
-  for (const ids of Object.values(groups)) if (ids.length > 1) ids.forEach((id) => (s.clues[id].removed = true));
-  for (const c of Object.values(s.clues)) if (norm(c.text) === norm(s.word)) c.removed = true;
+  // Совпадения: кто написал первым — остаётся (награда за скорость), остальные сгорают
+  for (const ids of Object.values(groups)) {
+    if (ids.length < 2) continue;
+    const first = ids.slice().sort((a, b) => (s.clues[a].at || 0) - (s.clues[b].at || 0))[0];
+    for (const id of ids) {
+      if (id === first) Object.assign(s.clues[id], { first: true });
+      else Object.assign(s.clues[id], { removed: true, by: 'dup', beat: first });
+    }
+  }
+  for (const c of Object.values(s.clues)) if (norm(c.text) === norm(s.word)) Object.assign(c, { removed: true, by: 'word', first: false });
 }
 function toFilter(s, ctx) {
   autoDupes(s);
@@ -172,7 +180,7 @@ function action(s, pid, msg, ctx) {
       const text = cleanWord(msg.text);
       if (!text) return 'Пустая подсказка';
       if (!ONE_WORD.test(text)) return 'Только одно слово: буквы и цифры, без пробелов и символов (дефис можно)';
-      s.clues[pid] = { text, removed: false };
+      s.clues[pid] = { text, removed: false, at: Date.now() };
       checkVotes(s, ctx);
       return;
     }
@@ -212,7 +220,10 @@ function action(s, pid, msg, ctx) {
     case 'toggle': {
       if (s.phase !== 'filter' || !isHelper) return;
       const c = s.clues[msg.pid];
-      if (c) c.removed = !c.removed;
+      if (c) {
+        c.removed = !c.removed;
+        c.by = c.removed ? pid : null; // кто вычеркнул — видно всем подсказчикам
+      }
       return;
     }
     case 'filterDone': {
@@ -308,9 +319,9 @@ function view(s, pid) {
       ? []
       : isGuesser
         ? (s.anon || Object.keys(s.clues))
-            .map((id, key) => ({ key, text: s.clues[id]?.text, removed: s.clues[id]?.removed }))
+            .map((id, key) => ({ key, text: s.clues[id]?.text, removed: s.clues[id]?.removed, first: !!s.clues[id]?.first }))
             .filter((c) => c.text && !(s.phase === 'guess' && c.removed))
-        : Object.entries(s.clues).map(([id, c]) => ({ pid: id, key: (s.anon || []).indexOf(id), text: c.text, removed: c.removed })),
+        : Object.entries(s.clues).map(([id, c]) => ({ pid: id, key: (s.anon || []).indexOf(id), text: c.text, removed: c.removed, by: c.removed ? c.by || null : null, beat: c.removed ? c.beat || null : null, first: !!c.first })),
     show: Object.keys(s.show || {}),
     guess: s.guess,
     correct: s.correct,

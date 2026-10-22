@@ -1131,6 +1131,62 @@
     };
     img.src = url;
   });
+  // Картинка персонажа в «Кто я?»: уменьшаем до ~320 px, сжимаем и загружаем на сервер
+  const whoFile = document.createElement('input');
+  whoFile.type = 'file';
+  whoFile.accept = 'image/*';
+  whoFile.hidden = true;
+  document.body.appendChild(whoFile);
+  whoFile.addEventListener('change', () => {
+    const f = whoFile.files && whoFile.files[0];
+    whoFile.value = '';
+    if (f) whoImgFrom(f);
+  });
+  function whoImgFrom(f) {
+    if (!/^image\//.test(f.type)) return toast('Это не картинка');
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = async () => {
+      URL.revokeObjectURL(url);
+      let data = '';
+      for (const side of [320, 240, 180]) {
+        const k = Math.min(1, side / Math.max(img.naturalWidth, img.naturalHeight));
+        const cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(img.naturalWidth * k));
+        cv.height = Math.max(1, Math.round(img.naturalHeight * k));
+        const c2 = cv.getContext('2d');
+        c2.imageSmoothingQuality = 'high';
+        c2.drawImage(img, 0, 0, cv.width, cv.height);
+        data = cv.toDataURL('image/webp', 0.82);
+        if (!data.startsWith('data:image/webp')) data = cv.toDataURL('image/jpeg', 0.85);
+        if (data.length * 0.75 < 140 * 1024) break;
+      }
+      const mine = (ui.whoImg = { prev: data, url: null });
+      render();
+      const r = await quietEmit('uploadAvatar', { data });
+      if (ui.whoImg !== mine) return;
+      if (r.error || !r.url) {
+        ui.whoImg = null;
+        toast(r.error || 'Не получилось загрузить картинку');
+      } else mine.url = r.url;
+      render();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toast('Не получилось открыть картинку');
+    };
+    img.src = url;
+  }
+  // Вставка картинки из буфера, пока загадываем персонажа
+  document.addEventListener('paste', (e) => {
+    const g = S?.game;
+    if (!g || g.type !== 'whoami' || g.phase !== 'write' || !g.writeFor || g.writtenForTarget) return;
+    const it = [...(e.clipboardData?.items || [])].find((x) => x.kind === 'file' && /^image\//.test(x.type));
+    if (!it) return;
+    e.preventDefault();
+    whoImgFrom(it.getAsFile());
+  });
+
   // Готовый круг: квадрат 256×256, внутри — то, что видно в окне
   function cropExport() {
     const c = ui.crop;
@@ -1856,6 +1912,8 @@
       if (bar && total) bar.style.width = Math.max(0, Math.min(100, (left / total) * 100)) + '%';
       el.classList.toggle('low', left < 10000);
     });
+    // отсчёт до следующего вопроса
+    document.querySelectorAll('[data-nx]').forEach((el) => (el.textContent = Math.max(1, Math.ceil((Number(el.dataset.nx) - n) / 1000))));
     // Таймер хода Коднеймс под хедером
     document.querySelectorAll('[data-clock]').forEach((el) => {
       const paused = el.dataset.paused === '1';
@@ -2507,7 +2565,12 @@
                ${
                  g.writtenForTarget
                    ? `<p class="jo-sent">${ic('check', 18)} Персонаж загадан — ждём остальных</p>`
-                   : `<form data-form="who-write" class="big-form"><input class="inp big-inp" name="text" data-keep="who-write" maxlength="60" placeholder="Персонаж или известный человек" autocomplete="off" required/><button class="btn primary mega">Загадать</button></form>
+                   : `<form data-form="who-write" class="who-write"><div class="big-form"><input class="inp big-inp" name="text" data-keep="who-write" maxlength="60" placeholder="Персонаж или известный человек" autocomplete="off" required/><button class="btn primary mega">Загадать</button></div>
+                 <div class="ww-img">${
+                   ui.whoImg
+                     ? `<span class="ww-prev"><img src="${esc(ui.whoImg.prev)}" alt=""><button type="button" class="ww-x" data-act="who-img-x" title="Убрать картинку">${ic('x', 13)}</button></span><span class="muted small">${ui.whoImg.url ? `${ic('check', 14)} Картинка прикреплена — её увидят все, кроме ${nm(g.writeFor)}` : 'Загружаем картинку…'}</span>`
+                     : `<button type="button" class="btn ghost ww-add" data-act="who-img">${ic('camera', 18)} Прикрепить картинку</button><span class="muted small">необязательно · можно вставить из буфера (Ctrl+V)</span>`
+                 }</div></form>
                <button class="link-btn" data-act="who-random">или выбрать случайного</button>`
                }`
             : '<p>Ждём остальных…</p>'
@@ -2524,13 +2587,16 @@
         const isMe = id === me;
         const place = g.finishOrder.indexOf(id);
         const speaking = g.turnPid === id && !over;
-        return `<div class="tile ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
-          <div class="tile-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 18)} это вы`}</div>
-          <div class="tile-ava">${pa(id, 128, 'round')}</div>
-          <div class="tile-foot">
-            <span class="tile-name">${speaking ? ic('mic', 14) : ''}${nm(id)}${isMe ? ' (вы)' : ''}</span>
-            <span class="tile-st">${p.guessed ? `${ic('check', 13)} #${place + 1} · +${g.points[id]}` : p.gaveUp ? 'сдался' : ''}</span>
+        // кубок первому угадавшему, серебро второму, бронза третьему
+        const medal = p.guessed && place >= 0 && place < 3 ? `<span class="wt-medal m${place + 1}" title="${['Первым угадал', 'Второе место', 'Третье место'][place]}">${ic(place === 0 ? 'trophy' : 'medal', place === 0 ? 20 : 17)}</span>` : '';
+        return `<div class="wt ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
+          <div class="wt-ava">${pa(id, 84, 'round')}${medal}</div>
+          <div class="wt-body">
+            <span class="wt-name">${speaking ? `<span class="wt-mic">${ic('mic', 12)}</span>` : ''}${nm(id)}${isMe ? ' <small>(вы)</small>' : ''}</span>
+            <div class="wt-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 16)} это вы`}</div>
+            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ''}</span>
           </div>
+          ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" loading="lazy">` : ''}
         </div>`;
       })
       .join('');
@@ -2543,14 +2609,17 @@
         <div class="qa-c-a">${live ? '<span class="qa-c-v">ждём ответы…</span>' : `<span class="qa-c-v">${AL[x.v] || '—'}</span>`}<span class="qa-c-n"><i class="y">${x.yes}</i><i class="n">${x.no}</i><i>${x.idk}</i></span></div>
       </div>`;
     // «Мои вопросы и ответы» — по порядку, как задавались: номер, вопрос, итог цветной меткой
+    // Вопросы раскладываем в две колонки: «Да» и «Нет»; спорные («не знаю», поровну) — отдельной строкой ниже
     const qaCards = (list, extra = '') => {
-      const AL2 = { yes: 'Да', no: 'Нет', idk: '?' };
-      const rows = list
-        .map(
-          (x, i) => `<div class="qa-line v-${x.v || 'idk'}"><span class="ql-n">${i + 1}</span><span class="ql-q">${esc(x.text)}</span><span class="ql-v">${AL2[x.v] || '?'}</span><span class="ql-c" title="да / нет / не знаю"><i class="y">${x.yes}</i> <i class="n">${x.no}</i> <i>${x.idk}</i></span></div>`
-        )
-        .join('');
-      return `<div class="qa-lines">${rows || '<span class="muted small">Вопросов пока не было</span>'}</div>${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
+      if (!list.length) return '<span class="muted small">Вопросов пока не было</span>';
+      const all = list.map((x, i) => ({ ...x, n: i + 1 }));
+      const item = (x) => `<div class="qa-it"><span class="ql-n">${x.n}</span><span class="ql-q">${esc(x.text)}</span><span class="ql-c" title="да / нет / не знаю"><i class="y">${x.yes}</i> <i class="n">${x.no}</i> <i>${x.idk}</i></span></div>`;
+      const col = (v, title) => {
+        const xs = all.filter((x) => x.v === v);
+        return `<div class="qa-col c-${v}"><div class="qa-col-h"><b>${title}</b><span>${xs.length}</span></div>${xs.map(item).join('') || '<span class="qa-empty">пока ничего</span>'}</div>`;
+      };
+      const rest = all.filter((x) => x.v !== 'yes' && x.v !== 'no');
+      return `<div class="qa-cols">${col('yes', 'Да')}${col('no', 'Нет')}</div>${rest.length ? `<div class="qa-col c-idk"><div class="qa-col-h"><b>Не ясно</b><span>${rest.length}</span></div>${rest.map(item).join('')}</div>` : ''}${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
     };
     const q = g.q && g.q.asker === g.turnPid ? g.q : null;
     const asker = g.turnPid;
@@ -2584,13 +2653,18 @@
           ${g.turnPid === me ? `<button class="btn primary mega" data-act="who-next">${ic('skip', 24)} Передать ход</button>` : ''}
           ${!myState.guessed && !myState.gaveUp ? `<button class="btn success mega" data-act="who-guessed">${ic('check', 24)} Я угадал!</button><button class="btn ghost mega" data-act="who-giveup">${ic('flag', 22)} Сдаюсь</button>` : `<span class="muted">Вы уже ${myState.guessed ? 'угадали' : 'сдались'} — помогайте остальным</span>`}
         </div>`;
-    return `<div class="who">
+    return `<div class="who who2">
+      <aside class="who-players">
+        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
+        <div class="who-list">${tiles}</div>
+      </aside>
+      <div class="who-main">
       <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута на вопрос. Большинство «нет» — ход переходит.</span>`}</div>
-      <div class="call-grid">${tiles}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
+      </div>
     </div>`;
   }
 
@@ -2630,7 +2704,12 @@
         .join('')}</span></div>`;
     const hearted = (c) => (g.isGuesser ? g.heart != null && c.key === g.heart : c.pid === g.heart);
     const clueEl = (c, tag = 'div', extra = '') =>
-      `<${tag} class="jc ${c.removed ? 'removed' : ''} ${hearted(c) ? 'hearted' : ''}" ${extra}><b>${esc(c.text)}</b>${hearted(c) ? `<span class="jc-heart">${ic('heartf', 20)}</span>` : ''}${c.pid && !g.isGuesser ? `<small>${pa(c.pid, 'xs', 'round')}${nm(c.pid)}</small>` : ''}</${tag}>`;
+      `<${tag} class="jc ${c.removed ? 'removed' : ''} ${hearted(c) ? 'hearted' : ''}" ${extra}><b class="${jcLen(c.text)}" lang="ru" style="--n:${Math.max(6, String(c.text || '').length)}">${esc(c.text)}</b>${c.first && !c.removed ? `<span class="jc-first" title="Написал эту подсказку первым — совпадения у остальных сгорели">${ic('medal', 13)} первым</span>` : ''}${hearted(c) ? `<span class="jc-heart">${ic('heartf', 20)}</span>` : ''}${c.pid && !g.isGuesser ? `<small>${pa(c.pid, 'xs', 'round')}${nm(c.pid)}</small>` : ''}${c.removed && c.by && !g.isGuesser ? `<span class="jc-by">${c.by === 'dup' ? (c.beat ? `${ic('swap', 12)} первым — ${pa(c.beat, 'xs', 'round')}<b>${nm(c.beat)}</b>` : `${ic('swap', 12)} совпала с другой`) : c.by === 'word' ? `${ic('alert', 12)} это само слово` : `${ic('x', 12)} вычеркнул ${pa(c.by, 'xs', 'round')}<b>${nm(c.by)}</b>`}</span>` : ''}</${tag}>`;
+    // Длинные слова — мельче, чтобы не рвались посередине («Нижевол-осье»)
+    function jcLen(t) {
+      const n = String(t || '').length;
+      return n > 15 ? 'l-xl' : n > 12 ? 'l-l' : n > 9 ? 'l-m' : '';
+    }
     const bigForm = (form, ph, btnText, keep) =>
       `<form data-form="${form}" class="big-form"><input class="inp big-inp" name="text" data-keep="${keep}" maxlength="30" placeholder="${ph}" autocomplete="off" pattern="[A-Za-zА-Яа-яЁёІіЇїЄєҐґ0-9]+(-[A-Za-zА-Яа-яЁёІіЇїЄєҐґ0-9]+)*" title="Одно слово: буквы и цифры, можно через дефис" ${form === 'jo-clue' ? 'required' : ''}/><button class="btn primary mega">${btnText}</button></form>`;
     let body = '';
@@ -2734,6 +2813,19 @@
     }
     return [lo, hi];
   }
+  // Кнопка «Дальше» + кто уже нажал; после того как готовы все — 5 секунд отсчёта до следующего вопроса
+  function nextBar(g, act) {
+    if (g.nextAt) {
+      const left = Math.max(0, g.nextAt - now());
+      return `<div class="nx" style="--nx:-${5000 - Math.min(5000, left)}ms"><div class="nx-ring"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/></svg><b data-nx="${g.nextAt}">${Math.max(1, Math.ceil(left / 1000))}</b></div><span>${g.round >= g.rounds ? 'Итоги игры' : 'Следующий вопрос'} через <b data-nx="${g.nextAt}">${Math.max(1, Math.ceil(left / 1000))}</b> с</span></div>`;
+    }
+    const iReady = g.ready.includes(S.me);
+    return `<div class="nx-wrap">
+      <button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="${act}">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button>
+      <div class="jo-ready nx-who"><span class="muted small">Нажали «Дальше» ${g.ready.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.ready.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.ready.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
+    </div>`;
+  }
+
   function rQuiz(g) {
     const me = S.me;
     const T = ''; // таймер — общей полосой под шапкой
@@ -2750,8 +2842,8 @@
       const ready = `<div class="jo-ready"><span class="muted small">Ответили ${g.answered.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.answered.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.answered.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>`;
       body = `<div class="stage-card qz-card">${T}
         <div class="qz-q">${esc(g.q.text)}</div>
-        <form data-form="qz-answer" class="big-form qz-form"><input class="inp big-inp qz-inp" name="v" data-keep="qz-v" inputmode="decimal" autocomplete="off" placeholder="Ваше число" required/>${g.q.unit ? `<span class="qz-unit">${esc(g.q.unit)}</span>` : ''}<button class="btn primary mega">${g.mine != null ? 'Изменить' : 'Ответить'}</button></form>
-        ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ваш ответ: <b>${fmtN(g.mine, g.q.unit)}</b> <span class="muted">— можно изменить, пока идёт время</span></div>` : '<p class="muted small">Можно с запятой: 3,14. Отрицательные — через минус.</p>'}
+        <form data-form="qz-answer" class="big-form qz-form"><input class="inp big-inp qz-inp" name="v" data-keep="qz-v" inputmode="decimal" autocomplete="off" placeholder="${esc(g.q.mask || 'Ваше число')}" aria-label="Ваше число, ${g.q.mask ? g.q.mask.replace(/[^X]/g, '').length + ' цифр' : ''}" required/>${g.q.unit ? `<span class="qz-unit">${esc(g.q.unit)}</span>` : ''}<button class="btn primary mega">${g.mine != null ? 'Изменить' : 'Ответить'}</button></form>
+        ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ваш ответ: <b>${fmtN(g.mine, g.q.unit)}</b> <span class="muted">— можно изменить, пока идёт время</span></div>` : `<p class="muted small">${g.q.mask ? `Подсказка: в ответе <b class="qz-mask">${esc(g.q.mask)}</b> — столько цифр. ` : ''}Можно с запятой: 3,14.</p>`}
         ${ready}</div>`;
     } else if (g.phase === 'reveal' && g.res) {
       const r = g.res;
@@ -2799,7 +2891,7 @@
           <div class="qz-scale"><span>${fmtN(lo, g.q.unit)}</span><span>${fmtN(hi, g.q.unit)}</span></div>
         </div>
         ${r.list.length ? `<div class="qz-list" style="animation-delay:${QZ_FILL + 300 - el}ms">${list}</div>` : '<p class="muted">Никто не успел ответить</p>'}
-        <div class="row c"><button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="qz-ready">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button><span class="muted small">${g.ready.length}/${g.order.length} готовы</span></div>
+        ${nextBar(g, 'qz-ready')}
       </div>`;
     } else if (g.phase === 'over') {
       body = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победа: ${(g.winners || []).map(nm).join(', ')}!</h2>
@@ -2829,37 +2921,53 @@
     } else if (g.phase === 'review') {
       const host = isHost();
       const sel = ui.mjSel && g.groups.some((x) => x.pids.includes(ui.mjSel)) ? ui.mjSel : null;
-      const pairs = g.groups.filter((x) => x.pids.length > 1);
       const t0 = (ui.mjStart = ui.mjStart || {})[g.round] || (ui.mjStart[g.round] = now());
       const el = now() - t0;
-      const solo = g.groups.filter((x) => x.pids.length === 1);
-      const groupCard = (x, i) => {
+      const lock = !!g.nextAt; // идёт отсчёт — группы уже не меняются
+      const canEdit = host && !lock;
+      const max = Math.max(1, ...g.groups.map((x) => x.pids.length));
+      const total = g.groups.reduce((n, x) => n + x.pids.length, 0);
+      // Итог для меня — сразу понятно, что произошло
+      const myG = g.groups.find((x) => x.pids.includes(me));
+      const myPts = g.preview[me] || 0;
+      const mates = myG ? myG.pids.length - 1 : 0;
+      const mine = !myG
+        ? `<div class="mj-me none">${ic('clock', 20)}<div><b>Вы не успели ответить</b><span>0 очков в этом раунде</span></div></div>`
+        : `<div class="mj-me ${myG.major ? 'major' : mates ? 'ok' : 'solo'}">
+            <span class="mj-me-ic">${myG.major ? ic('crown', 22) : mates ? ic('users', 22) : ic('x', 22)}</span>
+            <div><b>${myG.major ? 'Вы в большинстве!' : mates ? `Совпали с ${mates} ${plural(mates, 'игроком', 'игроками', 'игроками')}` : 'Никто не ответил так же'}</b><span>Ваш ответ «${esc(g.mine || myG.texts[0])}»</span></div>
+            <b class="mj-me-pts">${myPts ? '+' + myPts : '0'}</b>
+          </div>`;
+      const row = (x, i) => {
         const on = sel && x.pids.includes(sel);
         const pts = g.preview[x.pids[0]] || 0;
-        return `<div class="mj-g ${x.major ? 'major' : ''} ${on ? 'sel' : ''} ${host ? 'host' : ''}" ${host ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''} style="animation-delay:${i * 90 - el}ms">
-          ${x.major ? `<span class="mj-badge">${ic('crown', 14)} Ответ большинства</span>` : ''}
-          <div class="mj-txt">${x.texts.map(esc).join(' <i>/</i> ')}</div>
-          <div class="mj-ppl">${x.pids.map((p) => `<span class="mj-p">${pa(p, 26, 'round')}<small>${nm(p)}</small>${host && x.pids.length > 1 ? `<button class="mj-x" data-act="mj-split" data-id="${p}" title="Отделить этот ответ">${ic('x', 12)}</button>` : ''}</span>`).join('')}</div>
-          <div class="mj-foot"><b class="mj-n">${x.pids.length}</b><span class="muted small">${plural(x.pids.length, 'игрок', 'игрока', 'игроков')}</span>${pts ? `<b class="mj-pts">+${pts} каждому</b>` : ''}</div>
+        const solo = x.pids.length === 1;
+        const target = canEdit && sel && !on;
+        return `<div class="mj-row ${x.major ? 'major' : ''} ${solo ? 'solo' : ''} ${on ? 'sel' : ''} ${target ? 'target' : ''} ${x.pids.includes(me) ? 'mine' : ''} ${canEdit ? 'host' : ''}" ${canEdit ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''} style="--w:${(x.pids.length / max) * 100}%;--d:${i * 110 - el}ms">
+          <i class="mj-bar"></i>
+          <span class="mj-rk">${x.major ? ic('crown', 18) : solo ? '' : i + 1}</span>
+          <div class="mj-main">
+            <div class="mj-ans">${x.texts.map(esc).join(' <i>·</i> ')}</div>
+            <div class="mj-avs">${x.pids.map((p) => `<span class="mj-p">${pa(p, 24, 'round')}<small>${nm(p)}</small>${canEdit && !solo ? `<button class="mj-x" data-act="mj-split" data-id="${p}" title="Отделить этот ответ">${ic('x', 11)}</button>` : ''}</span>`).join('')}</div>
+          </div>
+          <div class="mj-side"><b class="mj-cnt">${x.pids.length}</b><span class="mj-pts ${pts ? '' : 'zero'}">${pts ? `+${pts} каждому` : '0 очков'}</span></div>
+          ${target ? `<span class="mj-merge">${ic('link', 14)} Склеить сюда</span>` : ''}
         </div>`;
       };
-      const soloList = solo.length
-        ? `<div class="mj-solo"><div class="side-h small">Без пары <span class="muted">— 0 очков</span></div><div class="mj-solo-l">${solo
-            .map((x) => `<span class="mj-s ${sel && x.pids.includes(sel) ? 'sel' : ''} ${host ? 'host' : ''}" ${host ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''}>${pa(x.pids[0], 22, 'round')}<b>${esc(x.texts[0])}</b></span>`)
-            .join('')}</div></div>`
-        : '';
-      const iReady = g.ready.includes(me);
-      const tip = host
-        ? sel
-          ? `<div class="mj-tip on">${ic('link', 16)} Теперь нажмите на ответ, с которым склеить, или на тот же — отменить</div>`
-          : '<div class="mj-tip">Похожие ответы разошлись? Нажмите на один, потом на другой — они склеятся.</div>'
-        : '<div class="mj-tip">Похожие ответы хост может склеить вручную</div>';
-      body = `<div class="stage-card qz-card">
+      const tip = lock
+        ? ''
+        : host
+          ? sel
+            ? `<div class="mj-tip on">${ic('link', 16)} Выберите ответ, с которым склеить. Нажмите на тот же — отмена</div>`
+            : `<div class="mj-tip">${ic('sparkles', 15)} Похожие ответы разошлись? Нажмите на один, потом на другой — они склеятся</div>`
+          : `<div class="mj-tip">${ic('sparkles', 15)} Похожие ответы хост может склеить вручную</div>`;
+      body = `<div class="stage-card qz-card mj-review">
         <div class="qz-q sm">${esc(g.q)}</div>
-        ${pairs.length ? `<div class="mj-groups">${pairs.map(groupCard).join('')}</div>` : '<p class="mj-none">Ни одного совпадения — все ответили по-разному!</p>'}
-        ${soloList}
+        ${mine}
+        <div class="mj-sum"><span>${g.groups.length} ${plural(g.groups.length, 'разный ответ', 'разных ответа', 'разных ответов')} от ${total} ${plural(total, 'игрока', 'игроков', 'игроков')}</span>${g.groups.some((x) => x.major) ? `<span class="mj-sum-m">${ic('crown', 13)} большинство +1</span>` : '<span class="muted">большинства нет — ничья по размеру</span>'}</div>
+        <div class="mj-rows">${g.groups.map(row).join('')}</div>
         ${tip}
-        <div class="row c"><button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="mj-ready">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button><span class="muted small">${g.ready.length}/${g.order.length} готовы</span></div>
+        ${nextBar(g, 'mj-ready')}
       </div>`;
     } else if (g.phase === 'over') {
       body = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победа: ${(g.winners || []).map(nm).join(', ')}!</h2>
@@ -3122,6 +3230,11 @@
     'spy-next': () => act('next'),
     // кто я
     'who-random': () => act('randomFor'),
+    'who-img': () => whoFile.click(),
+    'who-img-x': () => {
+      ui.whoImg = null;
+      render();
+    },
     'who-force': () => act('forceStart'),
     'who-next': () => act('next'),
     'who-ans': (d) => act('answer', { v: d.v }),
@@ -3386,8 +3499,12 @@
         render();
       }
     } else if (kind === 'who-write') {
-      const r = await act('write', { text: fd.get('text') });
-      if (!r.error) clear();
+      if (ui.whoImg && !ui.whoImg.url) return toast('Подождите — картинка ещё загружается');
+      const r = await act('write', { text: fd.get('text'), img: ui.whoImg?.url || null });
+      if (!r.error) {
+        clear();
+        ui.whoImg = null;
+      }
     } else if (kind === 'who-ask') {
       const r = await act('ask', { text: fd.get('text') });
       if (!r.error) clear();

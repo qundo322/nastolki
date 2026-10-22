@@ -1938,7 +1938,7 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 /* ---------- светлая тема: доводка ---------- */
 [data-theme='light'] body { background: radial-gradient(1200px 600px at 10% -10%, var(--glow-1) 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, var(--glow-2) 0%, transparent 55%), linear-gradient(90deg, var(--bg-l), var(--bg-r)); background-attachment: fixed; }
 [data-theme='light'] .card, [data-theme='light'] .stage-card { box-shadow: var(--shadow); }
-[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost):not(.ready-btn):not(.tp-join):not(.lp-btn) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
+[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost):not(.ready-btn):not(.tp-join):not(.lp-btn):not(.on):not(.ja-on) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
 [data-theme='light'] .btn.ghost:hover:not([disabled]) { background: var(--surface-2); }
 [data-theme='light'] .inp { background: var(--surface); border-color: var(--line-strong); }
 [data-theme='light'] .inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -2284,3 +2284,156 @@ html[data-theme='light'] { background: linear-gradient(90deg, var(--bg-l), var(-
 /* «меньше анимаций» не должен ломать сам лоадер */
 html.v-calm .loader, html.v-calm .loader::after { animation-duration: 2s !important; animation-iteration-count: infinite !important; }
 .mc-on.mc-snap { transition: none !important; }
+
+/* ===== «Дальше»: кто нажал + отсчёт 5 секунд ===== */
+.nx-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 6px; }
+.nx-who { margin: 0; }
+.nx { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 10px auto 0; padding: 12px 22px 12px 12px; width: fit-content; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 700; animation: nxIn .35s cubic-bezier(.2,.9,.3,1.2) backwards; }
+.nx > span b { font-variant-numeric: tabular-nums; }
+.nx-ring { position: relative; width: 44px; height: 44px; display: grid; place-items: center; }
+.nx-ring svg { position: absolute; inset: 0; rotate: -90deg; }
+.nx-ring circle { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 119.4; stroke-dashoffset: 0; animation: nxRing 5s linear forwards; animation-delay: var(--nx, 0ms); }
+.nx-ring b { font-size: 18px; font-weight: 900; }
+@keyframes nxRing { to { stroke-dashoffset: 119.4; } }
+@keyframes nxIn { from { opacity: 0; scale: .9; } }
+.qz-mask { letter-spacing: .12em; color: var(--text); }
+.qz-inp::placeholder { letter-spacing: .25em; }
+
+/* ===== «Ответ большинства»: разбор раунда ===== */
+.mj-review { gap: 14px; }
+.mj-me { display: flex; align-items: center; gap: 14px; width: min(640px, 100%); margin: 0 auto; padding: 14px 18px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--line); text-align: left; animation: nxIn .45s cubic-bezier(.2,.9,.3,1.2) backwards; }
+.mj-me > div { flex: 1; display: grid; gap: 2px; }
+.mj-me > div b { font-size: 17px; }
+.mj-me > div span { font-size: 13px; color: var(--muted); }
+.mj-me-ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--surface-3); color: var(--muted); }
+.mj-me-pts { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--muted); }
+.mj-me.ok { border-color: var(--green-line); background: color-mix(in srgb, var(--green) 10%, var(--surface-2)); }
+.mj-me.ok .mj-me-ic { background: var(--green); color: var(--green-ink); }
+.mj-me.ok .mj-me-pts { color: var(--green-text, var(--green)); }
+.mj-me.major { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
+.mj-me.major .mj-me-ic { background: var(--accent); color: var(--accent-ink); }
+.mj-me.major .mj-me-pts { color: var(--accent-text, var(--accent)); }
+.mj-sum { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; width: min(640px, 100%); margin: 2px auto -4px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.mj-sum-m { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-text, var(--accent)); }
+.mj-rows { display: grid; gap: 8px; width: min(640px, 100%); margin: 0 auto; }
+.mj-row { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); border: 2px solid transparent; text-align: left; overflow: hidden; isolation: isolate; animation: mjIn .45s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: var(--d, 0ms); }
+.mj-bar { position: absolute; inset: 0 auto 0 0; width: var(--w); z-index: -1; background: color-mix(in srgb, var(--green) 14%, transparent); transform-origin: left; animation: mjBar .7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--d, 0ms) + 150ms); }
+@keyframes mjBar { from { scale: 0 1; } }
+.mj-row.major { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)); }
+.mj-row.major .mj-bar { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.mj-row.solo { background: transparent; border: 1px dashed var(--line-strong); padding-block: 9px; }
+.mj-row.solo .mj-bar { display: none; }
+.mj-row.mine { box-shadow: inset 4px 0 0 var(--text); }
+.mj-rk { width: 26px; flex: none; text-align: center; font-weight: 900; color: var(--muted); }
+.mj-row.major .mj-rk { color: var(--accent-text, var(--accent)); }
+.mj-main { flex: 1; min-width: 0; display: grid; gap: 7px; }
+.mj-ans { font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.15; overflow-wrap: anywhere; }
+.mj-ans i { color: var(--faint); font-style: normal; }
+.mj-row.solo .mj-ans { font-size: 16px; }
+.mj-avs { display: flex; flex-wrap: wrap; gap: 6px; }
+.mj-p { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border-radius: 99px; background: color-mix(in srgb, var(--surface) 70%, transparent); font-size: 12.5px; font-weight: 700; }
+.mj-x { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0; }
+.mj-x:hover { background: var(--red); color: #fff; }
+.mj-side { display: grid; justify-items: end; gap: 2px; flex: none; }
+.mj-cnt { font-size: 26px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.mj-pts { font-size: 12px; font-weight: 800; color: var(--green-text, var(--green)); white-space: nowrap; }
+.mj-pts.zero { color: var(--faint); }
+.mj-row.host { cursor: pointer; }
+.mj-row.host:hover { border-color: var(--line-strong); }
+.mj-row.sel { border-color: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 20%, transparent); }
+.mj-row.target { border-style: dashed; border-color: var(--blue); }
+.mj-merge { position: absolute; right: 10px; top: 50%; translate: 0 -50%; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 99px; background: var(--blue); color: #fff; font-size: 12.5px; font-weight: 800; opacity: 0; transition: opacity .15s; pointer-events: none; }
+.mj-row.target:hover .mj-merge, .mj-row.target:focus-visible .mj-merge { opacity: 1; }
+.mj-tip { display: flex; align-items: center; justify-content: center; gap: 6px; }
+@media (max-width: 600px) { .mj-ans { font-size: 17px; } .mj-me-pts { font-size: 24px; } }
+
+/* ===== Кто я: игроки слева, игра справа ===== */
+.who.who2 { max-width: 1320px; display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.who2 .who-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.who2 .who-main > .card, .who2 .who-main > .banner, .who2 .who-ask { max-width: none; margin: 0; width: 100%; }
+.who-players { position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow-y: auto; padding: 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.who-list { display: grid; gap: 10px; margin-top: 10px; }
+.wt { position: relative; display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 16px; background: var(--surface-2); border: 2px solid transparent; animation: introUp .5s cubic-bezier(.16,1,.3,1) backwards; }
+.wt.speaking { border-color: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 20%, transparent); }
+.wt.done { border-color: var(--green-line); }
+.wt.gaveup { opacity: .55; }
+.wt.me { background: var(--surface-3); }
+.wt-ava { position: relative; flex: none; }
+.wt-ava .ava { box-shadow: 0 8px 20px -10px rgba(0,0,0,.6); }
+.wt-body { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.wt-name { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; color: var(--muted); }
+.wt-name small { font-weight: 600; }
+.wt-mic { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: var(--green-ink); }
+.wt-char { font-family: var(--display); font-weight: 800; font-size: 21px; line-height: 1.15; overflow-wrap: anywhere; }
+.wt-char.hidden-char { font-family: var(--font); font-size: 14px; font-weight: 700; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.wt-st { font-size: 12px; font-weight: 700; color: var(--green-text, var(--green)); display: inline-flex; align-items: center; gap: 4px; min-height: 14px; }
+.wt.gaveup .wt-st { color: var(--muted); }
+.wt-img { flex: none; width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 2px solid var(--surface); box-shadow: 0 8px 18px -10px rgba(0,0,0,.6); rotate: 3deg; transition: rotate .2s, scale .2s; }
+.wt-img:hover { rotate: 0deg; scale: 2.2; z-index: 5; position: relative; }
+/* медали: кубок, серебро, бронза */
+.wt-medal { position: absolute; right: -6px; bottom: -4px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--surface-2); animation: medalIn .7s cubic-bezier(.2,1.6,.4,1) backwards, medalBob 2.6s ease-in-out .7s infinite; overflow: hidden; }
+.wt-medal::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.75) 50%, transparent 60%); translate: -100% 0; animation: medalShine 3s ease-in-out 1s infinite; }
+.wt-medal.m1 { background: linear-gradient(140deg, #ffe58a, #f2b524 55%, #c98a0b); color: #5a3a00; box-shadow: 0 0 14px rgba(242,181,36,.6); width: 38px; height: 38px; }
+.wt-medal.m2 { background: linear-gradient(140deg, #f4f6f8, #b9c0c8 55%, #8a929b); color: #3a4048; }
+.wt-medal.m3 { background: linear-gradient(140deg, #f3c39a, #cd7f32 55%, #94561f); color: #3f2208; }
+@keyframes medalIn { from { scale: 0; rotate: -90deg; } }
+@keyframes medalBob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -3px; } }
+@keyframes medalShine { 0%, 60% { translate: -100% 0; } 100% { translate: 100% 0; } }
+html.v-bigWho .wt-ava .ava { width: 112px !important; height: 112px !important; }
+html.v-bigWho .wt-char { font-size: 28px; }
+html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 1fr); }
+/* картинка при загадывании */
+.who-write { display: grid; gap: 12px; justify-items: center; width: min(680px, 100%); }
+.who-write .big-form { width: 100%; }
+.ww-img { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.ww-prev { position: relative; }
+.ww-prev img { width: 76px; height: 76px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line-strong); display: block; }
+.ww-x { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--text); color: var(--bg); cursor: pointer; }
+/* вопросы и ответы: колонки «Да» и «Нет» */
+.qa-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.qa-col { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 14px; background: var(--surface-2); border-top: 3px solid var(--line-strong); min-width: 0; }
+.qa-col.c-yes { border-top-color: var(--green); }
+.qa-col.c-no { border-top-color: var(--red); }
+.qa-col.c-idk { margin-bottom: 8px; border-top-color: var(--accent); }
+.qa-col-h { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 6px; }
+.qa-col-h b { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.qa-col.c-yes .qa-col-h b { color: var(--green-text, var(--green)); }
+.qa-col.c-no .qa-col-h b { color: var(--red-text, var(--red)); }
+.qa-col-h span { font-size: 12px; font-weight: 800; min-width: 22px; text-align: center; padding: 2px 6px; border-radius: 99px; background: var(--surface-3); }
+.qa-it { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 10px; background: var(--surface); font-weight: 700; font-size: 14px; }
+.qa-it .ql-q { overflow-wrap: anywhere; }
+.qa-empty { font-size: 12px; color: var(--faint); padding: 6px; }
+@media (max-width: 1000px) {
+  .who.who2 { grid-template-columns: 1fr; }
+  .who-players { position: static; max-height: none; }
+  .who-list { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+}
+@media (max-width: 560px) { .qa-cols { grid-template-columns: 1fr; } .wt-ava .ava { width: 60px !important; height: 60px !important; } .wt-char { font-size: 17px; } }
+
+/* ===== Намёк понял: длинные слова и «кто вычеркнул» ===== */
+.jc b { overflow-wrap: normal; word-break: normal; hyphens: manual; max-width: 100%; }
+.jc b.l-m { font-size: clamp(19px, 2.1vw, 27px); }
+.jc b.l-l { font-size: clamp(17px, 1.8vw, 22px); }
+.jc b.l-xl { font-size: clamp(15px, 1.5vw, 18px); overflow-wrap: anywhere; }
+.jc { padding-bottom: 14px; }
+.jc-by { display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; padding: 3px 9px 3px 7px; border-radius: 99px; background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red-text, var(--red)); font-size: 12px; font-weight: 800; opacity: 1; animation: nxIn .3s cubic-bezier(.2,.9,.3,1.2) backwards; }
+.jc-by b { font-family: var(--font); font-size: 12px; text-decoration: none !important; }
+.jc.removed { opacity: 1; }
+.jc.removed > b, .jc.removed > small { opacity: .4; }
+
+/* ===== Таблица «Очки»: одинаковые отступы у всех строк, подсветка не прилипает к краям ===== */
+.jo-board .jb-row { padding: 9px 12px; border-radius: 12px; margin: 0; }
+.jo-board .jb-row + .jb-row { margin-top: 2px; }
+.jo-board .jb-row.turn { border-bottom-color: transparent; }
+.leader .lrow { padding: 8px 12px; border-radius: 10px; }
+.leader .lrow.turn { background: var(--accent-soft); border-bottom-color: transparent; }
+.leader .lrow:last-child { border-bottom: 0; }
+/* слово всегда помещается в карточку целиком: размер шрифта от ширины карточки и длины слова */
+.jc { container-type: inline-size; }
+.jc > b, .jc > b.l-m, .jc > b.l-l, .jc > b.l-xl { font-size: clamp(14px, calc((100cqi - 24px) / (var(--n, 6) * 0.6)), 34px); overflow-wrap: normal; white-space: nowrap; }
+/* медаль «написал первым» */
+.jc-first { position: absolute; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 6px; border-radius: 99px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: #5a3a00; background: linear-gradient(140deg, #ffe58a, #f2b524 55%, #c98a0b); box-shadow: 0 0 12px rgba(242,181,36,.5); overflow: hidden; animation: medalIn .6s cubic-bezier(.2,1.6,.4,1) backwards; }
+.jc-first::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.8) 50%, transparent 60%); translate: -100% 0; animation: medalShine 3s ease-in-out 1s infinite; }
+.jc:has(.jc-first) { border-color: #f2b524; }
+.jc-by { white-space: nowrap; max-width: 100%; overflow: hidden; } .jc-by b { overflow: hidden; text-overflow: ellipsis; }
+.notes-card .qa-cols { margin-bottom: 16px; }

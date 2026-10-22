@@ -1945,7 +1945,7 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 /* ---------- светлая тема: доводка ---------- */
 [data-theme='light'] body { background: radial-gradient(1200px 600px at 10% -10%, var(--glow-1) 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, var(--glow-2) 0%, transparent 55%), linear-gradient(90deg, var(--bg-l), var(--bg-r)); background-attachment: fixed; }
 [data-theme='light'] .card, [data-theme='light'] .stage-card { box-shadow: var(--shadow); }
-[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost):not(.ready-btn):not(.tp-join):not(.lp-btn) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
+[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost):not(.ready-btn):not(.tp-join):not(.lp-btn):not(.on):not(.ja-on) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
 [data-theme='light'] .btn.ghost:hover:not([disabled]) { background: var(--surface-2); }
 [data-theme='light'] .inp { background: var(--surface); border-color: var(--line-strong); }
 [data-theme='light'] .inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -2291,6 +2291,159 @@ html[data-theme='light'] { background: linear-gradient(90deg, var(--bg-l), var(-
 /* «меньше анимаций» не должен ломать сам лоадер */
 html.v-calm .loader, html.v-calm .loader::after { animation-duration: 2s !important; animation-iteration-count: infinite !important; }
 .mc-on.mc-snap { transition: none !important; }
+
+/* ===== «Дальше»: кто нажал + отсчёт 5 секунд ===== */
+.nx-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 6px; }
+.nx-who { margin: 0; }
+.nx { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 10px auto 0; padding: 12px 22px 12px 12px; width: fit-content; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 700; animation: nxIn .35s cubic-bezier(.2,.9,.3,1.2) backwards; }
+.nx > span b { font-variant-numeric: tabular-nums; }
+.nx-ring { position: relative; width: 44px; height: 44px; display: grid; place-items: center; }
+.nx-ring svg { position: absolute; inset: 0; rotate: -90deg; }
+.nx-ring circle { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 119.4; stroke-dashoffset: 0; animation: nxRing 5s linear forwards; animation-delay: var(--nx, 0ms); }
+.nx-ring b { font-size: 18px; font-weight: 900; }
+@keyframes nxRing { to { stroke-dashoffset: 119.4; } }
+@keyframes nxIn { from { opacity: 0; scale: .9; } }
+.qz-mask { letter-spacing: .12em; color: var(--text); }
+.qz-inp::placeholder { letter-spacing: .25em; }
+
+/* ===== «Ответ большинства»: разбор раунда ===== */
+.mj-review { gap: 14px; }
+.mj-me { display: flex; align-items: center; gap: 14px; width: min(640px, 100%); margin: 0 auto; padding: 14px 18px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--line); text-align: left; animation: nxIn .45s cubic-bezier(.2,.9,.3,1.2) backwards; }
+.mj-me > div { flex: 1; display: grid; gap: 2px; }
+.mj-me > div b { font-size: 17px; }
+.mj-me > div span { font-size: 13px; color: var(--muted); }
+.mj-me-ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--surface-3); color: var(--muted); }
+.mj-me-pts { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--muted); }
+.mj-me.ok { border-color: var(--green-line); background: color-mix(in srgb, var(--green) 10%, var(--surface-2)); }
+.mj-me.ok .mj-me-ic { background: var(--green); color: var(--green-ink); }
+.mj-me.ok .mj-me-pts { color: var(--green-text, var(--green)); }
+.mj-me.major { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
+.mj-me.major .mj-me-ic { background: var(--accent); color: var(--accent-ink); }
+.mj-me.major .mj-me-pts { color: var(--accent-text, var(--accent)); }
+.mj-sum { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; width: min(640px, 100%); margin: 2px auto -4px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.mj-sum-m { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-text, var(--accent)); }
+.mj-rows { display: grid; gap: 8px; width: min(640px, 100%); margin: 0 auto; }
+.mj-row { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); border: 2px solid transparent; text-align: left; overflow: hidden; isolation: isolate; animation: mjIn .45s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: var(--d, 0ms); }
+.mj-bar { position: absolute; inset: 0 auto 0 0; width: var(--w); z-index: -1; background: color-mix(in srgb, var(--green) 14%, transparent); transform-origin: left; animation: mjBar .7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--d, 0ms) + 150ms); }
+@keyframes mjBar { from { scale: 0 1; } }
+.mj-row.major { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)); }
+.mj-row.major .mj-bar { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.mj-row.solo { background: transparent; border: 1px dashed var(--line-strong); padding-block: 9px; }
+.mj-row.solo .mj-bar { display: none; }
+.mj-row.mine { box-shadow: inset 4px 0 0 var(--text); }
+.mj-rk { width: 26px; flex: none; text-align: center; font-weight: 900; color: var(--muted); }
+.mj-row.major .mj-rk { color: var(--accent-text, var(--accent)); }
+.mj-main { flex: 1; min-width: 0; display: grid; gap: 7px; }
+.mj-ans { font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.15; overflow-wrap: anywhere; }
+.mj-ans i { color: var(--faint); font-style: normal; }
+.mj-row.solo .mj-ans { font-size: 16px; }
+.mj-avs { display: flex; flex-wrap: wrap; gap: 6px; }
+.mj-p { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border-radius: 99px; background: color-mix(in srgb, var(--surface) 70%, transparent); font-size: 12.5px; font-weight: 700; }
+.mj-x { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0; }
+.mj-x:hover { background: var(--red); color: #fff; }
+.mj-side { display: grid; justify-items: end; gap: 2px; flex: none; }
+.mj-cnt { font-size: 26px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.mj-pts { font-size: 12px; font-weight: 800; color: var(--green-text, var(--green)); white-space: nowrap; }
+.mj-pts.zero { color: var(--faint); }
+.mj-row.host { cursor: pointer; }
+.mj-row.host:hover { border-color: var(--line-strong); }
+.mj-row.sel { border-color: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 20%, transparent); }
+.mj-row.target { border-style: dashed; border-color: var(--blue); }
+.mj-merge { position: absolute; right: 10px; top: 50%; translate: 0 -50%; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 99px; background: var(--blue); color: #fff; font-size: 12.5px; font-weight: 800; opacity: 0; transition: opacity .15s; pointer-events: none; }
+.mj-row.target:hover .mj-merge, .mj-row.target:focus-visible .mj-merge { opacity: 1; }
+.mj-tip { display: flex; align-items: center; justify-content: center; gap: 6px; }
+@media (max-width: 600px) { .mj-ans { font-size: 17px; } .mj-me-pts { font-size: 24px; } }
+
+/* ===== Кто я: игроки слева, игра справа ===== */
+.who.who2 { max-width: 1320px; display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.who2 .who-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.who2 .who-main > .card, .who2 .who-main > .banner, .who2 .who-ask { max-width: none; margin: 0; width: 100%; }
+.who-players { position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow-y: auto; padding: 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.who-list { display: grid; gap: 10px; margin-top: 10px; }
+.wt { position: relative; display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 16px; background: var(--surface-2); border: 2px solid transparent; animation: introUp .5s cubic-bezier(.16,1,.3,1) backwards; }
+.wt.speaking { border-color: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 20%, transparent); }
+.wt.done { border-color: var(--green-line); }
+.wt.gaveup { opacity: .55; }
+.wt.me { background: var(--surface-3); }
+.wt-ava { position: relative; flex: none; }
+.wt-ava .ava { box-shadow: 0 8px 20px -10px rgba(0,0,0,.6); }
+.wt-body { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.wt-name { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; color: var(--muted); }
+.wt-name small { font-weight: 600; }
+.wt-mic { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: var(--green-ink); }
+.wt-char { font-family: var(--display); font-weight: 800; font-size: 21px; line-height: 1.15; overflow-wrap: anywhere; }
+.wt-char.hidden-char { font-family: var(--font); font-size: 14px; font-weight: 700; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.wt-st { font-size: 12px; font-weight: 700; color: var(--green-text, var(--green)); display: inline-flex; align-items: center; gap: 4px; min-height: 14px; }
+.wt.gaveup .wt-st { color: var(--muted); }
+.wt-img { flex: none; width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 2px solid var(--surface); box-shadow: 0 8px 18px -10px rgba(0,0,0,.6); rotate: 3deg; transition: rotate .2s, scale .2s; }
+.wt-img:hover { rotate: 0deg; scale: 2.2; z-index: 5; position: relative; }
+/* медали: кубок, серебро, бронза */
+.wt-medal { position: absolute; right: -6px; bottom: -4px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--surface-2); animation: medalIn .7s cubic-bezier(.2,1.6,.4,1) backwards, medalBob 2.6s ease-in-out .7s infinite; overflow: hidden; }
+.wt-medal::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.75) 50%, transparent 60%); translate: -100% 0; animation: medalShine 3s ease-in-out 1s infinite; }
+.wt-medal.m1 { background: linear-gradient(140deg, #ffe58a, #f2b524 55%, #c98a0b); color: #5a3a00; box-shadow: 0 0 14px rgba(242,181,36,.6); width: 38px; height: 38px; }
+.wt-medal.m2 { background: linear-gradient(140deg, #f4f6f8, #b9c0c8 55%, #8a929b); color: #3a4048; }
+.wt-medal.m3 { background: linear-gradient(140deg, #f3c39a, #cd7f32 55%, #94561f); color: #3f2208; }
+@keyframes medalIn { from { scale: 0; rotate: -90deg; } }
+@keyframes medalBob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -3px; } }
+@keyframes medalShine { 0%, 60% { translate: -100% 0; } 100% { translate: 100% 0; } }
+html.v-bigWho .wt-ava .ava { width: 112px !important; height: 112px !important; }
+html.v-bigWho .wt-char { font-size: 28px; }
+html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 1fr); }
+/* картинка при загадывании */
+.who-write { display: grid; gap: 12px; justify-items: center; width: min(680px, 100%); }
+.who-write .big-form { width: 100%; }
+.ww-img { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.ww-prev { position: relative; }
+.ww-prev img { width: 76px; height: 76px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line-strong); display: block; }
+.ww-x { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--text); color: var(--bg); cursor: pointer; }
+/* вопросы и ответы: колонки «Да» и «Нет» */
+.qa-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.qa-col { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 14px; background: var(--surface-2); border-top: 3px solid var(--line-strong); min-width: 0; }
+.qa-col.c-yes { border-top-color: var(--green); }
+.qa-col.c-no { border-top-color: var(--red); }
+.qa-col.c-idk { margin-bottom: 8px; border-top-color: var(--accent); }
+.qa-col-h { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 6px; }
+.qa-col-h b { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.qa-col.c-yes .qa-col-h b { color: var(--green-text, var(--green)); }
+.qa-col.c-no .qa-col-h b { color: var(--red-text, var(--red)); }
+.qa-col-h span { font-size: 12px; font-weight: 800; min-width: 22px; text-align: center; padding: 2px 6px; border-radius: 99px; background: var(--surface-3); }
+.qa-it { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 10px; background: var(--surface); font-weight: 700; font-size: 14px; }
+.qa-it .ql-q { overflow-wrap: anywhere; }
+.qa-empty { font-size: 12px; color: var(--faint); padding: 6px; }
+@media (max-width: 1000px) {
+  .who.who2 { grid-template-columns: 1fr; }
+  .who-players { position: static; max-height: none; }
+  .who-list { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+}
+@media (max-width: 560px) { .qa-cols { grid-template-columns: 1fr; } .wt-ava .ava { width: 60px !important; height: 60px !important; } .wt-char { font-size: 17px; } }
+
+/* ===== Намёк понял: длинные слова и «кто вычеркнул» ===== */
+.jc b { overflow-wrap: normal; word-break: normal; hyphens: manual; max-width: 100%; }
+.jc b.l-m { font-size: clamp(19px, 2.1vw, 27px); }
+.jc b.l-l { font-size: clamp(17px, 1.8vw, 22px); }
+.jc b.l-xl { font-size: clamp(15px, 1.5vw, 18px); overflow-wrap: anywhere; }
+.jc { padding-bottom: 14px; }
+.jc-by { display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; padding: 3px 9px 3px 7px; border-radius: 99px; background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red-text, var(--red)); font-size: 12px; font-weight: 800; opacity: 1; animation: nxIn .3s cubic-bezier(.2,.9,.3,1.2) backwards; }
+.jc-by b { font-family: var(--font); font-size: 12px; text-decoration: none !important; }
+.jc.removed { opacity: 1; }
+.jc.removed > b, .jc.removed > small { opacity: .4; }
+
+/* ===== Таблица «Очки»: одинаковые отступы у всех строк, подсветка не прилипает к краям ===== */
+.jo-board .jb-row { padding: 9px 12px; border-radius: 12px; margin: 0; }
+.jo-board .jb-row + .jb-row { margin-top: 2px; }
+.jo-board .jb-row.turn { border-bottom-color: transparent; }
+.leader .lrow { padding: 8px 12px; border-radius: 10px; }
+.leader .lrow.turn { background: var(--accent-soft); border-bottom-color: transparent; }
+.leader .lrow:last-child { border-bottom: 0; }
+/* слово всегда помещается в карточку целиком: размер шрифта от ширины карточки и длины слова */
+.jc { container-type: inline-size; }
+.jc > b, .jc > b.l-m, .jc > b.l-l, .jc > b.l-xl { font-size: clamp(14px, calc((100cqi - 24px) / (var(--n, 6) * 0.6)), 34px); overflow-wrap: normal; white-space: nowrap; }
+/* медаль «написал первым» */
+.jc-first { position: absolute; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 6px; border-radius: 99px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: #5a3a00; background: linear-gradient(140deg, #ffe58a, #f2b524 55%, #c98a0b); box-shadow: 0 0 12px rgba(242,181,36,.5); overflow: hidden; animation: medalIn .6s cubic-bezier(.2,1.6,.4,1) backwards; }
+.jc-first::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.8) 50%, transparent 60%); translate: -100% 0; animation: medalShine 3s ease-in-out 1s infinite; }
+.jc:has(.jc-first) { border-color: #f2b524; }
+.jc-by { white-space: nowrap; max-width: 100%; overflow: hidden; } .jc-by b { overflow: hidden; text-overflow: ellipsis; }
+.notes-card .qa-cols { margin-bottom: 16px; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -3840,11 +3993,53 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     }
   });
 
+  // server/avatars.js
+  var require_avatars = __commonJS({
+    "server/avatars.js"(exports, module) {
+      var crypto = require_crypto_shim();
+      var MAX_BYTES = 150 * 1024;
+      var MAX_COUNT = 600;
+      var store = /* @__PURE__ */ new Map();
+      var MAGIC = [
+        { type: "image/jpeg", test: (b) => b[0] === 255 && b[1] === 216 && b[2] === 255 },
+        { type: "image/png", test: (b) => b[0] === 137 && b[1] === 80 && b[2] === 78 && b[3] === 71 },
+        { type: "image/webp", test: (b) => b.slice(0, 4).toString("latin1") === "RIFF" && b.slice(8, 12).toString("latin1") === "WEBP" }
+      ];
+      function put(dataUrl) {
+        const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+        if (!m) return { error: "\u041D\u0443\u0436\u043D\u0430 \u043A\u0430\u0440\u0442\u0438\u043D\u043A\u0430 JPEG, PNG \u0438\u043B\u0438 WebP" };
+        const buf = Buffer.from(m[2], "base64");
+        if (!buf.length || buf.length > MAX_BYTES) return { error: "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0430 \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0431\u043E\u043B\u044C\u0448\u0430\u044F" };
+        const kind = MAGIC.find((x) => x.test(buf));
+        if (!kind) return { error: "\u042D\u0442\u043E \u043D\u0435 \u043F\u043E\u0445\u043E\u0436\u0435 \u043D\u0430 \u043A\u0430\u0440\u0442\u0438\u043D\u043A\u0443" };
+        const hash = crypto.createHash("sha256").update(buf).digest("hex").slice(0, 24);
+        if (store.has(hash)) store.delete(hash);
+        store.set(hash, { buf, type: kind.type });
+        while (store.size > MAX_COUNT) store.delete(store.keys().next().value);
+        return { url: "/av/" + hash };
+      }
+      var URL_RE = /^\/av\/[a-f0-9]{24}$/;
+      var clean = (u) => typeof u === "string" && URL_RE.test(u) && store.has(u.slice(4)) ? u : null;
+      function route(app) {
+        app.get("/av/:hash", (req, res) => {
+          const it = store.get(String(req.params.hash));
+          if (!it) return res.status(404).end();
+          res.set("Content-Type", it.type);
+          res.set("Cache-Control", "public, max-age=31536000, immutable");
+          res.set("X-Content-Type-Options", "nosniff");
+          res.send(it.buf);
+        });
+      }
+      module.exports = { put, clean, route, MAX_BYTES };
+    }
+  });
+
   // server/games/whoami.js
   var require_whoami = __commonJS({
     "server/games/whoami.js"(exports, module) {
       var { CHARACTERS } = require_words();
       var { shuffle, Deck, countLabel } = require_util();
+      var Avatars = require_avatars();
       var Q_MS = 6e4;
       var meta = {
         title: "\u041A\u0442\u043E \u044F?",
@@ -3985,6 +4180,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             if (!text) return "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430";
             if (s.a[target].char) return "\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u0436 \u0443\u0436\u0435 \u0437\u0430\u0433\u0430\u0434\u0430\u043D";
             s.a[target].char = text;
+            s.a[target].img = Avatars.clean(msg.img);
             if (Object.values(s.a).every((a) => a.char)) {
               s.phase = "play";
               startQ(s, ctx);
@@ -4103,6 +4299,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
               id,
               {
                 char: s.phase === "write" ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== "over" ? null : a.char,
+                img: s.phase === "write" ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== "over" ? null : a.img || null,
                 writer: a.writer,
                 guessed: !!a.guessedAt,
                 gaveUp: !!a.gaveUp,
@@ -4190,7 +4387,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         short: "\u0412\u0441\u0435 \u043F\u0438\u0448\u0443\u0442 \u043F\u043E \u043E\u0434\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0435, \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u044B\u0435 \u0441\u0433\u043E\u0440\u0430\u044E\u0442. \u0423\u0433\u0430\u0434\u0430\u043B \u2014 \u0438 \u0432\u044B\u0431\u0435\u0440\u0438 \u043B\u0443\u0447\u0448\u0443\u044E \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443.",
         rules: [
           "\u041E\u0434\u0438\u043D \u0438\u0433\u0440\u043E\u043A \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u0435\u0442, \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u0432\u0438\u0434\u044F\u0442 \u0437\u0430\u0433\u0430\u0434\u0430\u043D\u043D\u043E\u0435 \u0441\u043B\u043E\u0432\u043E \u0438 \u0437\u0430 \u043C\u0438\u043D\u0443\u0442\u0443 \u043F\u0438\u0448\u0443\u0442 \u043F\u043E \u043E\u0434\u043D\u043E\u0439 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0435 \u2014 \u043E\u0434\u043D\u043E \u0441\u043B\u043E\u0432\u043E (\u0431\u0443\u043A\u0432\u044B \u0438 \u0446\u0438\u0444\u0440\u044B, \u043C\u043E\u0436\u043D\u043E \u0447\u0435\u0440\u0435\u0437 \u0434\u0435\u0444\u0438\u0441). \u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443 \u043D\u0435\u043B\u044C\u0437\u044F \u0437\u0430\u043C\u0435\u043D\u0438\u0442\u044C \u043F\u043E\u0441\u043B\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0438.",
-          "\u0417\u0430\u0442\u0435\u043C \u0437\u0430 30 \u0441\u0435\u043A\u0443\u043D\u0434 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u0447\u0438\u043A\u0438 \u0432\u044B\u0447\u0451\u0440\u043A\u0438\u0432\u0430\u044E\u0442 \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u044B\u0435 \u0438 \u043E\u0434\u043D\u043E\u043A\u043E\u0440\u0435\u043D\u043D\u044B\u0435 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 (\u0441\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F \u043E\u0442\u043C\u0435\u0447\u0430\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438). \u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 \u0443\u0445\u043E\u0434\u044F\u0442 \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0449\u0435\u043C\u0443, \u043A\u043E\u0433\u0434\u0430 \xAB\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C\xBB \u043D\u0430\u0436\u043C\u0443\u0442 \u0432\u0441\u0435 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u0447\u0438\u043A\u0438 \u0438\u043B\u0438 \u0432\u044B\u0439\u0434\u0435\u0442 \u0432\u0440\u0435\u043C\u044F.",
+          "\u0417\u0430\u0442\u0435\u043C \u0437\u0430 30 \u0441\u0435\u043A\u0443\u043D\u0434 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u0447\u0438\u043A\u0438 \u0432\u044B\u0447\u0451\u0440\u043A\u0438\u0432\u0430\u044E\u0442 \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u044B\u0435 \u0438 \u043E\u0434\u043D\u043E\u043A\u043E\u0440\u0435\u043D\u043D\u044B\u0435 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438. \u0421\u043E\u0432\u043F\u0430\u0434\u0435\u043D\u0438\u044F \u043E\u0442\u043C\u0435\u0447\u0430\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438: \u043A\u0442\u043E \u043D\u0430\u043F\u0438\u0441\u0430\u043B \u0442\u0430\u043A\u0443\u044E \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443 \u043F\u0435\u0440\u0432\u044B\u043C \u2014 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442 \u0435\u0451 \u0438 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u043C\u0435\u0434\u0430\u043B\u044C \xAB\u043F\u0435\u0440\u0432\u044B\u043C\xBB, \u0443 \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0445 \u043E\u043D\u0430 \u0441\u0433\u043E\u0440\u0430\u0435\u0442. \u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 \u0443\u0445\u043E\u0434\u044F\u0442 \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0449\u0435\u043C\u0443, \u043A\u043E\u0433\u0434\u0430 \xAB\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C\xBB \u043D\u0430\u0436\u043C\u0443\u0442 \u0432\u0441\u0435 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u0447\u0438\u043A\u0438 \u0438\u043B\u0438 \u0432\u044B\u0439\u0434\u0435\u0442 \u0432\u0440\u0435\u043C\u044F.",
           "\u0423\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0449\u0438\u0439 \u0432\u0438\u0434\u0438\u0442 \u043E\u0441\u0442\u0430\u0432\u0448\u0438\u0435\u0441\u044F \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 \u0430\u043D\u043E\u043D\u0438\u043C\u043D\u043E \u0438 \u043F\u0438\u0448\u0435\u0442 \u043E\u0442\u0432\u0435\u0442. \u0423\u0433\u0430\u0434\u0430\u043B \u2014 \u0437\u0430 30 \u0441\u0435\u043A\u0443\u043D\u0434 \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442 \u043B\u0443\u0447\u0448\u0443\u044E \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443 \u0441\u0435\u0440\u0434\u0435\u0447\u043A\u043E\u043C.",
           "\u041E\u0442\u0432\u0435\u0442 \u043D\u0435 \u0441\u043E\u0432\u043F\u0430\u043B \u0442\u043E\u0447\u044C-\u0432-\u0442\u043E\u0447\u044C? \u041F\u043E\u0434\u0441\u043A\u0430\u0437\u0447\u0438\u043A\u0438 \u0440\u0435\u0448\u0430\u044E\u0442: \xAB\u0417\u0430\u0441\u0447\u0438\u0442\u0430\u0442\u044C\xBB \u0438\u043B\u0438 \xAB\u041D\u0435 \u0437\u0430\u0441\u0447\u0438\u0442\u044B\u0432\u0430\u0442\u044C\xBB \u2014 \u0440\u0435\u0448\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u043D\u0438\u043C\u0430\u0435\u0442\u0441\u044F, \u043A\u043E\u0433\u0434\u0430 \u0442\u0430\u043A \u043D\u0430\u0436\u043C\u0443\u0442 \u0432\u0441\u0435. \u0417\u0430 30 \u0441\u0435\u043A\u0443\u043D\u0434 \u043D\u0435 \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u0438\u043B\u0438\u0441\u044C \u2014 \u043D\u0435 \u0437\u0430\u0441\u0447\u0438\u0442\u0430\u043D\u043E.",
           "\u041E\u0447\u043A\u0438, \u0435\u0441\u043B\u0438 \u0441\u043B\u043E\u0432\u043E \u0443\u0433\u0430\u0434\u0430\u043D\u043E: \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0449\u0435\u043C\u0443 +2; \u043A\u0430\u0436\u0434\u043E\u043C\u0443, \u0447\u044C\u044F \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0430 \u043D\u0435 \u0441\u0433\u043E\u0440\u0435\u043B\u0430, +1; \u0430\u0432\u0442\u043E\u0440\u0443 \u043B\u0443\u0447\u0448\u0435\u0439 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438 \u2014 \u0435\u0449\u0451 +3.",
@@ -4266,8 +4463,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           const key = k.length > 4 ? k.slice(0, 5) : k;
           (groups[key] = groups[key] || []).push(id);
         }
-        for (const ids of Object.values(groups)) if (ids.length > 1) ids.forEach((id) => s.clues[id].removed = true);
-        for (const c of Object.values(s.clues)) if (norm(c.text) === norm(s.word)) c.removed = true;
+        for (const ids of Object.values(groups)) {
+          if (ids.length < 2) continue;
+          const first = ids.slice().sort((a, b) => (s.clues[a].at || 0) - (s.clues[b].at || 0))[0];
+          for (const id of ids) {
+            if (id === first) Object.assign(s.clues[id], { first: true });
+            else Object.assign(s.clues[id], { removed: true, by: "dup", beat: first });
+          }
+        }
+        for (const c of Object.values(s.clues)) if (norm(c.text) === norm(s.word)) Object.assign(c, { removed: true, by: "word", first: false });
       }
       function toFilter(s, ctx) {
         autoDupes(s);
@@ -4335,7 +4539,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             const text = cleanWord(msg.text);
             if (!text) return "\u041F\u0443\u0441\u0442\u0430\u044F \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0430";
             if (!ONE_WORD.test(text)) return "\u0422\u043E\u043B\u044C\u043A\u043E \u043E\u0434\u043D\u043E \u0441\u043B\u043E\u0432\u043E: \u0431\u0443\u043A\u0432\u044B \u0438 \u0446\u0438\u0444\u0440\u044B, \u0431\u0435\u0437 \u043F\u0440\u043E\u0431\u0435\u043B\u043E\u0432 \u0438 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432 (\u0434\u0435\u0444\u0438\u0441 \u043C\u043E\u0436\u043D\u043E)";
-            s.clues[pid] = { text, removed: false };
+            s.clues[pid] = { text, removed: false, at: Date.now() };
             checkVotes(s, ctx);
             return;
           }
@@ -4372,7 +4576,10 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           case "toggle": {
             if (s.phase !== "filter" || !isHelper) return;
             const c = s.clues[msg.pid];
-            if (c) c.removed = !c.removed;
+            if (c) {
+              c.removed = !c.removed;
+              c.by = c.removed ? pid : null;
+            }
             return;
           }
           case "filterDone": {
@@ -4463,9 +4670,9 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           submitted: Object.keys(s.clues || {}),
           myClue: ((_b = (_a = s.clues) == null ? void 0 : _a[pid]) == null ? void 0 : _b.text) || null,
           clues: !showClues ? [] : isGuesser ? (s.anon || Object.keys(s.clues)).map((id, key) => {
-            var _a2, _b2;
-            return { key, text: (_a2 = s.clues[id]) == null ? void 0 : _a2.text, removed: (_b2 = s.clues[id]) == null ? void 0 : _b2.removed };
-          }).filter((c) => c.text && !(s.phase === "guess" && c.removed)) : Object.entries(s.clues).map(([id, c]) => ({ pid: id, key: (s.anon || []).indexOf(id), text: c.text, removed: c.removed })),
+            var _a2, _b2, _c;
+            return { key, text: (_a2 = s.clues[id]) == null ? void 0 : _a2.text, removed: (_b2 = s.clues[id]) == null ? void 0 : _b2.removed, first: !!((_c = s.clues[id]) == null ? void 0 : _c.first) };
+          }).filter((c) => c.text && !(s.phase === "guess" && c.removed)) : Object.entries(s.clues).map(([id, c]) => ({ pid: id, key: (s.anon || []).indexOf(id), text: c.text, removed: c.removed, by: c.removed ? c.by || null : null, beat: c.removed ? c.beat || null : null, first: !!c.first })),
           show: Object.keys(s.show || {}),
           guess: s.guess,
           correct: s.correct,
@@ -5035,7 +5242,208 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         ["\u0411\u044B\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0446\u0438\u0444\u0440 \u0432 \u043E\u0431\u044B\u0447\u043D\u043E\u043C \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u043E\u043C \u043D\u043E\u043C\u0435\u0440\u0435 \u0423\u043A\u0440\u0430\u0438\u043D\u044B \u0431\u0435\u0437 \u043A\u043E\u0434\u0430 \u0441\u0442\u0440\u0430\u043D\u044B (0XX\u2026)?", 10, "\u0446\u0438\u0444\u0440"],
         ["\u0411\u044B\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0446\u0438\u0444\u0440 \u0432 \u043F\u043E\u0447\u0442\u043E\u0432\u043E\u043C \u0438\u043D\u0434\u0435\u043A\u0441\u0435 \u0423\u043A\u0440\u0430\u0438\u043D\u044B?", 5, "\u0446\u0438\u0444\u0440"],
         ["\u0411\u044B\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0435\u043A\u0443\u043D\u0434 \u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0443\u044E\u0442 \u043C\u044B\u0442\u044C \u0440\u0443\u043A\u0438?", 20, "\u0441\u0435\u043A\u0443\u043D\u0434"],
-        ["\u0411\u044B\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0447\u0430\u0441\u043E\u0432 \u0432 \u0441\u0443\u0442\u043A\u0438 \u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0443\u044E\u0442 \u0441\u043F\u0430\u0442\u044C \u0432\u0437\u0440\u043E\u0441\u043B\u043E\u043C\u0443 (\u043C\u0438\u043D\u0438\u043C\u0443\u043C \u043F\u043E \u0412\u041E\u0417/\u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0430\u0446\u0438\u044F\u043C)?", 7, "\u0447\u0430\u0441\u043E\u0432"]
+        ["\u0411\u044B\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0447\u0430\u0441\u043E\u0432 \u0432 \u0441\u0443\u0442\u043A\u0438 \u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0443\u044E\u0442 \u0441\u043F\u0430\u0442\u044C \u0432\u0437\u0440\u043E\u0441\u043B\u043E\u043C\u0443 (\u043C\u0438\u043D\u0438\u043C\u0443\u043C \u043F\u043E \u0412\u041E\u0417/\u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0430\u0446\u0438\u044F\u043C)?", 7, "\u0447\u0430\u0441\u043E\u0432"],
+        // ---- ещё 200: видеоигры, кино, технологии, Украина, числа ----
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 GTA V?", 2013, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \xAB\u0412\u0435\u0434\u044C\u043C\u0430\u043A 3: \u0414\u0438\u043A\u0430\u044F \u041E\u0445\u043E\u0442\u0430\xBB?", 2015, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u0441\u0430\u043C\u0430\u044F \u043F\u0435\u0440\u0432\u0430\u044F \u0438\u0433\u0440\u0430 \xAB\u0412\u0435\u0434\u044C\u043C\u0430\u043A\xBB?", 2007, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Cyberpunk 2077?", 2020, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Half-Life?", 1998, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Half-Life 2?", 2004, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Portal?", 2007, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Portal 2?", 2011, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Counter-Strike 1.0?", 2e3, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 CS:GO?", 2012, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Counter-Strike 2?", 2023, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u0432\u044B\u0448\u043B\u0430 Dota 2?", 2013, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 World of Warcraft?", 2004, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F StarCraft?", 1998, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Warcraft III: Reign of Chaos?", 2002, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Diablo II?", 2e3, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 The Elder Scrolls V: Skyrim?", 2011, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Fallout 3?", 2008, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Fallout 4?", 2015, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u0441\u0430\u043C\u0430\u044F \u043F\u0435\u0440\u0432\u0430\u044F Doom?", 1993, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Quake?", 1996, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Wolfenstein 3D?", 1992, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \xABS.T.A.L.K.E.R.: \u0422\u0435\u043D\u044C \u0427\u0435\u0440\u043D\u043E\u0431\u044B\u043B\u044F\xBB?", 2007, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \xABS.T.A.L.K.E.R. 2: \u0421\u0435\u0440\u0434\u0446\u0435 \u0427\u0435\u0440\u043D\u043E\u0431\u044B\u043B\u044F\xBB?", 2024, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u0438\u0433\u0440\u0430 \xAB\u041C\u0435\u0442\u0440\u043E 2033\xBB?", 2010, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Red Dead Redemption 2?", 2018, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F The Last of Us?", 2013, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Elden Ring?", 2022, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Dark Souls?", 2011, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u043E\u043B\u043D\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F Baldur\u2019s Gate 3?", 2023, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Among Us?", 2018, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432 \u042F\u043F\u043E\u043D\u0438\u0438 \u0432\u044B\u0448\u043B\u0438 \u043F\u0435\u0440\u0432\u044B\u0435 \u0438\u0433\u0440\u044B Pok\xE9mon (Red \u0438 Green)?", 1996, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F The Legend of Zelda?", 1986, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F \u0438\u0433\u0440\u0430 \u043F\u0440\u043E \u0421\u043E\u043D\u0438\u043A\u0430?", 1991, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u041C\u0430\u0440\u0438\u043E \u0432\u043F\u0435\u0440\u0432\u044B\u0435 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F \u0432 \u0438\u0433\u0440\u0435 (Donkey Kong)?", 1981, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F The Sims?", 2e3, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Mortal Kombat?", 1992, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Street Fighter II?", 1991, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Angry Birds?", 2009, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Clash of Clans?", 2012, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Pok\xE9mon GO?", 2016, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 League of Legends?", 2009, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Hearthstone?", 2014, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Valorant?", 2020, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Overwatch?", 2016, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Rocket League?", 2015, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F \u0440\u0435\u0436\u0438\u043C \xAB\u041A\u043E\u0440\u043E\u043B\u0435\u0432\u0441\u043A\u0430\u044F \u0431\u0438\u0442\u0432\u0430\xBB \u0432 Fortnite?", 2017, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Apex Legends?", 2019, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Genshin Impact?", 2020, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Civilization \u0421\u0438\u0434\u0430 \u041C\u0435\u0439\u0435\u0440\u0430?", 1991, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Heroes of Might and Magic III?", 1999, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Grand Theft Auto?", 1997, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 GTA: Vice City?", 2002, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 GTA: San Andreas?", 2004, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Hollow Knight?", 2017, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Stardew Valley?", 2016, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Terraria?", 2011, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Undertale?", 2015, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F BioShock?", 2007, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Assassin\u2019s Creed?", 2007, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 God of War, \u0433\u0434\u0435 \u041A\u0440\u0430\u0442\u043E\u0441 \u043F\u0443\u0442\u0435\u0448\u0435\u0441\u0442\u0432\u0443\u0435\u0442 \u0441 \u0441\u044B\u043D\u043E\u043C \u0410\u0442\u0440\u0435\u0435\u043C?", 2018, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Resident Evil?", 1996, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Silent Hill?", 1999, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Final Fantasy?", 1987, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Mass Effect?", 2007, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Super Mario Kart?", 1992, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u0430\u0440\u043A\u0430\u0434\u0430 Pong?", 1972, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u0430\u0440\u043A\u0430\u0434\u0430 Space Invaders?", 1978, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0441\u044F Steam?", 2003, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0441\u044F Twitch?", 2011, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B Roblox?", 2006, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043D\u0430\u0447\u0430\u043B\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u0430\u0436\u0438 Steam Deck?", 2022, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043A\u043E\u043D\u0441\u043E\u043B\u044C Game Boy?", 1989, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 PlayStation 2?", 2e3, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 PlayStation 4?", 2013, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 PlayStation 5?", 2020, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F Xbox?", 2001, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Nintendo Switch?", 2017, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Nintendo Wii?", 2006, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Nintendo 64?", 1996, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Atari 2600?", 1977, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432 \u042F\u043F\u043E\u043D\u0438\u0438 \u0432\u044B\u0448\u043B\u0430 Sega Mega Drive?", 1988, "\u0433\u043E\u0434"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0431\u0438\u0442 \u0431\u044B\u043B\u043E \u0443 \u043F\u0440\u0438\u0441\u0442\u0430\u0432\u043A\u0438 NES (Dendy)?", 8, "\u0431\u0438\u0442"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u0432 \u043E\u0434\u043D\u043E\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u0435 \u0432 \u0441\u043E\u0440\u0435\u0432\u043D\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u043C Counter-Strike?", 5, "\u0438\u0433\u0440\u043E\u043A\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0440\u0430\u0443\u043D\u0434\u043E\u0432 \u043D\u0443\u0436\u043D\u043E \u0432\u044B\u0438\u0433\u0440\u0430\u0442\u044C \u0432 \u043E\u0431\u044B\u0447\u043D\u043E\u043C \u043C\u0430\u0442\u0447\u0435 Counter-Strike 2?", 13, "\u0440\u0430\u0443\u043D\u0434\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0433\u0435\u0440\u043E\u0435\u0432 \u0432 \u043E\u0434\u043D\u043E\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u0435 \u0432 Dota 2?", 5, "\u0433\u0435\u0440\u043E\u0435\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043B\u0438\u043D\u0438\u0439 (\u043B\u0430\u0439\u043D\u043E\u0432) \u043D\u0430 \u043A\u0430\u0440\u0442\u0435 Dota 2?", 3, "\u043B\u0438\u043D\u0438\u0438"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u043D\u0430\u0447\u0438\u043D\u0430\u044E\u0442 \u043E\u0431\u044B\u0447\u043D\u044B\u0439 \u043C\u0430\u0442\u0447 \xAB\u041A\u043E\u0440\u043E\u043B\u0435\u0432\u0441\u043A\u043E\u0439 \u0431\u0438\u0442\u0432\u044B\xBB \u0432 Fortnite?", 100, "\u0438\u0433\u0440\u043E\u043A\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u0432 \u043E\u0434\u043D\u043E\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u0435 \u0432 Overwatch 2?", 5, "\u0438\u0433\u0440\u043E\u043A\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u0432 \u043A\u043E\u043C\u0430\u043D\u0434\u0435 \u0432 \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u043E\u043C \u0441\u043E\u0440\u0435\u0432\u043D\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u043C Rocket League?", 3, "\u0438\u0433\u0440\u043E\u043A\u0430"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u0438\u043D\u0443\u0442 \u0434\u043B\u0438\u0442\u0441\u044F \u043E\u0431\u044B\u0447\u043D\u044B\u0439 \u043C\u0430\u0442\u0447 \u0432 Rocket League?", 5, "\u043C\u0438\u043D\u0443\u0442"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u0440\u0442 \u0432 \u043A\u043E\u043B\u043E\u0434\u0435 Hearthstone?", 30, "\u043A\u0430\u0440\u0442"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F \u0443 \u0433\u0435\u0440\u043E\u044F \u0432 \u043D\u0430\u0447\u0430\u043B\u0435 \u043C\u0430\u0442\u0447\u0430 Hearthstone?", 30, ""],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0440\u0435\u0430\u043B\u044C\u043D\u044B\u0445 \u043C\u0438\u043D\u0443\u0442 \u0434\u043B\u044F\u0442\u0441\u044F \u043E\u0434\u043D\u0438 \u0438\u0433\u0440\u043E\u0432\u044B\u0435 \u0441\u0443\u0442\u043A\u0438 \u0432 Minecraft?", 20, "\u043C\u0438\u043D\u0443\u0442"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0431\u043B\u043E\u043A\u043E\u0432 \u0432 \u0448\u0438\u0440\u0438\u043D\u0443 \u043E\u0434\u0438\u043D \u0447\u0430\u043D\u043A \u0432 Minecraft?", 16, "\u0431\u043B\u043E\u043A\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u044F\u0447\u0435\u0435\u043A \u0432 \u043F\u0430\u043D\u0435\u043B\u0438 \u0431\u044B\u0441\u0442\u0440\u043E\u0433\u043E \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u0432 Minecraft?", 9, "\u044F\u0447\u0435\u0435\u043A"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0435\u0440\u0434\u0435\u0447\u0435\u043A \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F \u0443 \u0438\u0433\u0440\u043E\u043A\u0430 \u0432 Minecraft?", 10, "\u0441\u0435\u0440\u0434\u0435\u0447\u0435\u043A"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043F\u0440\u0438\u0437\u0440\u0430\u043A\u043E\u0432 \u0433\u043E\u043D\u044F\u044E\u0442\u0441\u044F \u0437\u0430 Pac-Man \u0432 \u043D\u0430\u0447\u0430\u043B\u0435 \u0443\u0440\u043E\u0432\u043D\u044F?", 4, "\u043F\u0440\u0438\u0437\u0440\u0430\u043A\u0430"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u043E\u043D\u0435\u0442 \u043D\u0443\u0436\u043D\u043E \u0441\u043E\u0431\u0440\u0430\u0442\u044C \u0432 Super Mario Bros. \u0434\u043B\u044F \u0434\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0439 \u0436\u0438\u0437\u043D\u0438?", 100, "\u043C\u043E\u043D\u0435\u0442"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043B\u0438\u043D\u0438\u0439 \u043D\u0443\u0436\u043D\u043E \u0443\u0431\u0440\u0430\u0442\u044C \u0440\u0430\u0437\u043E\u043C, \u0447\u0442\u043E\u0431\u044B \u043F\u043E\u043B\u0443\u0447\u0438\u043B\u0441\u044F \xAB\u0442\u0435\u0442\u0440\u0438\u0441\xBB?", 4, "\u043B\u0438\u043D\u0438\u0438"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0418\u0437\u0443\u043C\u0440\u0443\u0434\u043E\u0432 \u0425\u0430\u043E\u0441\u0430 \u0441\u043E\u0431\u0438\u0440\u0430\u0435\u0442 \u0421\u043E\u043D\u0438\u043A?", 7, "\u0438\u0437\u0443\u043C\u0440\u0443\u0434\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0437\u043D\u0430\u0447\u043A\u043E\u0432 \u0441\u0442\u0430\u0434\u0438\u043E\u043D\u043E\u0432 \u0441\u043E\u0431\u0438\u0440\u0430\u0435\u0442 \u0442\u0440\u0435\u043D\u0435\u0440 \u0432 \u043E\u0441\u043D\u043E\u0432\u043D\u044B\u0445 \u0438\u0433\u0440\u0430\u0445 Pok\xE9mon?", 8, "\u0437\u043D\u0430\u0447\u043A\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0442\u0430\u0440\u0442\u043E\u0432\u044B\u0445 \u043F\u043E\u043A\u0435\u043C\u043E\u043D\u043E\u0432 \u043D\u0430 \u0432\u044B\u0431\u043E\u0440 \u0432 \u043A\u0430\u0436\u0434\u043E\u0439 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0439 \u0438\u0433\u0440\u0435 Pok\xE9mon?", 3, "\u043F\u043E\u043A\u0435\u043C\u043E\u043D\u0430"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u0438\u043D \u043D\u0430 \u0443\u0440\u043E\u0432\u043D\u0435 \xAB\u041D\u043E\u0432\u0438\u0447\u043E\u043A\xBB \u0432 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u043E\u043C \xAB\u0421\u0430\u043F\u0451\u0440\u0435\xBB Windows?", 10, "\u043C\u0438\u043D"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u0441\u0435\u0433\u043E \u043A\u043B\u0435\u0442\u043E\u043A \u0432 \u0441\u0443\u0434\u043E\u043A\u0443?", 81, "\u043A\u043B\u0435\u0442\u043A\u0430"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0433\u0440\u0430\u043D\u0435\u0439 \u0443 \u043A\u0443\u0431\u0438\u043A\u0430 d20 \u0438\u0437 \xAB\u041F\u043E\u0434\u0437\u0435\u043C\u0435\u043B\u0438\u0439 \u0438 \u0434\u0440\u0430\u043A\u043E\u043D\u043E\u0432\xBB?", 20, "\u0433\u0440\u0430\u043D\u0435\u0439"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0443\u0431\u0438\u043A\u043E\u0432 \u0431\u0440\u043E\u0441\u0430\u044E\u0442 \u0432 \u0438\u0433\u0440\u0435 Yahtzee (\xAB\u041F\u043E\u043A\u0435\u0440 \u043D\u0430 \u043A\u043E\u0441\u0442\u044F\u0445\xBB)?", 5, "\u043A\u0443\u0431\u0438\u043A\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0442\u0440\u0435\u0443\u0433\u043E\u043B\u044C\u043D\u0438\u043A\u043E\u0432-\u043F\u0443\u043D\u043A\u0442\u043E\u0432 \u043D\u0430 \u0434\u043E\u0441\u043A\u0435 \u0434\u043B\u044F \u043D\u0430\u0440\u0434?", 24, "\u043F\u0443\u043D\u043A\u0442\u0430"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u0440\u0442 \u0432 \u043A\u043E\u043B\u043E\u0434\u0435 \u0422\u0430\u0440\u043E?", 78, "\u043A\u0430\u0440\u0442"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u0440\u0442 \u0432 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u043A\u043E\u043B\u043E\u0434\u0435 UNO?", 108, "\u043A\u0430\u0440\u0442"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u043B\u0435\u0442\u043E\u043A \u043D\u0430 \u0434\u043E\u0441\u043A\u0435 \xAB\u042D\u0440\u0443\u0434\u0438\u0442\u0430\xBB (Scrabble)?", 225, "\u043A\u043B\u0435\u0442\u043E\u043A"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u0440\u0442\u043E\u0447\u0435\u043A-\u0441\u043B\u043E\u0432 \u043B\u0435\u0436\u0438\u0442 \u043D\u0430 \u0441\u0442\u043E\u043B\u0435 \u0432 \xAB\u041A\u043E\u0434\u043D\u0435\u0439\u043C\u0441\xBB?", 25, "\u043A\u0430\u0440\u0442\u043E\u0447\u0435\u043A"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0430\u0433\u0435\u043D\u0442\u043E\u0432 \u043D\u0443\u0436\u043D\u043E \u043D\u0430\u0439\u0442\u0438 \u043A\u043E\u043C\u0430\u043D\u0434\u0435, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u0445\u043E\u0434\u0438\u0442 \u043F\u0435\u0440\u0432\u043E\u0439 \u0432 \xAB\u041A\u043E\u0434\u043D\u0435\u0439\u043C\u0441\xBB?", 9, "\u0430\u0433\u0435\u043D\u0442\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u0438\u0434\u043E\u0432 \u0440\u0435\u0441\u0443\u0440\u0441\u043E\u0432 \u0432 \xAB\u041A\u043E\u043B\u043E\u043D\u0438\u0437\u0430\u0442\u043E\u0440\u0430\u0445\xBB (Catan)?", 5, "\u0432\u0438\u0434\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0433\u0435\u043A\u0441\u043E\u0432 \u0441\u0443\u0448\u0438 \u043D\u0430 \u043F\u043E\u043B\u0435 \u0431\u0430\u0437\u043E\u0432\u044B\u0445 \xAB\u041A\u043E\u043B\u043E\u043D\u0438\u0437\u0430\u0442\u043E\u0440\u043E\u0432\xBB (Catan)?", 19, "\u0433\u0435\u043A\u0441\u043E\u0432"],
+        ["\u0418\u0433\u0440\u044B", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u0440\u0442 \u0432 \u043C\u0438\u043D\u0438\u043C\u0430\u043B\u044C\u043D\u043E\u0439 \u043A\u043E\u043B\u043E\u0434\u0435 \u0434\u043B\u044F \u043E\u0431\u044B\u0447\u043D\u043E\u0433\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0430 Magic: The Gathering?", 60, "\u043A\u0430\u0440\u0442"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u0434\u043F\u0438\u0441\u0430\u043B\u0438 \u0412\u0435\u043B\u0438\u043A\u0443\u044E \u0445\u0430\u0440\u0442\u0438\u044E \u0432\u043E\u043B\u044C\u043D\u043E\u0441\u0442\u0435\u0439?", 1215, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u0440\u043E\u0438\u0437\u043E\u0448\u043B\u0430 \u0431\u0438\u0442\u0432\u0430 \u043F\u0440\u0438 \u0413\u0430\u0441\u0442\u0438\u043D\u0433\u0441\u0435?", 1066, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u0430\u043B\u0430 \u0417\u0430\u043F\u0430\u0434\u043D\u0430\u044F \u0420\u0438\u043C\u0441\u043A\u0430\u044F \u0438\u043C\u043F\u0435\u0440\u0438\u044F?", 476, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0441\u043E\u0441\u0442\u043E\u044F\u043B\u0430\u0441\u044C \u041F\u0435\u0440\u0435\u044F\u0441\u043B\u0430\u0432\u0441\u043A\u0430\u044F \u0440\u0430\u0434\u0430?", 1654, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u0440\u0438\u043D\u044F\u0442\u0430 \u041A\u043E\u043D\u0441\u0442\u0438\u0442\u0443\u0446\u0438\u044F \u041F\u0438\u043B\u0438\u043F\u0430 \u041E\u0440\u043B\u0438\u043A\u0430?", 1710, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043D\u0430\u0447\u0430\u043B\u0430\u0441\u044C \u0420\u0435\u0432\u043E\u043B\u044E\u0446\u0438\u044F \u0434\u043E\u0441\u0442\u043E\u0438\u043D\u0441\u0442\u0432\u0430?", 2013, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u0440\u0438\u043D\u044F\u043B\u0438 \u041A\u043E\u043D\u0441\u0442\u0438\u0442\u0443\u0446\u0438\u044E \u0423\u043A\u0440\u0430\u0438\u043D\u044B?", 1996, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0430 \u041E\u041E\u041D?", 1945, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0420\u0443\u0441\u043B\u0430\u043D\u0430 \u043F\u043E\u0431\u0435\u0434\u0438\u043B\u0430 \u043D\u0430 \xAB\u0415\u0432\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0438\xBB?", 2004, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0414\u0436\u0430\u043C\u0430\u043B\u0430 \u043F\u043E\u0431\u0435\u0434\u0438\u043B\u0430 \u043D\u0430 \xAB\u0415\u0432\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0438\xBB?", 2016, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 Kalush Orchestra \u043F\u043E\u0431\u0435\u0434\u0438\u043B\u0438 \u043D\u0430 \xAB\u0415\u0432\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0438\xBB?", 2022, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0443\u043C\u0435\u0440 \u0422\u0430\u0440\u0430\u0441 \u0428\u0435\u0432\u0447\u0435\u043D\u043A\u043E?", 1861, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0438\u0437\u043E\u0431\u0440\u0435\u043B\u0438 \u0431\u0430\u0441\u043A\u0435\u0442\u0431\u043E\u043B?", 1891, "\u0433\u043E\u0434"],
+        ["\u0418\u0441\u0442\u043E\u0440\u0438\u044F", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0410\u043D\u0434\u0440\u0435\u0439 \u0428\u0435\u0432\u0447\u0435\u043D\u043A\u043E \u043F\u043E\u043B\u0443\u0447\u0438\u043B \xAB\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u043C\u044F\u0447\xBB?", 2004, "\u0433\u043E\u0434"],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0411\u0435\u043B\u043A\u0430 \u0438 \u0421\u0442\u0440\u0435\u043B\u043A\u0430 \u0441\u043B\u0435\u0442\u0430\u043B\u0438 \u0432 \u043A\u043E\u0441\u043C\u043E\u0441 \u0438 \u0432\u0435\u0440\u043D\u0443\u043B\u0438\u0441\u044C?", 1960, "\u0433\u043E\u0434"],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043E\u0441\u043D\u043E\u0432\u0430\u043D\u0430 SpaceX?", 2002, "\u0433\u043E\u0434"],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u0435\u0440\u0432\u0430\u044F \u0441\u0442\u0443\u043F\u0435\u043D\u044C Falcon 9 \u0432\u043F\u0435\u0440\u0432\u044B\u0435 \u0443\u0441\u043F\u0435\u0448\u043D\u043E \u043F\u0440\u0438\u0437\u0435\u043C\u043B\u0438\u043B\u0430\u0441\u044C?", 2015, "\u0433\u043E\u0434"],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0438 \u0442\u0435\u043B\u0435\u0441\u043A\u043E\u043F \xAB\u0414\u0436\u0435\u0439\u043C\u0441 \u0423\u044D\u0431\u0431\xBB?", 2021, "\u0433\u043E\u0434"],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043E\u0442\u043A\u0440\u044B\u043B\u0438 \u041D\u0435\u043F\u0442\u0443\u043D?", 1846, "\u0433\u043E\u0434"],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u043F\u0443\u0442\u043D\u0438\u043A\u043E\u0432 \u0443 \u041C\u0430\u0440\u0441\u0430?", 2, "\u0441\u043F\u0443\u0442\u043D\u0438\u043A\u0430"],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u041A\u0430\u043A\u0430\u044F \u043F\u043E \u0441\u0447\u0451\u0442\u0443 \u043E\u0442 \u0421\u043E\u043B\u043D\u0446\u0430 \u043F\u043B\u0430\u043D\u0435\u0442\u0430 \u0417\u0435\u043C\u043B\u044F?", 3, ""],
+        ["\u041A\u043E\u0441\u043C\u043E\u0441", "\u041A\u0430\u043A\u0430\u044F \u043F\u043E \u0441\u0447\u0451\u0442\u0443 \u043E\u0442 \u0421\u043E\u043B\u043D\u0446\u0430 \u043F\u043B\u0430\u043D\u0435\u0442\u0430 \u041D\u0435\u043F\u0442\u0443\u043D?", 8, ""],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0410\u0442\u043E\u043C\u043D\u044B\u0439 \u043D\u043E\u043C\u0435\u0440 \u0432\u043E\u0434\u043E\u0440\u043E\u0434\u0430?", 1, ""],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0410\u0442\u043E\u043C\u043D\u044B\u0439 \u043D\u043E\u043C\u0435\u0440 \u0433\u0435\u043B\u0438\u044F?", 2, ""],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0410\u0442\u043E\u043C\u043D\u044B\u0439 \u043D\u043E\u043C\u0435\u0440 \u043A\u0430\u043B\u044C\u0446\u0438\u044F?", 20, ""],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0410\u0442\u043E\u043C\u043D\u044B\u0439 \u043D\u043E\u043C\u0435\u0440 \u043C\u0435\u0434\u0438?", 29, ""],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0410\u0442\u043E\u043C\u043D\u044B\u0439 \u043D\u043E\u043C\u0435\u0440 \u0441\u0432\u0438\u043D\u0446\u0430?", 82, ""],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u041F\u0440\u0438 \u043A\u0430\u043A\u043E\u0439 \u0442\u0435\u043C\u043F\u0435\u0440\u0430\u0442\u0443\u0440\u0435 \u043A\u0438\u043F\u0438\u0442 \u0432\u043E\u0434\u0430 \u043D\u0430 \u0443\u0440\u043E\u0432\u043D\u0435 \u043C\u043E\u0440\u044F, \xB0C?", 100, "\xB0C"],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0433\u0440\u0430\u0434\u0443\u0441\u043E\u0432 \u0432 \u043F\u0440\u044F\u043C\u043E\u043C \u0443\u0433\u043B\u0435?", 90, "\xB0"],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0433\u0440\u0430\u0434\u0443\u0441\u043E\u0432 \u0432 \u043F\u043E\u043B\u043D\u043E\u043C \u043E\u0431\u043E\u0440\u043E\u0442\u0435?", 360, "\xB0"],
+        ["\u041D\u0430\u0443\u043A\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0446\u0432\u0435\u0442\u043E\u0432 \u0432 \u0440\u0430\u0434\u0443\u0433\u0435 \u043F\u043E \u0442\u0440\u0430\u0434\u0438\u0446\u0438\u0438?", 7, "\u0446\u0432\u0435\u0442\u043E\u0432"],
+        ["\u0427\u0435\u043B\u043E\u0432\u0435\u043A", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u043C\u0435\u0440 \u0432 \u0441\u0435\u0440\u0434\u0446\u0435 \u0447\u0435\u043B\u043E\u0432\u0435\u043A\u0430?", 4, "\u043A\u0430\u043C\u0435\u0440\u044B"],
+        ["\u0427\u0435\u043B\u043E\u0432\u0435\u043A", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043E\u0440\u0433\u0430\u043D\u043E\u0432 \u0447\u0443\u0432\u0441\u0442\u0432 \u043F\u0440\u0438\u043D\u044F\u0442\u043E \u0432\u044B\u0434\u0435\u043B\u044F\u0442\u044C \u0442\u0440\u0430\u0434\u0438\u0446\u0438\u043E\u043D\u043D\u043E?", 5, ""],
+        ["\u0413\u0435\u043E\u0433\u0440\u0430\u0444\u0438\u044F", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u043E\u0440\u0435\u0439 \u043E\u043C\u044B\u0432\u0430\u044E\u0442 \u0423\u043A\u0440\u0430\u0438\u043D\u0443?", 2, "\u043C\u043E\u0440\u044F"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F \xAB\u041C\u0430\u0442\u0440\u0438\u0446\u0430\xBB?", 1999, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u043F\u0435\u0440\u0432\u044B\u0439 \u0444\u0438\u043B\u044C\u043C \u043E \u0413\u0430\u0440\u0440\u0438 \u041F\u043E\u0442\u0442\u0435\u0440\u0435?", 2001, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u0444\u0438\u043B\u044C\u043C \xAB\u0412\u043B\u0430\u0441\u0442\u0435\u043B\u0438\u043D \u043A\u043E\u043B\u0435\u0446: \u0411\u0440\u0430\u0442\u0441\u0442\u0432\u043E \u041A\u043E\u043B\u044C\u0446\u0430\xBB?", 2001, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u0444\u0438\u043B\u044C\u043C \xAB\u0410\u0432\u0430\u0442\u0430\u0440\xBB \u041A\u044D\u043C\u0435\u0440\u043E\u043D\u0430?", 2009, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u0444\u0438\u043B\u044C\u043C \xAB\u041C\u0441\u0442\u0438\u0442\u0435\u043B\u0438: \u0424\u0438\u043D\u0430\u043B\xBB?", 2019, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u043F\u0435\u0440\u0432\u044B\u0439 \xAB\u0428\u0440\u0435\u043A\xBB?", 2001, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u043C\u0443\u043B\u044C\u0442\u0444\u0438\u043B\u044C\u043C \xAB\u041A\u043E\u0440\u043E\u043B\u044C \u041B\u0435\u0432\xBB (\u0440\u0438\u0441\u043E\u0432\u0430\u043D\u043D\u044B\u0439)?", 1994, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0444\u0438\u043B\u044C\u043C\u043E\u0432 \u0432 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0439 \u0441\u0435\u0440\u0438\u0438 \u043E \u0413\u0430\u0440\u0440\u0438 \u041F\u043E\u0442\u0442\u0435\u0440\u0435?", 8, "\u0444\u0438\u043B\u044C\u043C\u043E\u0432"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0435\u0437\u043E\u043D\u043E\u0432 \u0432 \u0430\u043C\u0435\u0440\u0438\u043A\u0430\u043D\u0441\u043A\u043E\u043C \u0441\u0435\u0440\u0438\u0430\u043B\u0435 \xAB\u041E\u0444\u0438\u0441\xBB?", 9, "\u0441\u0435\u0437\u043E\u043D\u043E\u0432"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 \u043F\u0435\u0440\u0432\u0430\u044F \u0441\u0435\u0440\u0438\u044F \xAB\u0421\u0438\u043C\u043F\u0441\u043E\u043D\u043E\u0432\xBB \u043A\u0430\u043A \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E\u0433\u043E \u0441\u0435\u0440\u0438\u0430\u043B\u0430?", 1989, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0440\u0430\u0441\u043F\u0430\u043B\u0438\u0441\u044C The Beatles?", 1970, "\u0433\u043E\u0434"],
+        ["\u041A\u0443\u043B\u044C\u0442\u0443\u0440\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043F\u043E\u043B\u0443\u0442\u043E\u043D\u043E\u0432 \u0432 \u043E\u0434\u043D\u043E\u0439 \u043E\u043A\u0442\u0430\u0432\u0435?", 12, "\u043F\u043E\u043B\u0443\u0442\u043E\u043D\u043E\u0432"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Windows 7?", 2009, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u043B\u0430 Windows 10?", 2015, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u043E\u0441\u044C \u044F\u0434\u0440\u043E Linux?", 1991, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F \u044F\u0437\u044B\u043A \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F Python?", 1991, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F JavaScript?", 1995, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u043F\u0435\u0440\u0432\u044B\u0439 iPod?", 2001, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0432\u044B\u0448\u0435\u043B \u0431\u0440\u0430\u0443\u0437\u0435\u0440 Google Chrome?", 2008, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F Skype?", 2003, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F Discord?", 2015, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0441\u044F Spotify?", 2008, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F Reddit?", 2005, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043E\u0441\u043D\u043E\u0432\u0430\u043D Uber?", 2009, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043E\u0441\u043D\u043E\u0432\u0430\u043D Airbnb?", 2008, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u043B\u0441\u044F monobank?", 2017, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0412 \u043A\u0430\u043A\u043E\u043C \u0433\u043E\u0434\u0443 \u043F\u043E\u044F\u0432\u0438\u043B\u043E\u0441\u044C \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \xAB\u0414\u0456\u044F\xBB?", 2020, "\u0433\u043E\u0434"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0431\u0438\u0442 \u0432 \u043E\u0434\u043D\u043E\u043C \u0431\u0430\u0439\u0442\u0435?", 8, "\u0431\u0438\u0442"],
+        ["\u0422\u0435\u0445\u043D\u043E\u043B\u043E\u0433\u0438\u0438", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432 \u0432 \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u043E\u0439 \u0442\u0430\u0431\u043B\u0438\u0446\u0435 ASCII?", 128, "\u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432"],
+        ["\u0421\u043F\u043E\u0440\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u043E\u043B\u0435\u0446 \u043D\u0430 \u043E\u043B\u0438\u043C\u043F\u0438\u0439\u0441\u043A\u043E\u043C \u0444\u043B\u0430\u0433\u0435?", 5, "\u043A\u043E\u043B\u0435\u0446"],
+        ["\u0421\u043F\u043E\u0440\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u043E\u0434\u043D\u043E\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u043D\u0430 \u043F\u043E\u043B\u0435 \u0432 \u0444\u0443\u0442\u0431\u043E\u043B\u0435?", 11, "\u0438\u0433\u0440\u043E\u043A\u043E\u0432"],
+        ["\u0421\u043F\u043E\u0440\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0438\u0433\u0440\u043E\u043A\u043E\u0432 \u043E\u0434\u043D\u043E\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B \u043D\u0430 \u043F\u043E\u043B\u0435 \u0432 \u0431\u0435\u0439\u0441\u0431\u043E\u043B\u0435?", 9, "\u0438\u0433\u0440\u043E\u043A\u043E\u0432"],
+        ["\u0421\u043F\u043E\u0440\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0438\u043D\u043D\u0438\u043D\u0433\u043E\u0432 \u0432 \u043E\u0431\u044B\u0447\u043D\u043E\u043C \u043C\u0430\u0442\u0447\u0435 \u043F\u043E \u0431\u0435\u0439\u0441\u0431\u043E\u043B\u0443?", 9, "\u0438\u043D\u043D\u0438\u043D\u0433\u043E\u0432"],
+        ["\u0421\u043F\u043E\u0440\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043E\u0447\u043A\u043E\u0432 \u0434\u0430\u044E\u0442 \u0437\u0430 \u0442\u0430\u0447\u0434\u0430\u0443\u043D \u0432 \u0430\u043C\u0435\u0440\u0438\u043A\u0430\u043D\u0441\u043A\u043E\u043C \u0444\u0443\u0442\u0431\u043E\u043B\u0435?", 6, "\u043E\u0447\u043A\u043E\u0432"],
+        ["\u0421\u043F\u043E\u0440\u0442", "\u0414\u043B\u0438\u043D\u0430 \u0442\u0435\u043D\u043D\u0438\u0441\u043D\u043E\u0433\u043E \u043A\u043E\u0440\u0442\u0430, \u043C (\u0434\u043E \u0441\u043E\u0442\u044B\u0445)?", 23.77, "\u043C"],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043D\u0443\u043B\u0435\u0439 \u0432 \u043C\u0438\u043B\u043B\u0438\u043E\u043D\u0435?", 6, "\u043D\u0443\u043B\u0435\u0439"],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0427\u0435\u043C\u0443 \u0440\u0430\u0432\u0435\u043D \u0444\u0430\u043A\u0442\u043E\u0440\u0438\u0430\u043B \u0441\u0435\u043C\u0438 (7!)?", 5040, ""],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0427\u0438\u0441\u043B\u043E e \u0434\u043E \u0441\u043E\u0442\u044B\u0445?", 2.72, ""],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u041A\u0432\u0430\u0434\u0440\u0430\u0442\u043D\u044B\u0439 \u043A\u043E\u0440\u0435\u043D\u044C \u0438\u0437 2 \u0434\u043E \u0441\u043E\u0442\u044B\u0445?", 1.41, ""],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0431\u0443\u0434\u0435\u0442 13 \xD7 13?", 169, ""],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0427\u0435\u043C\u0443 \u0440\u0430\u0432\u043D\u0430 \u0440\u0438\u043C\u0441\u043A\u0430\u044F \u0446\u0438\u0444\u0440\u0430 MDCCLXXVI?", 1776, ""],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0427\u0435\u043C\u0443 \u0440\u0430\u0432\u043D\u0430 \u0440\u0438\u043C\u0441\u043A\u0430\u044F \u0446\u0438\u0444\u0440\u0430 MMM?", 3e3, ""],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0433\u0440\u0430\u043D\u0435\u0439 \u0443 \u043E\u043A\u0442\u0430\u044D\u0434\u0440\u0430?", 8, "\u0433\u0440\u0430\u043D\u0435\u0439"],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u0435\u0440\u0448\u0438\u043D \u0443 \u043A\u0443\u0431\u0430?", 8, "\u0432\u0435\u0440\u0448\u0438\u043D"],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0431\u0443\u0434\u0435\u0442 2 \u0432 8-\u0439 \u0441\u0442\u0435\u043F\u0435\u043D\u0438?", 256, ""],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0435\u043A\u0443\u043D\u0434 \u0432 15 \u043C\u0438\u043D\u0443\u0442\u0430\u0445?", 900, "\u0441\u0435\u043A\u0443\u043D\u0434"],
+        ["\u0427\u0438\u0441\u043B\u0430", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u0438\u043D\u0443\u0442 \u0432 \u043D\u0435\u0434\u0435\u043B\u0435?", 10080, "\u043C\u0438\u043D\u0443\u0442"],
+        ["\u0411\u044B\u0442", "\u041D\u043E\u043C\u0435\u0440 \u0430\u0432\u0430\u0440\u0438\u0439\u043D\u043E\u0439 \u0433\u0430\u0437\u043E\u0432\u043E\u0439 \u0441\u043B\u0443\u0436\u0431\u044B \u0432 \u0423\u043A\u0440\u0430\u0438\u043D\u0435?", 104, ""],
+        ["\u0411\u044B\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u0438\u043B\u043B\u0438\u043B\u0438\u0442\u0440\u043E\u0432 \u0432 \u0441\u0442\u043E\u043B\u043E\u0432\u043E\u0439 \u043B\u043E\u0436\u043A\u0435?", 15, "\u043C\u043B"],
+        ["\u0411\u044B\u0442", "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u0438\u043B\u043B\u0438\u043B\u0438\u0442\u0440\u043E\u0432 \u0432 \u0447\u0430\u0439\u043D\u043E\u0439 \u043B\u043E\u0436\u043A\u0435?", 5, "\u043C\u043B"]
       ];
     }
   });
@@ -5046,6 +5454,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       var QUESTIONS = require_quiz_questions();
       var { shuffle, Deck, clampInt, countLabel } = require_util();
       var REVEAL_MS = 15e3;
+      var NEXT_MS = 5e3;
       var meta = {
         title: "\u0412\u0438\u043A\u0442\u043E\u0440\u0438\u043D\u0430",
         emoji: "\u{1F522}",
@@ -5071,6 +5480,11 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         const n = Number(t);
         return Number.isFinite(n) && Math.abs(n) < 1e12 ? n : null;
       };
+      function mask(a) {
+        const t = String(Math.abs(a));
+        const [i, f] = t.split(".");
+        return (a < 0 ? "\u2212" : "") + "X".repeat(i.length) + (f ? "," + "X".repeat(f.length) : "");
+      }
       function create(ctx, st) {
         const ids = ctx.players().map((p) => p.id);
         if (ids.length < 2) return "\u0414\u043B\u044F \xAB\u0412\u0438\u043A\u0442\u043E\u0440\u0438\u043D\u044B\xBB \u043D\u0443\u0436\u043D\u043E \u043C\u0438\u043D\u0438\u043C\u0443\u043C 2 \u0438\u0433\u0440\u043E\u043A\u0430";
@@ -5101,6 +5515,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         s.q = { cat, text: q, answer: a, unit };
         s.answers = {};
         s.res = null;
+        s.nextAt = null;
         s.phase = "answer";
         setTimer(s, ctx, s.seconds * 1e3, () => reveal(s, ctx));
       }
@@ -5125,10 +5540,17 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         s.history.push({ q: s.q.text, answer: a, unit: s.q.unit, winners });
         s.phase = "reveal";
         s.ready = {};
-        setTimer(s, ctx, REVEAL_MS, () => advance(s, ctx));
+        s.nextAt = null;
+        setTimer(s, ctx, REVEAL_MS - NEXT_MS, () => soon(s, ctx));
+      }
+      function soon(s, ctx) {
+        if (s.phase !== "reveal" || s.nextAt) return;
+        setTimer(s, ctx, NEXT_MS, () => advance(s, ctx));
+        s.nextAt = s.endsAt;
       }
       function advance(s, ctx) {
         if (s.phase !== "reveal") return;
+        s.nextAt = null;
         if (s.round >= s.rounds) {
           s.phase = "over";
           ctx.clearTimer("quiz");
@@ -5152,15 +5574,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             return;
           }
           case "ready": {
-            if (s.phase !== "reveal") return;
+            if (s.phase !== "reveal" || s.nextAt) return;
             s.ready[pid] = !s.ready[pid];
-            if (online(s, ctx).every((id) => s.ready[id])) advance(s, ctx);
+            if (online(s, ctx).every((id) => s.ready[id])) soon(s, ctx);
             return;
           }
           case "skip": {
             if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
             if (s.phase === "answer") reveal(s, ctx);
-            else if (s.phase === "reveal") advance(s, ctx);
+            else if (s.phase === "reveal") s.nextAt ? advance(s, ctx) : soon(s, ctx);
             return;
           }
           case "addTime": {
@@ -5207,7 +5629,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           rounds: s.rounds,
           endsAt: s.endsAt,
           phaseMs: s.phaseMs,
-          q: s.q ? { cat: s.q.cat, text: s.q.text, unit: s.q.unit, answer: showAll ? s.q.answer : null } : null,
+          q: s.q ? { cat: s.q.cat, text: s.q.text, unit: s.q.unit, answer: showAll ? s.q.answer : null, mask: mask(s.q.answer) } : null,
+          nextAt: s.nextAt || null,
           answered: Object.keys(s.answers || {}),
           mine: (_b = (_a = s.answers) == null ? void 0 : _a[pid]) != null ? _b : null,
           res: showAll ? s.res : null,
@@ -5241,12 +5664,17 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         const left = s._left;
         s._left = null;
         if (s.phase === "answer") setTimer(s, ctx, left, () => reveal(s, ctx));
-        else if (s.phase === "reveal") setTimer(s, ctx, left, () => advance(s, ctx));
+        else if (s.phase === "reveal") {
+          if (s.nextAt) {
+            setTimer(s, ctx, left, () => advance(s, ctx));
+            s.nextAt = s.endsAt;
+          } else setTimer(s, ctx, left, () => soon(s, ctx));
+        }
       }
       var isOver = (s) => s.phase === "over";
       var results = (s) => ({ ...s.points });
       var stats = (s) => ({ quiz: { ...s.wins } });
-      module.exports = { meta, create, action, view, onLeave, onPresence, isOver, results, stats, pause, resume, parseNum };
+      module.exports = { meta, create, action, view, onLeave, onPresence, isOver, results, stats, pause, resume, parseNum, mask };
     }
   });
 
@@ -5779,6 +6207,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       var QUESTIONS = require_majority_questions();
       var { shuffle, Deck, clampInt, countLabel } = require_util();
       var REVIEW_MS = 3e4;
+      var NEXT_MS = 5e3;
       var meta = {
         title: "\u041E\u0442\u0432\u0435\u0442 \u0431\u043E\u043B\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u0430",
         emoji: "\u{1F465}",
@@ -5873,6 +6302,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         s.groupOf = {};
         s.ready = {};
         s.last = null;
+        s.nextAt = null;
         s.phase = "answer";
         setTimer(s, ctx, s.seconds * 1e3, () => reveal(s, ctx));
       }
@@ -5881,7 +6311,13 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         s.groupOf = autoGroups(s.answers);
         s.phase = "review";
         s.ready = {};
-        setTimer(s, ctx, REVIEW_MS, () => advance(s, ctx));
+        s.nextAt = null;
+        setTimer(s, ctx, REVIEW_MS, () => soon(s, ctx));
+      }
+      function soon(s, ctx) {
+        if (s.phase !== "review" || s.nextAt) return;
+        setTimer(s, ctx, NEXT_MS, () => advance(s, ctx));
+        s.nextAt = s.endsAt;
       }
       function finishRound(s) {
         const { got, majority } = score(s.groupOf);
@@ -5893,6 +6329,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       }
       function advance(s, ctx) {
         if (s.phase !== "review") return;
+        s.nextAt = null;
         finishRound(s);
         if (s.round >= s.rounds) {
           s.phase = "over";
@@ -5920,7 +6357,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           }
           case "merge": {
             if (!ctx.isHost) return "\u0421\u043A\u043B\u0435\u0438\u0432\u0430\u0435\u0442 \u0445\u043E\u0441\u0442";
-            if (s.phase !== "review") return;
+            if (s.phase !== "review" || s.nextAt) return;
             const ga = s.groupOf[msg.a];
             const gb = s.groupOf[msg.b];
             if (!ga || !gb || ga === gb) return;
@@ -5929,27 +6366,27 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           }
           case "split": {
             if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
-            if (s.phase !== "review" || !s.groupOf[msg.a]) return;
+            if (s.phase !== "review" || s.nextAt || !s.groupOf[msg.a]) return;
             s.groupOf[msg.a] = msg.a + "#" + Date.now();
             return;
           }
           case "ready": {
-            if (s.phase !== "review") return;
+            if (s.phase !== "review" || s.nextAt) return;
             s.ready[pid] = !s.ready[pid];
-            if (online(s, ctx).every((id) => s.ready[id])) advance(s, ctx);
+            if (online(s, ctx).every((id) => s.ready[id])) soon(s, ctx);
             return;
           }
           case "skip": {
             if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
             if (s.phase === "answer") reveal(s, ctx);
-            else if (s.phase === "review") advance(s, ctx);
+            else if (s.phase === "review") s.nextAt ? advance(s, ctx) : soon(s, ctx);
             return;
           }
           case "addTime": {
             if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
-            if (!s.endsAt || s.phase === "over") return;
+            if (!s.endsAt || s.phase === "over" || s.nextAt) return;
             const left = s.endsAt - Date.now() + 15e3;
-            const fn = s.phase === "answer" ? () => reveal(s, ctx) : () => advance(s, ctx);
+            const fn = s.phase === "answer" ? () => reveal(s, ctx) : () => soon(s, ctx);
             setTimer(s, ctx, left, fn);
             s.phaseMs = Math.max(left, s.phase === "answer" ? s.seconds * 1e3 : REVIEW_MS);
             return;
@@ -6006,7 +6443,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           inGame: s.order.includes(pid),
           order: s.order,
           points: s.points,
-          winners: s.winners || null
+          winners: s.winners || null,
+          nextAt: s.nextAt || null
         };
       }
       function onLeave(s, pid, ctx) {
@@ -6031,7 +6469,12 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         const left = s._left;
         s._left = null;
         if (s.phase === "answer") setTimer(s, ctx, left, () => reveal(s, ctx));
-        else if (s.phase === "review") setTimer(s, ctx, left, () => advance(s, ctx));
+        else if (s.phase === "review") {
+          if (s.nextAt) {
+            setTimer(s, ctx, left, () => advance(s, ctx));
+            s.nextAt = s.endsAt;
+          } else setTimer(s, ctx, left, () => soon(s, ctx));
+        }
       }
       var isOver = (s) => s.phase === "over";
       var results = (s) => ({ ...s.points });
@@ -7438,7 +7881,7 @@ window.RULES = {
       ['0', 'если не ответил'],
     ],
     win: 'Больше всех очков после последнего вопроса.',
-    tips: ['Не знаете точно — прикиньте порядок величины: даже грубая оценка часто ближе всех.', 'В базе 500 вопросов — история, наука, космос, география, спорт, культура, технологии и другое.'],
+    tips: ['Не знаете точно — прикиньте порядок величины: даже грубая оценка часто ближе всех.', 'В базе 700 вопросов — история, наука, космос, география, спорт, культура, технологии, видеоигры и другое.'],
   },
   majority: {
     title: 'Ответ большинства',
@@ -8617,6 +9060,62 @@ window.RULES = {
     };
     img.src = url;
   });
+  // Картинка персонажа в «Кто я?»: уменьшаем до ~320 px, сжимаем и загружаем на сервер
+  const whoFile = document.createElement('input');
+  whoFile.type = 'file';
+  whoFile.accept = 'image/*';
+  whoFile.hidden = true;
+  document.body.appendChild(whoFile);
+  whoFile.addEventListener('change', () => {
+    const f = whoFile.files && whoFile.files[0];
+    whoFile.value = '';
+    if (f) whoImgFrom(f);
+  });
+  function whoImgFrom(f) {
+    if (!/^image\//.test(f.type)) return toast('Это не картинка');
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = async () => {
+      URL.revokeObjectURL(url);
+      let data = '';
+      for (const side of [320, 240, 180]) {
+        const k = Math.min(1, side / Math.max(img.naturalWidth, img.naturalHeight));
+        const cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(img.naturalWidth * k));
+        cv.height = Math.max(1, Math.round(img.naturalHeight * k));
+        const c2 = cv.getContext('2d');
+        c2.imageSmoothingQuality = 'high';
+        c2.drawImage(img, 0, 0, cv.width, cv.height);
+        data = cv.toDataURL('image/webp', 0.82);
+        if (!data.startsWith('data:image/webp')) data = cv.toDataURL('image/jpeg', 0.85);
+        if (data.length * 0.75 < 140 * 1024) break;
+      }
+      const mine = (ui.whoImg = { prev: data, url: null });
+      render();
+      const r = await quietEmit('uploadAvatar', { data });
+      if (ui.whoImg !== mine) return;
+      if (r.error || !r.url) {
+        ui.whoImg = null;
+        toast(r.error || 'Не получилось загрузить картинку');
+      } else mine.url = r.url;
+      render();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toast('Не получилось открыть картинку');
+    };
+    img.src = url;
+  }
+  // Вставка картинки из буфера, пока загадываем персонажа
+  document.addEventListener('paste', (e) => {
+    const g = S?.game;
+    if (!g || g.type !== 'whoami' || g.phase !== 'write' || !g.writeFor || g.writtenForTarget) return;
+    const it = [...(e.clipboardData?.items || [])].find((x) => x.kind === 'file' && /^image\//.test(x.type));
+    if (!it) return;
+    e.preventDefault();
+    whoImgFrom(it.getAsFile());
+  });
+
   // Готовый круг: квадрат 256×256, внутри — то, что видно в окне
   function cropExport() {
     const c = ui.crop;
@@ -9342,6 +9841,8 @@ window.RULES = {
       if (bar && total) bar.style.width = Math.max(0, Math.min(100, (left / total) * 100)) + '%';
       el.classList.toggle('low', left < 10000);
     });
+    // отсчёт до следующего вопроса
+    document.querySelectorAll('[data-nx]').forEach((el) => (el.textContent = Math.max(1, Math.ceil((Number(el.dataset.nx) - n) / 1000))));
     // Таймер хода Коднеймс под хедером
     document.querySelectorAll('[data-clock]').forEach((el) => {
       const paused = el.dataset.paused === '1';
@@ -9993,7 +10494,12 @@ window.RULES = {
                ${
                  g.writtenForTarget
                    ? `<p class="jo-sent">${ic('check', 18)} Персонаж загадан — ждём остальных</p>`
-                   : `<form data-form="who-write" class="big-form"><input class="inp big-inp" name="text" data-keep="who-write" maxlength="60" placeholder="Персонаж или известный человек" autocomplete="off" required/><button class="btn primary mega">Загадать</button></form>
+                   : `<form data-form="who-write" class="who-write"><div class="big-form"><input class="inp big-inp" name="text" data-keep="who-write" maxlength="60" placeholder="Персонаж или известный человек" autocomplete="off" required/><button class="btn primary mega">Загадать</button></div>
+                 <div class="ww-img">${
+                   ui.whoImg
+                     ? `<span class="ww-prev"><img src="${esc(ui.whoImg.prev)}" alt=""><button type="button" class="ww-x" data-act="who-img-x" title="Убрать картинку">${ic('x', 13)}</button></span><span class="muted small">${ui.whoImg.url ? `${ic('check', 14)} Картинка прикреплена — её увидят все, кроме ${nm(g.writeFor)}` : 'Загружаем картинку…'}</span>`
+                     : `<button type="button" class="btn ghost ww-add" data-act="who-img">${ic('camera', 18)} Прикрепить картинку</button><span class="muted small">необязательно · можно вставить из буфера (Ctrl+V)</span>`
+                 }</div></form>
                <button class="link-btn" data-act="who-random">или выбрать случайного</button>`
                }`
             : '<p>Ждём остальных…</p>'
@@ -10010,13 +10516,16 @@ window.RULES = {
         const isMe = id === me;
         const place = g.finishOrder.indexOf(id);
         const speaking = g.turnPid === id && !over;
-        return `<div class="tile ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
-          <div class="tile-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 18)} это вы`}</div>
-          <div class="tile-ava">${pa(id, 128, 'round')}</div>
-          <div class="tile-foot">
-            <span class="tile-name">${speaking ? ic('mic', 14) : ''}${nm(id)}${isMe ? ' (вы)' : ''}</span>
-            <span class="tile-st">${p.guessed ? `${ic('check', 13)} #${place + 1} · +${g.points[id]}` : p.gaveUp ? 'сдался' : ''}</span>
+        // кубок первому угадавшему, серебро второму, бронза третьему
+        const medal = p.guessed && place >= 0 && place < 3 ? `<span class="wt-medal m${place + 1}" title="${['Первым угадал', 'Второе место', 'Третье место'][place]}">${ic(place === 0 ? 'trophy' : 'medal', place === 0 ? 20 : 17)}</span>` : '';
+        return `<div class="wt ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
+          <div class="wt-ava">${pa(id, 84, 'round')}${medal}</div>
+          <div class="wt-body">
+            <span class="wt-name">${speaking ? `<span class="wt-mic">${ic('mic', 12)}</span>` : ''}${nm(id)}${isMe ? ' <small>(вы)</small>' : ''}</span>
+            <div class="wt-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 16)} это вы`}</div>
+            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ''}</span>
           </div>
+          ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" loading="lazy">` : ''}
         </div>`;
       })
       .join('');
@@ -10029,14 +10538,17 @@ window.RULES = {
         <div class="qa-c-a">${live ? '<span class="qa-c-v">ждём ответы…</span>' : `<span class="qa-c-v">${AL[x.v] || '—'}</span>`}<span class="qa-c-n"><i class="y">${x.yes}</i><i class="n">${x.no}</i><i>${x.idk}</i></span></div>
       </div>`;
     // «Мои вопросы и ответы» — по порядку, как задавались: номер, вопрос, итог цветной меткой
+    // Вопросы раскладываем в две колонки: «Да» и «Нет»; спорные («не знаю», поровну) — отдельной строкой ниже
     const qaCards = (list, extra = '') => {
-      const AL2 = { yes: 'Да', no: 'Нет', idk: '?' };
-      const rows = list
-        .map(
-          (x, i) => `<div class="qa-line v-${x.v || 'idk'}"><span class="ql-n">${i + 1}</span><span class="ql-q">${esc(x.text)}</span><span class="ql-v">${AL2[x.v] || '?'}</span><span class="ql-c" title="да / нет / не знаю"><i class="y">${x.yes}</i> <i class="n">${x.no}</i> <i>${x.idk}</i></span></div>`
-        )
-        .join('');
-      return `<div class="qa-lines">${rows || '<span class="muted small">Вопросов пока не было</span>'}</div>${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
+      if (!list.length) return '<span class="muted small">Вопросов пока не было</span>';
+      const all = list.map((x, i) => ({ ...x, n: i + 1 }));
+      const item = (x) => `<div class="qa-it"><span class="ql-n">${x.n}</span><span class="ql-q">${esc(x.text)}</span><span class="ql-c" title="да / нет / не знаю"><i class="y">${x.yes}</i> <i class="n">${x.no}</i> <i>${x.idk}</i></span></div>`;
+      const col = (v, title) => {
+        const xs = all.filter((x) => x.v === v);
+        return `<div class="qa-col c-${v}"><div class="qa-col-h"><b>${title}</b><span>${xs.length}</span></div>${xs.map(item).join('') || '<span class="qa-empty">пока ничего</span>'}</div>`;
+      };
+      const rest = all.filter((x) => x.v !== 'yes' && x.v !== 'no');
+      return `<div class="qa-cols">${col('yes', 'Да')}${col('no', 'Нет')}</div>${rest.length ? `<div class="qa-col c-idk"><div class="qa-col-h"><b>Не ясно</b><span>${rest.length}</span></div>${rest.map(item).join('')}</div>` : ''}${extra ? `<div class="qa-grid">${extra}</div>` : ''}`;
     };
     const q = g.q && g.q.asker === g.turnPid ? g.q : null;
     const asker = g.turnPid;
@@ -10070,13 +10582,18 @@ window.RULES = {
           ${g.turnPid === me ? `<button class="btn primary mega" data-act="who-next">${ic('skip', 24)} Передать ход</button>` : ''}
           ${!myState.guessed && !myState.gaveUp ? `<button class="btn success mega" data-act="who-guessed">${ic('check', 24)} Я угадал!</button><button class="btn ghost mega" data-act="who-giveup">${ic('flag', 22)} Сдаюсь</button>` : `<span class="muted">Вы уже ${myState.guessed ? 'угадали' : 'сдались'} — помогайте остальным</span>`}
         </div>`;
-    return `<div class="who">
+    return `<div class="who who2">
+      <aside class="who-players">
+        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
+        <div class="who-list">${tiles}</div>
+      </aside>
+      <div class="who-main">
       <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута на вопрос. Большинство «нет» — ход переходит.</span>`}</div>
-      <div class="call-grid">${tiles}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
       ${actions}
+      </div>
     </div>`;
   }
 
@@ -10116,7 +10633,12 @@ window.RULES = {
         .join('')}</span></div>`;
     const hearted = (c) => (g.isGuesser ? g.heart != null && c.key === g.heart : c.pid === g.heart);
     const clueEl = (c, tag = 'div', extra = '') =>
-      `<${tag} class="jc ${c.removed ? 'removed' : ''} ${hearted(c) ? 'hearted' : ''}" ${extra}><b>${esc(c.text)}</b>${hearted(c) ? `<span class="jc-heart">${ic('heartf', 20)}</span>` : ''}${c.pid && !g.isGuesser ? `<small>${pa(c.pid, 'xs', 'round')}${nm(c.pid)}</small>` : ''}</${tag}>`;
+      `<${tag} class="jc ${c.removed ? 'removed' : ''} ${hearted(c) ? 'hearted' : ''}" ${extra}><b class="${jcLen(c.text)}" lang="ru" style="--n:${Math.max(6, String(c.text || '').length)}">${esc(c.text)}</b>${c.first && !c.removed ? `<span class="jc-first" title="Написал эту подсказку первым — совпадения у остальных сгорели">${ic('medal', 13)} первым</span>` : ''}${hearted(c) ? `<span class="jc-heart">${ic('heartf', 20)}</span>` : ''}${c.pid && !g.isGuesser ? `<small>${pa(c.pid, 'xs', 'round')}${nm(c.pid)}</small>` : ''}${c.removed && c.by && !g.isGuesser ? `<span class="jc-by">${c.by === 'dup' ? (c.beat ? `${ic('swap', 12)} первым — ${pa(c.beat, 'xs', 'round')}<b>${nm(c.beat)}</b>` : `${ic('swap', 12)} совпала с другой`) : c.by === 'word' ? `${ic('alert', 12)} это само слово` : `${ic('x', 12)} вычеркнул ${pa(c.by, 'xs', 'round')}<b>${nm(c.by)}</b>`}</span>` : ''}</${tag}>`;
+    // Длинные слова — мельче, чтобы не рвались посередине («Нижевол-осье»)
+    function jcLen(t) {
+      const n = String(t || '').length;
+      return n > 15 ? 'l-xl' : n > 12 ? 'l-l' : n > 9 ? 'l-m' : '';
+    }
     const bigForm = (form, ph, btnText, keep) =>
       `<form data-form="${form}" class="big-form"><input class="inp big-inp" name="text" data-keep="${keep}" maxlength="30" placeholder="${ph}" autocomplete="off" pattern="[A-Za-zА-Яа-яЁёІіЇїЄєҐґ0-9]+(-[A-Za-zА-Яа-яЁёІіЇїЄєҐґ0-9]+)*" title="Одно слово: буквы и цифры, можно через дефис" ${form === 'jo-clue' ? 'required' : ''}/><button class="btn primary mega">${btnText}</button></form>`;
     let body = '';
@@ -10220,6 +10742,19 @@ window.RULES = {
     }
     return [lo, hi];
   }
+  // Кнопка «Дальше» + кто уже нажал; после того как готовы все — 5 секунд отсчёта до следующего вопроса
+  function nextBar(g, act) {
+    if (g.nextAt) {
+      const left = Math.max(0, g.nextAt - now());
+      return `<div class="nx" style="--nx:-${5000 - Math.min(5000, left)}ms"><div class="nx-ring"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/></svg><b data-nx="${g.nextAt}">${Math.max(1, Math.ceil(left / 1000))}</b></div><span>${g.round >= g.rounds ? 'Итоги игры' : 'Следующий вопрос'} через <b data-nx="${g.nextAt}">${Math.max(1, Math.ceil(left / 1000))}</b> с</span></div>`;
+    }
+    const iReady = g.ready.includes(S.me);
+    return `<div class="nx-wrap">
+      <button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="${act}">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button>
+      <div class="jo-ready nx-who"><span class="muted small">Нажали «Дальше» ${g.ready.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.ready.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.ready.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
+    </div>`;
+  }
+
   function rQuiz(g) {
     const me = S.me;
     const T = ''; // таймер — общей полосой под шапкой
@@ -10236,8 +10771,8 @@ window.RULES = {
       const ready = `<div class="jo-ready"><span class="muted small">Ответили ${g.answered.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.answered.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.answered.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>`;
       body = `<div class="stage-card qz-card">${T}
         <div class="qz-q">${esc(g.q.text)}</div>
-        <form data-form="qz-answer" class="big-form qz-form"><input class="inp big-inp qz-inp" name="v" data-keep="qz-v" inputmode="decimal" autocomplete="off" placeholder="Ваше число" required/>${g.q.unit ? `<span class="qz-unit">${esc(g.q.unit)}</span>` : ''}<button class="btn primary mega">${g.mine != null ? 'Изменить' : 'Ответить'}</button></form>
-        ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ваш ответ: <b>${fmtN(g.mine, g.q.unit)}</b> <span class="muted">— можно изменить, пока идёт время</span></div>` : '<p class="muted small">Можно с запятой: 3,14. Отрицательные — через минус.</p>'}
+        <form data-form="qz-answer" class="big-form qz-form"><input class="inp big-inp qz-inp" name="v" data-keep="qz-v" inputmode="decimal" autocomplete="off" placeholder="${esc(g.q.mask || 'Ваше число')}" aria-label="Ваше число, ${g.q.mask ? g.q.mask.replace(/[^X]/g, '').length + ' цифр' : ''}" required/>${g.q.unit ? `<span class="qz-unit">${esc(g.q.unit)}</span>` : ''}<button class="btn primary mega">${g.mine != null ? 'Изменить' : 'Ответить'}</button></form>
+        ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ваш ответ: <b>${fmtN(g.mine, g.q.unit)}</b> <span class="muted">— можно изменить, пока идёт время</span></div>` : `<p class="muted small">${g.q.mask ? `Подсказка: в ответе <b class="qz-mask">${esc(g.q.mask)}</b> — столько цифр. ` : ''}Можно с запятой: 3,14.</p>`}
         ${ready}</div>`;
     } else if (g.phase === 'reveal' && g.res) {
       const r = g.res;
@@ -10285,7 +10820,7 @@ window.RULES = {
           <div class="qz-scale"><span>${fmtN(lo, g.q.unit)}</span><span>${fmtN(hi, g.q.unit)}</span></div>
         </div>
         ${r.list.length ? `<div class="qz-list" style="animation-delay:${QZ_FILL + 300 - el}ms">${list}</div>` : '<p class="muted">Никто не успел ответить</p>'}
-        <div class="row c"><button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="qz-ready">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button><span class="muted small">${g.ready.length}/${g.order.length} готовы</span></div>
+        ${nextBar(g, 'qz-ready')}
       </div>`;
     } else if (g.phase === 'over') {
       body = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победа: ${(g.winners || []).map(nm).join(', ')}!</h2>
@@ -10315,37 +10850,53 @@ window.RULES = {
     } else if (g.phase === 'review') {
       const host = isHost();
       const sel = ui.mjSel && g.groups.some((x) => x.pids.includes(ui.mjSel)) ? ui.mjSel : null;
-      const pairs = g.groups.filter((x) => x.pids.length > 1);
       const t0 = (ui.mjStart = ui.mjStart || {})[g.round] || (ui.mjStart[g.round] = now());
       const el = now() - t0;
-      const solo = g.groups.filter((x) => x.pids.length === 1);
-      const groupCard = (x, i) => {
+      const lock = !!g.nextAt; // идёт отсчёт — группы уже не меняются
+      const canEdit = host && !lock;
+      const max = Math.max(1, ...g.groups.map((x) => x.pids.length));
+      const total = g.groups.reduce((n, x) => n + x.pids.length, 0);
+      // Итог для меня — сразу понятно, что произошло
+      const myG = g.groups.find((x) => x.pids.includes(me));
+      const myPts = g.preview[me] || 0;
+      const mates = myG ? myG.pids.length - 1 : 0;
+      const mine = !myG
+        ? `<div class="mj-me none">${ic('clock', 20)}<div><b>Вы не успели ответить</b><span>0 очков в этом раунде</span></div></div>`
+        : `<div class="mj-me ${myG.major ? 'major' : mates ? 'ok' : 'solo'}">
+            <span class="mj-me-ic">${myG.major ? ic('crown', 22) : mates ? ic('users', 22) : ic('x', 22)}</span>
+            <div><b>${myG.major ? 'Вы в большинстве!' : mates ? `Совпали с ${mates} ${plural(mates, 'игроком', 'игроками', 'игроками')}` : 'Никто не ответил так же'}</b><span>Ваш ответ «${esc(g.mine || myG.texts[0])}»</span></div>
+            <b class="mj-me-pts">${myPts ? '+' + myPts : '0'}</b>
+          </div>`;
+      const row = (x, i) => {
         const on = sel && x.pids.includes(sel);
         const pts = g.preview[x.pids[0]] || 0;
-        return `<div class="mj-g ${x.major ? 'major' : ''} ${on ? 'sel' : ''} ${host ? 'host' : ''}" ${host ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''} style="animation-delay:${i * 90 - el}ms">
-          ${x.major ? `<span class="mj-badge">${ic('crown', 14)} Ответ большинства</span>` : ''}
-          <div class="mj-txt">${x.texts.map(esc).join(' <i>/</i> ')}</div>
-          <div class="mj-ppl">${x.pids.map((p) => `<span class="mj-p">${pa(p, 26, 'round')}<small>${nm(p)}</small>${host && x.pids.length > 1 ? `<button class="mj-x" data-act="mj-split" data-id="${p}" title="Отделить этот ответ">${ic('x', 12)}</button>` : ''}</span>`).join('')}</div>
-          <div class="mj-foot"><b class="mj-n">${x.pids.length}</b><span class="muted small">${plural(x.pids.length, 'игрок', 'игрока', 'игроков')}</span>${pts ? `<b class="mj-pts">+${pts} каждому</b>` : ''}</div>
+        const solo = x.pids.length === 1;
+        const target = canEdit && sel && !on;
+        return `<div class="mj-row ${x.major ? 'major' : ''} ${solo ? 'solo' : ''} ${on ? 'sel' : ''} ${target ? 'target' : ''} ${x.pids.includes(me) ? 'mine' : ''} ${canEdit ? 'host' : ''}" ${canEdit ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''} style="--w:${(x.pids.length / max) * 100}%;--d:${i * 110 - el}ms">
+          <i class="mj-bar"></i>
+          <span class="mj-rk">${x.major ? ic('crown', 18) : solo ? '' : i + 1}</span>
+          <div class="mj-main">
+            <div class="mj-ans">${x.texts.map(esc).join(' <i>·</i> ')}</div>
+            <div class="mj-avs">${x.pids.map((p) => `<span class="mj-p">${pa(p, 24, 'round')}<small>${nm(p)}</small>${canEdit && !solo ? `<button class="mj-x" data-act="mj-split" data-id="${p}" title="Отделить этот ответ">${ic('x', 11)}</button>` : ''}</span>`).join('')}</div>
+          </div>
+          <div class="mj-side"><b class="mj-cnt">${x.pids.length}</b><span class="mj-pts ${pts ? '' : 'zero'}">${pts ? `+${pts} каждому` : '0 очков'}</span></div>
+          ${target ? `<span class="mj-merge">${ic('link', 14)} Склеить сюда</span>` : ''}
         </div>`;
       };
-      const soloList = solo.length
-        ? `<div class="mj-solo"><div class="side-h small">Без пары <span class="muted">— 0 очков</span></div><div class="mj-solo-l">${solo
-            .map((x) => `<span class="mj-s ${sel && x.pids.includes(sel) ? 'sel' : ''} ${host ? 'host' : ''}" ${host ? `data-act="mj-pick" data-id="${x.pids[0]}" role="button" tabindex="0"` : ''}>${pa(x.pids[0], 22, 'round')}<b>${esc(x.texts[0])}</b></span>`)
-            .join('')}</div></div>`
-        : '';
-      const iReady = g.ready.includes(me);
-      const tip = host
-        ? sel
-          ? `<div class="mj-tip on">${ic('link', 16)} Теперь нажмите на ответ, с которым склеить, или на тот же — отменить</div>`
-          : '<div class="mj-tip">Похожие ответы разошлись? Нажмите на один, потом на другой — они склеятся.</div>'
-        : '<div class="mj-tip">Похожие ответы хост может склеить вручную</div>';
-      body = `<div class="stage-card qz-card">
+      const tip = lock
+        ? ''
+        : host
+          ? sel
+            ? `<div class="mj-tip on">${ic('link', 16)} Выберите ответ, с которым склеить. Нажмите на тот же — отмена</div>`
+            : `<div class="mj-tip">${ic('sparkles', 15)} Похожие ответы разошлись? Нажмите на один, потом на другой — они склеятся</div>`
+          : `<div class="mj-tip">${ic('sparkles', 15)} Похожие ответы хост может склеить вручную</div>`;
+      body = `<div class="stage-card qz-card mj-review">
         <div class="qz-q sm">${esc(g.q)}</div>
-        ${pairs.length ? `<div class="mj-groups">${pairs.map(groupCard).join('')}</div>` : '<p class="mj-none">Ни одного совпадения — все ответили по-разному!</p>'}
-        ${soloList}
+        ${mine}
+        <div class="mj-sum"><span>${g.groups.length} ${plural(g.groups.length, 'разный ответ', 'разных ответа', 'разных ответов')} от ${total} ${plural(total, 'игрока', 'игроков', 'игроков')}</span>${g.groups.some((x) => x.major) ? `<span class="mj-sum-m">${ic('crown', 13)} большинство +1</span>` : '<span class="muted">большинства нет — ничья по размеру</span>'}</div>
+        <div class="mj-rows">${g.groups.map(row).join('')}</div>
         ${tip}
-        <div class="row c"><button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="mj-ready">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button><span class="muted small">${g.ready.length}/${g.order.length} готовы</span></div>
+        ${nextBar(g, 'mj-ready')}
       </div>`;
     } else if (g.phase === 'over') {
       body = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победа: ${(g.winners || []).map(nm).join(', ')}!</h2>
@@ -10608,6 +11159,11 @@ window.RULES = {
     'spy-next': () => act('next'),
     // кто я
     'who-random': () => act('randomFor'),
+    'who-img': () => whoFile.click(),
+    'who-img-x': () => {
+      ui.whoImg = null;
+      render();
+    },
     'who-force': () => act('forceStart'),
     'who-next': () => act('next'),
     'who-ans': (d) => act('answer', { v: d.v }),
@@ -10872,8 +11428,12 @@ window.RULES = {
         render();
       }
     } else if (kind === 'who-write') {
-      const r = await act('write', { text: fd.get('text') });
-      if (!r.error) clear();
+      if (ui.whoImg && !ui.whoImg.url) return toast('Подождите — картинка ещё загружается');
+      const r = await act('write', { text: fd.get('text'), img: ui.whoImg?.url || null });
+      if (!r.error) {
+        clear();
+        ui.whoImg = null;
+      }
     } else if (kind === 'who-ask') {
       const r = await act('ask', { text: fd.get('text') });
       if (!r.error) clear();
