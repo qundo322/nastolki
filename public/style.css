@@ -1907,27 +1907,10 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 @media (max-width: 640px) { .topbar .tt { --w: 66px; --h: 30px; --k: 22px; } .tt-knob > i:nth-child(2) { left: 12px; top: 11px; } }
 @media (prefers-reduced-motion: reduce) { .tt-knob, .tt-sky > i { transition: none; } .tt-night::after { animation: none; } }
 
-/* ---- фейдер силы свечения ---- */
-.fader { --v: 0%; display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
-.fader-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.fader-v { font-size: 13px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
-.fader-track { position: relative; height: 26px; display: flex; align-items: center; }
-.fader-track::before { content: ''; position: absolute; left: 0; right: 0; height: 8px; border-radius: 99px; background: var(--surface-3); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); }
-.fader-track::after { content: ''; position: absolute; left: 0; width: var(--v); height: 8px; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 35%, transparent), var(--accent)); box-shadow: 0 0 calc(var(--v) / 6) color-mix(in srgb, var(--accent) 60%, transparent); }
-.fader input { -webkit-appearance: none; appearance: none; position: relative; z-index: 1; width: 100%; height: 26px; margin: 0; background: transparent; cursor: pointer; }
-.fader input::-webkit-slider-runnable-track { height: 26px; background: transparent; }
-.fader input::-moz-range-track { height: 26px; background: transparent; }
 /* ручка — как у микшерного фейдера: прямоугольная «шапка» с риской */
-.fader input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
   background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
-.fader input::-moz-range-thumb { width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
   background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
-.fader input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fader-scale { display: flex; justify-content: space-between; padding: 0 7px; margin-top: -4px; }
-.fader-scale i { width: 1px; height: 6px; background: var(--line-strong); }
-.fader-scale i:nth-child(5n + 1) { height: 9px; background: var(--faint); }
 .glow-ask-f { flex: none; width: 280px; }
-.glow-ask-f .fader { min-width: 0; }
 @media (max-width: 640px) { .glow-ask-f { width: 100%; } }
 
 /* ---- свечение хода: пятно растёт вместе с фейдером ---- */
@@ -1943,10 +1926,6 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .btn.primary[disabled] { filter: grayscale(.4) opacity(.6); }
 .gcard.active { border-color: var(--accent-line); }
 .gcard.active .gemoji { box-shadow: 0 6px 18px -4px var(--accent-glow); }
-.fader-track::after { background: var(--accent-bg); box-shadow: 0 0 calc(var(--v) / 5) var(--accent-glow); }
-.fader input::-webkit-slider-thumb { background: linear-gradient(90deg, transparent 6.5px, #1b1405 6.5px, #1b1405 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
-.fader input::-moz-range-thumb { background: linear-gradient(90deg, transparent 6.5px, #1b1405 6.5px, #1b1405 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
-.fader-v { color: var(--accent-text); }
 .mc-on:not(.flip)::before { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 80%, transparent), transparent 62%); }
 
 /* Карточки Коднеймс: пятно света под курсором слабее, наклон и светящийся край — как были */
@@ -1983,3 +1962,18 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .cs-t small { font-size: 11px; color: var(--muted); }
 @media (hover: none) { .cn-sort { cursor: pointer; } }
 .cn-clue.cap-turn .cn-sort { align-self: center; }
+
+/* ---------- простые ползунки настроек вида ---------- */
+.sl { --v: 0%; display: flex; flex-direction: column; gap: 6px; min-width: 230px; padding: 4px 0; }
+.sl + .sl { margin-top: 6px; }
+.sl-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; color: var(--muted); }
+.sl-top b { font-size: 12px; font-weight: 700; color: var(--accent-text); }
+.sl input { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; background: transparent; cursor: pointer; }
+.sl input::-webkit-slider-runnable-track { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--accent) var(--v), var(--surface-3) var(--v)); }
+.sl input::-moz-range-track { height: 4px; border-radius: 99px; background: var(--surface-3); }
+.sl input::-moz-range-progress { height: 4px; border-radius: 99px; background: var(--accent); }
+.sl input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .35), 0 0 0 1px rgba(0, 0, 0, .06); transition: transform .12s; }
+.sl input::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .35); }
+.sl input:active::-webkit-slider-thumb { transform: scale(1.15); }
+.sl input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent-soft), 0 1px 4px rgba(0, 0, 0, .35); }
+.glow-ask-f .sl { min-width: 0; }

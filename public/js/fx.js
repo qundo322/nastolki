@@ -16,7 +16,7 @@
     // Карточки Коднеймс низкие и мелкие — тот же угол на них почти не виден,
     // поэтому им наклон сильнее и перспектива ближе (на глаз — как у карточек игр в лобби)
     const cn = el.classList.contains('cn-card');
-    const tilt = cn ? 10 : MC_TILT;
+    const tilt = cn ? (window.CN_TILT ?? 10) : MC_TILT; // для Коднеймс — из настроек «Вид»
     const persp = cn ? 480 : 720;
     const rx = (0.5 - py) * 2 * tilt;
     const ry = (px - 0.5) * 2 * tilt;

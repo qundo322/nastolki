@@ -1914,27 +1914,10 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 @media (max-width: 640px) { .topbar .tt { --w: 66px; --h: 30px; --k: 22px; } .tt-knob > i:nth-child(2) { left: 12px; top: 11px; } }
 @media (prefers-reduced-motion: reduce) { .tt-knob, .tt-sky > i { transition: none; } .tt-night::after { animation: none; } }
 
-/* ---- фейдер силы свечения ---- */
-.fader { --v: 0%; display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
-.fader-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.fader-v { font-size: 13px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
-.fader-track { position: relative; height: 26px; display: flex; align-items: center; }
-.fader-track::before { content: ''; position: absolute; left: 0; right: 0; height: 8px; border-radius: 99px; background: var(--surface-3); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); }
-.fader-track::after { content: ''; position: absolute; left: 0; width: var(--v); height: 8px; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 35%, transparent), var(--accent)); box-shadow: 0 0 calc(var(--v) / 6) color-mix(in srgb, var(--accent) 60%, transparent); }
-.fader input { -webkit-appearance: none; appearance: none; position: relative; z-index: 1; width: 100%; height: 26px; margin: 0; background: transparent; cursor: pointer; }
-.fader input::-webkit-slider-runnable-track { height: 26px; background: transparent; }
-.fader input::-moz-range-track { height: 26px; background: transparent; }
 /* ручка — как у микшерного фейдера: прямоугольная «шапка» с риской */
-.fader input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
   background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
-.fader input::-moz-range-thumb { width: 16px; height: 26px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .35);
   background: linear-gradient(90deg, transparent 6.5px, var(--accent-ink) 6.5px, var(--accent-ink) 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #d9d6e2); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
-.fader input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fader-scale { display: flex; justify-content: space-between; padding: 0 7px; margin-top: -4px; }
-.fader-scale i { width: 1px; height: 6px; background: var(--line-strong); }
-.fader-scale i:nth-child(5n + 1) { height: 9px; background: var(--faint); }
 .glow-ask-f { flex: none; width: 280px; }
-.glow-ask-f .fader { min-width: 0; }
 @media (max-width: 640px) { .glow-ask-f { width: 100%; } }
 
 /* ---- свечение хода: пятно растёт вместе с фейдером ---- */
@@ -1950,10 +1933,6 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .btn.primary[disabled] { filter: grayscale(.4) opacity(.6); }
 .gcard.active { border-color: var(--accent-line); }
 .gcard.active .gemoji { box-shadow: 0 6px 18px -4px var(--accent-glow); }
-.fader-track::after { background: var(--accent-bg); box-shadow: 0 0 calc(var(--v) / 5) var(--accent-glow); }
-.fader input::-webkit-slider-thumb { background: linear-gradient(90deg, transparent 6.5px, #1b1405 6.5px, #1b1405 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
-.fader input::-moz-range-thumb { background: linear-gradient(90deg, transparent 6.5px, #1b1405 6.5px, #1b1405 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
-.fader-v { color: var(--accent-text); }
 .mc-on:not(.flip)::before { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 80%, transparent), transparent 62%); }
 
 /* Карточки Коднеймс: пятно света под курсором слабее, наклон и светящийся край — как были */
@@ -1990,6 +1969,21 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .cs-t small { font-size: 11px; color: var(--muted); }
 @media (hover: none) { .cn-sort { cursor: pointer; } }
 .cn-clue.cap-turn .cn-sort { align-self: center; }
+
+/* ---------- простые ползунки настроек вида ---------- */
+.sl { --v: 0%; display: flex; flex-direction: column; gap: 6px; min-width: 230px; padding: 4px 0; }
+.sl + .sl { margin-top: 6px; }
+.sl-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; color: var(--muted); }
+.sl-top b { font-size: 12px; font-weight: 700; color: var(--accent-text); }
+.sl input { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; background: transparent; cursor: pointer; }
+.sl input::-webkit-slider-runnable-track { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--accent) var(--v), var(--surface-3) var(--v)); }
+.sl input::-moz-range-track { height: 4px; border-radius: 99px; background: var(--surface-3); }
+.sl input::-moz-range-progress { height: 4px; border-radius: 99px; background: var(--accent); }
+.sl input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .35), 0 0 0 1px rgba(0, 0, 0, .06); transition: transform .12s; }
+.sl input::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .35); }
+.sl input:active::-webkit-slider-thumb { transform: scale(1.15); }
+.sl input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent-soft), 0 1px 4px rgba(0, 0, 0, .35); }
+.glow-ask-f .sl { min-width: 0; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -6295,7 +6289,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     // Карточки Коднеймс низкие и мелкие — тот же угол на них почти не виден,
     // поэтому им наклон сильнее и перспектива ближе (на глаз — как у карточек игр в лобби)
     const cn = el.classList.contains('cn-card');
-    const tilt = cn ? 10 : MC_TILT;
+    const tilt = cn ? (window.CN_TILT ?? 10) : MC_TILT; // для Коднеймс — из настроек «Вид»
     const persp = cn ? 480 : 720;
     const rx = (0.5 - py) * 2 * tilt;
     const ry = (px - 0.5) * 2 * tilt;
@@ -6912,6 +6906,11 @@ window.RULES = {
       return [0, 20, 30, 50][lvl] || 0;
     })(),
     fs: Number(LS.get('pg_cnfs', '36')) || 36,
+    // Наклон карточек Коднеймс под курсором, 0–100 (50 — по умолчанию, ≈10°)
+    tilt: (() => {
+      const v = LS.get('pg_tilt', '');
+      return v === '' ? 50 : Math.max(0, Math.min(100, Number(v) || 0));
+    })(),
   };
   const FS_OPTS = [24, 30, 36, 42];
   function applyView() {
@@ -6924,15 +6923,18 @@ window.RULES = {
       st.setProperty('--glow-s', String(0.85 + v / 100)); // размер пятна
     }
     document.documentElement.style.setProperty('--cn-fs', String(VIEW.fs));
+    window.CN_TILT = (VIEW.tilt / 100) * 20; // градусов, читает fx.js
   }
   applyView();
-  // Фейдер силы свечения (в меню «Вид» и в предложении при старте партии)
-  const glowLabel = (v) => (v ? (v <= 25 ? 'слабое' : v <= 45 ? 'среднее' : v <= 70 ? 'сильное' : 'максимум') + ` · ${v}%` : 'выкл');
-  const glowFader = () => `<div class="fader" style="--v:${VIEW.glow}%">
-      <div class="fader-top"><span class="muted small">Свечение хода</span><b class="fader-v" data-glow-label>${glowLabel(VIEW.glow)}</b></div>
-      <div class="fader-track"><input type="range" min="0" max="100" step="1" value="${VIEW.glow}" data-glow-fader aria-label="Сила свечения хода" /></div>
-      <div class="fader-scale" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  // Простые ползунки настроек вида: подпись, значение, тонкая дорожка с круглой ручкой
+  const glowLabel = (v) => (v ? (v <= 25 ? 'слабое' : v <= 45 ? 'среднее' : v <= 70 ? 'сильное' : 'максимум') : 'выкл');
+  const tiltLabel = (v) => (v ? (v <= 30 ? 'лёгкий' : v <= 60 ? 'средний' : v <= 85 ? 'сильный' : 'максимум') : 'выкл');
+  const slider = (key, title, v, label) => `<div class="sl" style="--v:${v}%">
+      <div class="sl-top"><span>${title}</span><b data-sl-label="${key}">${label(v)}</b></div>
+      <input type="range" min="0" max="100" step="1" value="${v}" data-sl="${key}" aria-label="${title}" />
     </div>`;
+  const glowFader = () => slider('glow', 'Свечение хода', VIEW.glow, glowLabel);
+  const tiltFader = () => slider('tilt', 'Наклон карточек', VIEW.tilt, tiltLabel);
   // Переключатель темы на три положения: светлая · тёмная · OLED
   const TT = [
     { id: 'light', name: 'Светлая тема' },
@@ -6951,6 +6953,7 @@ window.RULES = {
         ui.menu === 'theme'
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
               ${glowFader()}
+              ${tiltFader()}
               <div class="vp-sep"></div>
               <div class="vp-h">Размер слов на карточках</div>
               <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
@@ -6958,15 +6961,20 @@ window.RULES = {
           : ''
       }
     </div>`;
-  // Фейдер двигаем без перерисовки — сразу видно силу свечения
+  // Ползунки двигаем без перерисовки — эффект виден сразу
   document.addEventListener('input', (e) => {
-    if (!e.target.matches('[data-glow-fader]')) return;
-    VIEW.glow = Number(e.target.value) || 0;
+    const key = e.target.dataset && e.target.dataset.sl;
+    if (!key) return;
+    const v = Number(e.target.value) || 0;
+    VIEW[key] = v;
+    LS.set(key === 'glow' ? 'pg_glow_v' : 'pg_tilt', String(v));
     applyView();
-    LS.set('pg_glow_v', String(VIEW.glow));
-    document.querySelectorAll('.fader').forEach((f) => f.style.setProperty('--v', VIEW.glow + '%'));
-    document.querySelectorAll('[data-glow-label]').forEach((l) => (l.textContent = glowLabel(VIEW.glow)));
-    document.querySelectorAll('[data-glow-fader]').forEach((r) => r !== e.target && (r.value = VIEW.glow));
+    const label = key === 'glow' ? glowLabel : tiltLabel;
+    document.querySelectorAll(`[data-sl="${key}"]`).forEach((r) => {
+      if (r !== e.target) r.value = v;
+      r.closest('.sl')?.style.setProperty('--v', v + '%');
+    });
+    document.querySelectorAll(`[data-sl-label="${key}"]`).forEach((l) => (l.textContent = label(v)));
   });
 
   // ---------- громкость звуков интерфейса ----------

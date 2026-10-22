@@ -76,6 +76,11 @@
       return [0, 20, 30, 50][lvl] || 0;
     })(),
     fs: Number(LS.get('pg_cnfs', '36')) || 36,
+    // Наклон карточек Коднеймс под курсором, 0–100 (50 — по умолчанию, ≈10°)
+    tilt: (() => {
+      const v = LS.get('pg_tilt', '');
+      return v === '' ? 50 : Math.max(0, Math.min(100, Number(v) || 0));
+    })(),
   };
   const FS_OPTS = [24, 30, 36, 42];
   function applyView() {
@@ -88,15 +93,18 @@
       st.setProperty('--glow-s', String(0.85 + v / 100)); // размер пятна
     }
     document.documentElement.style.setProperty('--cn-fs', String(VIEW.fs));
+    window.CN_TILT = (VIEW.tilt / 100) * 20; // градусов, читает fx.js
   }
   applyView();
-  // Фейдер силы свечения (в меню «Вид» и в предложении при старте партии)
-  const glowLabel = (v) => (v ? (v <= 25 ? 'слабое' : v <= 45 ? 'среднее' : v <= 70 ? 'сильное' : 'максимум') + ` · ${v}%` : 'выкл');
-  const glowFader = () => `<div class="fader" style="--v:${VIEW.glow}%">
-      <div class="fader-top"><span class="muted small">Свечение хода</span><b class="fader-v" data-glow-label>${glowLabel(VIEW.glow)}</b></div>
-      <div class="fader-track"><input type="range" min="0" max="100" step="1" value="${VIEW.glow}" data-glow-fader aria-label="Сила свечения хода" /></div>
-      <div class="fader-scale" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  // Простые ползунки настроек вида: подпись, значение, тонкая дорожка с круглой ручкой
+  const glowLabel = (v) => (v ? (v <= 25 ? 'слабое' : v <= 45 ? 'среднее' : v <= 70 ? 'сильное' : 'максимум') : 'выкл');
+  const tiltLabel = (v) => (v ? (v <= 30 ? 'лёгкий' : v <= 60 ? 'средний' : v <= 85 ? 'сильный' : 'максимум') : 'выкл');
+  const slider = (key, title, v, label) => `<div class="sl" style="--v:${v}%">
+      <div class="sl-top"><span>${title}</span><b data-sl-label="${key}">${label(v)}</b></div>
+      <input type="range" min="0" max="100" step="1" value="${v}" data-sl="${key}" aria-label="${title}" />
     </div>`;
+  const glowFader = () => slider('glow', 'Свечение хода', VIEW.glow, glowLabel);
+  const tiltFader = () => slider('tilt', 'Наклон карточек', VIEW.tilt, tiltLabel);
   // Переключатель темы на три положения: светлая · тёмная · OLED
   const TT = [
     { id: 'light', name: 'Светлая тема' },
@@ -115,6 +123,7 @@
         ui.menu === 'theme'
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
               ${glowFader()}
+              ${tiltFader()}
               <div class="vp-sep"></div>
               <div class="vp-h">Размер слов на карточках</div>
               <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
@@ -122,15 +131,20 @@
           : ''
       }
     </div>`;
-  // Фейдер двигаем без перерисовки — сразу видно силу свечения
+  // Ползунки двигаем без перерисовки — эффект виден сразу
   document.addEventListener('input', (e) => {
-    if (!e.target.matches('[data-glow-fader]')) return;
-    VIEW.glow = Number(e.target.value) || 0;
+    const key = e.target.dataset && e.target.dataset.sl;
+    if (!key) return;
+    const v = Number(e.target.value) || 0;
+    VIEW[key] = v;
+    LS.set(key === 'glow' ? 'pg_glow_v' : 'pg_tilt', String(v));
     applyView();
-    LS.set('pg_glow_v', String(VIEW.glow));
-    document.querySelectorAll('.fader').forEach((f) => f.style.setProperty('--v', VIEW.glow + '%'));
-    document.querySelectorAll('[data-glow-label]').forEach((l) => (l.textContent = glowLabel(VIEW.glow)));
-    document.querySelectorAll('[data-glow-fader]').forEach((r) => r !== e.target && (r.value = VIEW.glow));
+    const label = key === 'glow' ? glowLabel : tiltLabel;
+    document.querySelectorAll(`[data-sl="${key}"]`).forEach((r) => {
+      if (r !== e.target) r.value = v;
+      r.closest('.sl')?.style.setProperty('--v', v + '%');
+    });
+    document.querySelectorAll(`[data-sl-label="${key}"]`).forEach((l) => (l.textContent = label(v)));
   });
 
   // ---------- громкость звуков интерфейса ----------
