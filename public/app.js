@@ -158,7 +158,7 @@
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
               <div class="vp-title">${ic('sliders', 16)} Настройки вида</div>
               ${sec([], 'Везде', `${slider('scale', 'Размер интерфейса', VIEW.scale, (v) => scalePct(v) + '%')}${vtog('calm', 'Меньше анимаций', 'без вращений, наклонов и фоновых волн')}`)}
-              ${games.map(([ids, t, body]) => sec(ids, t, body)).join('')}
+              ${games.filter(([ids]) => !cur || ids.includes(cur)).map(([ids, t, body]) => sec(ids, t, body)).join('')}
             </div>`
           : ''
       }
@@ -2138,7 +2138,7 @@
     if (g.type === 'alias' && g.phase === 'running' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
     else if (g.type === 'spyfall' && g.phase === 'play' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
     else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'придумывает вопрос' };
-    else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
+    else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', guess: `угадывает ${nm(g.guesser)}`, result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
     else if (g.type === 'quiz' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
     else if (g.type === 'majority' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 45000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'тайные ответы' : 'разбор совпадений' };
     if (!c) return '';

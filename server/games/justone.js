@@ -4,6 +4,7 @@ const { shuffle, Deck, norm, clampInt, customWords, countLabel } = require('../u
 // Время фаз
 const CLUE_MS = 60000; // написать подсказку
 const FILTER_MS = 30000; // вычеркнуть совпадения
+const GUESS_MS = 60000; // минута угадывающему
 const RESULT_MS = 30000; // выбрать лучшую подсказку / решить «засчитать»
 
 const meta = {
@@ -67,7 +68,15 @@ function setPhase(s, ctx, phase, ms) {
 function onTimeout(s, ctx) {
   if (s.phase === 'clues') toFilter(s, ctx);
   else if (s.phase === 'filter') toGuess(s, ctx);
-  else if (s.phase === 'result') finishRound(s, ctx);
+  else if (s.phase === 'guess') {
+    // Время вышло — как «пропустить»: слово не угадано
+    s.guess = null;
+    s.correct = null;
+    s.accept = {};
+    s.reject = {};
+    s.accepted = false;
+    setPhase(s, ctx, 'result', 0);
+  } else if (s.phase === 'result') finishRound(s, ctx);
 }
 
 function nextRound(s, ctx) {
@@ -117,7 +126,7 @@ function toFilter(s, ctx) {
 function toGuess(s, ctx) {
   // Угадывающий видит подсказки анонимно и в случайном порядке — чтобы выбирать лучшую честно
   s.anon = shuffle(Object.keys(s.clues));
-  setPhase(s, ctx, 'guess', 0);
+  setPhase(s, ctx, 'guess', GUESS_MS);
 }
 
 // Подсчёт очков раунда

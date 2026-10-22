@@ -4605,6 +4605,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       var { shuffle, Deck, norm, clampInt, customWords, countLabel } = require_util();
       var CLUE_MS = 6e4;
       var FILTER_MS = 3e4;
+      var GUESS_MS = 6e4;
       var RESULT_MS = 3e4;
       var meta = {
         title: "\u041D\u0430\u043C\u0451\u043A \u043F\u043E\u043D\u044F\u043B",
@@ -4661,7 +4662,14 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       function onTimeout(s, ctx) {
         if (s.phase === "clues") toFilter(s, ctx);
         else if (s.phase === "filter") toGuess(s, ctx);
-        else if (s.phase === "result") finishRound(s, ctx);
+        else if (s.phase === "guess") {
+          s.guess = null;
+          s.correct = null;
+          s.accept = {};
+          s.reject = {};
+          s.accepted = false;
+          setPhase(s, ctx, "result", 0);
+        } else if (s.phase === "result") finishRound(s, ctx);
       }
       function nextRound(s, ctx) {
         for (let k = 0; k < s.order.length; k++) {
@@ -4707,7 +4715,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       }
       function toGuess(s, ctx) {
         s.anon = shuffle(Object.keys(s.clues));
-        setPhase(s, ctx, "guess", 0);
+        setPhase(s, ctx, "guess", GUESS_MS);
       }
       function award(s) {
         const got = {};
@@ -8415,7 +8423,7 @@ window.RULES = {
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
               <div class="vp-title">${ic('sliders', 16)} Настройки вида</div>
               ${sec([], 'Везде', `${slider('scale', 'Размер интерфейса', VIEW.scale, (v) => scalePct(v) + '%')}${vtog('calm', 'Меньше анимаций', 'без вращений, наклонов и фоновых волн')}`)}
-              ${games.map(([ids, t, body]) => sec(ids, t, body)).join('')}
+              ${games.filter(([ids]) => !cur || ids.includes(cur)).map(([ids, t, body]) => sec(ids, t, body)).join('')}
             </div>`
           : ''
       }
@@ -10395,7 +10403,7 @@ window.RULES = {
     if (g.type === 'alias' && g.phase === 'running' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
     else if (g.type === 'spyfall' && g.phase === 'play' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
     else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'придумывает вопрос' };
-    else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
+    else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', guess: `угадывает ${nm(g.guesser)}`, result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
     else if (g.type === 'quiz' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
     else if (g.type === 'majority' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 45000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'тайные ответы' : 'разбор совпадений' };
     if (!c) return '';
