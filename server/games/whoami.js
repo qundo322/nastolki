@@ -279,7 +279,7 @@ function view(s, pid, ctx) {
           writer: a.writer,
           guessed: !!a.guessedAt,
           gaveUp: !!a.gaveUp,
-          qa: a.qa.slice(-12),
+          qa: a.qa.slice(-40),
         },
       ])
     ),

@@ -2760,14 +2760,15 @@
     // Справа — список «Не знаете, что спросить?» (только тому, кто сейчас спрашивает); уже заданные скрываем
     let sugg = '';
     if (!over && asker === me) {
-      const norm = (t) => String(t || '').toLowerCase().replace(/[^а-яёa-z0-9]/g, '');
-      const asked = new Set(myQa.map((x) => norm(x.text)));
-      const list = WHO_SUGG.filter((t) => !asked.has(norm(t)));
-      if (list.length)
+      // Список подстраивается под ответы: очевидное убираем, уточняющие вопросы — сверху
+      const { fresh, rest } = window.WhoSugg ? window.WhoSugg(myQa) : { fresh: [], rest: WHO_SUGG };
+      const item = (t, isNew) => `<button type="button" class="ws-item ${isNew ? 'new' : ''}" data-act="who-sugg" data-t="${esc(t)}"><span>${esc(t)}</span>${ic('chevron', 14)}</button>`;
+      if (fresh.length || rest.length)
         sugg = `<aside class="who-sugg" data-scroll="who-sugg">
           <div class="side-h">${ic('bulb', 16)} Не знаете, что спросить?</div>
-          <p class="muted small">Нажмите — вопрос появится в поле, его можно поправить</p>
-          <div class="ws-list">${list.map((t) => `<button type="button" class="ws-item" data-act="who-sugg" data-t="${esc(t)}"><span>${esc(t)}</span>${ic('chevron', 14)}</button>`).join('')}</div>
+          <p class="muted small">Нажмите — вопрос появится в поле. Список меняется по вашим ответам</p>
+          ${fresh.length ? `<div class="ws-h">${ic('sparkles', 13)} Уточните</div><div class="ws-list">${fresh.map((t) => item(t, true)).join('')}</div>` : ''}
+          ${rest.length ? `${fresh.length ? '<div class="ws-h">Ещё варианты</div>' : ''}<div class="ws-list">${rest.map((t) => item(t)).join('')}</div>` : ''}
         </aside>`;
     }
     return `<div class="who who2 ${sugg ? 'has-sugg' : ''} ${ui.enter ? 'enter' : ''}">

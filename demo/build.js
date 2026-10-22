@@ -9,7 +9,7 @@ const bundle = esbuild.buildSync({
   alias: { crypto: path.join(__dirname, 'crypto-shim.js') },
 }).outputFiles[0].text;
 const css = fs.readFileSync(path.join(root, 'public/style.css'), 'utf8');
-const app = ['public/js/icons.js', 'public/js/fx.js', 'public/js/sound.js', 'public/js/rules.js', 'public/app.js'].map((f) => fs.readFileSync(path.join(root, f), 'utf8')).join('\n;\n');
+const app = ['public/js/icons.js', 'public/js/fx.js', 'public/js/sound.js', 'public/js/rules.js', 'public/js/who-sugg.js', 'public/app.js'].map((f) => fs.readFileSync(path.join(root, f), 'utf8')).join('\n;\n');
 const demoCss = `
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
