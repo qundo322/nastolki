@@ -2952,7 +2952,7 @@
       const sel = ui.mjSel && g.groups.some((x) => x.pids.includes(ui.mjSel)) ? ui.mjSel : null;
       const t0 = (ui.mjStart = ui.mjStart || {})[g.round] || (ui.mjStart[g.round] = now());
       const el = now() - t0;
-      const lock = !!g.nextAt; // идёт отсчёт — группы уже не меняются
+      const lock = false;
       const canEdit = host && !lock;
       const max = Math.max(1, ...g.groups.map((x) => x.pids.length));
       const total = g.groups.reduce((n, x) => n + x.pids.length, 0);

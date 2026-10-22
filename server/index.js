@@ -1,6 +1,7 @@
 // Сервер сборника настольных игр.
 // Всё состояние хранится в памяти — для компании до ~20 человек этого достаточно.
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const crypto = require('crypto');
 const express = require('express');
@@ -29,16 +30,29 @@ const MAX_PLAYERS_PER_ROOM = Number(process.env.MAX_PLAYERS || 20);
 const ROOM_TTL_MS = 1000 * 60 * 60 * 6; // пустая комната живёт 6 часов
 
 const app = express();
-app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '1h' }));
+// Страница всегда свежая, а скрипты и стили — с меткой версии (?v=…): после деплоя браузер
+// сразу берёт новые файлы, а не держит старые из кэша ещё час
+const PUB = path.join(__dirname, '..', 'public');
+const VERSION = (() => {
+  const h = require('crypto').createHash('sha1');
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : h.update(fs.readFileSync(path.join(d, e.name)))));
+  walk(PUB);
+  return h.digest('hex').slice(0, 10);
+})();
+const INDEX = fs.readFileSync(path.join(PUB, 'index.html'), 'utf8').replace(/(src|href)="(\/(?:js\/)?[\w.-]+\.(?:js|css))"/g, `$1="$2?v=${VERSION}"`);
+const sendIndex = (_req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.type('html').send(INDEX);
+};
+app.get(['/', '/index.html'], sendIndex);
+app.use(express.static(PUB, { maxAge: '30d', index: false, setHeaders: (res, file) => /\.html$/.test(file) && res.set('Cache-Control', 'no-cache') }));
 app.get('/health', (_req, res) => res.json({ ok: true, rooms: rooms.size }));
 app.get('/api/games', (_req, res) =>
   res.json(Object.entries(GAMES).map(([id, g]) => ({ id, ...g.meta })))
 );
 Avatars.route(app);
 // Красивые ссылки вида /r/ABCD
-app.get('/r/:code', (_req, res) =>
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
-);
+app.get('/r/:code', sendIndex);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' }, pingInterval: 20000, pingTimeout: 25000 });
