@@ -13,7 +13,7 @@ const meta = {
   rules: [
     'Каждому игроку достаётся персонаж: его видят все, кроме самого игрока. Персонажей раздают случайно или каждый загадывает персонажа соседу.',
     'В свой ход пиши вопросы, на которые можно ответить «да» или «нет». Остальные отвечают кнопками «Да / Нет / Не знаю» — вопрос и ответ попадают в твою историю.',
-    'Когда ответили все: больше «да» — задавай следующий вопрос; больше «нет» — ход переходит дальше. Если «да» и «нет» поровну — ждём, пока игроки договорятся. На каждый вопрос — минута, время вышло — ход переходит.',
+    'Когда ответили все: больше «да» — задавай следующий вопрос; больше «нет» — ход переходит дальше. Если большинство уже ответило одинаково — решение принимается сразу, остальных не ждём. Если «да» и «нет» поровну — ждём, пока игроки договорятся. На то, чтобы придумать вопрос, — минута; не успел — ход переходит.',
     'Думаешь, что знаешь ответ, — назови персонажа вслух. Угадал — нажми «Я угадал», и персонаж откроется тебе.',
     'Очки: угадал персонажа — +1. Бонус за скорость: первый угадавший +2, второй +1. Сдался — 0.',
   ],
@@ -108,10 +108,16 @@ function checkAnswers(s, ctx) {
   const q = s.q;
   if (!q || s.phase !== 'play') return cancelPend(s, ctx);
   const need = voters(s, ctx);
-  if (!need.length || !need.every((id) => q.answers[id])) return cancelPend(s, ctx);
+  if (!need.length) return cancelPend(s, ctx);
   const t = tally(q);
-  if (t.yes === t.no && t.yes > 0) return cancelPend(s, ctx); // поровну — ждём, пока договорятся
-  const v = verdict(t);
+  // Большинство уже ответило одинаково — не ждём тех, кто задумался
+  const half = Math.floor(need.length / 2) + 1;
+  let v = t.yes >= half ? 'yes' : t.no >= half ? 'no' : null;
+  if (!v) {
+    if (!need.every((id) => q.answers[id])) return cancelPend(s, ctx);
+    if (t.yes === t.no && t.yes > 0) return cancelPend(s, ctx); // поровну — ждём, пока договорятся
+    v = verdict(t);
+  }
   if (s.pend && s.pend.qid === q.id && s.pend.v === v) return; // отсчёт уже идёт
   cancelPend(s, ctx);
   s.pend = { qid: q.id, v, at: Date.now() + PEND_MS, ms: PEND_MS };
@@ -181,6 +187,9 @@ function action(s, pid, msg, ctx) {
       if (!String(msg.text || '').trim()) return 'Напишите вопрос';
       if (s.q && !Object.keys(s.q.answers).length) s.q.text = String(msg.text).trim().slice(0, 120); // поправить ещё не отвеченный
       else newQ(s, pid, msg.text);
+      // Минута — только на то, чтобы придумать вопрос; пока отвечают, таймер не идёт
+      ctx.clearTimer('who-q');
+      s.qEnds = null;
       return;
     }
     case 'answer': {

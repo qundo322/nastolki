@@ -2548,6 +2548,14 @@ html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 
    (например, появилась строка «засчитываем через 2 секунды»), ничего не сдвигается вбок */
 html { scrollbar-gutter: stable; }
 .qa-note { min-height: 26px; margin: -6px 0 8px; display: flex; align-items: center; justify-content: center; } .qa-note .qa-split { margin: 0; }
+/* подсказки «что спросить» */
+.wa-sugg { width: min(760px, 100%); }
+.wa-sugg { text-align: center; }
+.wa-sugg-t { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 800; color: var(--muted); background: none; border: 0; padding: 4px 6px; }
+.wa-sugg.open .wa-sugg-t { color: var(--accent-text, var(--accent)); }
+.wa-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; justify-content: center; }
+.wa-chip { border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); border-radius: 99px; padding: 6px 12px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s; }
+.wa-chip:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -4237,7 +4245,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         rules: [
           "\u041A\u0430\u0436\u0434\u043E\u043C\u0443 \u0438\u0433\u0440\u043E\u043A\u0443 \u0434\u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436: \u0435\u0433\u043E \u0432\u0438\u0434\u044F\u0442 \u0432\u0441\u0435, \u043A\u0440\u043E\u043C\u0435 \u0441\u0430\u043C\u043E\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430. \u041F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0435\u0439 \u0440\u0430\u0437\u0434\u0430\u044E\u0442 \u0441\u043B\u0443\u0447\u0430\u0439\u043D\u043E \u0438\u043B\u0438 \u043A\u0430\u0436\u0434\u044B\u0439 \u0437\u0430\u0433\u0430\u0434\u044B\u0432\u0430\u0435\u0442 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u0441\u043E\u0441\u0435\u0434\u0443.",
           "\u0412 \u0441\u0432\u043E\u0439 \u0445\u043E\u0434 \u043F\u0438\u0448\u0438 \u0432\u043E\u043F\u0440\u043E\u0441\u044B, \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043C\u043E\u0436\u043D\u043E \u043E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \xAB\u0434\u0430\xBB \u0438\u043B\u0438 \xAB\u043D\u0435\u0442\xBB. \u041E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043E\u0442\u0432\u0435\u0447\u0430\u044E\u0442 \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438 \xAB\u0414\u0430 / \u041D\u0435\u0442 / \u041D\u0435 \u0437\u043D\u0430\u044E\xBB \u2014 \u0432\u043E\u043F\u0440\u043E\u0441 \u0438 \u043E\u0442\u0432\u0435\u0442 \u043F\u043E\u043F\u0430\u0434\u0430\u044E\u0442 \u0432 \u0442\u0432\u043E\u044E \u0438\u0441\u0442\u043E\u0440\u0438\u044E.",
-          "\u041A\u043E\u0433\u0434\u0430 \u043E\u0442\u0432\u0435\u0442\u0438\u043B\u0438 \u0432\u0441\u0435: \u0431\u043E\u043B\u044C\u0448\u0435 \xAB\u0434\u0430\xBB \u2014 \u0437\u0430\u0434\u0430\u0432\u0430\u0439 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0432\u043E\u043F\u0440\u043E\u0441; \u0431\u043E\u043B\u044C\u0448\u0435 \xAB\u043D\u0435\u0442\xBB \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442 \u0434\u0430\u043B\u044C\u0448\u0435. \u0415\u0441\u043B\u0438 \xAB\u0434\u0430\xBB \u0438 \xAB\u043D\u0435\u0442\xBB \u043F\u043E\u0440\u043E\u0432\u043D\u0443 \u2014 \u0436\u0434\u0451\u043C, \u043F\u043E\u043A\u0430 \u0438\u0433\u0440\u043E\u043A\u0438 \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u044F\u0442\u0441\u044F. \u041D\u0430 \u043A\u0430\u0436\u0434\u044B\u0439 \u0432\u043E\u043F\u0440\u043E\u0441 \u2014 \u043C\u0438\u043D\u0443\u0442\u0430, \u0432\u0440\u0435\u043C\u044F \u0432\u044B\u0448\u043B\u043E \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442.",
+          "\u041A\u043E\u0433\u0434\u0430 \u043E\u0442\u0432\u0435\u0442\u0438\u043B\u0438 \u0432\u0441\u0435: \u0431\u043E\u043B\u044C\u0448\u0435 \xAB\u0434\u0430\xBB \u2014 \u0437\u0430\u0434\u0430\u0432\u0430\u0439 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0432\u043E\u043F\u0440\u043E\u0441; \u0431\u043E\u043B\u044C\u0448\u0435 \xAB\u043D\u0435\u0442\xBB \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442 \u0434\u0430\u043B\u044C\u0448\u0435. \u0415\u0441\u043B\u0438 \u0431\u043E\u043B\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u043E \u0443\u0436\u0435 \u043E\u0442\u0432\u0435\u0442\u0438\u043B\u043E \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u043E \u2014 \u0440\u0435\u0448\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u043D\u0438\u043C\u0430\u0435\u0442\u0441\u044F \u0441\u0440\u0430\u0437\u0443, \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0445 \u043D\u0435 \u0436\u0434\u0451\u043C. \u0415\u0441\u043B\u0438 \xAB\u0434\u0430\xBB \u0438 \xAB\u043D\u0435\u0442\xBB \u043F\u043E\u0440\u043E\u0432\u043D\u0443 \u2014 \u0436\u0434\u0451\u043C, \u043F\u043E\u043A\u0430 \u0438\u0433\u0440\u043E\u043A\u0438 \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u044F\u0442\u0441\u044F. \u041D\u0430 \u0442\u043E, \u0447\u0442\u043E\u0431\u044B \u043F\u0440\u0438\u0434\u0443\u043C\u0430\u0442\u044C \u0432\u043E\u043F\u0440\u043E\u0441, \u2014 \u043C\u0438\u043D\u0443\u0442\u0430; \u043D\u0435 \u0443\u0441\u043F\u0435\u043B \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442.",
           "\u0414\u0443\u043C\u0430\u0435\u0448\u044C, \u0447\u0442\u043E \u0437\u043D\u0430\u0435\u0448\u044C \u043E\u0442\u0432\u0435\u0442, \u2014 \u043D\u0430\u0437\u043E\u0432\u0438 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u0432\u0441\u043B\u0443\u0445. \u0423\u0433\u0430\u0434\u0430\u043B \u2014 \u043D\u0430\u0436\u043C\u0438 \xAB\u042F \u0443\u0433\u0430\u0434\u0430\u043B\xBB, \u0438 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436 \u043E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F \u0442\u0435\u0431\u0435.",
           "\u041E\u0447\u043A\u0438: \u0443\u0433\u0430\u0434\u0430\u043B \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u2014 +1. \u0411\u043E\u043D\u0443\u0441 \u0437\u0430 \u0441\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u043F\u0435\u0440\u0432\u044B\u0439 \u0443\u0433\u0430\u0434\u0430\u0432\u0448\u0438\u0439 +2, \u0432\u0442\u043E\u0440\u043E\u0439 +1. \u0421\u0434\u0430\u043B\u0441\u044F \u2014 0."
         ],
@@ -4326,10 +4334,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         const q = s.q;
         if (!q || s.phase !== "play") return cancelPend(s, ctx);
         const need = voters(s, ctx);
-        if (!need.length || !need.every((id) => q.answers[id])) return cancelPend(s, ctx);
+        if (!need.length) return cancelPend(s, ctx);
         const t = tally(q);
-        if (t.yes === t.no && t.yes > 0) return cancelPend(s, ctx);
-        const v = verdict(t);
+        const half = Math.floor(need.length / 2) + 1;
+        let v = t.yes >= half ? "yes" : t.no >= half ? "no" : null;
+        if (!v) {
+          if (!need.every((id) => q.answers[id])) return cancelPend(s, ctx);
+          if (t.yes === t.no && t.yes > 0) return cancelPend(s, ctx);
+          v = verdict(t);
+        }
         if (s.pend && s.pend.qid === q.id && s.pend.v === v) return;
         cancelPend(s, ctx);
         s.pend = { qid: q.id, v, at: Date.now() + PEND_MS, ms: PEND_MS };
@@ -4397,6 +4410,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             if (!String(msg.text || "").trim()) return "\u041D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u043E\u043F\u0440\u043E\u0441";
             if (s.q && !Object.keys(s.q.answers).length) s.q.text = String(msg.text).trim().slice(0, 120);
             else newQ(s, pid, msg.text);
+            ctx.clearTimer("who-q");
+            s.qEnds = null;
             return;
           }
           case "answer": {
@@ -10227,7 +10242,7 @@ window.RULES = {
     let c = null;
     if (g.type === 'alias' && g.phase === 'running' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
     else if (g.type === 'spyfall' && g.phase === 'play' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
-    else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'задаёт вопрос' };
+    else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'придумывает вопрос' };
     else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
     else if (g.type === 'quiz' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
     else if (g.type === 'majority' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 45000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'тайные ответы' : 'разбор совпадений' };
@@ -10719,6 +10734,16 @@ window.RULES = {
   }
 
   // ===== Кто я: сетка как в звонке, заметки, большие кнопки внизу =====
+  // Частые вопросы для «Кто я?» — от общего к частному
+  const WHO_SUGG = [
+    'Я реальный человек?', 'Я вымышленный персонаж?', 'Я мужчина?', 'Я женщина?', 'Я человек?', 'Я животное?', 'Я жив сейчас?',
+    'Я из фильма?', 'Я из мультфильма?', 'Я из сериала?', 'Я из книги?', 'Я из видеоигры?', 'Я из аниме?', 'Я из сказки?',
+    'Я знаменит на весь мир?', 'Я из Украины?', 'Я из США?', 'Я из Европы?', 'Я жил до 1900 года?', 'Мне больше 50 лет?',
+    'Я актёр?', 'Я музыкант или певец?', 'Я спортсмен?', 'Я политик?', 'Я учёный или изобретатель?', 'Я блогер или ведущий?',
+    'Я супергерой?', 'Я злодей?', 'У меня есть суперсилы?', 'Я умею летать?', 'Я ношу очки?', 'У меня есть борода или усы?',
+    'Я связан с комедией?', 'Я персонаж Disney или Pixar?', 'Я персонаж Marvel или DC?',
+  ];
+
   function rWho(g) {
     const me = S.me;
     if (!g.inGame) return `<div class="narrow"><div class="stage-card"><p>Игра уже идёт.</p><button class="btn primary mega" data-act="who-add">Присоединиться со случайным персонажем</button></div></div>`;
@@ -10812,6 +10837,13 @@ window.RULES = {
       qBox = `<div class="card who-ask">
           <div class="wa-k">${ic('mic', 16)} Ваш вопрос</div>
           <form data-form="who-ask" class="wa-form"><input class="inp wa-inp" name="text" data-keep="who-ask" maxlength="120" placeholder="Я человек? Я из фильма?" autocomplete="off" required/><button class="btn primary mega">${ic('send', 20)} Спросить</button></form>
+          ${(() => {
+            // Подсказки, что спросить: убираем уже заданные
+            const asked = new Set(myQa.map((x) => String(x.text || '').toLowerCase().replace(/[^а-яёa-z0-9]/g, '')));
+            const list = WHO_SUGG.filter((t) => !asked.has(t.toLowerCase().replace(/[^а-яёa-z0-9]/g, '')));
+            const open = ui.waSugg ?? myQa.length < 3;
+            return list.length ? `<div class="wa-sugg ${open ? 'open' : ''}"><button type="button" class="wa-sugg-t" data-act="who-sugg-t">${ic('bulb', 15)} Не знаете, что спросить? ${ic(open ? 'up' : 'down', 14)}</button>${open ? `<div class="wa-chips">${list.map((t) => `<button type="button" class="wa-chip" data-act="who-sugg" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>` : '';
+          })()}
           ${q ? `<div class="wa-live"><span class="wa-q">«${esc(q.text)}»</span><span class="qa-t"><b class="y">Да ${q.yes}</b><b class="n">Нет ${q.no}</b><b>Не знаю ${q.idk}</b></span></div><p class="muted small center">Ответили все: «да» — спрашивайте дальше, «нет» — ход переходит</p>` : ''}
         </div>
         ${myQa.length ? `<div class="card qa-card"><div class="side-h">${ic('list', 16)} Ваши вопросы</div>${qaCards(myQa)}</div>` : ''}`;
@@ -10839,7 +10871,7 @@ window.RULES = {
         <div class="who-list">${tiles}</div>
       </aside>
       <div class="who-main">
-      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута на вопрос. Большинство «нет» — ход переходит.</span>`}</div>
+      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута, чтобы придумать вопрос. Большинство «нет» — ход переходит.</span>`}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>
@@ -11412,6 +11444,18 @@ window.RULES = {
     'spy-next': () => act('next'),
     // кто я
     'who-random': () => act('randomFor'),
+    'who-sugg-t': () => {
+      const myQa = S?.game?.players?.[S.me]?.qa || [];
+      ui.waSugg = !(ui.waSugg ?? myQa.length < 3);
+      render();
+    },
+    'who-sugg': (d) => {
+      const inp = $app.querySelector('input[data-keep="who-ask"]');
+      if (!inp) return;
+      inp.value = d.t;
+      inp.focus();
+      inp.select();
+    },
     'who-img': () => whoFile.click(),
     'who-img-x': () => {
       ui.whoImg = null;

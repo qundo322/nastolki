@@ -2541,3 +2541,11 @@ html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 
    (например, появилась строка «засчитываем через 2 секунды»), ничего не сдвигается вбок */
 html { scrollbar-gutter: stable; }
 .qa-note { min-height: 26px; margin: -6px 0 8px; display: flex; align-items: center; justify-content: center; } .qa-note .qa-split { margin: 0; }
+/* подсказки «что спросить» */
+.wa-sugg { width: min(760px, 100%); }
+.wa-sugg { text-align: center; }
+.wa-sugg-t { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 800; color: var(--muted); background: none; border: 0; padding: 4px 6px; }
+.wa-sugg.open .wa-sugg-t { color: var(--accent-text, var(--accent)); }
+.wa-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; justify-content: center; }
+.wa-chip { border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); border-radius: 99px; padding: 6px 12px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s; }
+.wa-chip:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }

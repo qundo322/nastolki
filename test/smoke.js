@@ -216,9 +216,11 @@ function bot(name, real = '') {
   assert((await wAsk2.act('ask', { text: '' })).error, 'empty question rejected');
   assert(g(h).qEnds > Date.now() + 50000, 'question timer ~60s');
   await wAsk2.act('ask', { text: 'Я живой?' });
-  for (const b of w2o) await b.act('answer', { v: 'yes' });
+  await wait(40);
+  assert(!g(h).qEnds, 'timer only while composing a question');
+  for (const b of w2o.slice(0, Math.floor(w2o.length / 2) + 1)) await b.act('answer', { v: 'yes' });
   await wait(60);
-  assert(g(h).q && g(h).q.pend && g(h).q.pend.v === 'yes', '2s countdown before counting');
+  assert(g(h).q && g(h).q.pend && g(h).q.pend.v === 'yes', 'majority yes → 2s countdown without waiting the rest');
   await wait(2100);
   assert(g(h).turnPid === wAsk2.st.me && !g(h).q && g(h).players[wAsk2.st.me].qa.length === 1, 'all yes → same asker, next question');
   // ничья «да»/«нет» — ждём
