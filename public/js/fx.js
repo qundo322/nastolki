@@ -10,7 +10,7 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ---------- 1. Магические карточки ----------
-  const MC = '.cn-card:not(.rev):not(.blank), .gcard:not([disabled]), button.jc, .rw, .m-pre, .mj-g.host, .mj-s.host, .spy-card';
+  const MC = '.cn-card:not(.rev):not(.blank), .gcard:not([disabled]), button.jc, .rw:not(.ro), .m-pre, .mj-g.host, .mj-s.host, .spy-card';
   const MC_TILT = 6; // градусов — вдвое мягче оригинала
   let mcEl = null;
   let mcPress = false;

@@ -60,6 +60,7 @@ function prepareTurn(s, ctx) {
       s.phase = 'ready';
       s.word = null;
       s.turnWords = [];
+      s.confirms = {};
       return;
     }
     s.turnTeam = (s.turnTeam + 1) % s.teams.length;
@@ -119,8 +120,10 @@ function action(s, pid, msg, ctx) {
       return;
     }
     case 'toggle': {
-      // В проверке любой игрок может поправить слово, но главный — объясняющий
+      // Слова отмечает объясняющий (хост — только если объясняющий пропал из сети)
       if (s.phase !== 'review') return;
+      if (!canMark(s, pid, ctx)) return 'Слова отмечает объясняющий';
+      s.confirms = {};
       const w = s.turnWords[msg.i];
       if (!w) return;
       if (w.last) {
@@ -135,6 +138,8 @@ function action(s, pid, msg, ctx) {
     case 'lastTo': {
       // Последнее слово: сразу выбрать, кто угадал — своя команда, соперники или никто
       if (s.phase !== 'review') return;
+      if (!canMark(s, pid, ctx)) return 'Кто угадал последнее слово, отмечает объясняющий';
+      s.confirms = {};
       const w = s.turnWords.find((x) => x.last);
       if (!w) return;
       const to = msg.to;
@@ -147,31 +152,16 @@ function action(s, pid, msg, ctx) {
       return;
     }
     case 'confirm': {
+      // «Подтвердить очки» нажимают все игроки в сети; хост может подтвердить за всех (force)
       if (s.phase !== 'review') return;
-      if (!isExpl && !ctx.isHost) return 'Подтверждает объясняющий';
-      const t = s.teams[s.turnTeam];
-      let pts = 0;
-      for (const w of s.turnWords) {
-        if (w.last) {
-          if (w.ok === 'own') pts++;
-          else if (typeof w.ok === 'number') s.teams[w.ok].score++;
-        } else if (w.ok) pts++;
-        else if (s.penalty) pts--;
+      if (!(msg.force && ctx.isHost)) {
+        if (teamOf(s, pid) === -1) return 'Подтверждают игроки команд';
+        s.confirms = s.confirms || {};
+        if (s.confirms[pid]) delete s.confirms[pid];
+        else s.confirms[pid] = true;
+        if (!confirmers(s, ctx).every((id) => s.confirms[id])) return;
       }
-      t.score += pts;
-      s.history.push({ team: s.turnTeam, explainer: s.explainer, pts, n: s.turnWords.length });
-      t.next++;
-      s.turnTeam = (s.turnTeam + 1) % s.teams.length;
-      if (s.turnTeam === 0) {
-        const best = Math.max(...s.teams.map((x) => x.score));
-        const leaders = s.teams.filter((x) => x.score === best);
-        if (best >= s.target && leaders.length === 1) {
-          s.phase = 'over';
-          s.winner = s.teams.indexOf(leaders[0]);
-          return;
-        }
-      }
-      prepareTurn(s, ctx);
+      applyConfirm(s, ctx);
       return;
     }
     case 'addTime': {
@@ -228,11 +218,62 @@ function action(s, pid, msg, ctx) {
   return 'Неизвестное действие';
 }
 
-function view(s, pid) {
+function applyConfirm(s, ctx) {
+  s.confirms = {};
+  const t = s.teams[s.turnTeam];
+  let pts = 0;
+  for (const w of s.turnWords) {
+    if (w.last) {
+      if (w.ok === 'own') pts++;
+      else if (typeof w.ok === 'number') s.teams[w.ok].score++;
+    } else if (w.ok) pts++;
+    else if (s.penalty) pts--;
+  }
+  t.score += pts;
+  s.history.push({ team: s.turnTeam, explainer: s.explainer, pts, n: s.turnWords.length });
+  t.next++;
+  s.turnTeam = (s.turnTeam + 1) % s.teams.length;
+  if (s.turnTeam === 0) {
+    const best = Math.max(...s.teams.map((x) => x.score));
+    const leaders = s.teams.filter((x) => x.score === best);
+    if (best >= s.target && leaders.length === 1) {
+      s.phase = 'over';
+      s.winner = s.teams.indexOf(leaders[0]);
+      return;
+    }
+  }
+  prepareTurn(s, ctx);
+}
+
+// Кто должен подтвердить очки — все игроки команд, кто в сети
+const confirmers = (s, ctx) => s.teams.flatMap((t) => t.members).filter((id) => ctx.room.players.get(id) && ctx.room.players.get(id).connected !== false);
+function canMark(s, pid, ctx) {
+  if (pid === s.explainer) return true;
+  const ex = ctx.room.players.get(s.explainer);
+  return ctx.isHost && (!ex || ex.connected === false);
+}
+// Очки хода «вживую»: сколько получит каждая команда, если подтвердить прямо сейчас
+function liveDelta(s) {
+  const d = s.teams.map(() => 0);
+  if (!['running', 'review'].includes(s.phase)) return d;
+  for (const w of s.turnWords || []) {
+    if (w.last) {
+      if (w.ok === 'own') d[s.turnTeam]++;
+      else if (typeof w.ok === 'number') d[w.ok]++;
+    } else if (w.ok) d[s.turnTeam]++;
+    else if (s.penalty) d[s.turnTeam]--;
+  }
+  return d;
+}
+
+function view(s, pid, ctx) {
   const my = teamOf(s, pid);
-  const seesWord = pid === s.explainer || (my !== -1 && my !== s.turnTeam) || my === -1;
+  const seesWord = pid === s.explainer; // слово видит только объясняющий — ни своя команда, ни соперники
   return {
     teams: s.teams.map((t) => ({ name: t.name, members: t.members, score: t.score })),
+    live: liveDelta(s),
+    confirms: Object.keys(s.confirms || {}),
+    confirmers: ctx ? confirmers(s, ctx) : [],
     myTeam: my,
     phase: s.phase,
     turnTeam: s.turnTeam,
@@ -260,6 +301,10 @@ function onLeave(s, pid, ctx) {
   }
 }
 
+// Кто-то вышел из сети, а остальные уже подтвердили — продолжаем
+function onPresence(s, ctx) {
+  if (s.phase === 'review' && Object.keys(s.confirms || {}).length && confirmers(s, ctx).every((id) => s.confirms[id])) applyConfirm(s, ctx);
+}
 const isOver = (s) => s.phase === 'over';
 const results = (s) => {
   const out = {};
@@ -286,4 +331,4 @@ function stats(s) {
   return { explainer };
 }
 
-module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume, stats };
+module.exports = { meta, create, action, view, onLeave, onPresence, isOver, results, pause, resume, stats };

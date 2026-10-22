@@ -2507,6 +2507,17 @@ html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 
   .spy-players { position: static; max-height: none; order: 2; }
 }
 
+/* ===== Элиас: по центру, живые очки, подтверждение всеми ===== */
+.tri { max-width: 1440px; margin-inline: auto; }
+.tri-side { min-width: 0; }
+.al-live { font-style: normal; font-size: 12px; font-weight: 900; padding: 2px 7px; border-radius: 99px; margin-right: 6px; align-self: center; }
+.al-live.up { color: var(--green-text, var(--green)); background: color-mix(in srgb, var(--green) 16%, transparent); }
+.al-live.down { color: var(--red-text, var(--red)); background: color-mix(in srgb, var(--red) 16%, transparent); }
+.rv-cta { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.rw.ro { cursor: default; }
+.rw.ro:hover { transform: none; }
+.al-last.ro { padding-bottom: 12px; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -3609,6 +3620,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             s.phase = "ready";
             s.word = null;
             s.turnWords = [];
+            s.confirms = {};
             return;
           }
           s.turnTeam = (s.turnTeam + 1) % s.teams.length;
@@ -3667,6 +3679,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           }
           case "toggle": {
             if (s.phase !== "review") return;
+            if (!canMark(s, pid, ctx)) return "\u0421\u043B\u043E\u0432\u0430 \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u044E\u0449\u0438\u0439";
+            s.confirms = {};
             const w = s.turnWords[msg.i];
             if (!w) return;
             if (w.last) {
@@ -3679,6 +3693,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           }
           case "lastTo": {
             if (s.phase !== "review") return;
+            if (!canMark(s, pid, ctx)) return "\u041A\u0442\u043E \u0443\u0433\u0430\u0434\u0430\u043B \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0435 \u0441\u043B\u043E\u0432\u043E, \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u044E\u0449\u0438\u0439";
+            s.confirms = {};
             const w = s.turnWords.find((x) => x.last);
             if (!w) return;
             const to = msg.to;
@@ -3692,30 +3708,14 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           }
           case "confirm": {
             if (s.phase !== "review") return;
-            if (!isExpl && !ctx.isHost) return "\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u0442 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u044E\u0449\u0438\u0439";
-            const t = s.teams[s.turnTeam];
-            let pts = 0;
-            for (const w of s.turnWords) {
-              if (w.last) {
-                if (w.ok === "own") pts++;
-                else if (typeof w.ok === "number") s.teams[w.ok].score++;
-              } else if (w.ok) pts++;
-              else if (s.penalty) pts--;
+            if (!(msg.force && ctx.isHost)) {
+              if (teamOf(s, pid) === -1) return "\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u044E\u0442 \u0438\u0433\u0440\u043E\u043A\u0438 \u043A\u043E\u043C\u0430\u043D\u0434";
+              s.confirms = s.confirms || {};
+              if (s.confirms[pid]) delete s.confirms[pid];
+              else s.confirms[pid] = true;
+              if (!confirmers(s, ctx).every((id) => s.confirms[id])) return;
             }
-            t.score += pts;
-            s.history.push({ team: s.turnTeam, explainer: s.explainer, pts, n: s.turnWords.length });
-            t.next++;
-            s.turnTeam = (s.turnTeam + 1) % s.teams.length;
-            if (s.turnTeam === 0) {
-              const best = Math.max(...s.teams.map((x) => x.score));
-              const leaders = s.teams.filter((x) => x.score === best);
-              if (best >= s.target && leaders.length === 1) {
-                s.phase = "over";
-                s.winner = s.teams.indexOf(leaders[0]);
-                return;
-              }
-            }
-            prepareTurn(s, ctx);
+            applyConfirm(s, ctx);
             return;
           }
           case "addTime": {
@@ -3770,12 +3770,59 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         }
         return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435";
       }
-      function view(s, pid) {
+      function applyConfirm(s, ctx) {
+        s.confirms = {};
+        const t = s.teams[s.turnTeam];
+        let pts = 0;
+        for (const w of s.turnWords) {
+          if (w.last) {
+            if (w.ok === "own") pts++;
+            else if (typeof w.ok === "number") s.teams[w.ok].score++;
+          } else if (w.ok) pts++;
+          else if (s.penalty) pts--;
+        }
+        t.score += pts;
+        s.history.push({ team: s.turnTeam, explainer: s.explainer, pts, n: s.turnWords.length });
+        t.next++;
+        s.turnTeam = (s.turnTeam + 1) % s.teams.length;
+        if (s.turnTeam === 0) {
+          const best = Math.max(...s.teams.map((x) => x.score));
+          const leaders = s.teams.filter((x) => x.score === best);
+          if (best >= s.target && leaders.length === 1) {
+            s.phase = "over";
+            s.winner = s.teams.indexOf(leaders[0]);
+            return;
+          }
+        }
+        prepareTurn(s, ctx);
+      }
+      var confirmers = (s, ctx) => s.teams.flatMap((t) => t.members).filter((id) => ctx.room.players.get(id) && ctx.room.players.get(id).connected !== false);
+      function canMark(s, pid, ctx) {
+        if (pid === s.explainer) return true;
+        const ex = ctx.room.players.get(s.explainer);
+        return ctx.isHost && (!ex || ex.connected === false);
+      }
+      function liveDelta(s) {
+        const d = s.teams.map(() => 0);
+        if (!["running", "review"].includes(s.phase)) return d;
+        for (const w of s.turnWords || []) {
+          if (w.last) {
+            if (w.ok === "own") d[s.turnTeam]++;
+            else if (typeof w.ok === "number") d[w.ok]++;
+          } else if (w.ok) d[s.turnTeam]++;
+          else if (s.penalty) d[s.turnTeam]--;
+        }
+        return d;
+      }
+      function view(s, pid, ctx) {
         var _a;
         const my = teamOf(s, pid);
-        const seesWord = pid === s.explainer || my !== -1 && my !== s.turnTeam || my === -1;
+        const seesWord = pid === s.explainer;
         return {
           teams: s.teams.map((t) => ({ name: t.name, members: t.members, score: t.score })),
+          live: liveDelta(s),
+          confirms: Object.keys(s.confirms || {}),
+          confirmers: ctx ? confirmers(s, ctx) : [],
           myTeam: my,
           phase: s.phase,
           turnTeam: s.turnTeam,
@@ -3801,6 +3848,9 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           prepareTurn(s, ctx);
         }
       }
+      function onPresence(s, ctx) {
+        if (s.phase === "review" && Object.keys(s.confirms || {}).length && confirmers(s, ctx).every((id) => s.confirms[id])) applyConfirm(s, ctx);
+      }
       var isOver = (s) => s.phase === "over";
       var results = (s) => {
         const out = {};
@@ -3822,7 +3872,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         for (const h of s.history) if (h.pts > 0) explainer[h.explainer] = (explainer[h.explainer] || 0) + h.pts;
         return { explainer };
       }
-      module.exports = { meta, create, action, view, onLeave, isOver, results, pause, resume, stats };
+      module.exports = { meta, create, action, view, onLeave, onPresence, isOver, results, pause, resume, stats };
     }
   });
 
@@ -7361,7 +7411,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ---------- 1. Магические карточки ----------
-  const MC = '.cn-card:not(.rev):not(.blank), .gcard:not([disabled]), button.jc, .rw, .m-pre, .mj-g.host, .mj-s.host, .spy-card';
+  const MC = '.cn-card:not(.rev):not(.blank), .gcard:not([disabled]), button.jc, .rw:not(.ro), .m-pre, .mj-g.host, .mj-s.host, .spy-card';
   const MC_TILT = 6; // градусов — вдвое мягче оригинала
   let mcEl = null;
   let mcPress = false;
@@ -9522,6 +9572,7 @@ window.RULES = {
         items.push(plusT('h-addtime', 15));
         items.push(btn('h-newword', 'reset', 'Заменить слово (без очков)'));
       }
+      if (g.phase === 'review') items.push(btn('al-confirm-force', 'check', 'Подтвердить очки за всех'));
       if (['ready', 'running', 'review'].includes(g.phase)) items.push(btn('al-skipturn', 'skip', 'Пропустить ход'));
       if (g.phase === 'teams') items.push(btn('al-shuffle', 'shuffle', 'Перемешать команды'));
       if (!t) items.push(btn('al-restart', 'reset', 'Начать заново'));
@@ -10389,7 +10440,7 @@ window.RULES = {
     const t = g.teams[i];
     const turn = i === g.turnTeam && !['teams', 'over'].includes(g.phase);
     return `<aside class="side-team ${turn ? 'turn' : ''} ${i === g.myTeam ? 'mine' : ''}" style="--tc:${ALIAS_BG[i]}">
-      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left"><b data-cnt="als-${i}">${t.score}</b><small>из ${g.target}</small></span></div>
+      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left">${g.live && g.live[i] ? `<em class="al-live ${g.live[i] > 0 ? 'up' : 'down'}">${g.live[i] > 0 ? '+' : ''}${g.live[i]}</em>` : ''}<b data-cnt="als-${i}">${t.score + ((g.live && g.live[i]) || 0)}</b><small>из ${g.target}</small></span></div>
       ${turn ? `<div class="tp-turn">${ic('mic', 14)} Ход команды</div>` : ''}
       <div class="tp-agents">${
         t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}</div>`).join('') ||
@@ -10445,7 +10496,9 @@ window.RULES = {
         <div class="counters"><span>Угадано <b data-cnt="alg">${g.guessedNow}</b></span><span>Пропущено <b data-cnt="alk">${g.skippedNow}</b></span></div>
       </div>`;
     } else if (g.phase === 'review') {
-      const canConfirm = isExpl || isHost();
+      // Слова и «кто угадал последнее» отмечает только объясняющий; очки подтверждают все
+      const exOff = player(g.explainer)?.connected === false;
+      const canMark = isExpl || (isHost() && exOff);
       const lastLabel = (w) => (w.ok === 'own' ? 'угадала своя команда' : typeof w.ok === 'number' ? `угадали «${esc(g.teams[w.ok].name)}»` : 'никто не угадал');
       center = `<div class="stage-card left">
         <div class="kicker">Проверка слов · команда «${esc(team.name)}»</div>
@@ -10455,6 +10508,7 @@ window.RULES = {
           if (!lw) return '';
           const cur = lw.ok === 'own' ? g.turnTeam : typeof lw.ok === 'number' ? lw.ok : lw.set ? 'none' : null;
           const order = [g.turnTeam, ...g.teams.map((_, i) => i).filter((i) => i !== g.turnTeam)];
+          if (!canMark) return `<div class="al-last ${lw.set ? 'done' : ''} ro"><div class="al-last-h"><span class="muted">Последнее слово</span><b>«${esc(lw.w)}»</b><span class="muted">${lw.set ? `— ${cur === 'none' ? 'никто не угадал' : `угадали «${esc(g.teams[cur].name)}»`}` : `— ${nm(g.explainer)} отметит, кто угадал`}</span></div></div>`;
           return `<div class="al-last ${lw.set ? 'done' : ''}">
             <div class="al-last-h"><span class="muted">Последнее слово</span><b>«${esc(lw.w)}»</b><span class="muted">— кто угадал?</span></div>
             <div class="al-last-b">${order
@@ -10462,23 +10516,32 @@ window.RULES = {
               .join('')}<button class="al-tb none ${cur === 'none' ? 'on' : ''}" data-act="al-last" data-to="none">${cur === 'none' ? ic('check', 16) : ''}Никто</button></div>
           </div>`;
         })()}
-        <p class="small muted">Нажмите на слово, чтобы поменять статус. Угадано +1${g.penalty ? ', пропуск −1' : ''}.</p>
+        <p class="small muted">${canMark ? 'Нажмите на слово, чтобы поменять статус.' : `Слова отмечает ${nm(g.explainer)}.`} Угадано +1${g.penalty ? ', пропуск −1' : ''}.</p>
         ${(() => {
           const ok = g.turnWords.filter((w) => w.ok === true || w.ok === 'own').length;
-          const no = g.turnWords.filter((w) => w.ok === false || w.ok === null || w.ok === undefined).length;
-          const pts = ok - (g.penalty ? no : 0);
+          const no = g.turnWords.filter((w) => !w.last && (w.ok === false || w.ok === null || w.ok === undefined)).length;
+          const pts = (g.live && g.live[g.turnTeam]) ?? ok - (g.penalty ? no : 0); // как посчитает сервер: последнее слово без штрафа
           return `<div class="rv-sum"><span class="ok">${ic('check', 14)} ${ok} угадано</span><span class="no">${ic('x', 14)} ${no} ${g.penalty ? 'пропуск' : 'мимо'}</span><b>${pts > 0 ? '+' : ''}${pts} ${plural(Math.abs(pts), 'очко', 'очка', 'очков')}</b></div>`;
         })()}
         <div class="review">${
           g.turnWords
             .map(
-              (w, i) => `<button class="rw ${w.last ? 'last' : ''} ${w.ok === true || w.ok === 'own' ? 'ok' : typeof w.ok === 'number' ? 'other' : 'no'}" data-act="al-toggle" data-i="${i}">
+              (w, i) => `<button class="rw ${w.last ? 'last' : ''} ${w.ok === true || w.ok === 'own' ? 'ok' : typeof w.ok === 'number' ? 'other' : 'no'} ${canMark ? '' : 'ro'}" ${canMark ? `data-act="al-toggle" data-i="${i}"` : 'tabindex="-1"'}>
             <span class="rw-ic">${w.ok === true || w.ok === 'own' ? ic('check', 18) : typeof w.ok === 'number' ? ic('swap', 18) : ic('x', 18)}</span>
             <span class="rw-w">${esc(w.w)}</span><em>${w.last ? 'последнее: ' + lastLabel(w) : w.ok ? '+1' : g.penalty ? '−1' : '0'}</em></button>`
             )
             .join('') || '<p class="muted">Ни одного слова</p>'
         }</div>
-        <div class="rv-cta">${canConfirm ? `<button class="btn primary mega" data-act="al-confirm">${ic('check', 20)} Подтвердить очки</button>` : `<span class="muted">Подтверждает ${nm(g.explainer)}</span>`}</div>
+        ${(() => {
+          const ids = g.confirmers || [];
+          const done = g.confirms || [];
+          const mine = done.includes(me);
+          const inTeam = g.myTeam !== -1 && g.myTeam != null;
+          return `<div class="rv-cta">
+            ${inTeam ? `<button class="btn ${mine ? 'ja-on' : 'primary'} mega" data-act="al-confirm">${mine ? `${ic('check', 20)} Подтвердили — ждём остальных` : `${ic('check', 20)} Подтвердить очки`}</button>` : ''}
+            <div class="jo-ready nx-who"><span class="muted small">Подтвердили ${done.length}/${ids.length}${done.length ? '' : ' — игра продолжится, когда нажмут все'}</span><span class="jr-list">${ids.map((id) => `<span class="jr ${done.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${done.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
+          </div>`;
+        })()}
       </div>`;
     } else if (g.phase === 'over') {
       center = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победила команда «${esc(g.teams[g.winner].name)}»!</h2>
@@ -11283,6 +11346,7 @@ window.RULES = {
     'al-skip': () => act('skip'),
     'al-toggle': (d) => act('toggle', { i: Number(d.i) }),
     'al-confirm': () => act('confirm'),
+    'al-confirm-force': () => act('confirm', { force: true }),
     'al-skipturn': () => act('skipTurn'),
     'al-restart': async () => (await ask({ title: 'Начать заново?', text: 'Счёт всех команд обнулится.', ok: 'Начать заново', danger: true, icon: 'reset' })) && act('restart'),
     // шпион

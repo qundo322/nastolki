@@ -2499,3 +2499,14 @@ html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 
   .spyfall.spy2 { grid-template-columns: 1fr; }
   .spy-players { position: static; max-height: none; order: 2; }
 }
+
+/* ===== Элиас: по центру, живые очки, подтверждение всеми ===== */
+.tri { max-width: 1440px; margin-inline: auto; }
+.tri-side { min-width: 0; }
+.al-live { font-style: normal; font-size: 12px; font-weight: 900; padding: 2px 7px; border-radius: 99px; margin-right: 6px; align-self: center; }
+.al-live.up { color: var(--green-text, var(--green)); background: color-mix(in srgb, var(--green) 16%, transparent); }
+.al-live.down { color: var(--red-text, var(--red)); background: color-mix(in srgb, var(--red) 16%, transparent); }
+.rv-cta { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.rw.ro { cursor: default; }
+.rw.ro:hover { transform: none; }
+.al-last.ro { padding-bottom: 12px; }

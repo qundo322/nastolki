@@ -1513,6 +1513,7 @@
         items.push(plusT('h-addtime', 15));
         items.push(btn('h-newword', 'reset', 'Заменить слово (без очков)'));
       }
+      if (g.phase === 'review') items.push(btn('al-confirm-force', 'check', 'Подтвердить очки за всех'));
       if (['ready', 'running', 'review'].includes(g.phase)) items.push(btn('al-skipturn', 'skip', 'Пропустить ход'));
       if (g.phase === 'teams') items.push(btn('al-shuffle', 'shuffle', 'Перемешать команды'));
       if (!t) items.push(btn('al-restart', 'reset', 'Начать заново'));
@@ -2380,7 +2381,7 @@
     const t = g.teams[i];
     const turn = i === g.turnTeam && !['teams', 'over'].includes(g.phase);
     return `<aside class="side-team ${turn ? 'turn' : ''} ${i === g.myTeam ? 'mine' : ''}" style="--tc:${ALIAS_BG[i]}">
-      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left"><b data-cnt="als-${i}">${t.score}</b><small>из ${g.target}</small></span></div>
+      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left">${g.live && g.live[i] ? `<em class="al-live ${g.live[i] > 0 ? 'up' : 'down'}">${g.live[i] > 0 ? '+' : ''}${g.live[i]}</em>` : ''}<b data-cnt="als-${i}">${t.score + ((g.live && g.live[i]) || 0)}</b><small>из ${g.target}</small></span></div>
       ${turn ? `<div class="tp-turn">${ic('mic', 14)} Ход команды</div>` : ''}
       <div class="tp-agents">${
         t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}</div>`).join('') ||
@@ -2436,7 +2437,9 @@
         <div class="counters"><span>Угадано <b data-cnt="alg">${g.guessedNow}</b></span><span>Пропущено <b data-cnt="alk">${g.skippedNow}</b></span></div>
       </div>`;
     } else if (g.phase === 'review') {
-      const canConfirm = isExpl || isHost();
+      // Слова и «кто угадал последнее» отмечает только объясняющий; очки подтверждают все
+      const exOff = player(g.explainer)?.connected === false;
+      const canMark = isExpl || (isHost() && exOff);
       const lastLabel = (w) => (w.ok === 'own' ? 'угадала своя команда' : typeof w.ok === 'number' ? `угадали «${esc(g.teams[w.ok].name)}»` : 'никто не угадал');
       center = `<div class="stage-card left">
         <div class="kicker">Проверка слов · команда «${esc(team.name)}»</div>
@@ -2446,6 +2449,7 @@
           if (!lw) return '';
           const cur = lw.ok === 'own' ? g.turnTeam : typeof lw.ok === 'number' ? lw.ok : lw.set ? 'none' : null;
           const order = [g.turnTeam, ...g.teams.map((_, i) => i).filter((i) => i !== g.turnTeam)];
+          if (!canMark) return `<div class="al-last ${lw.set ? 'done' : ''} ro"><div class="al-last-h"><span class="muted">Последнее слово</span><b>«${esc(lw.w)}»</b><span class="muted">${lw.set ? `— ${cur === 'none' ? 'никто не угадал' : `угадали «${esc(g.teams[cur].name)}»`}` : `— ${nm(g.explainer)} отметит, кто угадал`}</span></div></div>`;
           return `<div class="al-last ${lw.set ? 'done' : ''}">
             <div class="al-last-h"><span class="muted">Последнее слово</span><b>«${esc(lw.w)}»</b><span class="muted">— кто угадал?</span></div>
             <div class="al-last-b">${order
@@ -2453,23 +2457,32 @@
               .join('')}<button class="al-tb none ${cur === 'none' ? 'on' : ''}" data-act="al-last" data-to="none">${cur === 'none' ? ic('check', 16) : ''}Никто</button></div>
           </div>`;
         })()}
-        <p class="small muted">Нажмите на слово, чтобы поменять статус. Угадано +1${g.penalty ? ', пропуск −1' : ''}.</p>
+        <p class="small muted">${canMark ? 'Нажмите на слово, чтобы поменять статус.' : `Слова отмечает ${nm(g.explainer)}.`} Угадано +1${g.penalty ? ', пропуск −1' : ''}.</p>
         ${(() => {
           const ok = g.turnWords.filter((w) => w.ok === true || w.ok === 'own').length;
-          const no = g.turnWords.filter((w) => w.ok === false || w.ok === null || w.ok === undefined).length;
-          const pts = ok - (g.penalty ? no : 0);
+          const no = g.turnWords.filter((w) => !w.last && (w.ok === false || w.ok === null || w.ok === undefined)).length;
+          const pts = (g.live && g.live[g.turnTeam]) ?? ok - (g.penalty ? no : 0); // как посчитает сервер: последнее слово без штрафа
           return `<div class="rv-sum"><span class="ok">${ic('check', 14)} ${ok} угадано</span><span class="no">${ic('x', 14)} ${no} ${g.penalty ? 'пропуск' : 'мимо'}</span><b>${pts > 0 ? '+' : ''}${pts} ${plural(Math.abs(pts), 'очко', 'очка', 'очков')}</b></div>`;
         })()}
         <div class="review">${
           g.turnWords
             .map(
-              (w, i) => `<button class="rw ${w.last ? 'last' : ''} ${w.ok === true || w.ok === 'own' ? 'ok' : typeof w.ok === 'number' ? 'other' : 'no'}" data-act="al-toggle" data-i="${i}">
+              (w, i) => `<button class="rw ${w.last ? 'last' : ''} ${w.ok === true || w.ok === 'own' ? 'ok' : typeof w.ok === 'number' ? 'other' : 'no'} ${canMark ? '' : 'ro'}" ${canMark ? `data-act="al-toggle" data-i="${i}"` : 'tabindex="-1"'}>
             <span class="rw-ic">${w.ok === true || w.ok === 'own' ? ic('check', 18) : typeof w.ok === 'number' ? ic('swap', 18) : ic('x', 18)}</span>
             <span class="rw-w">${esc(w.w)}</span><em>${w.last ? 'последнее: ' + lastLabel(w) : w.ok ? '+1' : g.penalty ? '−1' : '0'}</em></button>`
             )
             .join('') || '<p class="muted">Ни одного слова</p>'
         }</div>
-        <div class="rv-cta">${canConfirm ? `<button class="btn primary mega" data-act="al-confirm">${ic('check', 20)} Подтвердить очки</button>` : `<span class="muted">Подтверждает ${nm(g.explainer)}</span>`}</div>
+        ${(() => {
+          const ids = g.confirmers || [];
+          const done = g.confirms || [];
+          const mine = done.includes(me);
+          const inTeam = g.myTeam !== -1 && g.myTeam != null;
+          return `<div class="rv-cta">
+            ${inTeam ? `<button class="btn ${mine ? 'ja-on' : 'primary'} mega" data-act="al-confirm">${mine ? `${ic('check', 20)} Подтвердили — ждём остальных` : `${ic('check', 20)} Подтвердить очки`}</button>` : ''}
+            <div class="jo-ready nx-who"><span class="muted small">Подтвердили ${done.length}/${ids.length}${done.length ? '' : ' — игра продолжится, когда нажмут все'}</span><span class="jr-list">${ids.map((id) => `<span class="jr ${done.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${done.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
+          </div>`;
+        })()}
       </div>`;
     } else if (g.phase === 'over') {
       center = `<div class="stage-card"><div class="big-ic">${ic('trophy', 56)}</div><h2 class="h2">Победила команда «${esc(g.teams[g.winner].name)}»!</h2>
@@ -3274,6 +3287,7 @@
     'al-skip': () => act('skip'),
     'al-toggle': (d) => act('toggle', { i: Number(d.i) }),
     'al-confirm': () => act('confirm'),
+    'al-confirm-force': () => act('confirm', { force: true }),
     'al-skipturn': () => act('skipTurn'),
     'al-restart': async () => (await ask({ title: 'Начать заново?', text: 'Счёт всех команд обнулится.', ok: 'Начать заново', danger: true, icon: 'reset' })) && act('restart'),
     // шпион
