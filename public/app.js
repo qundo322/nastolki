@@ -2690,12 +2690,16 @@
         const speaking = g.turnPid === id && !over;
         // кубок первому угадавшему, серебро второму, бронза третьему
         const medal = p.guessed && place >= 0 && place < 3 ? `<span class="wt-medal m${place + 1}" title="${['Первым угадал', 'Второе место', 'Третье место'][place]}">${ic(place === 0 ? 'trophy' : 'medal', place === 0 ? 20 : 17)}</span>` : '';
-        return `<div class="wt ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
-          <div class="wt-ava">${pa(id, 84, 'round')}${medal}</div>
+        // Идёт вопрос: кто уже ответил (галочка цветом ответа), а кто ещё нет — чтобы подтолкнуть
+        const curQ = !over && g.q && g.q.asker === g.turnPid ? g.q : null;
+        const ans = curQ && id !== g.turnPid ? curQ.who[id] || null : undefined;
+        const ansBadge = ans === undefined ? '' : ans ? `<span class="wt-ans a-${ans}" title="Ответил">${ans === 'no' ? ic('x', 13) : ans === 'idk' ? '<b>?</b>' : ic('check', 13)}</span>` : `<span class="wt-ans wait" title="Ещё не ответил"><i></i><i></i><i></i></span>`;
+        return `<div class="wt ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''} ${ans === null ? 'slow' : ''}">
+          <div class="wt-ava">${pa(id, 84, 'round')}${medal}${ansBadge}</div>
           <div class="wt-body">
             <span class="wt-name">${speaking ? `<span class="wt-mic">${ic('mic', 12)}</span>` : ''}${nm(id)}${isMe ? ' <small>(вы)</small>' : ''}</span>
             <div class="wt-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 16)} это вы`}</div>
-            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ''}</span>
+            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ans === null ? '<b class="wt-slow">ещё не ответил</b>' : ans ? `<span class="wt-did">ответил${ans === 'yes' ? ' «да»' : ans === 'no' ? ' «нет»' : ' «не знаю»'}</span>` : ''}</span>
           </div>
           ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" decoding="sync">` : ''}
         </div>`;
@@ -2768,7 +2772,7 @@
     }
     return `<div class="who who2 ${sugg ? 'has-sugg' : ''} ${ui.enter ? 'enter' : ''}">
       <aside class="who-players" data-scroll="who-players">
-        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
+        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.q && g.q.asker === g.turnPid && !over ? `ответили ${Object.keys(g.q.who).length} из ${g.order.filter((id) => id !== g.turnPid && g.players[id]).length}` : g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
         <div class="who-list">${tiles}</div>
       </aside>
       <div class="who-main">

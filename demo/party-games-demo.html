@@ -2574,6 +2574,19 @@ html { scrollbar-gutter: stable; }
 @media (max-width: 1000px) { .who.who2.has-sugg { grid-template-columns: 1fr; } .who-sugg { grid-column: auto; } }
 .who-sugg { max-height: calc(100vh - 170px); }
 
+/* «Кто я»: кто ответил на текущий вопрос */
+.wt-ans { position: absolute; left: -4px; top: -4px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--surface-2); z-index: 1; }
+.wt-ans.a-yes { background: var(--green); color: var(--green-ink); }
+.wt-ans.a-no { background: var(--red); color: #fff; }
+.wt-ans.a-idk { background: var(--surface-3); color: var(--muted); }
+.wt-ans.wait { background: var(--accent); display: flex; gap: 2px; justify-content: center; align-items: center; }
+.wt-ans.wait i { width: 4px; height: 4px; border-radius: 50%; background: var(--accent-ink); animation: wwDot 1.2s ease-in-out infinite; }
+.wt-ans.wait i:nth-child(2) { animation-delay: .15s; }
+.wt-ans.wait i:nth-child(3) { animation-delay: .3s; }
+.wt.slow { border-color: color-mix(in srgb, var(--accent) 55%, transparent); border-style: dashed; }
+.wt-slow { color: var(--accent-text, var(--accent)); }
+.wt-did { color: var(--muted); font-weight: 700; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -4489,7 +4502,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         }
         return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435";
       }
-      function view(s, pid) {
+      function view(s, pid, ctx) {
         const me = s.a[pid];
         const target = Object.keys(s.a).find((id) => s.a[id].writer === pid);
         return {
@@ -4504,7 +4517,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           finishOrder: s.finishOrder,
           points: points(s),
           qEnds: s.phase === "play" ? s.qEnds : null,
-          q: s.q && s.phase === "play" ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0, pend: s.pend && s.pend.qid === s.q.id ? { v: s.pend.v, at: s.pend.at, ms: s.pend.ms } : null } : null,
+          q: s.q && s.phase === "play" ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0 && (!ctx || voters(s, ctx).every((id) => s.q.answers[id])), pend: s.pend && s.pend.qid === s.q.id ? { v: s.pend.v, at: s.pend.at, ms: s.pend.ms } : null } : null,
           players: Object.fromEntries(
             Object.entries(s.a).map(([id, a]) => [
               id,
@@ -10804,12 +10817,16 @@ window.RULES = {
         const speaking = g.turnPid === id && !over;
         // кубок первому угадавшему, серебро второму, бронза третьему
         const medal = p.guessed && place >= 0 && place < 3 ? `<span class="wt-medal m${place + 1}" title="${['Первым угадал', 'Второе место', 'Третье место'][place]}">${ic(place === 0 ? 'trophy' : 'medal', place === 0 ? 20 : 17)}</span>` : '';
-        return `<div class="wt ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
-          <div class="wt-ava">${pa(id, 84, 'round')}${medal}</div>
+        // Идёт вопрос: кто уже ответил (галочка цветом ответа), а кто ещё нет — чтобы подтолкнуть
+        const curQ = !over && g.q && g.q.asker === g.turnPid ? g.q : null;
+        const ans = curQ && id !== g.turnPid ? curQ.who[id] || null : undefined;
+        const ansBadge = ans === undefined ? '' : ans ? `<span class="wt-ans a-${ans}" title="Ответил">${ans === 'no' ? ic('x', 13) : ans === 'idk' ? '<b>?</b>' : ic('check', 13)}</span>` : `<span class="wt-ans wait" title="Ещё не ответил"><i></i><i></i><i></i></span>`;
+        return `<div class="wt ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''} ${ans === null ? 'slow' : ''}">
+          <div class="wt-ava">${pa(id, 84, 'round')}${medal}${ansBadge}</div>
           <div class="wt-body">
             <span class="wt-name">${speaking ? `<span class="wt-mic">${ic('mic', 12)}</span>` : ''}${nm(id)}${isMe ? ' <small>(вы)</small>' : ''}</span>
             <div class="wt-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 16)} это вы`}</div>
-            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ''}</span>
+            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ans === null ? '<b class="wt-slow">ещё не ответил</b>' : ans ? `<span class="wt-did">ответил${ans === 'yes' ? ' «да»' : ans === 'no' ? ' «нет»' : ' «не знаю»'}</span>` : ''}</span>
           </div>
           ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" decoding="sync">` : ''}
         </div>`;
@@ -10882,7 +10899,7 @@ window.RULES = {
     }
     return `<div class="who who2 ${sugg ? 'has-sugg' : ''} ${ui.enter ? 'enter' : ''}">
       <aside class="who-players" data-scroll="who-players">
-        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
+        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.q && g.q.asker === g.turnPid && !over ? `ответили ${Object.keys(g.q.who).length} из ${g.order.filter((id) => id !== g.turnPid && g.players[id]).length}` : g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
         <div class="who-list">${tiles}</div>
       </aside>
       <div class="who-main">

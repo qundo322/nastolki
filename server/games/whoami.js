@@ -254,7 +254,7 @@ function action(s, pid, msg, ctx) {
   return 'Неизвестное действие';
 }
 
-function view(s, pid) {
+function view(s, pid, ctx) {
   const me = s.a[pid];
   const target = Object.keys(s.a).find((id) => s.a[id].writer === pid);
   return {
@@ -269,7 +269,7 @@ function view(s, pid) {
     finishOrder: s.finishOrder,
     points: points(s),
     qEnds: s.phase === 'play' ? s.qEnds : null,
-    q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0, pend: s.pend && s.pend.qid === s.q.id ? { v: s.pend.v, at: s.pend.at, ms: s.pend.ms } : null } : null,
+    q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0 && (!ctx || voters(s, ctx).every((id) => s.q.answers[id])), pend: s.pend && s.pend.qid === s.q.id ? { v: s.pend.v, at: s.pend.at, ms: s.pend.ms } : null } : null,
     players: Object.fromEntries(
       Object.entries(s.a).map(([id, a]) => [
         id,
