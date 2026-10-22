@@ -319,7 +319,8 @@ io.on('connection', (socket) => {
   }));
 
   // Общее радио комнаты
-  socket.on('radio', inRoom((room, pid, msg) => {
+  // Ссылка Spotify: ищем этот трек на YouTube (асинхронно), потом добавляем как обычный
+  const radioSync = inRoom((room, pid, msg) => {
     const err = Radio.handle(room, pid, msg, room.hostId === pid);
     if (err) return err;
     for (const item of Radio.untitled(room)) {
@@ -332,7 +333,16 @@ io.on('connection', (socket) => {
         broadcast(room);
       });
     }
-  }));
+  });
+  socket.on('radio', (msg = {}, cb) => {
+    if (!(msg && msg.op === 'add' && Radio.spotifyId(msg.url))) return radioSync(msg, cb);
+    const room = rooms.get(socket.data.room);
+    if (!room || !room.players.has(socket.data.pid)) return fail(cb, 'Вы не в комнате');
+    Radio.resolveSpotify(msg.url).then((r) => {
+      if (!r) return fail(cb, 'Не нашли этот трек из Spotify на YouTube — вставьте ссылку YouTube');
+      radioSync({ op: 'add', url: 'https://youtu.be/' + r.vid, title: r.title }, cb);
+    });
+  });
 
   socket.on('kick', hostOnly((room, pid, { target }) => {
     if (target === pid) return 'Нельзя выгнать себя';

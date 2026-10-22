@@ -81,11 +81,27 @@
       const v = LS.get('pg_tilt', '');
       return v === '' ? 50 : Math.max(0, Math.min(100, Number(v) || 0));
     })(),
+    // Масштаб интерфейса: ползунок 0–100 → 85–130 %, по умолчанию 100 %
+    scale: (() => {
+      const v = LS.get('pg_scale', '');
+      return v === '' ? 33 : Math.max(0, Math.min(100, Number(v) || 0));
+    })(),
+    // Переключатели доступности и удобства (true/false), хранятся по отдельности
+    calm: LS.get('pg_calm', '') === '1', // меньше анимаций
+    cb: LS.get('pg_cb', '') === '1', // значки цветов в Коднеймс (для дальтоников)
+    bigAlias: LS.get('pg_bigAlias', '') === '1', // крупное слово в Элиасе
+    bigRole: LS.get('pg_bigRole', '') === '1', // крупная карточка роли в Шпионе
+    bigQ: LS.get('pg_bigQ', '') === '1', // крупный вопрос в Викторине и «Ответе большинства»
+    bigWho: LS.get('pg_bigWho', '') === '1', // ещё крупнее карточки в «Кто я?»
   };
+  const scalePct = (v) => Math.round(85 + v * 0.45);
+  const VIEW_TOGGLES = ['calm', 'cb', 'bigAlias', 'bigRole', 'bigQ', 'bigWho'];
   const FS_OPTS = [24, 30, 36, 42];
   function applyView() {
     const v = VIEW.glow;
     const st = document.documentElement.style;
+    st.setProperty('--ui-zoom', String(scalePct(VIEW.scale) / 100));
+    for (const k of VIEW_TOGGLES) document.documentElement.classList.toggle('v-' + k, !!VIEW[k]);
     document.documentElement.dataset.glow = v ? 'on' : 'off';
     if (v) {
       st.setProperty('--glow-k', String(Math.min(1, 0.35 + v / 80))); // яркость пульса
@@ -117,29 +133,46 @@
       ${TT.map((t, i) => `<button type="button" class="tt-hit h${i}" data-act="set-theme" data-t="${t.id}" role="radio" aria-checked="${theme() === t.id}" title="${t.name}" aria-label="${t.name}"></button>`).join('')}
     </div>`;
   // Меню «Вид»: свечение хода и размер слов
-  const viewMenu = () => `<div class="menu-wrap" data-pop>
-      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: свечение хода, размер слов">${ic('palette')}</button>
+  // Переключатель-«тумблер» для настроек вида
+  const vtog = (k, title, sub) => `<button type="button" class="vt ${VIEW[k] ? 'on' : ''}" data-act="view-tog" data-k="${k}" role="switch" aria-checked="${!!VIEW[k]}"><span class="vt-t"><b>${title}</b>${sub ? `<small>${sub}</small>` : ''}</span><i class="vt-sw"></i></button>`;
+  // Меню «Вид»: общие настройки + раздел каждой игры; раздел текущей игры подсвечен
+  const viewMenu = () => {
+    const cur = S?.game?.type || null;
+    const sec = (ids, title, body) => {
+      const now = ids.includes(cur);
+      return `<section class="vp-sec ${now ? 'now' : ''}"><div class="vp-sh">${ids.length === 1 ? gIcon(ids[0], 15) : ic('sparkles', 15)}<b>${title}</b>${now ? '<span class="vp-now">сейчас</span>' : ''}</div>${body}</section>`;
+    };
+    // текущая игра — первым разделом после общих
+    const games = [
+      [['codenames'], 'Коднеймс', `${tiltFader()}<div class="vp-h">Размер слов на карточках</div><div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>${vtog('cb', 'Значки цветов', 'для дальтоников: ▲ красные, ● синие, ✕ убийца')}`],
+      [['codenames', 'justone'], 'Свечение хода', `${glowFader()}<p class="vp-note">Мерцание по краю экрана: в Коднеймс — цветом команды, в «Намёк понял» — сверху</p>`],
+      [['alias'], 'Элиас', vtog('bigAlias', 'Крупное слово', 'легче читать объясняющему издалека')],
+      [['spyfall'], 'Шпион', vtog('bigRole', 'Крупная карточка роли', 'локация и роль крупным шрифтом')],
+      [['whoami'], 'Кто я?', vtog('bigWho', 'Ещё крупнее карточки', 'аватары и персонажи на весь экран')],
+      [['quiz', 'majority'], 'Викторина и «Ответ большинства»', vtog('bigQ', 'Крупный вопрос', 'вопрос и поле ответа крупнее')],
+    ].sort((a, b) => b[0].includes(cur) - a[0].includes(cur));
+    return `<div class="menu-wrap" data-pop>
+      <button class="btn sm ghost view-btn" data-act="menu" data-menu="theme" title="Настройки вида и доступности">${ic('sliders', 17)}<span class="hide-m">Вид</span></button>
       ${
         ui.menu === 'theme'
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
-              ${glowFader()}
-              ${tiltFader()}
-              <div class="vp-sep"></div>
-              <div class="vp-h">Размер слов на карточках</div>
-              <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
+              <div class="vp-title">${ic('sliders', 16)} Настройки вида</div>
+              ${sec([], 'Везде', `${slider('scale', 'Размер интерфейса', VIEW.scale, (v) => scalePct(v) + '%')}${vtog('calm', 'Меньше анимаций', 'без вращений, наклонов и фоновых волн')}`)}
+              ${games.map(([ids, t, body]) => sec(ids, t, body)).join('')}
             </div>`
           : ''
       }
     </div>`;
+  };
   // Ползунки двигаем без перерисовки — эффект виден сразу
   document.addEventListener('input', (e) => {
     const key = e.target.dataset && e.target.dataset.sl;
     if (!key) return;
     const v = Number(e.target.value) || 0;
     VIEW[key] = v;
-    LS.set(key === 'glow' ? 'pg_glow_v' : 'pg_tilt', String(v));
+    LS.set({ glow: 'pg_glow_v', tilt: 'pg_tilt', scale: 'pg_scale' }[key], String(v));
     applyView();
-    const label = key === 'glow' ? glowLabel : tiltLabel;
+    const label = { glow: glowLabel, tilt: tiltLabel, scale: (x) => scalePct(x) + '%' }[key];
     document.querySelectorAll(`[data-sl="${key}"]`).forEach((r) => {
       if (r !== e.target) r.value = v;
       r.closest('.sl')?.style.setProperty('--v', v + '%');
@@ -201,7 +234,7 @@
     const team = p?.id ? bgFor(p.id) : null;
     const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" onerror="this.remove()">` : '';
     const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
-    return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
+    return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${typeof size === 'number' && px > 44 ? `;font-size:${Math.round(px * 0.34)}px` : ''}${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -281,7 +314,10 @@
       </div>
     </div>
     <div class="lofi-queue"></div>
-    <form class="lofi-add" data-lofi-form><span class="la-ic">${ic('link', 15)}</span><input class="inp" name="url" placeholder="Вставьте ссылку на YouTube — трек сам встанет в очередь" autocomplete="off" inputmode="url"/></form>`;
+    <div class="lofi-paste">
+      <button type="button" class="btn lp-btn" data-lofi="paste">${ic('clip', 17)}<span><b>Вставить из буфера</b><small>ссылка YouTube или Spotify</small></span></button>
+    </div>
+    <form class="lofi-add" data-lofi-form hidden><span class="la-ic">${ic('link', 15)}</span><input class="inp" name="url" placeholder="Вставьте ссылку YouTube или Spotify" autocomplete="off" inputmode="url"/></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
   // Кнопка радио — слева снизу, открывает мини-плеер над собой
@@ -452,6 +488,7 @@
     } else if (a === 'skip') rEmit('skip');
     else if (a === 'lofi') rEmit('lofi');
     else if (a === 'rm') rEmit('remove', { qid: b.dataset.q });
+    else if (a === 'paste') pasteFromClipboard();
     else if (a === 'up' || a === 'down') rEmit('move', { qid: b.dataset.q, d: a === 'up' ? -1 : 1 });
   });
   // Перетаскивание треков в очереди (хост): мышью и пальцем
@@ -492,25 +529,49 @@
     grip.addEventListener('pointerup', up);
     grip.addEventListener('pointercancel', up);
   });
-  // Ссылка вставлена — трек сам улетает в очередь, без кнопок
+  // Ссылка YouTube или Spotify → сразу в очередь
+  const isSpotify = (u) => /open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/[A-Za-z0-9]{22}|^spotify:track:/.test(String(u || '').trim());
   let addBusy = false;
-  async function addFromInput(inp, strict) {
-    const u = inp.value.trim();
-    if (!u || addBusy) return;
-    if (!ytId(u)) {
-      if (strict) toast('Не похоже на ссылку YouTube');
-      return;
+  async function addUrl(u, strict) {
+    u = String(u || '').trim();
+    if (!u || addBusy) return false;
+    if (!ytId(u) && !isSpotify(u)) {
+      if (strict) toast('Не похоже на ссылку YouTube или Spotify');
+      return false;
     }
     addBusy = true;
-    inp.classList.add('sending');
+    const btn = dock.querySelector('.lp-btn');
+    btn && btn.classList.add('sending');
+    if (isSpotify(u)) toast('Ищем этот трек на YouTube…', 'info');
     const r = await rEmit('add', { url: u });
     addBusy = false;
-    inp.classList.remove('sending');
-    if (!r.error) {
-      inp.value = '';
-      Sound.play('pop');
+    btn && btn.classList.remove('sending');
+    if (!r.error) Sound.play('pop');
+    return !r.error;
+  }
+  async function addFromInput(inp, strict) {
+    if (await addUrl(inp.value, strict)) inp.value = '';
+  }
+  // Кнопка «Вставить из буфера»; если браузер не даёт читать буфер — показываем поле
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) return toast('В буфере пусто — скопируйте ссылку на трек', 'info');
+      await addUrl(text, true);
+    } catch {
+      const f = dock.querySelector('.lofi-add');
+      f.hidden = false;
+      f.querySelector('input').focus();
+      toast('Браузер не дал прочитать буфер — вставьте ссылку в поле (Ctrl+V)', 'info');
     }
   }
+  // Ctrl+V, пока открыт плеер и курсор не в поле ввода, — тоже добавляет трек
+  document.addEventListener('paste', (e) => {
+    if (dock.hidden || dock.classList.contains('mini')) return;
+    if (e.target.closest && e.target.closest('input, textarea, [contenteditable]')) return;
+    const text = e.clipboardData && e.clipboardData.getData('text');
+    if (text && (ytId(text.trim()) || isSpotify(text))) addUrl(text, true);
+  });
   dock.addEventListener('submit', (e) => {
     e.preventDefault();
     addFromInput(e.target.querySelector('input'), true);
@@ -712,6 +773,53 @@
   }
 
   // ---------- общий рендер ----------
+  // Анимированные счётчики очков: число «докручивается» до нового значения и подпрыгивает.
+  // Значение берём из текста, прошлое — из памяти по ключу data-cnt, так что перерисовки не мешают.
+  const cntMem = new Map();
+  const cntRun = new Map(); // ключ → {from, to, at}
+  function animateCounts() {
+    const els = $app.querySelectorAll('[data-cnt]');
+    const t = performance.now();
+    const seen = new Set();
+    els.forEach((el) => {
+      const k = el.dataset.cnt;
+      seen.add(k);
+      const to = Number(el.textContent);
+      if (!Number.isFinite(to)) return;
+      const prev = cntMem.get(k);
+      cntMem.set(k, to);
+      let run = cntRun.get(k);
+      if (prev != null && prev !== to && !document.documentElement.classList.contains('v-calm')) {
+        const cur = run && run.to !== to ? Math.round(run.from + (run.to - run.from) * Math.min(1, (t - run.at) / run.d)) : prev;
+        run = { from: cur, to, at: t, d: Math.min(900, 280 + Math.abs(to - cur) * 90), up: to > cur };
+        cntRun.set(k, run);
+      }
+      if (run && t - run.at < run.d) {
+        el.classList.add('cnt-run', run.up ? 'cnt-up' : 'cnt-down');
+        el.style.setProperty('--ce', -(t - run.at) + 'ms');
+        el.textContent = String(run.from);
+      } else if (run) cntRun.delete(k);
+    });
+    for (const k of cntMem.keys()) if (!seen.has(k)) cntMem.delete(k);
+    if (cntRun.size && !cntTick) cntTick = requestAnimationFrame(stepCounts);
+  }
+  let cntTick = 0;
+  function stepCounts() {
+    cntTick = 0;
+    const t = performance.now();
+    for (const [k, r] of cntRun) {
+      const el = $app.querySelector(`[data-cnt="${CSS.escape(k)}"]`);
+      const p = Math.min(1, (t - r.at) / r.d);
+      const e = 1 - Math.pow(1 - p, 3);
+      if (el) el.textContent = String(Math.round(r.from + (r.to - r.from) * e));
+      if (p >= 1) {
+        cntRun.delete(k);
+        if (el) el.classList.remove('cnt-run');
+      }
+    }
+    if (cntRun.size) cntTick = requestAnimationFrame(stepCounts);
+  }
+
   function render() {
     const keep = snapshotInputs();
     const chatEl = $app.querySelector('.chat-log');
@@ -735,6 +843,7 @@
     ui.ctlAnim = false;
     ui.leaveAnim = false;
     restoreInputs(keep);
+    animateCounts();
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
     const rb2 = $app.querySelector('.rl-body');
@@ -829,7 +938,10 @@
         <h1>Экранки <span>а не настолки — для своих</span></h1>
         <p class="lead">${gamesLine()} — по одной или марафоном с турнирной таблицей.</p>
       </div>`;
-    return `${header}<main class="home">
+    if (!ui.homeAt) ui.homeAt = Date.now(); // первый показ — каскадная анимация
+    const hel = Date.now() - ui.homeAt;
+    const intro = hel < 1800 ? 'intro' : '';
+    return `${header}<main class="home ${intro}" style="--el:${hel}ms">
       ${hero}
       <form class="card home-card" data-form="enter" autocomplete="on">
         <span class="lbl">${code ? `Вход в комнату ${esc(code)}` : 'Кто ты?'}</span>
@@ -1330,13 +1442,23 @@
         <div><div class="lbl">Пригласите друзей по ссылке</div><div class="link">${esc(link)}</div></div>
         <button class="btn primary" data-act="copy">${ic('link', 16)} Скопировать</button>
       </div>`;
+    // Первое открытие лобби — каскадное появление блоков
+    // держим класс 1,6 с; задержки анимаций считаются от первого показа (--el), поэтому перерисовка не «перезапускает» их
+    if (!ui.lobbyAt) ui.lobbyAt = Date.now();
+    const lel = Date.now() - ui.lobbyAt;
+    const intro = lel < 1600 ? 'intro' : '';
+    const wrap = (main) => `<div class="lobby-wrap ${intro}" style="--el:${lel}ms">${renderRoster()}<div class="lobby">${main}</div></div>`;
     if (!host)
-      return `<div class="lobby">${paused}${invite}<div class="card center big-pad"><div class="big-ic">${ic('dice', 44)}</div><h2 class="h2">Хост выбирает игру</h2>
+      return wrap(`${paused}${invite}<div class="card center big-pad"><div class="big-ic">${ic('dice', 44)}</div><h2 class="h2">Хост выбирает игру</h2>
         <p class="muted">${nm(S.room.hostId)} настраивает игру или марафон. Пока можно почитать правила.</p></div>
-        <div class="games-grid">${GAMES.map((x) => gameCard(x, false, sel)).join('')}</div></div>`;
-    const tabs = `<div class="tabs"><button class="${ui.mode === 'single' ? 'on' : ''}" data-act="mode" data-m="single">${ic('grid', 16)} Одна игра</button><button class="${ui.mode === 'tour' ? 'on' : ''}" data-act="mode" data-m="tour">${ic('trophy', 16)} Марафон</button></div>`;
-    if (ui.mode === 'tour') return `<div class="lobby">${paused}${invite}${tabs}${renderTourBuilder()}</div>`;
-    return `<div class="lobby">${paused}${invite}${tabs}
+        <div class="games-grid">${GAMES.map((x) => gameCard(x, false, sel)).join('')}</div>`);
+    // Переключатель с «едущей» плашкой: при смене плашка и блоки под ним анимируются
+    const ma = ui.modeAnim;
+    ui.modeAnim = null;
+    const tabs = `<div class="tabs seg2 ${ma ? 'anim-' + ma : ''}" data-mode="${ui.mode}"><i class="tab-ind" aria-hidden="true"></i><button class="${ui.mode === 'single' ? 'on' : ''}" data-act="mode" data-m="single">${ic('grid', 16)} Одна игра</button><button class="${ui.mode === 'tour' ? 'on' : ''}" data-act="mode" data-m="tour">${ic('trophy', 16)} Марафон</button></div>`;
+    const pane = (html) => `<div class="mode-pane ${ma ? (ma === 'tour' ? 'in-right' : 'in-left') : ''}">${html}</div>`;
+    if (ui.mode === 'tour') return wrap(`${paused}${invite}${tabs}${pane(renderTourBuilder())}`);
+    return wrap(`${paused}${invite}${tabs}${pane(`
       <div class="games-grid">${GAMES.map((x) => gameCard(x, true, sel)).join('')}</div>
       <div class="card settings">
         <div class="settings-h"><b>${gIcon(meta.id)} ${esc(meta.title)}</b> <button class="link-btn" data-act="rules">как играть и как считаются очки?</button></div>
@@ -1344,7 +1466,36 @@
           ${(meta.settings || []).map((x) => renderSetting(x)).join('')}
           <button class="btn primary big" type="submit">${ic('play', 16)} Начать игру</button>
         </form>
-      </div></div>`;
+      </div>`)}`);
+  }
+
+  // Колонка «В комнате»: большие карточки игроков, новые «влетают» — чтобы каждый чувствовал, что его ждали
+  const rosterKnown = new Map(); // id → когда впервые увидели (для анимации «влетания»)
+  let rosterInit = false;
+  function renderRoster() {
+    const r = S.room;
+    const ps = r.players.slice().sort((a, b) => (b.id === r.hostId) - (a.id === r.hostId) || (b.connected - a.connected));
+    const online = ps.filter((p) => p.connected).length;
+    const t = Date.now();
+    ps.forEach((p) => !rosterKnown.has(p.id) && rosterKnown.set(p.id, rosterInit ? t : 0));
+    rosterInit = true;
+    const fe = (p) => t - rosterKnown.get(p.id);
+    const fresh = new Set(ps.filter((p) => rosterKnown.get(p.id) && fe(p) < 1700).map((p) => p.id));
+    const mood = online >= 4 ? 'Компания собралась — можно начинать!' : online >= 2 ? 'Уже веселее. Зовите остальных!' : 'Пока вы один — позовите друзей';
+    return `<aside class="roster card">
+      <div class="ro-h"><div><b>В комнате</b><span class="ro-n">${online}</span></div><span class="muted small">${mood}</span></div>
+      <div class="ro-list">${ps
+        .map(
+          (p, i) => `<div class="ro-p ${p.connected ? '' : 'off'} ${p.id === S.me ? 'me' : ''} ${fresh.has(p.id) ? 'fresh' : ''}" style="--i:${i}${fresh.has(p.id) ? `;--fe:${fe(p)}ms` : ''}">
+            <span class="ro-ava">${avaHtml(p, 52, 'round')}${p.connected ? '<i class="ro-dot"></i>' : ''}</span>
+            <span class="ro-t"><b>${esc(p.name)}${p.id === S.me ? ' <small class="muted">(вы)</small>' : ''}</b><small>${p.id === r.hostId ? `${ic('crown', 12)} хост` : p.connected ? (p.real ? esc(p.real) : 'в игре') : 'не в сети'}</small></span>
+            ${p.id === r.hostId ? `<span class="ro-crown">${ic('crown', 16)}</span>` : ''}
+          </div>`
+        )
+        .join('')}
+        <button class="ro-p ro-add" data-act="copy" title="Скопировать ссылку-приглашение"><span class="ro-ava"><span class="ro-plus">${ic('plus', 22)}</span></span><span class="ro-t"><b>Позвать друга</b><small>скопировать ссылку</small></span></button>
+      </div>
+    </aside>`;
   }
 
   const gameCard = (g, clickable, sel) => `<button class="gcard ${g.id === sel && clickable ? 'active' : ''}" ${clickable ? `data-act="pick" data-id="${g.id}"` : 'disabled'}>
@@ -1482,7 +1633,7 @@
         .map((r, i) => {
           if (r.total !== last) place = i + 1;
           last = r.total;
-          return `<tr class="${r.id === S.me ? 'me' : ''}"><td>${place}</td><td>${player(r.id) ? who(r.id, 'sm') : '<span class="muted">ушёл</span>'}</td>${types.map((ty) => `<td>${r.per[ty] || 0}</td>`).join('')}<td><b>${r.total}</b></td></tr>`;
+          return `<tr class="${r.id === S.me ? 'me' : ''}"><td>${place}</td><td>${player(r.id) ? who(r.id, 'sm') : '<span class="muted">ушёл</span>'}</td>${types.map((ty) => `<td>${r.per[ty] || 0}</td>`).join('')}<td><b data-cnt="tt-${r.id}">${r.total}</b></td></tr>`;
         })
         .join('')}</tbody></table></div>`;
   }
@@ -1667,7 +1818,7 @@
   const leaderboard = (pairs, mark) =>
     `<div class="leader">${pairs
       .sort((a, b) => b[1] - a[1])
-      .map(([id, n], i) => `<div class="lrow ${id === mark ? 'turn' : ''} ${id === S.me ? 'me' : ''}"><span>${i === 0 && n > 0 ? `<span class="medal">${ic('medal', 14)}</span>` : ''}${who(id, 'sm')}</span><b>${n}</b></div>`)
+      .map(([id, n], i) => `<div class="lrow ${id === mark ? 'turn' : ''} ${id === S.me ? 'me' : ''}"><span>${i === 0 && n > 0 ? `<span class="medal">${ic('medal', 14)}</span>` : ''}${who(id, 'sm')}</span><b data-cnt="lb-${id}">${n}</b></div>`)
       .join('')}</div>`;
 
   // Переносы по слогам (правила русского языка): вставляем мягкие переносы &shy;
@@ -1949,7 +2100,7 @@
         const total = found + g.left[t];
         return `<div class="tp-top">
           <div class="tp-name-row"><span class="tp-name">${TN[t]}</span>${turn ? `<span class="tp-turn">${ic('clock', 13)} ${g.step === 'clue' ? 'капитан думает' : 'отгадывают'}</span>` : ''}</div>
-          <div class="tp-count"><b>${g.left[t]}</b><span>${plural(g.left[t], 'слово осталось', 'слова осталось', 'слов осталось')}<small>найдено ${found} из ${total}</small></span></div>
+          <div class="tp-count"><b data-cnt="cnl-${t}">${g.left[t]}</b><span>${plural(g.left[t], 'слово осталось', 'слова осталось', 'слов осталось')}<small>найдено ${found} из ${total}</small></span></div>
           <div class="tp-dots">${Array.from({ length: total }, (_, k) => `<i class="${k < found ? 'on' : ''}"></i>`).join('')}</div>
         </div>`;
       })()}
@@ -2035,6 +2186,7 @@
         if (g.step === 'setup') return `<div class="cn-card blank" style="--i:${i}">${ic('grid', 18)}</div>`;
         return `<button class="cn-card ${c.color ? 'c-' + c.color : ''} ${c.revealed ? 'rev' : ''} ${c.marks.includes(me) ? 'mine' : ''} ${pend ? 'pending' : ''} ${ui.flip && ui.flip.has(i) ? 'flip' : ''} ${ui.enter && g.step === 'clue' ? 'deal' : ''}" style="--i:${i};${ui.flip && ui.flip.has(i) ? `--fd:-${Date.now() - ui.flip.get(i)}ms` : ''}${ui.cnSort ? `;order:${cnRank(c, i, myTeam)}` : ''}" data-act="cn-mark" data-i="${i}">
           <span class="w ${/\s/.test(c.w) ? 'phrase' : ''}" lang="ru">${hy(c.w)}</span>
+          ${c.color ? `<i class="cb-mark" aria-hidden="true">${{ red: '▲', blue: '●', neutral: '–', assassin: '✕' }[c.color] || ''}</i>` : ''}
           ${c.marks.length ? `<span class="marks">${c.marks.map((m) => pa(m, 'xs')).join('')}</span>` : ''}
           ${pend ? `<span class="pend" style="--d:${g.pending.ms}ms;--e:-${elapsed}ms">${ring('fill')}</span>` : ''}
         </button>`;
@@ -2077,7 +2229,7 @@
     const t = g.teams[i];
     const turn = i === g.turnTeam && !['teams', 'over'].includes(g.phase);
     return `<aside class="side-team ${turn ? 'turn' : ''} ${i === g.myTeam ? 'mine' : ''}" style="--tc:${ALIAS_BG[i]}">
-      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left"><b>${t.score}</b><small>из ${g.target}</small></span></div>
+      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left"><b data-cnt="als-${i}">${t.score}</b><small>из ${g.target}</small></span></div>
       ${turn ? `<div class="tp-turn">${ic('mic', 14)} Ход команды</div>` : ''}
       <div class="tp-agents">${
         t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}</div>`).join('') ||
@@ -2085,6 +2237,27 @@
       }</div>
       ${g.phase === 'teams' && i !== g.myTeam ? `<button class="btn tp-join" data-act="al-join" data-team="${i}">${ic('userplus', 18)} В эту команду</button>` : i === g.myTeam ? `<div class="tp-in">${ic('check', 14)} Вы в этой команде</div>` : ''}
     </aside>`;
+  }
+
+  // Колода слов Элиаса: верхняя карточка + стопка под ней. Угадали — карточка улетает вверх-вправо зелёной,
+  // пропуск — влево красной, следующая поднимается из стопки. Время анимации считаем от момента смены,
+  // чтобы перерисовки её не перезапускали.
+  function aliasStack(g) {
+    const turn = g.explainer + ':' + g.turnTeam + ':' + (g.endsAt || '');
+    const k = (g.guessedNow || 0) + (g.skippedNow || 0);
+    const p = ui.al;
+    if (!p || p.turn !== turn) ui.al = { turn, k, g: g.guessedNow || 0, w: g.word, out: null };
+    else if (k > p.k) {
+      ui.al = { turn, k, g: g.guessedNow || 0, w: g.word, out: { w: p.w, kind: (g.guessedNow || 0) > p.g ? 'got' : 'skip', at: Date.now() } };
+    } else if (k === p.k) p.w = g.word;
+    const o = ui.al.out;
+    const el = o ? Date.now() - o.at : 1e9;
+    const face = (w) => (w ? `<span class="al-w">${esc(w)}</span>` : `<span class="al-w q">?</span>`);
+    return `<div class="al-stack ${g.word ? '' : 'hid'}" style="--oe:${Math.min(el, 5000)}ms">
+      <div class="al-back b3"></div><div class="al-back b2"></div><div class="al-back b1"></div>
+      <div class="al-card top ${o && el < 1500 ? 'enter' : ''}">${face(g.word)}<span class="al-n">${k + 1}</span></div>
+      ${o && el < 1500 ? `<div class="al-card out ${o.kind}">${face(o.w)}<span class="al-stamp">${o.kind === 'got' ? ic('check', 18) + ' +1' : ic('x', 18) + ' пропуск'}</span></div>` : ''}
+    </div>`;
   }
 
   function rAlias(g) {
@@ -2107,9 +2280,9 @@
       </div>`;
     } else if (g.phase === 'running') {
       center = `<div class="stage-card run">
-        ${g.word ? `<div class="mega-word">${esc(g.word)}</div>` : `<div class="mega-word hidden">?</div><p class="muted">Слушайте ${nm(g.explainer)} и угадывайте!</p>`}
+        ${aliasStack(g)}${g.word ? '' : `<p class="muted">Слушайте ${nm(g.explainer)} и угадывайте!</p>`}
         ${isExpl ? `<div class="mega-row"><button class="btn danger mega" data-act="al-skip">${ic('x', 26)} Пропуск${g.penalty ? ' −1' : ''}</button><button class="btn success mega" data-act="al-got">${ic('check', 26)} Угадали +1</button></div>` : ''}
-        <div class="counters"><span>Угадано <b>${g.guessedNow}</b></span><span>Пропущено <b>${g.skippedNow}</b></span></div>
+        <div class="counters"><span>Угадано <b data-cnt="alg">${g.guessedNow}</b></span><span>Пропущено <b data-cnt="alk">${g.skippedNow}</b></span></div>
       </div>`;
     } else if (g.phase === 'review') {
       const canConfirm = isExpl || isHost();
@@ -2289,7 +2462,7 @@
         const speaking = g.turnPid === id && !over;
         return `<div class="tile ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
           <div class="tile-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 18)} это вы`}</div>
-          <div class="tile-ava">${pa(id, 88, 'round')}</div>
+          <div class="tile-ava">${pa(id, 128, 'round')}</div>
           <div class="tile-foot">
             <span class="tile-name">${speaking ? ic('mic', 14) : ''}${nm(id)}${isMe ? ' (вы)' : ''}</span>
             <span class="tile-st">${p.guessed ? `${ic('check', 13)} #${place + 1} · +${g.points[id]}` : p.gaveUp ? 'сдался' : ''}</span>
@@ -2384,7 +2557,7 @@
     // Таблица очков: сердечки рядом с очками
     const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1] || (g.hearts[b[0]] || 0) - (g.hearts[a[0]] || 0));
     const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— угадал +2 · подсказка дошла +1 · лучшая подсказка +3</span></div>
-      ${rows.map(([id, n], i) => `<div class="jb-row ${id === g.guesser ? 'turn' : ''} ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.hearts[id] ? `<span class="jb-h" title="Сколько раз его подсказку выбрали лучшей">${ic('heartf', 15)}${g.hearts[id]}</span>` : ''}<b class="jb-p">${n}</b></div>`).join('')}</div>`;
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === g.guesser ? 'turn' : ''} ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.hearts[id] ? `<span class="jb-h" title="Сколько раз его подсказку выбрали лучшей">${ic('heartf', 15)}${g.hearts[id]}</span>` : ''}<b class="jb-p" data-cnt="jb-${id}">${n}</b></div>`).join('')}</div>`;
     if (!g.inGame) return `<div class="narrow justone">${head}<div class="stage-card"><button class="btn primary mega" data-act="jo-add">Присоединиться</button></div>${board}</div>`;
     // Кто уже готов (видят все)
     const readyRow = (ids, done, label) =>
@@ -2502,7 +2675,7 @@
     const T = ''; // таймер — общей полосой под шапкой
     const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1]);
     const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— ближе всех +1 · точно в цель ещё +1</span></div>
-      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.wins[id] ? `<span class="qz-w" title="Сколько раз был ближе всех">${ic('target', 14)}${g.wins[id]}</span>` : ''}<b class="jb-p">${n}</b></div>`).join('')}</div>`;
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.wins[id] ? `<span class="qz-w" title="Сколько раз был ближе всех">${ic('target', 14)}${g.wins[id]}</span>` : ''}<b class="jb-p" data-cnt="jb-${id}">${n}</b></div>`).join('')}</div>`;
     const head = `<div class="jo-top qz-head">
       <div class="jo-tile"><span class="jt-k">Вопрос</span><b class="jt-v">${g.round}<small>из ${g.rounds}</small></b></div>
       <div class="jo-tile wide"><span class="jt-k">Тема</span><b class="jt-v qz-cat">${esc(g.q?.cat || '')}</b></div>
@@ -2575,7 +2748,7 @@
     const me = S.me;
     const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1]);
     const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— +1 за каждое совпадение · большинству ещё +1</span></div>
-      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span><b class="jb-p">${n}</b></div>`).join('')}</div>`;
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span><b class="jb-p" data-cnt="jb-${id}">${n}</b></div>`).join('')}</div>`;
     const head = `<div class="jo-top qz-head">
       <div class="jo-tile"><span class="jt-k">Вопрос</span><b class="jt-v">${g.round}<small>из ${g.rounds}</small></b></div>
       <div class="jo-tile wide"><span class="jt-k">Задача</span><b class="jt-v mj-task">${g.phase === 'review' ? 'Кто с кем совпал?' : 'Ответь, как ответит большинство'}</b></div>
@@ -2781,6 +2954,15 @@
       });
       syncWave();
     },
+    'view-tog': (d) => {
+      const k = d.k;
+      if (!VIEW_TOGGLES.includes(k)) return;
+      VIEW[k] = !VIEW[k];
+      LS.set('pg_' + k, VIEW[k] ? '1' : '');
+      applyView();
+      syncWave();
+      render();
+    },
     'view-glow': (d) => {
       VIEW.glow = Number(d.n) || 0;
       LS.set('pg_glow_v', String(VIEW.glow));
@@ -2957,6 +3139,7 @@
       render();
     },
     mode: (d) => {
+      if (d.m !== ui.mode) ui.modeAnim = d.m;
       ui.mode = d.m;
       render();
     },

@@ -86,7 +86,7 @@ docker run -d --restart=always -p 80:3000 --name party-games party-games
 Все словари — в `server/words.js`:
 - `WORDS` — для Коднеймс, Элиаса и «Намёк понял» (только одиночные слова)
 - `server/quiz_questions.js` — 500 вопросов для «Викторины» (ответ — число)
-- `server/majority_questions.js` — 300 простых вопросов для «Ответа большинства» (совпадения приносят очки)
+- `server/majority_questions.js` — 500 простых вопросов для «Ответа большинства» (совпадения приносят очки)
 - `CHARACTERS` — для «Кто я?»
 - `LOCATIONS` — локации и роли для «Шпиона»
 

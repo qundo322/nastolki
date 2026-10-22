@@ -107,9 +107,11 @@
   /* Светлая тема в духе Linear / Vercel: холодный нейтральный серый, белые поверхности,
      тонкие рамки, мягкие тени, высокий контраст текста */
   color-scheme: light;
-  --bg: #f5f5f7;
-  --glow-1: rgba(124, 92, 255, 0.05);
-  --glow-2: rgba(40, 140, 220, 0.04);
+  --bg: #eeebf3; /* лавандово-серый: розоватый слева, голубоватый справа */
+  --bg-l: #f1ebf0;
+  --bg-r: #eceaf6;
+  --glow-1: rgba(255, 140, 170, 0.07);
+  --glow-2: rgba(110, 130, 255, 0.07);
   --surface: #ffffff;
   --surface-2: #f4f4f6;
   --surface-3: #e9e9ee;
@@ -159,16 +161,17 @@
   --cn-text: #1b1b22;
   --cn-edge: #d6d6df;
   --cn-border: rgba(16, 16, 28, 0.08);
-  --cn-red: #e5484d;
-  --cn-red-text: #ffffff;
-  --cn-red-glow: rgba(229, 72, 77, 0.35);
-  --cn-blue: #3e63dd;
-  --cn-blue-text: #ffffff;
-  --cn-blue-glow: rgba(62, 99, 221, 0.35);
-  --cn-neu: #ebe6da;
-  --cn-neu-text: #6a6352;
-  --cn-ass: #25252b;
-  --cn-ass-text: #d6d6de;
+  /* цвета карточек — как на эталонном скриншоте светлой доски */
+  --cn-red: #ff6452;
+  --cn-red-text: #8e1b10;
+  --cn-red-glow: rgba(255, 100, 82, 0.45);
+  --cn-blue: #4fb8ff;
+  --cn-blue-text: #0a4a80;
+  --cn-blue-glow: rgba(79, 184, 255, 0.45);
+  --cn-neu: #fffcf3;
+  --cn-neu-text: #8b8579;
+  --cn-ass: #444446;
+  --cn-ass-text: #b6b6b9;
 
   --spy-bg: #ffffff;
   --spy-text: #15151a;
@@ -1940,9 +1943,9 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 [data-theme='light'] .cn-card.mc-on::after { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 0, 0, .025), transparent 60%); }
 
 /* ---------- светлая тема: доводка ---------- */
-[data-theme='light'] body { background: radial-gradient(1200px 600px at 10% -10%, var(--glow-1) 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, var(--glow-2) 0%, transparent 55%), var(--bg); }
+[data-theme='light'] body { background: radial-gradient(1200px 600px at 10% -10%, var(--glow-1) 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, var(--glow-2) 0%, transparent 55%), linear-gradient(90deg, var(--bg-l), var(--bg-r)); background-attachment: fixed; }
 [data-theme='light'] .card, [data-theme='light'] .stage-card { box-shadow: var(--shadow); }
-[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
+[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost):not(.ready-btn):not(.tp-join):not(.lp-btn) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
 [data-theme='light'] .btn.ghost:hover:not([disabled]) { background: var(--surface-2); }
 [data-theme='light'] .inp { background: var(--surface); border-color: var(--line-strong); }
 [data-theme='light'] .inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -1952,7 +1955,7 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 [data-theme='light'] .cn-card { box-shadow: 0 0 0 1px var(--line), 0 2px 0 var(--cn-edge), 0 6px 14px -8px rgba(16, 16, 28, .18); }
 [data-theme='light'] .cn-card:hover:not(.rev) { box-shadow: 0 0 0 1px var(--line-strong), 0 2px 0 var(--cn-edge), 0 10px 22px -10px rgba(16, 16, 28, .25); }
 [data-theme='light'] .cn-card.c-red, [data-theme='light'] .cn-card.c-blue, [data-theme='light'] .cn-card.c-assassin { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08), 0 2px 0 rgba(0, 0, 0, .12); }
-[data-theme='light'] .cn-card.c-neutral { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 2px 0 #d8d1c0; }
+[data-theme='light'] .cn-card.c-neutral { box-shadow: inset 0 0 0 1px rgba(120, 100, 60, .1), 0 2px 0 #e6dfcd; }
 [data-theme='light'] .cn-card.mc-on { box-shadow: 0 0 0 1px var(--line-strong), 0 14px 26px -10px rgba(16, 16, 28, .28); }
 
 /* ---------- Коднеймс: капитанский вид «по цветам» ---------- */
@@ -2042,6 +2045,197 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .lofi-add .la-ic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: inline-flex; }
 .lofi-add .inp { padding-left: 32px; }
 .lofi-add .inp.sending { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); color: var(--muted); }
+/* радио: кнопка «вставить из буфера» */
+.lofi-paste { display: flex; }
+.lp-btn { flex: 1; justify-content: flex-start; gap: 10px; padding: 9px 12px; border-style: dashed; text-align: left; }
+.lp-btn span { display: flex; flex-direction: column; line-height: 1.2; }
+.lp-btn b { font-size: 13px; }
+.lp-btn small { font-size: 11px; color: var(--muted); font-weight: 600; }
+.lp-btn.sending { border-color: var(--accent); background: var(--accent-soft); animation: lpPulse 1s ease-in-out infinite; }
+@keyframes lpPulse { 50% { box-shadow: 0 0 0 4px var(--accent-soft); } }
+.lofi-add[hidden] { display: none; }
+
+/* ============================================================
+   v28: лобби с колонкой игроков, анимированный переключатель, вступительные анимации
+   ============================================================ */
+.lobby-wrap { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; max-width: 1400px; margin: 0 auto; align-items: start; }
+.lobby-wrap .lobby { max-width: none; margin: 0; min-width: 0; }
+@media (max-width: 960px) { .lobby-wrap { grid-template-columns: 1fr; } }
+
+/* ---- «В комнате» ---- */
+.roster { position: sticky; top: 76px; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; isolation: isolate; }
+.roster::before { content: ''; position: absolute; inset: -40% -40% auto auto; width: 220px; height: 220px; border-radius: 50%; z-index: -1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%); animation: roGlow 6s ease-in-out infinite alternate; }
+@keyframes roGlow { to { transform: translate(-40px, 60px) scale(1.2); opacity: .7; } }
+.ro-h { display: flex; flex-direction: column; gap: 2px; }
+.ro-h > div { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.ro-n { min-width: 26px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 13px; display: inline-grid; place-items: center; }
+.ro-list { display: flex; flex-direction: column; gap: 8px; }
+.ro-p { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line);
+  transition: transform .2s cubic-bezier(.2, .8, .3, 1), border-color .2s, box-shadow .2s; font: inherit; color: inherit; text-align: left; }
+.ro-p:hover { transform: translateX(3px); border-color: var(--line-strong); }
+.ro-p.me { border-color: var(--accent-line); background: color-mix(in srgb, var(--accent) 7%, var(--surface-2)); }
+.ro-p.off { opacity: .5; }
+.ro-ava { position: relative; flex: none; display: inline-grid; }
+.ro-ava .ava { box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent); }
+.ro-p.off .ro-ava .ava { box-shadow: 0 0 0 2px var(--surface-2); filter: grayscale(.6); }
+.ro-dot { position: absolute; right: 0; bottom: 0; width: 13px; height: 13px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 0 3px var(--surface-2); }
+.ro-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #3ddc84; animation: roPing 2s ease-out infinite; }
+@keyframes roPing { 0% { transform: scale(1); opacity: .7; } 80%, 100% { transform: scale(2.4); opacity: 0; } }
+.ro-t { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.ro-t b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ro-t small { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ro-crown { margin-left: auto; color: var(--accent-text); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 60%, transparent)); }
+/* новый игрок «влетает» с вспышкой */
+.ro-p.fresh { animation: roIn .7s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(0s - var(--fe, 0ms)); }
+.ro-p.fresh::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 2px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 50%, transparent); animation: roFlash 1.6s ease-out forwards; animation-delay: calc(0s - var(--fe, 0ms)); }
+@keyframes roIn { 0% { opacity: 0; transform: translateX(-30px) scale(.9); } 60% { opacity: 1; transform: translateX(4px) scale(1.02); } 100% { transform: none; } }
+@keyframes roFlash { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+.ro-add { cursor: pointer; border-style: dashed; background: transparent; }
+.ro-add:hover { border-color: var(--accent); }
+.ro-plus { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; border: 2px dashed var(--line-strong); color: var(--muted); }
+.ro-add:hover .ro-plus { border-color: var(--accent); color: var(--accent-text); }
+@media (max-width: 960px) { .roster { position: static; } .ro-list { flex-direction: row; flex-wrap: wrap; } .ro-p { flex: 1 1 200px; } }
+
+/* ---- переключатель «Одна игра / Марафон»: едущая плашка ---- */
+.tabs.seg2 { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; isolation: isolate; }
+.tabs.seg2 button { position: relative; z-index: 1; justify-content: center; transition: color .25s; }
+.tabs.seg2 button.on { background: transparent; color: var(--accent-ink); }
+.tab-ind { position: absolute; z-index: 0; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 6px); border-radius: 9px; background: var(--accent-bg, var(--accent));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); transform: translateX(0); }
+.tabs.seg2[data-mode='tour'] .tab-ind { transform: translateX(calc(100% + 4px)); }
+.tabs.seg2.anim-tour .tab-ind { animation: tabToR .45s cubic-bezier(.3, 1.4, .5, 1); }
+.tabs.seg2.anim-single .tab-ind { animation: tabToL .45s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes tabToR { from { transform: translateX(0) scaleX(1); } 45% { transform: translateX(calc(60% + 4px)) scaleX(1.25); } }
+@keyframes tabToL { from { transform: translateX(calc(100% + 4px)) scaleX(1); } 45% { transform: translateX(40%) scaleX(1.25); } }
+/* блоки под переключателем въезжают с той стороны, куда переключили */
+.mode-pane.in-right { animation: paneR .45s cubic-bezier(.16, 1, .3, 1) both; }
+.mode-pane.in-left { animation: paneL .45s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes paneR { from { opacity: 0; transform: translateX(40px); filter: blur(4px); } }
+@keyframes paneL { from { opacity: 0; transform: translateX(-40px); filter: blur(4px); } }
+.mode-pane.in-right .games-grid > *, .mode-pane.in-left .games-grid > *, .mode-pane.in-right .mrow, .mode-pane.in-left .mrow { animation: introUp .55s cubic-bezier(.16, 1, .3, 1) both; }
+
+/* ---- выбранная игра — заметная и читаемая (без полупрозрачности) ---- */
+html.holo .in-lobby .gcard.active, .gcard.active { background: color-mix(in srgb, var(--accent) 13%, var(--surface)); backdrop-filter: none; border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 10px 30px -10px color-mix(in srgb, var(--accent) 55%, transparent); }
+.gcard.active .gname { color: var(--text); }
+.gcard.active .gshort { color: color-mix(in srgb, var(--text) 78%, transparent); }
+[data-theme='light'] .gcard.active { background: color-mix(in srgb, var(--accent) 16%, #fff); }
+
+/* ---- вступительные анимации (каскад, как в GSAP) ---- */
+@keyframes introUp { from { opacity: 0; transform: translateY(26px) scale(.97); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes introLine { from { opacity: 0; transform: translateY(100%) rotate(2deg); } to { opacity: 1; transform: none; } }
+.home.intro .home-hero > *, .home.intro .home-card > * { animation: introUp .9s cubic-bezier(.16, 1, .3, 1) both; }
+.home.intro .home-hero > :nth-child(1) { animation-delay: calc(.05s - var(--el, 0ms)); }
+.home.intro .home-hero > :nth-child(2) { animation-delay: calc(.15s - var(--el, 0ms)); }
+.home.intro .home-hero > :nth-child(3) { animation-delay: calc(.3s - var(--el, 0ms)); }
+.home.intro .home-hero h1 span { display: block; animation: introLine 1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(.3s - var(--el, 0ms)); }
+.home.intro .home-card { animation: introUp 1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(.2s - var(--el, 0ms)); }
+.home.intro .home-card > :nth-child(1) { animation-delay: calc(.35s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(2) { animation-delay: calc(.42s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(3) { animation-delay: calc(.49s - var(--el, 0ms)); }
+.home.intro .home-card > :nth-child(4) { animation-delay: calc(.56s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(5) { animation-delay: calc(.63s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(6) { animation-delay: calc(.7s - var(--el, 0ms)); }
+.lobby-wrap.intro .roster { animation: introUp .9s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(0s - var(--el, 0ms)); }
+.lobby-wrap.intro .ro-p { animation: roIn .8s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(calc(.25s + var(--i, 0) * 70ms) - var(--el, 0ms)); }
+.lobby-wrap.intro .lobby > * { animation: introUp .9s cubic-bezier(.16, 1, .3, 1) both; }
+.lobby-wrap.intro .lobby > :nth-child(1) { animation-delay: calc(.08s - var(--el, 0ms)); } .lobby-wrap.intro .lobby > :nth-child(2) { animation-delay: calc(.16s - var(--el, 0ms)); }
+.lobby-wrap.intro .lobby > :nth-child(3) { animation-delay: calc(.24s - var(--el, 0ms)); } .lobby-wrap.intro .lobby > :nth-child(4) { animation-delay: calc(.32s - var(--el, 0ms)); }
+.lobby-wrap.intro .games-grid > * { animation: introUp .8s cubic-bezier(.16, 1, .3, 1) both; }
+.games-grid > :nth-child(1) { --gi: 0; } .games-grid > :nth-child(2) { --gi: 1; } .games-grid > :nth-child(3) { --gi: 2; } .games-grid > :nth-child(4) { --gi: 3; }
+.games-grid > :nth-child(5) { --gi: 4; } .games-grid > :nth-child(6) { --gi: 5; } .games-grid > :nth-child(7) { --gi: 6; } .games-grid > :nth-child(8) { --gi: 7; }
+.lobby-wrap.intro .games-grid > * { animation-delay: calc(calc(.35s + var(--gi, 0) * 60ms) - var(--el, 0ms)); }
+.mode-pane .games-grid > * { animation-delay: calc(var(--gi, 0) * 45ms); }
+.mrow:nth-child(n) { --gi: 0; }
+@media (prefers-reduced-motion: reduce) { .intro *, .mode-pane, .mode-pane *, .tab-ind, .ro-p { animation: none !important; } }
+
+/* ===== v29: меню «Вид» с разделами по играм + доступность ===== */
+#app { zoom: var(--ui-zoom, 1); }
+.view-btn { gap: 6px; padding-inline: 10px; }
+.view-pop { width: min(340px, calc(100vw - 24px)); max-height: min(78vh, 640px); overflow-y: auto; padding: 8px; }
+.vp-title { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; padding: 6px 8px 10px; }
+.vp-sec { border: 1px solid var(--line); border-radius: 14px; padding: 6px 4px 8px; margin-top: 8px; transition: border-color .2s, background .2s; }
+.vp-sec.now { border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 7%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
+.vp-sh { display: flex; align-items: center; gap: 8px; padding: 4px 8px 6px; font-size: 13px; }
+.vp-sh b { flex: 1; }
+.vp-now { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 3px 7px; border-radius: 99px; background: var(--accent); color: #1a1500; }
+.vp-note { font-size: 12px; color: var(--muted); margin: 2px 10px 0; line-height: 1.35; }
+.vt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: 0; color: inherit; padding: 8px 10px; border-radius: 10px; cursor: pointer; font: inherit; }
+.vt:hover { background: var(--hover, rgba(127,127,127,.08)); }
+.vt-t { flex: 1; display: grid; gap: 2px; }
+.vt-t b { font-size: 13px; font-weight: 700; }
+.vt-t small { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.vt-sw { flex: none; width: 36px; height: 22px; border-radius: 99px; background: var(--line); position: relative; transition: background .2s; }
+.vt-sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+.vt.on .vt-sw { background: var(--accent); }
+.vt.on .vt-sw::after { transform: translateX(14px); }
+.vt:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* меньше анимаций */
+html.v-calm *, html.v-calm *::before, html.v-calm *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+html.v-calm .mc, html.v-calm [style*="--rx"] { transform: none !important; }
+
+/* крупные режимы */
+html.v-bigAlias .mega-word, html.v-bigAlias .al-card .al-w { font-size: clamp(44px, 9vw, 96px) !important; }
+html.v-bigRole .spy-card h2 { font-size: clamp(34px, 6vw, 58px); }
+html.v-bigRole .spy-card p { font-size: 22px; }
+html.v-bigRole .spy-card .kicker { font-size: 15px; }
+html.v-bigQ .qz-q { font-size: clamp(28px, 4.6vw, 46px) !important; line-height: 1.2; }
+html.v-bigQ .qz-form .inp { font-size: 24px; min-height: 60px; }
+/* значки цветов для дальтоников */
+.cb-mark { display: none; position: absolute; top: 6px; left: 8px; font-size: 13px; font-weight: 900; line-height: 1; opacity: .85; pointer-events: none; }
+html.v-cb .cn-card .cb-mark { display: block; }
+
+/* ===== Элиас: колода слов ===== */
+.al-stack { position: relative; width: min(460px, 100%); aspect-ratio: 1.6; margin: 8px auto 50px; perspective: 900px; }
+.al-card, .al-back { position: absolute; inset: 0; border-radius: 22px; }
+.al-back { background: var(--surface-2); border: 1px solid var(--line); box-shadow: 0 6px 18px -10px rgba(0,0,0,.35); }
+.al-back.b1 { transform: translateY(16px) scale(.95); opacity: .9; }
+.al-back.b2 { transform: translateY(31px) scale(.9); opacity: .65; }
+.al-back.b3 { transform: translateY(45px) scale(.85); opacity: .4; }
+.al-card { display: grid; place-items: center; padding: 18px; background: var(--word-bg, var(--surface)); color: var(--word-text, var(--text)); border: 1px solid var(--line-strong); box-shadow: 0 18px 40px -18px rgba(0,0,0,.5), 0 2px 0 var(--line); text-align: center; }
+.al-card .al-w { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 6.4vw, 60px); line-height: 1.05; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.al-card .al-w.q { font-size: 84px; color: var(--muted); }
+.al-n { position: absolute; top: 12px; left: 16px; font-size: 12px; font-weight: 800; color: var(--muted); }
+.al-card.top.enter { animation: alRise .5s cubic-bezier(.2,.9,.3,1.2) backwards; animation-delay: calc(0s - var(--oe)); }
+.al-card.out { z-index: 3; pointer-events: none; animation: alOutGot .6s cubic-bezier(.4,0,.6,1) forwards; animation-delay: calc(0s - var(--oe)); }
+.al-card.out.got { background: color-mix(in srgb, var(--green) 22%, var(--surface)); border-color: var(--green); }
+.al-card.out.skip { background: color-mix(in srgb, var(--red) 20%, var(--surface)); border-color: var(--red); animation-name: alOutSkip; }
+.al-stamp { position: absolute; top: 14px; right: 16px; display: inline-flex; align-items: center; gap: 4px; font-weight: 900; font-size: 15px; padding: 4px 10px; border-radius: 99px; border: 2px solid currentColor; transform: rotate(8deg); }
+.al-card.out.got .al-stamp { color: var(--green-text, var(--green)); }
+.al-card.out.skip .al-stamp { color: var(--red-text, var(--red)); transform: rotate(-8deg); left: 16px; right: auto; }
+@keyframes alRise { from { transform: translateY(16px) scale(.95); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes alOutGot { 0% { transform: none; opacity: 1; } 25% { transform: translate(10px,-12px) rotate(3deg) scale(1.03); opacity: 1; } 100% { transform: translate(130%,-60%) rotate(22deg); opacity: 0; } }
+@keyframes alOutSkip { 0% { transform: none; opacity: 1; } 25% { transform: translate(-10px,4px) rotate(-3deg); opacity: 1; } 100% { transform: translate(-130%,30%) rotate(-22deg); opacity: 0; } }
+.stage-card.run { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .al-card.out { display: none; } }
+
+/* ===== Кто я: крупнее аватары и карточки персонажей ===== */
+.call-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.who .tile { aspect-ratio: 4 / 3.2; border-radius: 20px; }
+.tile-char { top: 12px; left: 12px; right: 12px; font-size: 22px; padding: 10px 14px; border-radius: 14px; box-shadow: 0 6px 16px -10px rgba(0,0,0,.4); }
+.tile-char.hidden-char { font-size: 15px; }
+.tile-ava { margin-top: 44px; }
+.tile-ava .ava { box-shadow: 0 10px 26px -12px rgba(0,0,0,.55); }
+.tile-name { font-size: 14px; padding: 4px 11px; }
+html.v-bigWho .call-grid { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+html.v-bigWho .tile-char { font-size: 30px; padding: 14px 16px; }
+html.v-bigWho .tile-ava .ava { width: 168px !important; height: 168px !important; }
+html.v-bigWho .tile-ava { margin-top: 64px; }
+@media (max-width: 700px) {
+  .call-grid, html.v-bigWho .call-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tile-ava .ava, html.v-bigWho .tile-ava .ava { width: 76px !important; height: 76px !important; }
+  .tile-char, html.v-bigWho .tile-char { font-size: 15px; top: 6px; left: 6px; right: 6px; padding: 5px 7px; }
+  .tile-ava { margin-top: 30px; }
+}
+
+/* ===== счётчики очков ===== */
+[data-cnt] { display: inline-block; font-variant-numeric: tabular-nums; }
+.cnt-run { animation: cntBump .55s cubic-bezier(.3,1.6,.5,1) backwards; animation-delay: var(--ce, 0ms); }
+.cnt-run.cnt-up { color: var(--green-text, var(--green)); }
+.cnt-run.cnt-down { color: var(--red-text, var(--red)); }
+@keyframes cntBump { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.tp-count .cnt-run { color: inherit; }
+
+html[data-theme='light'] { background: linear-gradient(90deg, var(--bg-l), var(--bg-r)); }
+[data-cnt="alk"].cnt-run.cnt-up { color: var(--red-text, var(--red)); }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -5318,7 +5512,208 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         "\u0427\u0442\u043E \u043C\u043E\u0436\u043D\u043E \u0434\u0435\u043B\u0430\u0442\u044C \u0431\u0435\u0441\u043A\u043E\u043D\u0435\u0447\u043D\u043E?",
         "\u0427\u0442\u043E \u043D\u0435\u043B\u044C\u0437\u044F \u0434\u0430\u0432\u0430\u0442\u044C \u0432 \u0434\u043E\u043B\u0433?",
         "\u0427\u0442\u043E \u043F\u0440\u0438\u043D\u043E\u0441\u0438\u0442 \u0443\u0434\u0430\u0447\u0443?",
-        "\u0427\u0442\u043E \u0430\u0441\u0441\u043E\u0446\u0438\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0441 \u0423\u043A\u0440\u0430\u0438\u043D\u043E\u0439?"
+        "\u0427\u0442\u043E \u0430\u0441\u0441\u043E\u0446\u0438\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0441 \u0423\u043A\u0440\u0430\u0438\u043D\u043E\u0439?",
+        // ---- ещё 200: еда, дом, город, работа, интернет, праздники, люди, детство ----
+        "\u041A\u0430\u043A\u043E\u0439 \u0441\u0443\u043F \u0441\u0430\u043C\u044B\u0439 \u0432\u043A\u0443\u0441\u043D\u044B\u0439?",
+        "\u0411\u0435\u0437 \u043A\u0430\u043A\u043E\u0439 \u043F\u0440\u0438\u043F\u0440\u0430\u0432\u044B \u043D\u0435 \u043E\u0431\u043E\u0439\u0442\u0438\u0441\u044C?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0444\u0440\u0443\u043A\u0442 \u0441\u0430\u043C\u044B\u0439 \u0432\u043A\u0443\u0441\u043D\u044B\u0439?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043E\u0432\u043E\u0449 \u0432\u0441\u0435 \u043D\u0435 \u043B\u044E\u0431\u0438\u043B\u0438 \u0432 \u0434\u0435\u0442\u0441\u0442\u0432\u0435?",
+        "\u0427\u0442\u043E \u0437\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u044E\u0442 \u0432 \u043F\u0438\u0446\u0446\u0435\u0440\u0438\u0438?",
+        "\u041A\u0430\u043A\u0443\u044E \u043D\u0430\u0447\u0438\u043D\u043A\u0443 \u0431\u0435\u0440\u0443\u0442 \u0434\u043B\u044F \u0432\u0430\u0440\u0435\u043D\u0438\u043A\u043E\u0432?",
+        "\u0427\u0442\u043E \u043F\u044C\u044E\u0442 \u043F\u043E \u0443\u0442\u0440\u0430\u043C?",
+        "\u0427\u0435\u043C \u043C\u0430\u0436\u0443\u0442 \u0445\u043B\u0435\u0431?",
+        "\u0427\u0442\u043E \u0435\u0434\u044F\u0442 \u0432 \u043A\u0438\u043D\u043E\u0442\u0435\u0430\u0442\u0440\u0435?",
+        "\u0427\u0442\u043E \u0433\u043E\u0442\u043E\u0432\u044F\u0442 \u043D\u0430 \u043C\u0430\u043D\u0433\u0430\u043B\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0431\u043B\u044E\u0434\u043E \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E \u043D\u0430 \u041D\u043E\u0432\u044B\u0439 \u0433\u043E\u0434?",
+        "\u0427\u0442\u043E \u043F\u043E\u043A\u0443\u043F\u0430\u044E\u0442 \u043A \u043F\u0438\u0432\u0443?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0442\u043E\u0440\u0442 \u0441\u0430\u043C\u044B\u0439 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u0435\u0434\u044F\u0442, \u043A\u043E\u0433\u0434\u0430 \u0433\u0440\u0443\u0441\u0442\u043D\u043E?",
+        "\u0427\u0442\u043E \u043F\u0440\u0438\u043D\u043E\u0441\u044F\u0442 \u0432 \u0433\u043E\u0441\u0442\u0438 \u043A \u0447\u0430\u044E?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0441\u043E\u0443\u0441 \u0441\u0430\u043C\u044B\u0439 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E \u043F\u043E\u0434\u0433\u043E\u0440\u0430\u0435\u0442?",
+        "\u041A\u0430\u043A\u0443\u044E \u043A\u0430\u0448\u0443 \u0435\u0434\u044F\u0442 \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u0427\u0442\u043E \u0431\u0435\u0440\u0443\u0442 \u0432 \u0434\u043E\u0440\u043E\u0433\u0443 \u043F\u0435\u0440\u0435\u043A\u0443\u0441\u0438\u0442\u044C?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0441\u044B\u0440 \u0441\u0430\u043C\u044B\u0439 \u0432\u043A\u0443\u0441\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u0437\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u044E\u0442 \u0432 \u0434\u043E\u0441\u0442\u0430\u0432\u043A\u0435 \u043F\u043E\u0437\u0434\u043D\u043E \u043D\u043E\u0447\u044C\u044E?",
+        "\u041A\u0430\u043A\u043E\u0435 \u043C\u043E\u0440\u043E\u0436\u0435\u043D\u043E\u0435 \u0441\u0430\u043C\u043E\u0435 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u043E\u0435?",
+        "\u0427\u0442\u043E \u0433\u043E\u0442\u043E\u0432\u044F\u0442, \u043A\u043E\u0433\u0434\u0430 \u043B\u0435\u043D\u044C \u0433\u043E\u0442\u043E\u0432\u0438\u0442\u044C?",
+        "\u0427\u0442\u043E \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E \u0442\u0435\u0440\u044F\u044E\u0442 \u0434\u043E\u043C\u0430?",
+        "\u0413\u0434\u0435 \u0445\u0440\u0430\u043D\u044F\u0442 \u043F\u0430\u043A\u0435\u0442\u044B \u0441 \u043F\u0430\u043A\u0435\u0442\u0430\u043C\u0438?",
+        "\u041A\u0430\u043A\u0430\u044F \u0434\u043E\u043C\u0430\u0448\u043D\u044F\u044F \u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0430\u043C\u0430\u044F \u0441\u043A\u0443\u0447\u043D\u0430\u044F?",
+        "\u0427\u0442\u043E \u0441\u0442\u043E\u0438\u0442 \u043D\u0430 \u043F\u043E\u0434\u043E\u043A\u043E\u043D\u043D\u0438\u043A\u0435?",
+        "\u0427\u0442\u043E \u043B\u0435\u0436\u0438\u0442 \u0432 \u044F\u0449\u0438\u043A\u0435 \u0441\u043E \u0432\u0441\u044F\u043A\u043E\u0439 \u0432\u0441\u044F\u0447\u0438\u043D\u043E\u0439?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043F\u0440\u0435\u0434\u043C\u0435\u0442 \u0435\u0441\u0442\u044C \u0432 \u043A\u0430\u0436\u0434\u043E\u0439 \u0432\u0430\u043D\u043D\u043E\u0439?",
+        "\u0427\u0442\u043E \u043B\u043E\u043C\u0430\u0435\u0442\u0441\u044F \u0432 \u0434\u043E\u043C\u0435 \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u0427\u0435\u043C \u043F\u0430\u0445\u043D\u0435\u0442 \u0432 \u043F\u043E\u0434\u044A\u0435\u0437\u0434\u0435?",
+        "\u0427\u0442\u043E \u0441\u043B\u044B\u0448\u043D\u043E \u043E\u0442 \u0441\u043E\u0441\u0435\u0434\u0435\u0439 \u0441\u0432\u0435\u0440\u0445\u0443?",
+        "\u0427\u0442\u043E \u0432\u0435\u0448\u0430\u044E\u0442 \u043D\u0430 \u0441\u0442\u0435\u043D\u0443 \u0432 \u043A\u043E\u043C\u043D\u0430\u0442\u0435?",
+        "\u0427\u0442\u043E \u043F\u0435\u0440\u0432\u044B\u043C \u0434\u0435\u043B\u0430\u044E\u0442, \u043F\u0440\u0438\u0434\u044F \u0434\u043E\u043C\u043E\u0439?",
+        "\u041A\u0430\u043A\u0443\u044E \u0442\u0435\u0445\u043D\u0438\u043A\u0443 \u0432\u043A\u043B\u044E\u0447\u0430\u044E\u0442 \u043A\u0430\u0436\u0434\u044B\u0439 \u0434\u0435\u043D\u044C?",
+        "\u0427\u0442\u043E \u0441\u043E\u0431\u0438\u0440\u0430\u044E\u0442 \u043D\u0430 \u0431\u0430\u043B\u043A\u043E\u043D\u0435 \u0433\u043E\u0434\u0430\u043C\u0438?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0446\u0432\u0435\u0442 \u043E\u0431\u043E\u0435\u0432 \u0441\u0430\u043C\u044B\u0439 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u0431\u0435\u0440\u0443\u0442 \u0441 \u0441\u043E\u0431\u043E\u0439, \u043A\u043E\u0433\u0434\u0430 \u0432\u044B\u0445\u043E\u0434\u044F\u0442 \u0438\u0437 \u0434\u043E\u043C\u0430?",
+        "\u0427\u0442\u043E \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E \u0435\u0441\u0442\u044C \u0432 \u0430\u043F\u0442\u0435\u0447\u043A\u0435?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442 \u0432 \u0432\u044B\u0445\u043E\u0434\u043D\u043E\u0439 \u0443\u0442\u0440\u043E\u043C?",
+        "\u041D\u0430 \u0447\u0451\u043C \u0434\u043E\u0431\u0438\u0440\u0430\u044E\u0442\u0441\u044F \u043D\u0430 \u0440\u0430\u0431\u043E\u0442\u0443?",
+        "\u0413\u0434\u0435 \u043D\u0430\u0437\u043D\u0430\u0447\u0430\u044E\u0442 \u0432\u0441\u0442\u0440\u0435\u0447\u0443 \u0432 \u0446\u0435\u043D\u0442\u0440\u0435 \u0433\u043E\u0440\u043E\u0434\u0430?",
+        "\u0427\u0442\u043E \u0440\u0430\u0437\u0434\u0440\u0430\u0436\u0430\u0435\u0442 \u0432 \u043C\u0430\u0440\u0448\u0440\u0443\u0442\u043A\u0435?",
+        "\u0427\u0442\u043E \u043F\u0440\u043E\u0434\u0430\u044E\u0442 \u0432 \u043A\u0438\u043E\u0441\u043A\u0435 \u0443 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0438?",
+        "\u041A\u0443\u0434\u0430 \u0435\u0434\u0443\u0442 \u043D\u0430 \u0432\u044B\u0445\u043E\u0434\u043D\u044B\u0435 \u0437\u0430 \u0433\u043E\u0440\u043E\u0434?",
+        "\u0427\u0442\u043E \u0444\u043E\u0442\u043E\u0433\u0440\u0430\u0444\u0438\u0440\u0443\u044E\u0442 \u0442\u0443\u0440\u0438\u0441\u0442\u044B \u0432 \u041A\u0438\u0435\u0432\u0435?",
+        "\u0413\u0434\u0435 \u0433\u0443\u043B\u044F\u044E\u0442 \u0432\u0435\u0447\u0435\u0440\u043E\u043C?",
+        "\u0427\u0442\u043E \u0441\u0442\u0440\u043E\u044F\u0442 \u0432\u043E \u0434\u0432\u043E\u0440\u0430\u0445?",
+        "\u0427\u0442\u043E \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E \u0438\u0449\u0443\u0442 \u043D\u0430 \u043A\u0430\u0440\u0442\u0435?",
+        "\u041A\u0430\u043A\u0430\u044F \u043C\u0430\u0448\u0438\u043D\u0430 \u0441\u0430\u043C\u0430\u044F \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u0430\u044F?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0446\u0432\u0435\u0442 \u043C\u0430\u0448\u0438\u043D\u044B \u0441\u0430\u043C\u044B\u0439 \u0447\u0430\u0441\u0442\u044B\u0439?",
+        "\u0427\u0442\u043E \u0441\u043B\u0443\u0448\u0430\u044E\u0442 \u0432 \u0442\u0430\u043A\u0441\u0438?",
+        "\u0427\u0442\u043E \u0432\u0438\u0434\u043D\u043E \u0438\u0437 \u043E\u043A\u043D\u0430 \u043F\u043E\u0435\u0437\u0434\u0430?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0443\u0440\u043E\u043A \u0432 \u0448\u043A\u043E\u043B\u0435 \u0431\u044B\u043B \u0441\u0430\u043C\u044B\u043C \u043B\u044E\u0431\u0438\u043C\u044B\u043C?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043F\u0440\u0435\u0434\u043C\u0435\u0442 \u0432 \u0448\u043A\u043E\u043B\u0435 \u0431\u044B\u043B \u0441\u0430\u043C\u044B\u043C \u0442\u0440\u0443\u0434\u043D\u044B\u043C?",
+        "\u0427\u0442\u043E \u043B\u0435\u0436\u0438\u0442 \u043D\u0430 \u0440\u0430\u0431\u043E\u0447\u0435\u043C \u0441\u0442\u043E\u043B\u0435?",
+        "\u041A\u0430\u043A\u0430\u044F \u043F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u044F \u0441\u0430\u043C\u0430\u044F \u0443\u0432\u0430\u0436\u0430\u0435\u043C\u0430\u044F?",
+        "\u041A\u0430\u043A\u0430\u044F \u043F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u044F \u0441\u0430\u043C\u0430\u044F \u0441\u043A\u0443\u0447\u043D\u0430\u044F?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442 \u043D\u0430 \u0441\u043A\u0443\u0447\u043D\u043E\u043C \u0441\u043E\u0432\u0435\u0449\u0430\u043D\u0438\u0438?",
+        "\u041A\u0435\u043C \u043C\u0435\u0447\u0442\u0430\u044E\u0442 \u0441\u0442\u0430\u0442\u044C \u0432 \u0434\u0435\u0442\u0441\u0442\u0432\u0435?",
+        "\u0427\u0442\u043E \u043F\u0438\u0448\u0443\u0442 \u0432 \u0440\u0435\u0437\u044E\u043C\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u044E\u0442 \u043F\u0435\u0440\u0432\u044B\u043C \u043D\u0430 \u0440\u0430\u0431\u043E\u0442\u0435?",
+        "\u0427\u0442\u043E \u0431\u0435\u0440\u0443\u0442 \u0441 \u0441\u043E\u0431\u043E\u0439 \u043D\u0430 \u044D\u043A\u0437\u0430\u043C\u0435\u043D \u043D\u0430 \u0443\u0434\u0430\u0447\u0443?",
+        "\u041A\u0430\u043A\u0430\u044F \u043E\u0446\u0435\u043D\u043A\u0430 \u0441\u0430\u043C\u0430\u044F \u043E\u0431\u0438\u0434\u043D\u0430\u044F?",
+        "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u044E\u0442\u0441\u044F \u043D\u0430 \u043F\u0435\u0440\u0435\u043C\u0435\u043D\u0435?",
+        "\u0427\u0442\u043E \u043E\u0442\u043A\u043B\u0430\u0434\u044B\u0432\u0430\u044E\u0442 \u043D\u0430 \u043F\u043E\u043D\u0435\u0434\u0435\u043B\u044C\u043D\u0438\u043A?",
+        "\u0427\u0442\u043E \u0433\u0443\u0433\u043B\u044F\u0442 \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0441\u043C\u0430\u0439\u043B\u0438\u043A \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0442 \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u041E \u0447\u0451\u043C \u043F\u0438\u0448\u0443\u0442 \u0432 \u0441\u0435\u043C\u0435\u0439\u043D\u043E\u043C \u0447\u0430\u0442\u0435?",
+        "\u0427\u0442\u043E \u0441\u043C\u043E\u0442\u0440\u044F\u0442 \u043D\u0430 YouTube \u043F\u0435\u0440\u0435\u0434 \u0441\u043D\u043E\u043C?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u043F\u0440\u043E\u043F\u0430\u043B \u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442?",
+        "\u041A\u0430\u043A\u0443\u044E \u0441\u043E\u0446\u0441\u0435\u0442\u044C \u0443\u0434\u0430\u043B\u044F\u044E\u0442 \u043F\u0435\u0440\u0432\u043E\u0439?",
+        "\u0427\u0442\u043E \u0444\u043E\u0442\u043A\u0430\u044E\u0442 \u0434\u043B\u044F \u0441\u0442\u043E\u0440\u0438\u0441?",
+        "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u043A\u043B\u0430\u0434\u043E\u043A \u043E\u0442\u043A\u0440\u044B\u0442\u043E \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442 \u0441 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u043E\u043C, \u043A\u043E\u0433\u0434\u0430 \u043E\u043D \u0442\u043E\u0440\u043C\u043E\u0437\u0438\u0442?",
+        "\u041A\u0430\u043A \u043F\u043E\u0434\u043F\u0438\u0441\u044B\u0432\u0430\u044E\u0442 \u043C\u0430\u043C\u0443 \u0432 \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u0430\u0445?",
+        "\u0427\u0442\u043E \u043F\u0438\u0448\u0443\u0442, \u043A\u043E\u0433\u0434\u0430 \u043D\u0435\u0447\u0435\u0433\u043E \u043E\u0442\u0432\u0435\u0442\u0438\u0442\u044C?",
+        "\u041D\u0430 \u0447\u0442\u043E \u0442\u0440\u0430\u0442\u044F\u0442 \u0431\u043E\u043B\u044C\u0448\u0435 \u0432\u0441\u0435\u0433\u043E \u0432\u0440\u0435\u043C\u0435\u043D\u0438 \u0432 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043C\u0435\u0441\u0441\u0435\u043D\u0434\u0436\u0435\u0440 \u0441\u0430\u043C\u044B\u0439 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439?",
+        "\u041A\u0443\u0434\u0430 \u0435\u0434\u0443\u0442 \u0432 \u043E\u0442\u043F\u0443\u0441\u043A?",
+        "\u0427\u0442\u043E \u0431\u0435\u0440\u0443\u0442 \u043D\u0430 \u043F\u043B\u044F\u0436?",
+        "\u0427\u0442\u043E \u0434\u0430\u0440\u044F\u0442 \u043D\u0430 \u0434\u0435\u043D\u044C \u0440\u043E\u0436\u0434\u0435\u043D\u0438\u044F?",
+        "\u0427\u0442\u043E \u0434\u0430\u0440\u044F\u0442 \u0434\u0435\u0432\u0443\u0448\u043A\u0435 \u043D\u0430 8 \u043C\u0430\u0440\u0442\u0430?",
+        "\u0427\u0442\u043E \u0434\u0430\u0440\u044F\u0442 \u043C\u0443\u0436\u0447\u0438\u043D\u0435, \u0435\u0441\u043B\u0438 \u043D\u0435 \u0437\u043D\u0430\u0435\u0448\u044C, \u0447\u0442\u043E \u0434\u0430\u0440\u0438\u0442\u044C?",
+        "\u0427\u0442\u043E \u0437\u0430\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0442 \u043F\u043E\u0434 \u0431\u043E\u0439 \u043A\u0443\u0440\u0430\u043D\u0442\u043E\u0432?",
+        "\u0427\u0442\u043E \u043F\u043E\u044E\u0442 \u0432 \u043A\u0430\u0440\u0430\u043E\u043A\u0435?",
+        "\u0427\u0442\u043E \u0444\u043E\u0442\u043E\u0433\u0440\u0430\u0444\u0438\u0440\u0443\u044E\u0442 \u0432 \u043E\u0442\u043F\u0443\u0441\u043A\u0435?",
+        "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u044E\u0442\u0441\u044F \u043D\u0430 \u043F\u0438\u043A\u043D\u0438\u043A\u0435?",
+        "\u0427\u0442\u043E \u043F\u0440\u0438\u0432\u043E\u0437\u044F\u0442 \u0438\u0437-\u0437\u0430 \u0433\u0440\u0430\u043D\u0438\u0446\u044B?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043F\u043E\u0434\u0430\u0440\u043E\u043A \u0441\u0430\u043C\u044B\u0439 \u0431\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u043F\u0440\u043E\u0449\u0430\u044E\u0442 \u0434\u0440\u0443\u0437\u044C\u044F\u043C?",
+        "\u0427\u0442\u043E \u0440\u0430\u0437\u0434\u0440\u0430\u0436\u0430\u0435\u0442 \u0432 \u043B\u044E\u0434\u044F\u0445 \u0431\u043E\u043B\u044C\u0448\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u041A\u0430\u043A\u043E\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u043E \u0441\u0430\u043C\u043E\u0435 \u0432\u0430\u0436\u043D\u043E\u0435 \u0432 \u0434\u0440\u0443\u0433\u0435?",
+        "\u041E \u0447\u0451\u043C \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u044E\u0442 \u0440\u043E\u0434\u0441\u0442\u0432\u0435\u043D\u043D\u0438\u043A\u0438 \u0437\u0430 \u0441\u0442\u043E\u043B\u043E\u043C?",
+        "\u0427\u0442\u043E \u043E\u0431\u0435\u0449\u0430\u044E\u0442 \u0438 \u043D\u0435 \u0434\u0435\u043B\u0430\u044E\u0442?",
+        "\u041A\u0430\u043A \u0437\u043E\u0432\u0443\u0442 \u043A\u043E\u0442\u0430?",
+        "\u041A\u0430\u043A \u0437\u043E\u0432\u0443\u0442 \u0441\u043E\u0431\u0430\u043A\u0443?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0436\u0435\u043D\u0441\u043A\u043E\u0435 \u0438\u043C\u044F \u0441\u0430\u043C\u043E\u0435 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u043E\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u043C\u0443\u0436\u0441\u043A\u043E\u0435 \u0438\u043C\u044F \u0441\u0430\u043C\u043E\u0435 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u043E\u0435?",
+        "\u0427\u0442\u043E \u0434\u0430\u0440\u044F\u0442 \u043D\u0430 \u0441\u0432\u0430\u0434\u044C\u0431\u0443?",
+        "\u0418\u0437-\u0437\u0430 \u0447\u0435\u0433\u043E \u0441\u0441\u043E\u0440\u044F\u0442\u0441\u044F \u043F\u0430\u0440\u044B?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u0441\u043A\u0443\u0447\u043D\u043E \u0432\u0434\u0432\u043E\u0451\u043C?",
+        "\u041A\u0430\u043A \u043D\u0430\u0437\u044B\u0432\u0430\u044E\u0442 \u043B\u044E\u0431\u0438\u043C\u043E\u0433\u043E \u0447\u0435\u043B\u043E\u0432\u0435\u043A\u0430?",
+        "\u041A\u0430\u043A\u0443\u044E \u0444\u0440\u0430\u0437\u0443 \u0441\u043B\u044B\u0448\u0430\u043B\u0438 \u043E\u0442 \u0431\u0430\u0431\u0443\u0448\u043A\u0438?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u0435\u0442 \u043F\u0430\u043F\u0430 \u043D\u0430 \u0432\u044B\u0445\u043E\u0434\u043D\u044B\u0445?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u043D\u0435 \u0441\u043F\u0438\u0442\u0441\u044F?",
+        "\u0427\u0435\u0433\u043E \u0431\u043E\u044F\u0442\u0441\u044F \u0431\u043E\u043B\u044C\u0448\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0436\u0438\u0432\u043E\u0442\u043D\u043E\u0435 \u0441\u0430\u043C\u043E\u0435 \u043E\u043F\u0430\u0441\u043D\u043E\u0435?",
+        "\u041A\u0430\u043A\u0430\u044F \u043F\u0442\u0438\u0446\u0430 \u0441\u0430\u043C\u0430\u044F \u0443\u043C\u043D\u0430\u044F?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0434\u0435\u0440\u0435\u0432\u043E \u0441\u0430\u043C\u043E\u0435 \u043A\u0440\u0430\u0441\u0438\u0432\u043E\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0433\u043E\u0434\u0430 \u0441\u0430\u043C\u043E\u0435 \u043B\u0443\u0447\u0448\u0435\u0435?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u0438\u0434\u0451\u0442 \u0434\u043E\u0436\u0434\u044C?",
+        "\u041A\u0430\u043A\u043E\u0435 \u043D\u0430\u0441\u0435\u043A\u043E\u043C\u043E\u0435 \u0441\u0430\u043C\u043E\u0435 \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u043E\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0436\u0438\u0432\u043E\u0442\u043D\u043E\u0435 \u0434\u0435\u0440\u0436\u0430\u0442 \u0434\u043E\u043C\u0430, \u043A\u0440\u043E\u043C\u0435 \u043A\u043E\u0448\u0435\u043A \u0438 \u0441\u043E\u0431\u0430\u043A?",
+        "\u041A\u0430\u043A\u0430\u044F \u043F\u043E\u0433\u043E\u0434\u0430 \u0441\u0430\u043C\u0430\u044F \u043B\u0443\u0447\u0448\u0430\u044F?",
+        "\u041A\u0430\u043A\u043E\u0435 \u043C\u043E\u0440\u0435 \u0431\u043B\u0438\u0436\u0435 \u0432\u0441\u0435\u0433\u043E \u0441\u0435\u0440\u0434\u0446\u0443?",
+        "\u0427\u0442\u043E \u0440\u0430\u0441\u0442\u0451\u0442 \u043D\u0430 \u043E\u0433\u043E\u0440\u043E\u0434\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0437\u0432\u0443\u043A \u0430\u0441\u0441\u043E\u0446\u0438\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0441 \u043B\u0435\u0442\u043E\u043C?",
+        "\u0427\u0442\u043E \u0432\u0438\u0434\u043D\u043E \u043D\u0430 \u043D\u043E\u0447\u043D\u043E\u043C \u043D\u0435\u0431\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043C\u0443\u043B\u044C\u0442\u0444\u0438\u043B\u044C\u043C \u0441\u043C\u043E\u0442\u0440\u0435\u043B\u0438 \u0432 \u0434\u0435\u0442\u0441\u0442\u0432\u0435?",
+        "\u0412\u043E \u0447\u0442\u043E \u0438\u0433\u0440\u0430\u043B\u0438 \u0432\u043E \u0434\u0432\u043E\u0440\u0435?",
+        "\u0427\u0442\u043E \u0441\u043E\u0431\u0438\u0440\u0430\u043B\u0438 \u0432 \u0434\u0435\u0442\u0441\u0442\u0432\u0435?",
+        "\u041A\u0430\u043A\u0430\u044F \u0441\u043B\u0430\u0434\u043E\u0441\u0442\u044C \u0438\u0437 \u0434\u0435\u0442\u0441\u0442\u0432\u0430 \u0441\u0430\u043C\u0430\u044F \u043B\u044E\u0431\u0438\u043C\u0430\u044F?",
+        "\u0427\u0435\u043C \u043F\u0443\u0433\u0430\u043B\u0438 \u0432 \u0434\u0435\u0442\u0441\u0442\u0432\u0435?",
+        "\u041A\u0430\u043A\u0443\u044E \u0438\u0433\u0440\u0443\u0448\u043A\u0443 \u0445\u043E\u0442\u0435\u043B\u0438 \u0431\u043E\u043B\u044C\u0448\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u043B\u0438 \u043B\u0435\u0442\u043E\u043C \u0443 \u0431\u0430\u0431\u0443\u0448\u043A\u0438?",
+        "\u041A\u0430\u043A\u0443\u044E \u043A\u043D\u0438\u0433\u0443 \u0437\u0430\u0441\u0442\u0430\u0432\u043B\u044F\u043B\u0438 \u0447\u0438\u0442\u0430\u0442\u044C \u0432 \u0448\u043A\u043E\u043B\u0435?",
+        "\u0427\u0442\u043E \u0431\u044B\u043B\u043E \u0432 \u043A\u0430\u0436\u0434\u043E\u043C \u0441\u043E\u0432\u0435\u0442\u0441\u043A\u043E\u043C \u0441\u0435\u0440\u0432\u0430\u043D\u0442\u0435?",
+        "\u041A\u0430\u043A\u0443\u044E \u043F\u0435\u0441\u043D\u044E \u0437\u043D\u0430\u044E\u0442 \u0432\u0441\u0435 \u0441 \u0434\u0435\u0442\u0441\u0442\u0432\u0430?",
+        "\u0427\u0442\u043E \u043F\u0440\u044F\u0442\u0430\u043B\u0438 \u043E\u0442 \u0440\u043E\u0434\u0438\u0442\u0435\u043B\u0435\u0439?",
+        "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u043B\u0438\u0441\u044C \u0432 \u043B\u0430\u0433\u0435\u0440\u0435?",
+        "\u041A\u0430\u043A\u0430\u044F \u0438\u0433\u0440\u0430 \u043D\u0430 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0435 \u0431\u044B\u043B\u0430 \u0443 \u0432\u0441\u0435\u0445?",
+        "\u0427\u0442\u043E \u0431\u044B\u043B\u043E \u043D\u0430 \u043E\u0431\u043B\u043E\u0436\u043A\u0435 \u0442\u0435\u0442\u0440\u0430\u0434\u043A\u0438?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043D\u0430\u043F\u0438\u0442\u043E\u043A \u0438\u0437 \u0434\u0435\u0442\u0441\u0442\u0432\u0430 \u0441\u0430\u043C\u044B\u0439 \u0432\u043A\u0443\u0441\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u043F\u0440\u0438\u043D\u043E\u0441\u0438\u0442 \u0443\u0434\u0430\u0447\u0443 \u0432 \u043F\u043E\u043D\u0435\u0434\u0435\u043B\u044C\u043D\u0438\u043A?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0447\u0438\u0441\u043B\u043E \u0441\u0430\u043C\u043E\u0435 \u0441\u0447\u0430\u0441\u0442\u043B\u0438\u0432\u043E\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0446\u0432\u0435\u0442 \u0441\u0430\u043C\u044B\u0439 \u0441\u043F\u043E\u043A\u043E\u0439\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u043D\u0435\u043B\u044C\u0437\u044F \u043A\u0443\u043F\u0438\u0442\u044C \u0437\u0430 \u0434\u0435\u043D\u044C\u0433\u0438?",
+        "\u0427\u0442\u043E \u043B\u0443\u0447\u0448\u0435: \u0447\u0430\u0439 \u0438\u043B\u0438 \u043A\u043E\u0444\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0441\u043B\u043E\u0432\u043E \u0433\u043E\u0432\u043E\u0440\u044F\u0442 \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u0427\u0442\u043E \u0431\u0435\u0440\u0443\u0442 \u043D\u0430 \u043D\u0435\u043E\u0431\u0438\u0442\u0430\u0435\u043C\u044B\u0439 \u043E\u0441\u0442\u0440\u043E\u0432?",
+        "\u041A\u0430\u043A\u0443\u044E \u0441\u0443\u043F\u0435\u0440\u0441\u0438\u043B\u0443 \u0445\u043E\u0442\u044F\u0442 \u0438\u043C\u0435\u0442\u044C?",
+        "\u0427\u0442\u043E \u0441\u0434\u0435\u043B\u0430\u044E\u0442 \u043F\u0435\u0440\u0432\u044B\u043C \u0434\u0435\u043B\u043E\u043C, \u0432\u044B\u0438\u0433\u0440\u0430\u0432 \u043C\u0438\u043B\u043B\u0438\u043E\u043D?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0437\u0432\u0443\u043A \u0441\u0430\u043C\u044B\u0439 \u0440\u0430\u0437\u0434\u0440\u0430\u0436\u0430\u044E\u0449\u0438\u0439?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0437\u0430\u043F\u0430\u0445 \u0441\u0430\u043C\u044B\u0439 \u043F\u0440\u0438\u044F\u0442\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442, \u0447\u0442\u043E\u0431\u044B \u0443\u0441\u043F\u043E\u043A\u043E\u0438\u0442\u044C\u0441\u044F?",
+        "\u0427\u0442\u043E \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u0435\u0442 \u043E \u0434\u043E\u043C\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0438\u0437\u043E\u0431\u0440\u0435\u0442\u0435\u043D\u0438\u0435 \u0441\u0430\u043C\u043E\u0435 \u043F\u043E\u043B\u0435\u0437\u043D\u043E\u0435?",
+        "\u0427\u0442\u043E \u0432\u0441\u0435\u0433\u0434\u0430 \u043E\u043F\u0430\u0437\u0434\u044B\u0432\u0430\u0435\u0442?",
+        "\u0427\u0442\u043E \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u0432\u0441\u0435\u0433\u043E?",
+        "\u0412\u043E \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u0441\u0442\u0430\u044E\u0442 \u043F\u043E \u0432\u044B\u0445\u043E\u0434\u043D\u044B\u043C?",
+        "\u0427\u0442\u043E \u043F\u0438\u0448\u0443\u0442 \u043D\u0430 \u043E\u0442\u043A\u0440\u044B\u0442\u043A\u0435?",
+        "\u0427\u0442\u043E \u043A\u0440\u0438\u0447\u0430\u0442 \u043D\u0430 \u0444\u0443\u0442\u0431\u043E\u043B\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0432\u0438\u0434 \u0441\u043F\u043E\u0440\u0442\u0430 \u0441\u0430\u043C\u044B\u0439 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439?",
+        "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u044E\u0442\u0441\u044F \u0432 \u0441\u043F\u043E\u0440\u0442\u0437\u0430\u043B\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043C\u0443\u0437\u044B\u043A\u0430\u043B\u044C\u043D\u044B\u0439 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442 \u0441\u0430\u043C\u044B\u0439 \u043A\u0440\u0430\u0441\u0438\u0432\u044B\u0439?",
+        "\u0427\u0442\u043E \u043D\u0430\u0434\u0435\u0432\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u0445\u043E\u043B\u043E\u0434\u043D\u043E?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0430\u043A\u0441\u0435\u0441\u0441\u0443\u0430\u0440 \u0435\u0441\u0442\u044C \u0443 \u0432\u0441\u0435\u0445?",
+        "\u0427\u0442\u043E \u043D\u043E\u0441\u044F\u0442 \u0432 \u043A\u0430\u0440\u043C\u0430\u043D\u0435?",
+        "\u0427\u0435\u043C \u043F\u0430\u0445\u043D\u0435\u0442 \u041D\u043E\u0432\u044B\u0439 \u0433\u043E\u0434?",
+        "\u0427\u0442\u043E \u043F\u0435\u0440\u0432\u044B\u043C \u0434\u0435\u043B\u0430\u044E\u0442 \u0432 \u043E\u0442\u0435\u043B\u0435?",
+        "\u0427\u0442\u043E \u0445\u043E\u0447\u0435\u0442\u0441\u044F \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0432 \u043F\u044F\u0442\u043D\u0438\u0446\u0443 \u0432\u0435\u0447\u0435\u0440\u043E\u043C?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0441\u043B\u043E\u0432\u043E \u0441\u0430\u043C\u043E\u0435 \u0434\u043E\u0431\u0440\u043E\u0435?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u0441\u043B\u043E\u043C\u0430\u043B\u0441\u044F \u043B\u0438\u0444\u0442?",
+        "\u0427\u0442\u043E \u043E\u0441\u0442\u0430\u0432\u043B\u044F\u044E\u0442 \u043D\u0430 \u043F\u043E\u0442\u043E\u043C?",
+        "\u0427\u0442\u043E \u043F\u0435\u0440\u0432\u044B\u043C \u0438\u0449\u0443\u0442 \u0432 \u043D\u043E\u0432\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0438\u0440\u0435?",
+        "\u0427\u0442\u043E \u0431\u0435\u0440\u0443\u0442 \u0441 \u0441\u043E\u0431\u043E\u0439 \u0432 \u0431\u043E\u043B\u044C\u043D\u0438\u0446\u0443?",
+        "\u041A\u0430\u043A\u0443\u044E \u043F\u0435\u0441\u043D\u044E \u0432\u043A\u043B\u044E\u0447\u0430\u044E\u0442 \u0432 \u043C\u0430\u0448\u0438\u043D\u0435?",
+        "\u0427\u0442\u043E \u043A\u043B\u0430\u0434\u0443\u0442 \u0432 \u0447\u0435\u043C\u043E\u0434\u0430\u043D \u0432 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u043C\u043E\u043C\u0435\u043D\u0442?",
+        "\u0427\u0442\u043E \u0437\u0430\u0431\u044B\u0432\u0430\u044E\u0442 \u0432\u0437\u044F\u0442\u044C \u0432 \u043F\u043E\u0435\u0437\u0434\u043A\u0443?",
+        "\u0427\u0442\u043E \u043F\u043E\u043A\u0443\u043F\u0430\u044E\u0442 \u043D\u0430 \u0440\u044B\u043D\u043A\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0431\u0440\u0435\u043D\u0434 \u043E\u0434\u0435\u0436\u0434\u044B \u0441\u0430\u043C\u044B\u0439 \u0438\u0437\u0432\u0435\u0441\u0442\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u0437\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u044E\u0442 \u0432 \u043A\u043E\u0444\u0435\u0439\u043D\u0435?",
+        "\u041A\u0430\u043A\u043E\u0435 \u043A\u0430\u0444\u0435 \u0435\u0441\u0442\u044C \u0432 \u043A\u0430\u0436\u0434\u043E\u043C \u0433\u043E\u0440\u043E\u0434\u0435?",
+        "\u0427\u0442\u043E \u0435\u0434\u044F\u0442 \u043D\u0430 \u0443\u043B\u0438\u0446\u0435 \u043D\u0430 \u0445\u043E\u0434\u0443?",
+        "\u0427\u0442\u043E \u043F\u0435\u043A\u0443\u0442 \u043D\u0430 \u043F\u0440\u0430\u0437\u0434\u043D\u0438\u043A\u0438?",
+        "\u0427\u0435\u043C \u0443\u0433\u043E\u0449\u0430\u044E\u0442 \u0433\u043E\u0441\u0442\u0435\u0439?",
+        "\u0427\u0442\u043E \u0434\u0430\u0440\u044F\u0442 \u043A\u043E\u043B\u043B\u0435\u0433\u0430\u043C \u043D\u0430 \u041D\u043E\u0432\u044B\u0439 \u0433\u043E\u0434?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0444\u0440\u0443\u043A\u0442 \u0431\u0435\u0440\u0443\u0442 \u0432 \u0434\u043E\u0440\u043E\u0433\u0443?",
+        "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u044E\u0442\u0441\u044F \u0432 \u0431\u043E\u043C\u0431\u043E\u0443\u0431\u0435\u0436\u0438\u0449\u0435?",
+        "\u0427\u0442\u043E \u0431\u0435\u0440\u0443\u0442 \u0432 \u0443\u043A\u0440\u044B\u0442\u0438\u0435 \u0432 \u043F\u0435\u0440\u0432\u0443\u044E \u043E\u0447\u0435\u0440\u0435\u0434\u044C?",
+        "\u0427\u0442\u043E \u0437\u0430\u0440\u044F\u0436\u0430\u044E\u0442 \u043F\u0435\u0440\u0432\u044B\u043C, \u043A\u043E\u0433\u0434\u0430 \u0434\u0430\u043B\u0438 \u0441\u0432\u0435\u0442?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u0434\u0430\u043B\u0438 \u0441\u0432\u0435\u0442?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0433\u0435\u043D\u0435\u0440\u0430\u0442\u043E\u0440 \u0441\u0430\u043C\u044B\u0439 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439?",
+        "\u0427\u0442\u043E \u0433\u043E\u0442\u043E\u0432\u044F\u0442 \u043D\u0430 \u0433\u0430\u0437\u043E\u0432\u043E\u0439 \u0433\u043E\u0440\u0435\u043B\u043A\u0435?",
+        "\u0427\u0435\u043C \u0441\u0432\u0435\u0442\u044F\u0442, \u043A\u043E\u0433\u0434\u0430 \u043D\u0435\u0442 \u0441\u0432\u0435\u0442\u0430?",
+        "\u0427\u0442\u043E \u043D\u043E\u0441\u044F\u0442 \u0432\u043E\u043B\u043E\u043D\u0442\u0451\u0440\u044B \u0432 \u0440\u044E\u043A\u0437\u0430\u043A\u0435?",
+        "\u0427\u0442\u043E \u043F\u0438\u0448\u0443\u0442 \u043D\u0430 \u0448\u0435\u0432\u0440\u043E\u043D\u0435?",
+        "\u041A\u0430\u043A\u0443\u044E \u043F\u0435\u0441\u043D\u044E \u043F\u043E\u044E\u0442 \u0432\u043C\u0435\u0441\u0442\u0435 \u043D\u0430 \u043A\u0443\u0445\u043D\u0435?",
+        "\u0427\u0442\u043E \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u0435\u0442 \u043E \u043C\u0438\u0440\u043D\u043E\u0439 \u0436\u0438\u0437\u043D\u0438?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0433\u043E\u0440\u043E\u0434 \u0445\u043E\u0442\u044F\u0442 \u043F\u043E\u0441\u0435\u0442\u0438\u0442\u044C \u043F\u043E\u0441\u043B\u0435 \u0432\u043E\u0439\u043D\u044B?",
+        "\u0427\u0442\u043E \u0434\u0435\u043B\u0430\u044E\u0442 \u0432 \u043F\u043E\u0435\u0437\u0434\u0435 \xAB\u0418\u043D\u0442\u0435\u0440\u0441\u0438\u0442\u0438\xBB?",
+        "\u0427\u0442\u043E \u0435\u0434\u044F\u0442 \u0432 \xAB\u0423\u043A\u0440\u0437\u0430\u043B\u0438\u0437\u043D\u044B\u0446\u0435\xBB?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043C\u0435\u043C \u0437\u043D\u0430\u044E\u0442 \u0432\u0441\u0435?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0443\u043A\u0440\u0430\u0438\u043D\u0441\u043A\u0438\u0439 \u0438\u0441\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C \u0441\u0430\u043C\u044B\u0439 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439?",
+        "\u041A\u0430\u043A\u043E\u0439 \u0444\u0438\u043B\u044C\u043C \u043F\u0435\u0440\u0435\u0441\u043C\u0430\u0442\u0440\u0438\u0432\u0430\u044E\u0442 \u043C\u043D\u043E\u0433\u043E \u0440\u0430\u0437?",
+        "\u041A\u0430\u043A\u0443\u044E \u043A\u043D\u0438\u0433\u0443 \u0441\u043E\u0432\u0435\u0442\u0443\u044E\u0442 \u043F\u0440\u043E\u0447\u0438\u0442\u0430\u0442\u044C \u0432\u0441\u0435\u043C?",
+        "\u041A\u0430\u043A\u043E\u0439 \u043F\u043E\u0434\u043A\u0430\u0441\u0442 \u0441\u043B\u0443\u0448\u0430\u044E\u0442 \u0432 \u0434\u043E\u0440\u043E\u0433\u0435?",
+        "\u0427\u0442\u043E \u043F\u0435\u0440\u0432\u044B\u043C \u0434\u0435\u043B\u0430\u044E\u0442, \u043A\u043E\u0433\u0434\u0430 \u043F\u0440\u043E\u0441\u043D\u0443\u043B\u0438\u0441\u044C?",
+        "\u041A\u0430\u043A\u043E\u0435 \u0431\u043B\u044E\u0434\u043E \u0443\u043C\u0435\u0435\u0442 \u0433\u043E\u0442\u043E\u0432\u0438\u0442\u044C \u043A\u0430\u0436\u0434\u044B\u0439?"
       ];
     }
   });
@@ -5763,7 +6158,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       function make() {
         return { cur: { id: nid(), ...DEFAULT, by: null, startedAt: Date.now() }, queue: [] };
       }
-      function get(room2) {
+      function getRadio(room2) {
         return room2.radio || (room2.radio = make());
       }
       function play(r, item) {
@@ -5775,7 +6170,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         else play(r, DEFAULT);
       }
       function handle2(room2, pid, msg, isHost) {
-        const r = get(room2);
+        const r = getRadio(room2);
         const op2 = msg && msg.op;
         if (op2 === "add" || op2 === "now") {
           const vid = ytId(msg.url);
@@ -5840,7 +6235,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u0440\u0430\u0434\u0438\u043E";
       }
       function view(room2) {
-        const r = get(room2);
+        const r = getRadio(room2);
         return { cur: { id: r.cur.id, vid: r.cur.vid, title: r.cur.title, live: r.cur.live, by: r.cur.by, startedAt: r.cur.startedAt }, queue: r.queue.map(({ qid, vid, title, by }) => ({ qid, vid, title, by })) };
       }
       async function fetchTitle(vid) {
@@ -5857,10 +6252,52 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         }
       }
       function untitled(room2) {
-        const r = get(room2);
+        const r = getRadio(room2);
         return [r.cur, ...r.queue].filter((x) => !x.live && (!x.title || x.title === "\u0422\u0440\u0435\u043A") && !x.tried);
       }
-      module.exports = { handle: handle2, view, get, ytId, fetchTitle, untitled, DEFAULT };
+      var spotifyId = (url) => {
+        const m = String(url || "").match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/([A-Za-z0-9]{22})/) || String(url || "").match(/^spotify:track:([A-Za-z0-9]{22})$/);
+        return m ? m[1] : null;
+      };
+      async function get(url, ms = 6e3, headers = {}) {
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), ms);
+        try {
+          const res = await fetch(url, { signal: ctl.signal, headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36", "Accept-Language": "en-US,en;q=0.8,ru;q=0.6", ...headers } });
+          return res.ok ? await res.text() : null;
+        } catch {
+          return null;
+        } finally {
+          clearTimeout(t);
+        }
+      }
+      async function resolveSpotify(url) {
+        const id = spotifyId(url);
+        if (!id) return null;
+        let title = null;
+        let artist = null;
+        const oe = await get(`https://open.spotify.com/oembed?url=${encodeURIComponent("https://open.spotify.com/track/" + id)}`);
+        try {
+          title = oe && JSON.parse(oe).title;
+        } catch {
+        }
+        const embed = await get(`https://open.spotify.com/embed/track/${id}`);
+        if (embed) {
+          const a = embed.match(/"artists":\[\{"name":"([^"]+)"/) || embed.match(/"subtitle":"([^"]+)"/);
+          if (a) artist = JSON.parse('"' + a[1] + '"');
+          if (!title) {
+            const tt = embed.match(/"name":"([^"]+)","uri":"spotify:track:/);
+            if (tt) title = JSON.parse('"' + tt[1] + '"');
+          }
+        }
+        if (!title) return null;
+        const q = `${artist ? artist + " - " : ""}${title}`;
+        const html = await get(`https://www.youtube.com/results?search_query=${encodeURIComponent(q + " audio")}&hl=en`, 7e3, { Cookie: "CONSENT=YES+cb; SOCS=CAI" });
+        const m = html && (html.match(/"videoRenderer":\{"videoId":"([\w-]{11})"/) || html.match(/"videoId":"([\w-]{11})"/));
+        if (!m) return null;
+        return { vid: m[1], title: q.slice(0, 120) };
+      }
+      module.exports = { handle: handle2, view, get: getRadio, ytId, fetchTitle, untitled, DEFAULT, spotifyId, resolveSpotify };
     }
   });
 
@@ -6278,6 +6715,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     herd: '<circle cx="12" cy="6.5" r="3"/><circle cx="5" cy="9" r="2.4"/><circle cx="19" cy="9" r="2.4"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0M1.5 19a3.6 3.6 0 0 1 5-3.3M22.5 19a3.6 3.6 0 0 0-5-3.3"/>',
     minus: '<path d="M5 12h14"/>',
+    clip: '<rect x="8" y="3" width="8" height="4" rx="1.5"/><path d="M16 5h1.5A2.5 2.5 0 0 1 20 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-11A2.5 2.5 0 0 1 6.5 5H8"/><path d="M9 13h6M9 16.5h4"/>',
+    sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
     camera: '<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h2l1.5-2.5h6L16.5 6h2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.8"/>',
     upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
     crop: '<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M2 6h14a2 2 0 0 1 2 2v14"/>',
@@ -6338,7 +6777,9 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
    Всё работает через делегирование на document, поэтому переживает перерисовки innerHTML.
    Только мышь (на телефонах эффекты не нужны) и только если не включено «меньше анимации». */
 (() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const reduceMq = matchMedia('(prefers-reduced-motion: reduce)');
+  // «Меньше анимаций» в меню Вид работает как системная настройка
+  const reduce = { get matches() { return reduceMq.matches || document.documentElement.classList.contains('v-calm'); } };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ---------- 1. Магические карточки ----------
@@ -6939,7 +7380,7 @@ window.RULES = {
       ['0', 'если твой ответ ни с кем не совпал'],
     ],
     win: 'Больше всех очков после последнего вопроса.',
-    tips: ['Не пытайтесь быть оригинальными — здесь выигрывает самый очевидный ответ.', 'В базе 300 вопросов: быт, еда, праздники, работа, свет и блэкауты, город, отдых.'],
+    tips: ['Не пытайтесь быть оригинальными — здесь выигрывает самый очевидный ответ.', 'В базе 500 вопросов: быт, еда, праздники, работа, свет и блэкауты, город, отдых.'],
   },
   tour: {
     title: 'Марафон',
@@ -7045,11 +7486,27 @@ window.RULES = {
       const v = LS.get('pg_tilt', '');
       return v === '' ? 50 : Math.max(0, Math.min(100, Number(v) || 0));
     })(),
+    // Масштаб интерфейса: ползунок 0–100 → 85–130 %, по умолчанию 100 %
+    scale: (() => {
+      const v = LS.get('pg_scale', '');
+      return v === '' ? 33 : Math.max(0, Math.min(100, Number(v) || 0));
+    })(),
+    // Переключатели доступности и удобства (true/false), хранятся по отдельности
+    calm: LS.get('pg_calm', '') === '1', // меньше анимаций
+    cb: LS.get('pg_cb', '') === '1', // значки цветов в Коднеймс (для дальтоников)
+    bigAlias: LS.get('pg_bigAlias', '') === '1', // крупное слово в Элиасе
+    bigRole: LS.get('pg_bigRole', '') === '1', // крупная карточка роли в Шпионе
+    bigQ: LS.get('pg_bigQ', '') === '1', // крупный вопрос в Викторине и «Ответе большинства»
+    bigWho: LS.get('pg_bigWho', '') === '1', // ещё крупнее карточки в «Кто я?»
   };
+  const scalePct = (v) => Math.round(85 + v * 0.45);
+  const VIEW_TOGGLES = ['calm', 'cb', 'bigAlias', 'bigRole', 'bigQ', 'bigWho'];
   const FS_OPTS = [24, 30, 36, 42];
   function applyView() {
     const v = VIEW.glow;
     const st = document.documentElement.style;
+    st.setProperty('--ui-zoom', String(scalePct(VIEW.scale) / 100));
+    for (const k of VIEW_TOGGLES) document.documentElement.classList.toggle('v-' + k, !!VIEW[k]);
     document.documentElement.dataset.glow = v ? 'on' : 'off';
     if (v) {
       st.setProperty('--glow-k', String(Math.min(1, 0.35 + v / 80))); // яркость пульса
@@ -7081,29 +7538,46 @@ window.RULES = {
       ${TT.map((t, i) => `<button type="button" class="tt-hit h${i}" data-act="set-theme" data-t="${t.id}" role="radio" aria-checked="${theme() === t.id}" title="${t.name}" aria-label="${t.name}"></button>`).join('')}
     </div>`;
   // Меню «Вид»: свечение хода и размер слов
-  const viewMenu = () => `<div class="menu-wrap" data-pop>
-      <button class="btn sm ghost icon-btn" data-act="menu" data-menu="theme" title="Вид: свечение хода, размер слов">${ic('palette')}</button>
+  // Переключатель-«тумблер» для настроек вида
+  const vtog = (k, title, sub) => `<button type="button" class="vt ${VIEW[k] ? 'on' : ''}" data-act="view-tog" data-k="${k}" role="switch" aria-checked="${!!VIEW[k]}"><span class="vt-t"><b>${title}</b>${sub ? `<small>${sub}</small>` : ''}</span><i class="vt-sw"></i></button>`;
+  // Меню «Вид»: общие настройки + раздел каждой игры; раздел текущей игры подсвечен
+  const viewMenu = () => {
+    const cur = S?.game?.type || null;
+    const sec = (ids, title, body) => {
+      const now = ids.includes(cur);
+      return `<section class="vp-sec ${now ? 'now' : ''}"><div class="vp-sh">${ids.length === 1 ? gIcon(ids[0], 15) : ic('sparkles', 15)}<b>${title}</b>${now ? '<span class="vp-now">сейчас</span>' : ''}</div>${body}</section>`;
+    };
+    // текущая игра — первым разделом после общих
+    const games = [
+      [['codenames'], 'Коднеймс', `${tiltFader()}<div class="vp-h">Размер слов на карточках</div><div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>${vtog('cb', 'Значки цветов', 'для дальтоников: ▲ красные, ● синие, ✕ убийца')}`],
+      [['codenames', 'justone'], 'Свечение хода', `${glowFader()}<p class="vp-note">Мерцание по краю экрана: в Коднеймс — цветом команды, в «Намёк понял» — сверху</p>`],
+      [['alias'], 'Элиас', vtog('bigAlias', 'Крупное слово', 'легче читать объясняющему издалека')],
+      [['spyfall'], 'Шпион', vtog('bigRole', 'Крупная карточка роли', 'локация и роль крупным шрифтом')],
+      [['whoami'], 'Кто я?', vtog('bigWho', 'Ещё крупнее карточки', 'аватары и персонажи на весь экран')],
+      [['quiz', 'majority'], 'Викторина и «Ответ большинства»', vtog('bigQ', 'Крупный вопрос', 'вопрос и поле ответа крупнее')],
+    ].sort((a, b) => b[0].includes(cur) - a[0].includes(cur));
+    return `<div class="menu-wrap" data-pop>
+      <button class="btn sm ghost view-btn" data-act="menu" data-menu="theme" title="Настройки вида и доступности">${ic('sliders', 17)}<span class="hide-m">Вид</span></button>
       ${
         ui.menu === 'theme'
           ? `<div class="pop right view-pop ${ui.popAnim ? 'anim' : ''}">
-              ${glowFader()}
-              ${tiltFader()}
-              <div class="vp-sep"></div>
-              <div class="vp-h">Размер слов на карточках</div>
-              <div class="vp-seg">${FS_OPTS.map((n) => `<button class="${VIEW.fs === n ? 'on' : ''}" data-act="view-fs" data-n="${n}" style="font-size:${10 + (n - 24) / 3}px">Аа</button>`).join('')}</div>
+              <div class="vp-title">${ic('sliders', 16)} Настройки вида</div>
+              ${sec([], 'Везде', `${slider('scale', 'Размер интерфейса', VIEW.scale, (v) => scalePct(v) + '%')}${vtog('calm', 'Меньше анимаций', 'без вращений, наклонов и фоновых волн')}`)}
+              ${games.map(([ids, t, body]) => sec(ids, t, body)).join('')}
             </div>`
           : ''
       }
     </div>`;
+  };
   // Ползунки двигаем без перерисовки — эффект виден сразу
   document.addEventListener('input', (e) => {
     const key = e.target.dataset && e.target.dataset.sl;
     if (!key) return;
     const v = Number(e.target.value) || 0;
     VIEW[key] = v;
-    LS.set(key === 'glow' ? 'pg_glow_v' : 'pg_tilt', String(v));
+    LS.set({ glow: 'pg_glow_v', tilt: 'pg_tilt', scale: 'pg_scale' }[key], String(v));
     applyView();
-    const label = key === 'glow' ? glowLabel : tiltLabel;
+    const label = { glow: glowLabel, tilt: tiltLabel, scale: (x) => scalePct(x) + '%' }[key];
     document.querySelectorAll(`[data-sl="${key}"]`).forEach((r) => {
       if (r !== e.target) r.value = v;
       r.closest('.sl')?.style.setProperty('--v', v + '%');
@@ -7165,7 +7639,7 @@ window.RULES = {
     const team = p?.id ? bgFor(p.id) : null;
     const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" onerror="this.remove()">` : '';
     const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
-    return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
+    return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${typeof size === 'number' && px > 44 ? `;font-size:${Math.round(px * 0.34)}px` : ''}${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -7245,7 +7719,10 @@ window.RULES = {
       </div>
     </div>
     <div class="lofi-queue"></div>
-    <form class="lofi-add" data-lofi-form><span class="la-ic">${ic('link', 15)}</span><input class="inp" name="url" placeholder="Вставьте ссылку на YouTube — трек сам встанет в очередь" autocomplete="off" inputmode="url"/></form>`;
+    <div class="lofi-paste">
+      <button type="button" class="btn lp-btn" data-lofi="paste">${ic('clip', 17)}<span><b>Вставить из буфера</b><small>ссылка YouTube или Spotify</small></span></button>
+    </div>
+    <form class="lofi-add" data-lofi-form hidden><span class="la-ic">${ic('link', 15)}</span><input class="inp" name="url" placeholder="Вставьте ссылку YouTube или Spotify" autocomplete="off" inputmode="url"/></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
   // Кнопка радио — слева снизу, открывает мини-плеер над собой
@@ -7416,6 +7893,7 @@ window.RULES = {
     } else if (a === 'skip') rEmit('skip');
     else if (a === 'lofi') rEmit('lofi');
     else if (a === 'rm') rEmit('remove', { qid: b.dataset.q });
+    else if (a === 'paste') pasteFromClipboard();
     else if (a === 'up' || a === 'down') rEmit('move', { qid: b.dataset.q, d: a === 'up' ? -1 : 1 });
   });
   // Перетаскивание треков в очереди (хост): мышью и пальцем
@@ -7456,25 +7934,49 @@ window.RULES = {
     grip.addEventListener('pointerup', up);
     grip.addEventListener('pointercancel', up);
   });
-  // Ссылка вставлена — трек сам улетает в очередь, без кнопок
+  // Ссылка YouTube или Spotify → сразу в очередь
+  const isSpotify = (u) => /open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/[A-Za-z0-9]{22}|^spotify:track:/.test(String(u || '').trim());
   let addBusy = false;
-  async function addFromInput(inp, strict) {
-    const u = inp.value.trim();
-    if (!u || addBusy) return;
-    if (!ytId(u)) {
-      if (strict) toast('Не похоже на ссылку YouTube');
-      return;
+  async function addUrl(u, strict) {
+    u = String(u || '').trim();
+    if (!u || addBusy) return false;
+    if (!ytId(u) && !isSpotify(u)) {
+      if (strict) toast('Не похоже на ссылку YouTube или Spotify');
+      return false;
     }
     addBusy = true;
-    inp.classList.add('sending');
+    const btn = dock.querySelector('.lp-btn');
+    btn && btn.classList.add('sending');
+    if (isSpotify(u)) toast('Ищем этот трек на YouTube…', 'info');
     const r = await rEmit('add', { url: u });
     addBusy = false;
-    inp.classList.remove('sending');
-    if (!r.error) {
-      inp.value = '';
-      Sound.play('pop');
+    btn && btn.classList.remove('sending');
+    if (!r.error) Sound.play('pop');
+    return !r.error;
+  }
+  async function addFromInput(inp, strict) {
+    if (await addUrl(inp.value, strict)) inp.value = '';
+  }
+  // Кнопка «Вставить из буфера»; если браузер не даёт читать буфер — показываем поле
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) return toast('В буфере пусто — скопируйте ссылку на трек', 'info');
+      await addUrl(text, true);
+    } catch {
+      const f = dock.querySelector('.lofi-add');
+      f.hidden = false;
+      f.querySelector('input').focus();
+      toast('Браузер не дал прочитать буфер — вставьте ссылку в поле (Ctrl+V)', 'info');
     }
   }
+  // Ctrl+V, пока открыт плеер и курсор не в поле ввода, — тоже добавляет трек
+  document.addEventListener('paste', (e) => {
+    if (dock.hidden || dock.classList.contains('mini')) return;
+    if (e.target.closest && e.target.closest('input, textarea, [contenteditable]')) return;
+    const text = e.clipboardData && e.clipboardData.getData('text');
+    if (text && (ytId(text.trim()) || isSpotify(text))) addUrl(text, true);
+  });
   dock.addEventListener('submit', (e) => {
     e.preventDefault();
     addFromInput(e.target.querySelector('input'), true);
@@ -7676,6 +8178,53 @@ window.RULES = {
   }
 
   // ---------- общий рендер ----------
+  // Анимированные счётчики очков: число «докручивается» до нового значения и подпрыгивает.
+  // Значение берём из текста, прошлое — из памяти по ключу data-cnt, так что перерисовки не мешают.
+  const cntMem = new Map();
+  const cntRun = new Map(); // ключ → {from, to, at}
+  function animateCounts() {
+    const els = $app.querySelectorAll('[data-cnt]');
+    const t = performance.now();
+    const seen = new Set();
+    els.forEach((el) => {
+      const k = el.dataset.cnt;
+      seen.add(k);
+      const to = Number(el.textContent);
+      if (!Number.isFinite(to)) return;
+      const prev = cntMem.get(k);
+      cntMem.set(k, to);
+      let run = cntRun.get(k);
+      if (prev != null && prev !== to && !document.documentElement.classList.contains('v-calm')) {
+        const cur = run && run.to !== to ? Math.round(run.from + (run.to - run.from) * Math.min(1, (t - run.at) / run.d)) : prev;
+        run = { from: cur, to, at: t, d: Math.min(900, 280 + Math.abs(to - cur) * 90), up: to > cur };
+        cntRun.set(k, run);
+      }
+      if (run && t - run.at < run.d) {
+        el.classList.add('cnt-run', run.up ? 'cnt-up' : 'cnt-down');
+        el.style.setProperty('--ce', -(t - run.at) + 'ms');
+        el.textContent = String(run.from);
+      } else if (run) cntRun.delete(k);
+    });
+    for (const k of cntMem.keys()) if (!seen.has(k)) cntMem.delete(k);
+    if (cntRun.size && !cntTick) cntTick = requestAnimationFrame(stepCounts);
+  }
+  let cntTick = 0;
+  function stepCounts() {
+    cntTick = 0;
+    const t = performance.now();
+    for (const [k, r] of cntRun) {
+      const el = $app.querySelector(`[data-cnt="${CSS.escape(k)}"]`);
+      const p = Math.min(1, (t - r.at) / r.d);
+      const e = 1 - Math.pow(1 - p, 3);
+      if (el) el.textContent = String(Math.round(r.from + (r.to - r.from) * e));
+      if (p >= 1) {
+        cntRun.delete(k);
+        if (el) el.classList.remove('cnt-run');
+      }
+    }
+    if (cntRun.size) cntTick = requestAnimationFrame(stepCounts);
+  }
+
   function render() {
     const keep = snapshotInputs();
     const chatEl = $app.querySelector('.chat-log');
@@ -7699,6 +8248,7 @@ window.RULES = {
     ui.ctlAnim = false;
     ui.leaveAnim = false;
     restoreInputs(keep);
+    animateCounts();
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
     const rb2 = $app.querySelector('.rl-body');
@@ -7793,7 +8343,10 @@ window.RULES = {
         <h1>Экранки <span>а не настолки — для своих</span></h1>
         <p class="lead">${gamesLine()} — по одной или марафоном с турнирной таблицей.</p>
       </div>`;
-    return `${header}<main class="home">
+    if (!ui.homeAt) ui.homeAt = Date.now(); // первый показ — каскадная анимация
+    const hel = Date.now() - ui.homeAt;
+    const intro = hel < 1800 ? 'intro' : '';
+    return `${header}<main class="home ${intro}" style="--el:${hel}ms">
       ${hero}
       <form class="card home-card" data-form="enter" autocomplete="on">
         <span class="lbl">${code ? `Вход в комнату ${esc(code)}` : 'Кто ты?'}</span>
@@ -8294,13 +8847,23 @@ window.RULES = {
         <div><div class="lbl">Пригласите друзей по ссылке</div><div class="link">${esc(link)}</div></div>
         <button class="btn primary" data-act="copy">${ic('link', 16)} Скопировать</button>
       </div>`;
+    // Первое открытие лобби — каскадное появление блоков
+    // держим класс 1,6 с; задержки анимаций считаются от первого показа (--el), поэтому перерисовка не «перезапускает» их
+    if (!ui.lobbyAt) ui.lobbyAt = Date.now();
+    const lel = Date.now() - ui.lobbyAt;
+    const intro = lel < 1600 ? 'intro' : '';
+    const wrap = (main) => `<div class="lobby-wrap ${intro}" style="--el:${lel}ms">${renderRoster()}<div class="lobby">${main}</div></div>`;
     if (!host)
-      return `<div class="lobby">${paused}${invite}<div class="card center big-pad"><div class="big-ic">${ic('dice', 44)}</div><h2 class="h2">Хост выбирает игру</h2>
+      return wrap(`${paused}${invite}<div class="card center big-pad"><div class="big-ic">${ic('dice', 44)}</div><h2 class="h2">Хост выбирает игру</h2>
         <p class="muted">${nm(S.room.hostId)} настраивает игру или марафон. Пока можно почитать правила.</p></div>
-        <div class="games-grid">${GAMES.map((x) => gameCard(x, false, sel)).join('')}</div></div>`;
-    const tabs = `<div class="tabs"><button class="${ui.mode === 'single' ? 'on' : ''}" data-act="mode" data-m="single">${ic('grid', 16)} Одна игра</button><button class="${ui.mode === 'tour' ? 'on' : ''}" data-act="mode" data-m="tour">${ic('trophy', 16)} Марафон</button></div>`;
-    if (ui.mode === 'tour') return `<div class="lobby">${paused}${invite}${tabs}${renderTourBuilder()}</div>`;
-    return `<div class="lobby">${paused}${invite}${tabs}
+        <div class="games-grid">${GAMES.map((x) => gameCard(x, false, sel)).join('')}</div>`);
+    // Переключатель с «едущей» плашкой: при смене плашка и блоки под ним анимируются
+    const ma = ui.modeAnim;
+    ui.modeAnim = null;
+    const tabs = `<div class="tabs seg2 ${ma ? 'anim-' + ma : ''}" data-mode="${ui.mode}"><i class="tab-ind" aria-hidden="true"></i><button class="${ui.mode === 'single' ? 'on' : ''}" data-act="mode" data-m="single">${ic('grid', 16)} Одна игра</button><button class="${ui.mode === 'tour' ? 'on' : ''}" data-act="mode" data-m="tour">${ic('trophy', 16)} Марафон</button></div>`;
+    const pane = (html) => `<div class="mode-pane ${ma ? (ma === 'tour' ? 'in-right' : 'in-left') : ''}">${html}</div>`;
+    if (ui.mode === 'tour') return wrap(`${paused}${invite}${tabs}${pane(renderTourBuilder())}`);
+    return wrap(`${paused}${invite}${tabs}${pane(`
       <div class="games-grid">${GAMES.map((x) => gameCard(x, true, sel)).join('')}</div>
       <div class="card settings">
         <div class="settings-h"><b>${gIcon(meta.id)} ${esc(meta.title)}</b> <button class="link-btn" data-act="rules">как играть и как считаются очки?</button></div>
@@ -8308,7 +8871,36 @@ window.RULES = {
           ${(meta.settings || []).map((x) => renderSetting(x)).join('')}
           <button class="btn primary big" type="submit">${ic('play', 16)} Начать игру</button>
         </form>
-      </div></div>`;
+      </div>`)}`);
+  }
+
+  // Колонка «В комнате»: большие карточки игроков, новые «влетают» — чтобы каждый чувствовал, что его ждали
+  const rosterKnown = new Map(); // id → когда впервые увидели (для анимации «влетания»)
+  let rosterInit = false;
+  function renderRoster() {
+    const r = S.room;
+    const ps = r.players.slice().sort((a, b) => (b.id === r.hostId) - (a.id === r.hostId) || (b.connected - a.connected));
+    const online = ps.filter((p) => p.connected).length;
+    const t = Date.now();
+    ps.forEach((p) => !rosterKnown.has(p.id) && rosterKnown.set(p.id, rosterInit ? t : 0));
+    rosterInit = true;
+    const fe = (p) => t - rosterKnown.get(p.id);
+    const fresh = new Set(ps.filter((p) => rosterKnown.get(p.id) && fe(p) < 1700).map((p) => p.id));
+    const mood = online >= 4 ? 'Компания собралась — можно начинать!' : online >= 2 ? 'Уже веселее. Зовите остальных!' : 'Пока вы один — позовите друзей';
+    return `<aside class="roster card">
+      <div class="ro-h"><div><b>В комнате</b><span class="ro-n">${online}</span></div><span class="muted small">${mood}</span></div>
+      <div class="ro-list">${ps
+        .map(
+          (p, i) => `<div class="ro-p ${p.connected ? '' : 'off'} ${p.id === S.me ? 'me' : ''} ${fresh.has(p.id) ? 'fresh' : ''}" style="--i:${i}${fresh.has(p.id) ? `;--fe:${fe(p)}ms` : ''}">
+            <span class="ro-ava">${avaHtml(p, 52, 'round')}${p.connected ? '<i class="ro-dot"></i>' : ''}</span>
+            <span class="ro-t"><b>${esc(p.name)}${p.id === S.me ? ' <small class="muted">(вы)</small>' : ''}</b><small>${p.id === r.hostId ? `${ic('crown', 12)} хост` : p.connected ? (p.real ? esc(p.real) : 'в игре') : 'не в сети'}</small></span>
+            ${p.id === r.hostId ? `<span class="ro-crown">${ic('crown', 16)}</span>` : ''}
+          </div>`
+        )
+        .join('')}
+        <button class="ro-p ro-add" data-act="copy" title="Скопировать ссылку-приглашение"><span class="ro-ava"><span class="ro-plus">${ic('plus', 22)}</span></span><span class="ro-t"><b>Позвать друга</b><small>скопировать ссылку</small></span></button>
+      </div>
+    </aside>`;
   }
 
   const gameCard = (g, clickable, sel) => `<button class="gcard ${g.id === sel && clickable ? 'active' : ''}" ${clickable ? `data-act="pick" data-id="${g.id}"` : 'disabled'}>
@@ -8446,7 +9038,7 @@ window.RULES = {
         .map((r, i) => {
           if (r.total !== last) place = i + 1;
           last = r.total;
-          return `<tr class="${r.id === S.me ? 'me' : ''}"><td>${place}</td><td>${player(r.id) ? who(r.id, 'sm') : '<span class="muted">ушёл</span>'}</td>${types.map((ty) => `<td>${r.per[ty] || 0}</td>`).join('')}<td><b>${r.total}</b></td></tr>`;
+          return `<tr class="${r.id === S.me ? 'me' : ''}"><td>${place}</td><td>${player(r.id) ? who(r.id, 'sm') : '<span class="muted">ушёл</span>'}</td>${types.map((ty) => `<td>${r.per[ty] || 0}</td>`).join('')}<td><b data-cnt="tt-${r.id}">${r.total}</b></td></tr>`;
         })
         .join('')}</tbody></table></div>`;
   }
@@ -8631,7 +9223,7 @@ window.RULES = {
   const leaderboard = (pairs, mark) =>
     `<div class="leader">${pairs
       .sort((a, b) => b[1] - a[1])
-      .map(([id, n], i) => `<div class="lrow ${id === mark ? 'turn' : ''} ${id === S.me ? 'me' : ''}"><span>${i === 0 && n > 0 ? `<span class="medal">${ic('medal', 14)}</span>` : ''}${who(id, 'sm')}</span><b>${n}</b></div>`)
+      .map(([id, n], i) => `<div class="lrow ${id === mark ? 'turn' : ''} ${id === S.me ? 'me' : ''}"><span>${i === 0 && n > 0 ? `<span class="medal">${ic('medal', 14)}</span>` : ''}${who(id, 'sm')}</span><b data-cnt="lb-${id}">${n}</b></div>`)
       .join('')}</div>`;
 
   // Переносы по слогам (правила русского языка): вставляем мягкие переносы &shy;
@@ -8913,7 +9505,7 @@ window.RULES = {
         const total = found + g.left[t];
         return `<div class="tp-top">
           <div class="tp-name-row"><span class="tp-name">${TN[t]}</span>${turn ? `<span class="tp-turn">${ic('clock', 13)} ${g.step === 'clue' ? 'капитан думает' : 'отгадывают'}</span>` : ''}</div>
-          <div class="tp-count"><b>${g.left[t]}</b><span>${plural(g.left[t], 'слово осталось', 'слова осталось', 'слов осталось')}<small>найдено ${found} из ${total}</small></span></div>
+          <div class="tp-count"><b data-cnt="cnl-${t}">${g.left[t]}</b><span>${plural(g.left[t], 'слово осталось', 'слова осталось', 'слов осталось')}<small>найдено ${found} из ${total}</small></span></div>
           <div class="tp-dots">${Array.from({ length: total }, (_, k) => `<i class="${k < found ? 'on' : ''}"></i>`).join('')}</div>
         </div>`;
       })()}
@@ -8999,6 +9591,7 @@ window.RULES = {
         if (g.step === 'setup') return `<div class="cn-card blank" style="--i:${i}">${ic('grid', 18)}</div>`;
         return `<button class="cn-card ${c.color ? 'c-' + c.color : ''} ${c.revealed ? 'rev' : ''} ${c.marks.includes(me) ? 'mine' : ''} ${pend ? 'pending' : ''} ${ui.flip && ui.flip.has(i) ? 'flip' : ''} ${ui.enter && g.step === 'clue' ? 'deal' : ''}" style="--i:${i};${ui.flip && ui.flip.has(i) ? `--fd:-${Date.now() - ui.flip.get(i)}ms` : ''}${ui.cnSort ? `;order:${cnRank(c, i, myTeam)}` : ''}" data-act="cn-mark" data-i="${i}">
           <span class="w ${/\s/.test(c.w) ? 'phrase' : ''}" lang="ru">${hy(c.w)}</span>
+          ${c.color ? `<i class="cb-mark" aria-hidden="true">${{ red: '▲', blue: '●', neutral: '–', assassin: '✕' }[c.color] || ''}</i>` : ''}
           ${c.marks.length ? `<span class="marks">${c.marks.map((m) => pa(m, 'xs')).join('')}</span>` : ''}
           ${pend ? `<span class="pend" style="--d:${g.pending.ms}ms;--e:-${elapsed}ms">${ring('fill')}</span>` : ''}
         </button>`;
@@ -9041,7 +9634,7 @@ window.RULES = {
     const t = g.teams[i];
     const turn = i === g.turnTeam && !['teams', 'over'].includes(g.phase);
     return `<aside class="side-team ${turn ? 'turn' : ''} ${i === g.myTeam ? 'mine' : ''}" style="--tc:${ALIAS_BG[i]}">
-      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left"><b>${t.score}</b><small>из ${g.target}</small></span></div>
+      <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left"><b data-cnt="als-${i}">${t.score}</b><small>из ${g.target}</small></span></div>
       ${turn ? `<div class="tp-turn">${ic('mic', 14)} Ход команды</div>` : ''}
       <div class="tp-agents">${
         t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}</div>`).join('') ||
@@ -9049,6 +9642,27 @@ window.RULES = {
       }</div>
       ${g.phase === 'teams' && i !== g.myTeam ? `<button class="btn tp-join" data-act="al-join" data-team="${i}">${ic('userplus', 18)} В эту команду</button>` : i === g.myTeam ? `<div class="tp-in">${ic('check', 14)} Вы в этой команде</div>` : ''}
     </aside>`;
+  }
+
+  // Колода слов Элиаса: верхняя карточка + стопка под ней. Угадали — карточка улетает вверх-вправо зелёной,
+  // пропуск — влево красной, следующая поднимается из стопки. Время анимации считаем от момента смены,
+  // чтобы перерисовки её не перезапускали.
+  function aliasStack(g) {
+    const turn = g.explainer + ':' + g.turnTeam + ':' + (g.endsAt || '');
+    const k = (g.guessedNow || 0) + (g.skippedNow || 0);
+    const p = ui.al;
+    if (!p || p.turn !== turn) ui.al = { turn, k, g: g.guessedNow || 0, w: g.word, out: null };
+    else if (k > p.k) {
+      ui.al = { turn, k, g: g.guessedNow || 0, w: g.word, out: { w: p.w, kind: (g.guessedNow || 0) > p.g ? 'got' : 'skip', at: Date.now() } };
+    } else if (k === p.k) p.w = g.word;
+    const o = ui.al.out;
+    const el = o ? Date.now() - o.at : 1e9;
+    const face = (w) => (w ? `<span class="al-w">${esc(w)}</span>` : `<span class="al-w q">?</span>`);
+    return `<div class="al-stack ${g.word ? '' : 'hid'}" style="--oe:${Math.min(el, 5000)}ms">
+      <div class="al-back b3"></div><div class="al-back b2"></div><div class="al-back b1"></div>
+      <div class="al-card top ${o && el < 1500 ? 'enter' : ''}">${face(g.word)}<span class="al-n">${k + 1}</span></div>
+      ${o && el < 1500 ? `<div class="al-card out ${o.kind}">${face(o.w)}<span class="al-stamp">${o.kind === 'got' ? ic('check', 18) + ' +1' : ic('x', 18) + ' пропуск'}</span></div>` : ''}
+    </div>`;
   }
 
   function rAlias(g) {
@@ -9071,9 +9685,9 @@ window.RULES = {
       </div>`;
     } else if (g.phase === 'running') {
       center = `<div class="stage-card run">
-        ${g.word ? `<div class="mega-word">${esc(g.word)}</div>` : `<div class="mega-word hidden">?</div><p class="muted">Слушайте ${nm(g.explainer)} и угадывайте!</p>`}
+        ${aliasStack(g)}${g.word ? '' : `<p class="muted">Слушайте ${nm(g.explainer)} и угадывайте!</p>`}
         ${isExpl ? `<div class="mega-row"><button class="btn danger mega" data-act="al-skip">${ic('x', 26)} Пропуск${g.penalty ? ' −1' : ''}</button><button class="btn success mega" data-act="al-got">${ic('check', 26)} Угадали +1</button></div>` : ''}
-        <div class="counters"><span>Угадано <b>${g.guessedNow}</b></span><span>Пропущено <b>${g.skippedNow}</b></span></div>
+        <div class="counters"><span>Угадано <b data-cnt="alg">${g.guessedNow}</b></span><span>Пропущено <b data-cnt="alk">${g.skippedNow}</b></span></div>
       </div>`;
     } else if (g.phase === 'review') {
       const canConfirm = isExpl || isHost();
@@ -9253,7 +9867,7 @@ window.RULES = {
         const speaking = g.turnPid === id && !over;
         return `<div class="tile ${speaking ? 'speaking' : ''} ${p.guessed ? 'done' : ''} ${p.gaveUp ? 'gaveup' : ''} ${isMe ? 'me' : ''}">
           <div class="tile-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 18)} это вы`}</div>
-          <div class="tile-ava">${pa(id, 88, 'round')}</div>
+          <div class="tile-ava">${pa(id, 128, 'round')}</div>
           <div class="tile-foot">
             <span class="tile-name">${speaking ? ic('mic', 14) : ''}${nm(id)}${isMe ? ' (вы)' : ''}</span>
             <span class="tile-st">${p.guessed ? `${ic('check', 13)} #${place + 1} · +${g.points[id]}` : p.gaveUp ? 'сдался' : ''}</span>
@@ -9348,7 +9962,7 @@ window.RULES = {
     // Таблица очков: сердечки рядом с очками
     const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1] || (g.hearts[b[0]] || 0) - (g.hearts[a[0]] || 0));
     const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— угадал +2 · подсказка дошла +1 · лучшая подсказка +3</span></div>
-      ${rows.map(([id, n], i) => `<div class="jb-row ${id === g.guesser ? 'turn' : ''} ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.hearts[id] ? `<span class="jb-h" title="Сколько раз его подсказку выбрали лучшей">${ic('heartf', 15)}${g.hearts[id]}</span>` : ''}<b class="jb-p">${n}</b></div>`).join('')}</div>`;
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === g.guesser ? 'turn' : ''} ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.hearts[id] ? `<span class="jb-h" title="Сколько раз его подсказку выбрали лучшей">${ic('heartf', 15)}${g.hearts[id]}</span>` : ''}<b class="jb-p" data-cnt="jb-${id}">${n}</b></div>`).join('')}</div>`;
     if (!g.inGame) return `<div class="narrow justone">${head}<div class="stage-card"><button class="btn primary mega" data-act="jo-add">Присоединиться</button></div>${board}</div>`;
     // Кто уже готов (видят все)
     const readyRow = (ids, done, label) =>
@@ -9466,7 +10080,7 @@ window.RULES = {
     const T = ''; // таймер — общей полосой под шапкой
     const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1]);
     const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— ближе всех +1 · точно в цель ещё +1</span></div>
-      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.wins[id] ? `<span class="qz-w" title="Сколько раз был ближе всех">${ic('target', 14)}${g.wins[id]}</span>` : ''}<b class="jb-p">${n}</b></div>`).join('')}</div>`;
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.wins[id] ? `<span class="qz-w" title="Сколько раз был ближе всех">${ic('target', 14)}${g.wins[id]}</span>` : ''}<b class="jb-p" data-cnt="jb-${id}">${n}</b></div>`).join('')}</div>`;
     const head = `<div class="jo-top qz-head">
       <div class="jo-tile"><span class="jt-k">Вопрос</span><b class="jt-v">${g.round}<small>из ${g.rounds}</small></b></div>
       <div class="jo-tile wide"><span class="jt-k">Тема</span><b class="jt-v qz-cat">${esc(g.q?.cat || '')}</b></div>
@@ -9539,7 +10153,7 @@ window.RULES = {
     const me = S.me;
     const rows = Object.entries(g.points).sort((a, b) => b[1] - a[1]);
     const board = `<div class="card jo-board"><div class="side-h">Очки <span class="muted small">— +1 за каждое совпадение · большинству ещё +1</span></div>
-      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span><b class="jb-p">${n}</b></div>`).join('')}</div>`;
+      ${rows.map(([id, n], i) => `<div class="jb-row ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span><b class="jb-p" data-cnt="jb-${id}">${n}</b></div>`).join('')}</div>`;
     const head = `<div class="jo-top qz-head">
       <div class="jo-tile"><span class="jt-k">Вопрос</span><b class="jt-v">${g.round}<small>из ${g.rounds}</small></b></div>
       <div class="jo-tile wide"><span class="jt-k">Задача</span><b class="jt-v mj-task">${g.phase === 'review' ? 'Кто с кем совпал?' : 'Ответь, как ответит большинство'}</b></div>
@@ -9745,6 +10359,15 @@ window.RULES = {
       });
       syncWave();
     },
+    'view-tog': (d) => {
+      const k = d.k;
+      if (!VIEW_TOGGLES.includes(k)) return;
+      VIEW[k] = !VIEW[k];
+      LS.set('pg_' + k, VIEW[k] ? '1' : '');
+      applyView();
+      syncWave();
+      render();
+    },
     'view-glow': (d) => {
       VIEW.glow = Number(d.n) || 0;
       LS.set('pg_glow_v', String(VIEW.glow));
@@ -9921,6 +10544,7 @@ window.RULES = {
       render();
     },
     mode: (d) => {
+      if (d.m !== ui.mode) ui.modeAnim = d.m;
       ui.mode = d.m;
       render();
     },

@@ -100,9 +100,11 @@
   /* Светлая тема в духе Linear / Vercel: холодный нейтральный серый, белые поверхности,
      тонкие рамки, мягкие тени, высокий контраст текста */
   color-scheme: light;
-  --bg: #f5f5f7;
-  --glow-1: rgba(124, 92, 255, 0.05);
-  --glow-2: rgba(40, 140, 220, 0.04);
+  --bg: #eeebf3; /* лавандово-серый: розоватый слева, голубоватый справа */
+  --bg-l: #f1ebf0;
+  --bg-r: #eceaf6;
+  --glow-1: rgba(255, 140, 170, 0.07);
+  --glow-2: rgba(110, 130, 255, 0.07);
   --surface: #ffffff;
   --surface-2: #f4f4f6;
   --surface-3: #e9e9ee;
@@ -152,16 +154,17 @@
   --cn-text: #1b1b22;
   --cn-edge: #d6d6df;
   --cn-border: rgba(16, 16, 28, 0.08);
-  --cn-red: #e5484d;
-  --cn-red-text: #ffffff;
-  --cn-red-glow: rgba(229, 72, 77, 0.35);
-  --cn-blue: #3e63dd;
-  --cn-blue-text: #ffffff;
-  --cn-blue-glow: rgba(62, 99, 221, 0.35);
-  --cn-neu: #ebe6da;
-  --cn-neu-text: #6a6352;
-  --cn-ass: #25252b;
-  --cn-ass-text: #d6d6de;
+  /* цвета карточек — как на эталонном скриншоте светлой доски */
+  --cn-red: #ff6452;
+  --cn-red-text: #8e1b10;
+  --cn-red-glow: rgba(255, 100, 82, 0.45);
+  --cn-blue: #4fb8ff;
+  --cn-blue-text: #0a4a80;
+  --cn-blue-glow: rgba(79, 184, 255, 0.45);
+  --cn-neu: #fffcf3;
+  --cn-neu-text: #8b8579;
+  --cn-ass: #444446;
+  --cn-ass-text: #b6b6b9;
 
   --spy-bg: #ffffff;
   --spy-text: #15151a;
@@ -1933,9 +1936,9 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 [data-theme='light'] .cn-card.mc-on::after { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 0, 0, .025), transparent 60%); }
 
 /* ---------- светлая тема: доводка ---------- */
-[data-theme='light'] body { background: radial-gradient(1200px 600px at 10% -10%, var(--glow-1) 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, var(--glow-2) 0%, transparent 55%), var(--bg); }
+[data-theme='light'] body { background: radial-gradient(1200px 600px at 10% -10%, var(--glow-1) 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, var(--glow-2) 0%, transparent 55%), linear-gradient(90deg, var(--bg-l), var(--bg-r)); background-attachment: fixed; }
 [data-theme='light'] .card, [data-theme='light'] .stage-card { box-shadow: var(--shadow); }
-[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
+[data-theme='light'] .btn:not(.primary):not(.danger):not(.success):not(.ghost):not(.ready-btn):not(.tp-join):not(.lp-btn) { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 2px rgba(16, 16, 28, .05); }
 [data-theme='light'] .btn.ghost:hover:not([disabled]) { background: var(--surface-2); }
 [data-theme='light'] .inp { background: var(--surface); border-color: var(--line-strong); }
 [data-theme='light'] .inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -1945,7 +1948,7 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 [data-theme='light'] .cn-card { box-shadow: 0 0 0 1px var(--line), 0 2px 0 var(--cn-edge), 0 6px 14px -8px rgba(16, 16, 28, .18); }
 [data-theme='light'] .cn-card:hover:not(.rev) { box-shadow: 0 0 0 1px var(--line-strong), 0 2px 0 var(--cn-edge), 0 10px 22px -10px rgba(16, 16, 28, .25); }
 [data-theme='light'] .cn-card.c-red, [data-theme='light'] .cn-card.c-blue, [data-theme='light'] .cn-card.c-assassin { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08), 0 2px 0 rgba(0, 0, 0, .12); }
-[data-theme='light'] .cn-card.c-neutral { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 2px 0 #d8d1c0; }
+[data-theme='light'] .cn-card.c-neutral { box-shadow: inset 0 0 0 1px rgba(120, 100, 60, .1), 0 2px 0 #e6dfcd; }
 [data-theme='light'] .cn-card.mc-on { box-shadow: 0 0 0 1px var(--line-strong), 0 14px 26px -10px rgba(16, 16, 28, .28); }
 
 /* ---------- Коднеймс: капитанский вид «по цветам» ---------- */
@@ -2035,3 +2038,194 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 .lofi-add .la-ic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: inline-flex; }
 .lofi-add .inp { padding-left: 32px; }
 .lofi-add .inp.sending { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); color: var(--muted); }
+/* радио: кнопка «вставить из буфера» */
+.lofi-paste { display: flex; }
+.lp-btn { flex: 1; justify-content: flex-start; gap: 10px; padding: 9px 12px; border-style: dashed; text-align: left; }
+.lp-btn span { display: flex; flex-direction: column; line-height: 1.2; }
+.lp-btn b { font-size: 13px; }
+.lp-btn small { font-size: 11px; color: var(--muted); font-weight: 600; }
+.lp-btn.sending { border-color: var(--accent); background: var(--accent-soft); animation: lpPulse 1s ease-in-out infinite; }
+@keyframes lpPulse { 50% { box-shadow: 0 0 0 4px var(--accent-soft); } }
+.lofi-add[hidden] { display: none; }
+
+/* ============================================================
+   v28: лобби с колонкой игроков, анимированный переключатель, вступительные анимации
+   ============================================================ */
+.lobby-wrap { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; max-width: 1400px; margin: 0 auto; align-items: start; }
+.lobby-wrap .lobby { max-width: none; margin: 0; min-width: 0; }
+@media (max-width: 960px) { .lobby-wrap { grid-template-columns: 1fr; } }
+
+/* ---- «В комнате» ---- */
+.roster { position: sticky; top: 76px; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; isolation: isolate; }
+.roster::before { content: ''; position: absolute; inset: -40% -40% auto auto; width: 220px; height: 220px; border-radius: 50%; z-index: -1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%); animation: roGlow 6s ease-in-out infinite alternate; }
+@keyframes roGlow { to { transform: translate(-40px, 60px) scale(1.2); opacity: .7; } }
+.ro-h { display: flex; flex-direction: column; gap: 2px; }
+.ro-h > div { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.ro-n { min-width: 26px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 13px; display: inline-grid; place-items: center; }
+.ro-list { display: flex; flex-direction: column; gap: 8px; }
+.ro-p { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line);
+  transition: transform .2s cubic-bezier(.2, .8, .3, 1), border-color .2s, box-shadow .2s; font: inherit; color: inherit; text-align: left; }
+.ro-p:hover { transform: translateX(3px); border-color: var(--line-strong); }
+.ro-p.me { border-color: var(--accent-line); background: color-mix(in srgb, var(--accent) 7%, var(--surface-2)); }
+.ro-p.off { opacity: .5; }
+.ro-ava { position: relative; flex: none; display: inline-grid; }
+.ro-ava .ava { box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent); }
+.ro-p.off .ro-ava .ava { box-shadow: 0 0 0 2px var(--surface-2); filter: grayscale(.6); }
+.ro-dot { position: absolute; right: 0; bottom: 0; width: 13px; height: 13px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 0 3px var(--surface-2); }
+.ro-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #3ddc84; animation: roPing 2s ease-out infinite; }
+@keyframes roPing { 0% { transform: scale(1); opacity: .7; } 80%, 100% { transform: scale(2.4); opacity: 0; } }
+.ro-t { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.ro-t b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ro-t small { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ro-crown { margin-left: auto; color: var(--accent-text); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 60%, transparent)); }
+/* новый игрок «влетает» с вспышкой */
+.ro-p.fresh { animation: roIn .7s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(0s - var(--fe, 0ms)); }
+.ro-p.fresh::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 2px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 50%, transparent); animation: roFlash 1.6s ease-out forwards; animation-delay: calc(0s - var(--fe, 0ms)); }
+@keyframes roIn { 0% { opacity: 0; transform: translateX(-30px) scale(.9); } 60% { opacity: 1; transform: translateX(4px) scale(1.02); } 100% { transform: none; } }
+@keyframes roFlash { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+.ro-add { cursor: pointer; border-style: dashed; background: transparent; }
+.ro-add:hover { border-color: var(--accent); }
+.ro-plus { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; border: 2px dashed var(--line-strong); color: var(--muted); }
+.ro-add:hover .ro-plus { border-color: var(--accent); color: var(--accent-text); }
+@media (max-width: 960px) { .roster { position: static; } .ro-list { flex-direction: row; flex-wrap: wrap; } .ro-p { flex: 1 1 200px; } }
+
+/* ---- переключатель «Одна игра / Марафон»: едущая плашка ---- */
+.tabs.seg2 { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; isolation: isolate; }
+.tabs.seg2 button { position: relative; z-index: 1; justify-content: center; transition: color .25s; }
+.tabs.seg2 button.on { background: transparent; color: var(--accent-ink); }
+.tab-ind { position: absolute; z-index: 0; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 6px); border-radius: 9px; background: var(--accent-bg, var(--accent));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); transform: translateX(0); }
+.tabs.seg2[data-mode='tour'] .tab-ind { transform: translateX(calc(100% + 4px)); }
+.tabs.seg2.anim-tour .tab-ind { animation: tabToR .45s cubic-bezier(.3, 1.4, .5, 1); }
+.tabs.seg2.anim-single .tab-ind { animation: tabToL .45s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes tabToR { from { transform: translateX(0) scaleX(1); } 45% { transform: translateX(calc(60% + 4px)) scaleX(1.25); } }
+@keyframes tabToL { from { transform: translateX(calc(100% + 4px)) scaleX(1); } 45% { transform: translateX(40%) scaleX(1.25); } }
+/* блоки под переключателем въезжают с той стороны, куда переключили */
+.mode-pane.in-right { animation: paneR .45s cubic-bezier(.16, 1, .3, 1) both; }
+.mode-pane.in-left { animation: paneL .45s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes paneR { from { opacity: 0; transform: translateX(40px); filter: blur(4px); } }
+@keyframes paneL { from { opacity: 0; transform: translateX(-40px); filter: blur(4px); } }
+.mode-pane.in-right .games-grid > *, .mode-pane.in-left .games-grid > *, .mode-pane.in-right .mrow, .mode-pane.in-left .mrow { animation: introUp .55s cubic-bezier(.16, 1, .3, 1) both; }
+
+/* ---- выбранная игра — заметная и читаемая (без полупрозрачности) ---- */
+html.holo .in-lobby .gcard.active, .gcard.active { background: color-mix(in srgb, var(--accent) 13%, var(--surface)); backdrop-filter: none; border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 10px 30px -10px color-mix(in srgb, var(--accent) 55%, transparent); }
+.gcard.active .gname { color: var(--text); }
+.gcard.active .gshort { color: color-mix(in srgb, var(--text) 78%, transparent); }
+[data-theme='light'] .gcard.active { background: color-mix(in srgb, var(--accent) 16%, #fff); }
+
+/* ---- вступительные анимации (каскад, как в GSAP) ---- */
+@keyframes introUp { from { opacity: 0; transform: translateY(26px) scale(.97); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes introLine { from { opacity: 0; transform: translateY(100%) rotate(2deg); } to { opacity: 1; transform: none; } }
+.home.intro .home-hero > *, .home.intro .home-card > * { animation: introUp .9s cubic-bezier(.16, 1, .3, 1) both; }
+.home.intro .home-hero > :nth-child(1) { animation-delay: calc(.05s - var(--el, 0ms)); }
+.home.intro .home-hero > :nth-child(2) { animation-delay: calc(.15s - var(--el, 0ms)); }
+.home.intro .home-hero > :nth-child(3) { animation-delay: calc(.3s - var(--el, 0ms)); }
+.home.intro .home-hero h1 span { display: block; animation: introLine 1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(.3s - var(--el, 0ms)); }
+.home.intro .home-card { animation: introUp 1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(.2s - var(--el, 0ms)); }
+.home.intro .home-card > :nth-child(1) { animation-delay: calc(.35s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(2) { animation-delay: calc(.42s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(3) { animation-delay: calc(.49s - var(--el, 0ms)); }
+.home.intro .home-card > :nth-child(4) { animation-delay: calc(.56s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(5) { animation-delay: calc(.63s - var(--el, 0ms)); } .home.intro .home-card > :nth-child(6) { animation-delay: calc(.7s - var(--el, 0ms)); }
+.lobby-wrap.intro .roster { animation: introUp .9s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(0s - var(--el, 0ms)); }
+.lobby-wrap.intro .ro-p { animation: roIn .8s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(calc(.25s + var(--i, 0) * 70ms) - var(--el, 0ms)); }
+.lobby-wrap.intro .lobby > * { animation: introUp .9s cubic-bezier(.16, 1, .3, 1) both; }
+.lobby-wrap.intro .lobby > :nth-child(1) { animation-delay: calc(.08s - var(--el, 0ms)); } .lobby-wrap.intro .lobby > :nth-child(2) { animation-delay: calc(.16s - var(--el, 0ms)); }
+.lobby-wrap.intro .lobby > :nth-child(3) { animation-delay: calc(.24s - var(--el, 0ms)); } .lobby-wrap.intro .lobby > :nth-child(4) { animation-delay: calc(.32s - var(--el, 0ms)); }
+.lobby-wrap.intro .games-grid > * { animation: introUp .8s cubic-bezier(.16, 1, .3, 1) both; }
+.games-grid > :nth-child(1) { --gi: 0; } .games-grid > :nth-child(2) { --gi: 1; } .games-grid > :nth-child(3) { --gi: 2; } .games-grid > :nth-child(4) { --gi: 3; }
+.games-grid > :nth-child(5) { --gi: 4; } .games-grid > :nth-child(6) { --gi: 5; } .games-grid > :nth-child(7) { --gi: 6; } .games-grid > :nth-child(8) { --gi: 7; }
+.lobby-wrap.intro .games-grid > * { animation-delay: calc(calc(.35s + var(--gi, 0) * 60ms) - var(--el, 0ms)); }
+.mode-pane .games-grid > * { animation-delay: calc(var(--gi, 0) * 45ms); }
+.mrow:nth-child(n) { --gi: 0; }
+@media (prefers-reduced-motion: reduce) { .intro *, .mode-pane, .mode-pane *, .tab-ind, .ro-p { animation: none !important; } }
+
+/* ===== v29: меню «Вид» с разделами по играм + доступность ===== */
+#app { zoom: var(--ui-zoom, 1); }
+.view-btn { gap: 6px; padding-inline: 10px; }
+.view-pop { width: min(340px, calc(100vw - 24px)); max-height: min(78vh, 640px); overflow-y: auto; padding: 8px; }
+.vp-title { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; padding: 6px 8px 10px; }
+.vp-sec { border: 1px solid var(--line); border-radius: 14px; padding: 6px 4px 8px; margin-top: 8px; transition: border-color .2s, background .2s; }
+.vp-sec.now { border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 7%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
+.vp-sh { display: flex; align-items: center; gap: 8px; padding: 4px 8px 6px; font-size: 13px; }
+.vp-sh b { flex: 1; }
+.vp-now { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 3px 7px; border-radius: 99px; background: var(--accent); color: #1a1500; }
+.vp-note { font-size: 12px; color: var(--muted); margin: 2px 10px 0; line-height: 1.35; }
+.vt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: 0; color: inherit; padding: 8px 10px; border-radius: 10px; cursor: pointer; font: inherit; }
+.vt:hover { background: var(--hover, rgba(127,127,127,.08)); }
+.vt-t { flex: 1; display: grid; gap: 2px; }
+.vt-t b { font-size: 13px; font-weight: 700; }
+.vt-t small { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.vt-sw { flex: none; width: 36px; height: 22px; border-radius: 99px; background: var(--line); position: relative; transition: background .2s; }
+.vt-sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+.vt.on .vt-sw { background: var(--accent); }
+.vt.on .vt-sw::after { transform: translateX(14px); }
+.vt:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* меньше анимаций */
+html.v-calm *, html.v-calm *::before, html.v-calm *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+html.v-calm .mc, html.v-calm [style*="--rx"] { transform: none !important; }
+
+/* крупные режимы */
+html.v-bigAlias .mega-word, html.v-bigAlias .al-card .al-w { font-size: clamp(44px, 9vw, 96px) !important; }
+html.v-bigRole .spy-card h2 { font-size: clamp(34px, 6vw, 58px); }
+html.v-bigRole .spy-card p { font-size: 22px; }
+html.v-bigRole .spy-card .kicker { font-size: 15px; }
+html.v-bigQ .qz-q { font-size: clamp(28px, 4.6vw, 46px) !important; line-height: 1.2; }
+html.v-bigQ .qz-form .inp { font-size: 24px; min-height: 60px; }
+/* значки цветов для дальтоников */
+.cb-mark { display: none; position: absolute; top: 6px; left: 8px; font-size: 13px; font-weight: 900; line-height: 1; opacity: .85; pointer-events: none; }
+html.v-cb .cn-card .cb-mark { display: block; }
+
+/* ===== Элиас: колода слов ===== */
+.al-stack { position: relative; width: min(460px, 100%); aspect-ratio: 1.6; margin: 8px auto 50px; perspective: 900px; }
+.al-card, .al-back { position: absolute; inset: 0; border-radius: 22px; }
+.al-back { background: var(--surface-2); border: 1px solid var(--line); box-shadow: 0 6px 18px -10px rgba(0,0,0,.35); }
+.al-back.b1 { transform: translateY(16px) scale(.95); opacity: .9; }
+.al-back.b2 { transform: translateY(31px) scale(.9); opacity: .65; }
+.al-back.b3 { transform: translateY(45px) scale(.85); opacity: .4; }
+.al-card { display: grid; place-items: center; padding: 18px; background: var(--word-bg, var(--surface)); color: var(--word-text, var(--text)); border: 1px solid var(--line-strong); box-shadow: 0 18px 40px -18px rgba(0,0,0,.5), 0 2px 0 var(--line); text-align: center; }
+.al-card .al-w { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 6.4vw, 60px); line-height: 1.05; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.al-card .al-w.q { font-size: 84px; color: var(--muted); }
+.al-n { position: absolute; top: 12px; left: 16px; font-size: 12px; font-weight: 800; color: var(--muted); }
+.al-card.top.enter { animation: alRise .5s cubic-bezier(.2,.9,.3,1.2) backwards; animation-delay: calc(0s - var(--oe)); }
+.al-card.out { z-index: 3; pointer-events: none; animation: alOutGot .6s cubic-bezier(.4,0,.6,1) forwards; animation-delay: calc(0s - var(--oe)); }
+.al-card.out.got { background: color-mix(in srgb, var(--green) 22%, var(--surface)); border-color: var(--green); }
+.al-card.out.skip { background: color-mix(in srgb, var(--red) 20%, var(--surface)); border-color: var(--red); animation-name: alOutSkip; }
+.al-stamp { position: absolute; top: 14px; right: 16px; display: inline-flex; align-items: center; gap: 4px; font-weight: 900; font-size: 15px; padding: 4px 10px; border-radius: 99px; border: 2px solid currentColor; transform: rotate(8deg); }
+.al-card.out.got .al-stamp { color: var(--green-text, var(--green)); }
+.al-card.out.skip .al-stamp { color: var(--red-text, var(--red)); transform: rotate(-8deg); left: 16px; right: auto; }
+@keyframes alRise { from { transform: translateY(16px) scale(.95); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes alOutGot { 0% { transform: none; opacity: 1; } 25% { transform: translate(10px,-12px) rotate(3deg) scale(1.03); opacity: 1; } 100% { transform: translate(130%,-60%) rotate(22deg); opacity: 0; } }
+@keyframes alOutSkip { 0% { transform: none; opacity: 1; } 25% { transform: translate(-10px,4px) rotate(-3deg); opacity: 1; } 100% { transform: translate(-130%,30%) rotate(-22deg); opacity: 0; } }
+.stage-card.run { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .al-card.out { display: none; } }
+
+/* ===== Кто я: крупнее аватары и карточки персонажей ===== */
+.call-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.who .tile { aspect-ratio: 4 / 3.2; border-radius: 20px; }
+.tile-char { top: 12px; left: 12px; right: 12px; font-size: 22px; padding: 10px 14px; border-radius: 14px; box-shadow: 0 6px 16px -10px rgba(0,0,0,.4); }
+.tile-char.hidden-char { font-size: 15px; }
+.tile-ava { margin-top: 44px; }
+.tile-ava .ava { box-shadow: 0 10px 26px -12px rgba(0,0,0,.55); }
+.tile-name { font-size: 14px; padding: 4px 11px; }
+html.v-bigWho .call-grid { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+html.v-bigWho .tile-char { font-size: 30px; padding: 14px 16px; }
+html.v-bigWho .tile-ava .ava { width: 168px !important; height: 168px !important; }
+html.v-bigWho .tile-ava { margin-top: 64px; }
+@media (max-width: 700px) {
+  .call-grid, html.v-bigWho .call-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tile-ava .ava, html.v-bigWho .tile-ava .ava { width: 76px !important; height: 76px !important; }
+  .tile-char, html.v-bigWho .tile-char { font-size: 15px; top: 6px; left: 6px; right: 6px; padding: 5px 7px; }
+  .tile-ava { margin-top: 30px; }
+}
+
+/* ===== счётчики очков ===== */
+[data-cnt] { display: inline-block; font-variant-numeric: tabular-nums; }
+.cnt-run { animation: cntBump .55s cubic-bezier(.3,1.6,.5,1) backwards; animation-delay: var(--ce, 0ms); }
+.cnt-run.cnt-up { color: var(--green-text, var(--green)); }
+.cnt-run.cnt-down { color: var(--red-text, var(--red)); }
+@keyframes cntBump { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.tp-count .cnt-run { color: inherit; }
+
+html[data-theme='light'] { background: linear-gradient(90deg, var(--bg-l), var(--bg-r)); }
+[data-cnt="alk"].cnt-run.cnt-up { color: var(--red-text, var(--red)); }

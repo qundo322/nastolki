@@ -16,7 +16,7 @@ const nid = () => (Date.now().toString(36) + (seq++).toString(36)).slice(-10);
 function make() {
   return { cur: { id: nid(), ...DEFAULT, by: null, startedAt: Date.now() }, queue: [] };
 }
-function get(room) {
+function getRadio(room) {
   return room.radio || (room.radio = make());
 }
 function play(r, item) {
@@ -30,7 +30,7 @@ function next(r) {
 
 // op: add | now | skip | ended | remove | move | title
 function handle(room, pid, msg, isHost) {
-  const r = get(room);
+  const r = getRadio(room);
   const op = msg && msg.op;
   if (op === 'add' || op === 'now') {
     const vid = ytId(msg.url);
@@ -100,7 +100,7 @@ function handle(room, pid, msg, isHost) {
 }
 
 function view(room) {
-  const r = get(room);
+  const r = getRadio(room);
   return { cur: { id: r.cur.id, vid: r.cur.vid, title: r.cur.title, live: r.cur.live, by: r.cur.by, startedAt: r.cur.startedAt }, queue: r.queue.map(({ qid, vid, title, by }) => ({ qid, vid, title, by })) };
 }
 
@@ -121,8 +121,53 @@ async function fetchTitle(vid) {
 
 // Треки без названия (сервер подтянет его с YouTube)
 function untitled(room) {
-  const r = get(room);
+  const r = getRadio(room);
   return [r.cur, ...r.queue].filter((x) => !x.live && (!x.title || x.title === 'Трек') && !x.tried);
 }
 
-module.exports = { handle, view, get, ytId, fetchTitle, untitled, DEFAULT };
+// ---- Spotify: сам Spotify у всех синхронно не сыграть (без премиума — только 30-секундные превью),
+// поэтому по ссылке Spotify узнаём «исполнитель — трек» и ищем этот же трек на YouTube.
+const spotifyId = (url) => {
+  const m = String(url || '').match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/([A-Za-z0-9]{22})/) || String(url || '').match(/^spotify:track:([A-Za-z0-9]{22})$/);
+  return m ? m[1] : null;
+};
+async function get(url, ms = 6000, headers = {}) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.8,ru;q=0.6', ...headers } });
+    return res.ok ? await res.text() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+async function resolveSpotify(url) {
+  const id = spotifyId(url);
+  if (!id) return null;
+  let title = null;
+  let artist = null;
+  const oe = await get(`https://open.spotify.com/oembed?url=${encodeURIComponent('https://open.spotify.com/track/' + id)}`);
+  try {
+    title = oe && JSON.parse(oe).title;
+  } catch {}
+  const embed = await get(`https://open.spotify.com/embed/track/${id}`);
+  if (embed) {
+    const a = embed.match(/"artists":\[\{"name":"([^"]+)"/) || embed.match(/"subtitle":"([^"]+)"/);
+    if (a) artist = JSON.parse('"' + a[1] + '"');
+    if (!title) {
+      const tt = embed.match(/"name":"([^"]+)","uri":"spotify:track:/);
+      if (tt) title = JSON.parse('"' + tt[1] + '"');
+    }
+  }
+  if (!title) return null;
+  const q = `${artist ? artist + ' - ' : ''}${title}`;
+  // поиск на YouTube без ключа: первая выдача; куки согласия — чтобы из Европы не уводило на страницу cookie
+  const html = await get(`https://www.youtube.com/results?search_query=${encodeURIComponent(q + ' audio')}&hl=en`, 7000, { Cookie: 'CONSENT=YES+cb; SOCS=CAI' });
+  const m = html && (html.match(/"videoRenderer":\{"videoId":"([\w-]{11})"/) || html.match(/"videoId":"([\w-]{11})"/));
+  if (!m) return null;
+  return { vid: m[1], title: q.slice(0, 120) };
+}
+
+module.exports = { handle, view, get: getRadio, ytId, fetchTitle, untitled, DEFAULT, spotifyId, resolveSpotify };

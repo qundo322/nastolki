@@ -4,7 +4,9 @@
    Всё работает через делегирование на document, поэтому переживает перерисовки innerHTML.
    Только мышь (на телефонах эффекты не нужны) и только если не включено «меньше анимации». */
 (() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const reduceMq = matchMedia('(prefers-reduced-motion: reduce)');
+  // «Меньше анимаций» в меню Вид работает как системная настройка
+  const reduce = { get matches() { return reduceMq.matches || document.documentElement.classList.contains('v-calm'); } };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ---------- 1. Магические карточки ----------
