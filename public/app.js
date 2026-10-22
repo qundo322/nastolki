@@ -232,7 +232,7 @@
     const px = SIZES[size] || size;
     const name = p?.name || '?';
     const team = p?.id ? bgFor(p.id) : null;
-    const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" onerror="this.remove()">` : '';
+    const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" decoding="sync" onerror="this.remove()">` : '';
     const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
     return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${typeof size === 'number' && px > 44 ? `;font-size:${Math.round(px * 0.34)}px` : ''}${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
   }
@@ -910,6 +910,9 @@
     // Прокрутка колонок команд сохраняется между перерисовками
     const colScroll = {};
     $app.querySelectorAll('.cn-col').forEach((el) => (colScroll[el.className] = el.scrollTop));
+    // Прокручиваемые панели (игроки в «Кто я» и «Шпионе», история) — сохраняем прокрутку между перерисовками
+    const keepScroll = {};
+    $app.querySelectorAll('[data-scroll]').forEach((el) => (keepScroll[el.dataset.scroll] = el.scrollTop));
     const hadForm = !!$app.querySelector('.cform.side');
     const rb = $app.querySelector('.rl-body');
     const rulesScroll = rb && rb.dataset.g === String(ui.showRules) ? rb.scrollTop : 0;
@@ -936,6 +939,9 @@
     if (c) c.scrollTop = nearBottom ? c.scrollHeight : chatScroll;
     $app.querySelectorAll('.cn-col').forEach((el) => {
       if (colScroll[el.className] != null) el.scrollTop = colScroll[el.className];
+    });
+    $app.querySelectorAll('[data-scroll]').forEach((el) => {
+      if (keepScroll[el.dataset.scroll] != null) el.scrollTop = keepScroll[el.dataset.scroll];
     });
     const form = $app.querySelector('.cform.side');
     if (form && !hadForm) {
@@ -2585,7 +2591,7 @@
     // История: кто кого спрашивал — с аватарками, свежие сверху
     const hist = g.qlog.length
       ? `<div class="card spy-hist"><div class="side-h">${ic('list', 16)} Кто кого спрашивал <span class="muted small">${g.qlog.length}</span></div>
-          <div class="sh-list">${g.qlog
+          <div class="sh-list" data-scroll="spy-hist">${g.qlog
             .map((q, i) => ({ ...q, n: i + 1 }))
             .reverse()
             .slice(0, 30)
@@ -2604,7 +2610,7 @@
     const score = Object.entries(g.score);
     const votedN = Object.keys(g.votes).length;
     return `<div class="spyfall spy2 ${ui.enter ? 'enter' : ''}">
-      <aside class="spy-players">
+      <aside class="spy-players" data-scroll="spy-players">
         <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${playing ? `обвинение — нужны голоса всех остальных${votedN ? ` · голосов ${votedN}` : ''}` : ''}</span></div>
         <div class="sp-list">${players}</div>
         ${score.length && score.some(([, n]) => n) ? `<div class="sp-score"><div class="side-h">Общий счёт</div>${leaderboard(score)}</div>` : ''}
@@ -2681,7 +2687,7 @@
             <div class="wt-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 16)} это вы`}</div>
             <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ''}</span>
           </div>
-          ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" loading="lazy">` : ''}
+          ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" decoding="sync">` : ''}
         </div>`;
       })
       .join('');
@@ -2739,7 +2745,7 @@
           ${!myState.guessed && !myState.gaveUp ? `<button class="btn success mega" data-act="who-guessed">${ic('check', 24)} Я угадал!</button><button class="btn ghost mega" data-act="who-giveup">${ic('flag', 22)} Сдаюсь</button>` : `<span class="muted">Вы уже ${myState.guessed ? 'угадали' : 'сдались'} — помогайте остальным</span>`}
         </div>`;
     return `<div class="who who2 ${ui.enter ? 'enter' : ''}">
-      <aside class="who-players">
+      <aside class="who-players" data-scroll="who-players">
         <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
         <div class="who-list">${tiles}</div>
       </aside>
