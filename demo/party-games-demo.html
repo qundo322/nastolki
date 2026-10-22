@@ -28,20 +28,14 @@
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
   --overlay: rgba(5, 4, 8, 0.6);
 
-  /* Акцент — меш-градиент розовый → фиолетовый → синий. --accent — его средний сплошной цвет
-     (для рамок, текста, полосок), --accent-bg — сам градиент (для кнопок и плашек). */
-  --accent: #b46cff;
-  --accent-hover: #c48bff;
-  --accent-ink: #ffffff;
-  --accent-text: #d2a8ff;
-  --accent-soft: rgba(180, 108, 255, 0.13);
-  --accent-line: rgba(180, 108, 255, 0.5);
-  --accent-bg:
-    radial-gradient(120% 160% at 0% 0%, #ff7ac8 0%, transparent 55%),
-    radial-gradient(110% 150% at 100% 0%, #8b5cff 0%, transparent 60%),
-    radial-gradient(140% 140% at 100% 100%, #5b7bff 0%, transparent 55%),
-    linear-gradient(120deg, #ee62c9 0%, #a35cff 55%, #6d6cff 100%);
-  --accent-glow: rgba(190, 100, 255, 0.45);
+  --accent: #f2c14b;
+  --accent-hover: #f6cf6e;
+  --accent-ink: #1b1405;
+  --accent-text: #f2c14b;
+  --accent-soft: rgba(242, 193, 75, 0.1);
+  --accent-line: rgba(242, 193, 75, 0.45);
+  --accent-bg: #f2c14b; /* сплошной; сюда можно подставить градиент — всё возьмёт отсюда */
+  --accent-glow: rgba(242, 193, 75, 0.35);
 
   --red: #e5484d;
   --red-ink: #ffffff;
@@ -114,8 +108,8 @@
      тонкие рамки, мягкие тени, высокий контраст текста */
   color-scheme: light;
   --bg: #f5f5f7;
-  --glow-1: rgba(168, 108, 255, 0.08);
-  --glow-2: rgba(255, 120, 200, 0.06);
+  --glow-1: rgba(124, 92, 255, 0.05);
+  --glow-2: rgba(40, 140, 220, 0.04);
   --surface: #ffffff;
   --surface-2: #f4f4f6;
   --surface-3: #e9e9ee;
@@ -129,18 +123,14 @@
   --shadow: 0 1px 2px rgba(16, 16, 28, 0.05), 0 6px 20px rgba(16, 16, 28, 0.06);
   --overlay: rgba(18, 18, 28, 0.3);
 
-  --accent: #8b45f0;
-  --accent-hover: #7a34e0;
-  --accent-ink: #ffffff;
-  --accent-text: #7330d8;
-  --accent-soft: #f3ecff;
-  --accent-line: #d5c2fb;
-  --accent-bg:
-    radial-gradient(120% 160% at 0% 0%, #f25fbf 0%, transparent 55%),
-    radial-gradient(110% 150% at 100% 0%, #8048f5 0%, transparent 60%),
-    radial-gradient(140% 140% at 100% 100%, #4e6cf5 0%, transparent 55%),
-    linear-gradient(120deg, #e055b8 0%, #8f4cf2 55%, #5b5ff0 100%);
-  --accent-glow: rgba(140, 70, 240, 0.28);
+  --accent: #f2c14b;
+  --accent-hover: #e9b431;
+  --accent-ink: #1b1405;
+  --accent-text: #8a6100;
+  --accent-soft: #fdf4d8;
+  --accent-line: #e6c56a;
+  --accent-bg: #f2c14b;
+  --accent-glow: rgba(214, 160, 30, 0.3);
 
   --red: #e5484d;
   --red-ink: #ffffff;
@@ -1964,22 +1954,21 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 /* ============================================================
    v27: акцент — меш-градиент, светлая тема в духе Linear
    ============================================================ */
-.home h1 span { background: var(--accent-bg); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.logo-mark { color: var(--accent); }
-.btn.primary { background: var(--accent-bg); border-color: transparent; color: var(--accent-ink); box-shadow: 0 6px 18px -6px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, .22); }
-.btn.primary:hover:not([disabled]) { filter: brightness(1.06) saturate(1.05); box-shadow: 0 10px 26px -8px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, .25); }
+.logo-mark { color: var(--accent-text); }
+.btn.primary { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 18px -8px var(--accent-glow); }
+.btn.primary:hover:not([disabled]) { filter: brightness(1.04); box-shadow: 0 10px 24px -10px var(--accent-glow); }
 .btn.primary[disabled] { filter: grayscale(.4) opacity(.6); }
 .gcard.active { border-color: var(--accent-line); }
 .gcard.active .gemoji { box-shadow: 0 6px 18px -4px var(--accent-glow); }
 .fader-track::after { background: var(--accent-bg); box-shadow: 0 0 calc(var(--v) / 5) var(--accent-glow); }
-.fader input::-webkit-slider-thumb { background: linear-gradient(90deg, transparent 6.5px, #7b4fe0 6.5px, #7b4fe0 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
-.fader input::-moz-range-thumb { background: linear-gradient(90deg, transparent 6.5px, #7b4fe0 6.5px, #7b4fe0 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
+.fader input::-webkit-slider-thumb { background: linear-gradient(90deg, transparent 6.5px, #1b1405 6.5px, #1b1405 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
+.fader input::-moz-range-thumb { background: linear-gradient(90deg, transparent 6.5px, #1b1405 6.5px, #1b1405 8.5px, transparent 8.5px), linear-gradient(180deg, #fff, #dcd8e8); }
 .fader-v { color: var(--accent-text); }
 .mc-on:not(.flip)::before { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 80%, transparent), transparent 62%); }
 
 /* Карточки Коднеймс: пятно света под курсором слабее, наклон и светящийся край — как были */
 .cn-card.mc-on::after { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .05), transparent 60%); }
-[data-theme='light'] .cn-card.mc-on::after { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgba(140, 80, 240, .05), transparent 60%); }
+[data-theme='light'] .cn-card.mc-on::after { background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 0, 0, .025), transparent 60%); }
 
 /* ---------- светлая тема: доводка ---------- */
 [data-theme='light'] body { background: radial-gradient(1200px 600px at 10% -10%, var(--glow-1) 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, var(--glow-2) 0%, transparent 55%), var(--bg); }
@@ -6371,9 +6360,9 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
   // ---------- 3. Голографические волны (WebGL) ----------
   // Цвета под тему: фон, три цвета переливов, сила
   const PAL = {
-    dark: { bg: '#0e0d13', a: '#8b5cff', b: '#ff6ec7', c: '#4f7dff', k: 1.15, hl: 0.08 },
-    oled: { bg: '#000000', a: '#7a4cf5', b: '#e85fb8', c: '#3f68e8', k: 0.7, hl: 0.05 },
-    light: { bg: '#f5f5f7', a: '#b79bff', b: '#ff9fd6', c: '#9db4ff', k: 0.8, hl: 0.4 },
+    dark: { bg: '#0e0d13', a: '#8a5cff', b: '#26c2f0', c: '#f2c14b', k: 1.15, hl: 0.09 },
+    oled: { bg: '#000000', a: '#7a4cf5', b: '#1fa8d8', c: '#e0ae35', k: 0.7, hl: 0.06 },
+    light: { bg: '#f5f5f7', a: '#9d86ff', b: '#5fc4f5', c: '#f5bf45', k: 0.85, hl: 0.35 },
   };
   const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
   const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
@@ -8710,7 +8699,7 @@ window.RULES = {
       <label class="cf-l"><b>1</b> Слово</label>
       <input class="inp clue-word" name="word" data-keep="cn-clue${mode === 'edit' ? '-e' : ''}" data-preview="1" value="${word}" placeholder="Одно слово" maxlength="30" autocomplete="off" required/>
       <label class="cf-l"><b>2</b> Карточки и сила</label>
-      <div class="cf-hint">1 — точно про это слово, 0.5 — наполовину, −1 — точно НЕ это. Цветная нить связывает силы: 1+1</div>
+      <div class="cf-hint">1 — точно про это слово, 0.5 — наполовину, −1 — точно НЕ это. Жёлтая нить связывает силы: 1+1</div>
       <div class="slots">${slots}</div>
       ${n < 9 ? `<button type="button" class="add-slot" data-act="cn-sadd">${ic('plus', 15)} Ещё карточка</button>` : ''}
       <label class="cf-l"><b>3</b> Агенты увидят</label>
