@@ -3,7 +3,6 @@ const { shuffle, Deck, clampInt, countLabel } = require('../util');
 
 // «Ответ большинства»: все тайно отвечают на простой вопрос. Совпал с другими — получил очки.
 const REVIEW_MS = 30000; // время на разбор ответов (хост может склеить похожие)
-const NEXT_MS = 5000; // отсчёт перед следующим вопросом
 
 const meta = {
   title: 'Ответ большинства',
@@ -113,7 +112,6 @@ function startRound(s, ctx) {
   s.groupOf = {};
   s.ready = {};
   s.last = null;
-  s.nextAt = null;
   s.phase = 'answer';
   setTimer(s, ctx, s.seconds * 1000, () => reveal(s, ctx));
 }
@@ -123,16 +121,9 @@ function reveal(s, ctx) {
   s.groupOf = autoGroups(s.answers);
   s.phase = 'review';
   s.ready = {};
-  s.nextAt = null;
-  setTimer(s, ctx, REVIEW_MS, () => soon(s, ctx));
+  setTimer(s, ctx, REVIEW_MS, () => advance(s, ctx));
 }
 
-// Отсчёт 5 секунд до следующего вопроса: группы уже не меняются, очки видны
-function soon(s, ctx) {
-  if (s.phase !== 'review' || s.nextAt) return;
-  setTimer(s, ctx, NEXT_MS, () => advance(s, ctx));
-  s.nextAt = s.endsAt;
-}
 
 // Конец разбора: начисляем очки по группам (с учётом склеек хоста)
 function finishRound(s) {
@@ -144,7 +135,6 @@ function finishRound(s) {
 
 function advance(s, ctx) {
   if (s.phase !== 'review') return;
-  s.nextAt = null;
   finishRound(s);
   if (s.round >= s.rounds) {
     s.phase = 'over';
@@ -175,7 +165,7 @@ function action(s, pid, msg, ctx) {
     case 'merge': {
       // Хост склеивает две группы похожих ответов: a — группа (pid любого её участника), b — куда
       if (!ctx.isHost) return 'Склеивает хост';
-      if (s.phase !== 'review' || s.nextAt) return;
+      if (s.phase !== 'review') return;
       const ga = s.groupOf[msg.a];
       const gb = s.groupOf[msg.b];
       if (!ga || !gb || ga === gb) return;
@@ -185,27 +175,27 @@ function action(s, pid, msg, ctx) {
     case 'split': {
       // Отделить ответ от группы (если склеилось лишнее)
       if (!ctx.isHost) return 'Только хост';
-      if (s.phase !== 'review' || s.nextAt || !s.groupOf[msg.a]) return;
+      if (s.phase !== 'review' || !s.groupOf[msg.a]) return;
       s.groupOf[msg.a] = msg.a + '#' + Date.now();
       return;
     }
     case 'ready': {
-      if (s.phase !== 'review' || s.nextAt) return;
+      if (s.phase !== 'review') return;
       s.ready[pid] = !s.ready[pid];
-      if (online(s, ctx).every((id) => s.ready[id])) soon(s, ctx);
+      if (online(s, ctx).every((id) => s.ready[id])) advance(s, ctx);
       return;
     }
     case 'skip': {
       if (!ctx.isHost) return 'Только хост';
       if (s.phase === 'answer') reveal(s, ctx);
-      else if (s.phase === 'review') s.nextAt ? advance(s, ctx) : soon(s, ctx);
+      else if (s.phase === 'review') advance(s, ctx);
       return;
     }
     case 'addTime': {
       if (!ctx.isHost) return 'Только хост';
-      if (!s.endsAt || s.phase === 'over' || s.nextAt) return;
+      if (!s.endsAt || s.phase === 'over') return;
       const left = s.endsAt - Date.now() + 15000;
-      const fn = s.phase === 'answer' ? () => reveal(s, ctx) : () => soon(s, ctx);
+      const fn = s.phase === 'answer' ? () => reveal(s, ctx) : () => advance(s, ctx);
       setTimer(s, ctx, left, fn);
       s.phaseMs = Math.max(left, s.phase === 'answer' ? s.seconds * 1000 : REVIEW_MS);
       return;
@@ -265,7 +255,6 @@ function view(s, pid) {
     order: s.order,
     points: s.points,
     winners: s.winners || null,
-    nextAt: s.nextAt || null,
   };
 }
 
@@ -292,10 +281,7 @@ function resume(s, ctx) {
   s._left = null;
   if (s.phase === 'answer') setTimer(s, ctx, left, () => reveal(s, ctx));
   else if (s.phase === 'review') {
-    if (s.nextAt) {
-      setTimer(s, ctx, left, () => advance(s, ctx));
-      s.nextAt = s.endsAt;
-    } else setTimer(s, ctx, left, () => soon(s, ctx));
+    setTimer(s, ctx, left, () => advance(s, ctx));
   }
 }
 

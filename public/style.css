@@ -2437,3 +2437,21 @@ html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 
 .jc:has(.jc-first) { border-color: #f2b524; }
 .jc-by { white-space: nowrap; max-width: 100%; overflow: hidden; } .jc-by b { overflow: hidden; text-overflow: ellipsis; }
 .notes-card .qa-cols { margin-bottom: 16px; }
+.nx-row { display: flex; align-items: center; gap: 14px; }
+.nx-row .nx-ring circle { animation-duration: var(--nd, 10s); }
+.toast.again { animation: toastShake .35s ease; } @keyframes toastShake { 0%,100% { translate: 0 0; } 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+/* кубок марафона — над кнопкой чата */
+.fab-row { position: relative; }
+.trophy-fab.up { position: absolute; right: 0; bottom: calc(100% + 10px); }
+
+/* ===== Коднеймс: «Передать ход» голосованием команды ===== */
+.cn-pass { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.cn-pass .cta-pass { margin-left: 0; gap: 8px; }
+.cn-pass .cta-pass .pend { position: relative; top: auto; right: auto; width: 22px; height: 22px; padding: 2px; box-shadow: none; }
+.cn-pass.pending .cta-pass { box-shadow: 0 0 0 3px var(--accent); }
+.cn-pass-who { display: inline-flex; align-items: center; gap: 4px; }
+.cn-pass-who .ava-wrap { opacity: .4; transition: opacity .2s; }
+.cn-pass-who .ava-wrap.on { opacity: 1; }
+.cn-pass-who small { margin-left: 4px; font-weight: 800; color: var(--muted); }
+.cn-pass-note { margin: 6px 0 0; display: flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 700; }
+@media (max-width: 760px) { .cn-pass { width: 100%; margin-left: 0; align-items: stretch; } .cn-pass-who { justify-content: center; } }

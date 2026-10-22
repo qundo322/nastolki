@@ -239,13 +239,29 @@
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
 
+  // Одно уведомление за раз: новое заменяет старое (ошибки не копятся столбиком при частых кликах).
+  // Тот же текст — просто продлеваем показ и слегка «встряхиваем».
+  let toastEl = null;
+  let toastT1 = 0;
+  let toastT2 = 0;
   function toast(msg, kind = 'err') {
-    const el = document.createElement('div');
-    el.className = 'toast ' + kind;
-    el.textContent = msg;
-    document.getElementById('toasts').appendChild(el);
-    setTimeout(() => el.classList.add('out'), 2600);
-    setTimeout(() => el.remove(), 3000);
+    const box = document.getElementById('toasts');
+    if (toastEl && toastEl.isConnected && toastEl.textContent === msg && toastEl.classList.contains(kind) && !toastEl.classList.contains('out')) {
+      toastEl.classList.remove('again');
+      void toastEl.offsetWidth;
+      toastEl.classList.add('again');
+    } else {
+      box.querySelectorAll('.toast').forEach((x) => x.remove());
+      toastEl = document.createElement('div');
+      toastEl.className = 'toast ' + kind;
+      toastEl.textContent = msg;
+      box.appendChild(toastEl);
+    }
+    const el = toastEl;
+    clearTimeout(toastT1);
+    clearTimeout(toastT2);
+    toastT1 = setTimeout(() => el.classList.add('out'), 2600);
+    toastT2 = setTimeout(() => el.remove(), 3000);
   }
 
   const emit = (ev, data = {}) =>
@@ -1420,7 +1436,7 @@
           : ''
       }
       <div class="fab-row">
-        ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''}" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
+        ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''} ${ui.chatOpen ? '' : 'up'}" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
         ${
           hostTools
             ? `<div class="ctl-wrap">${ctlOpen || ui.ctlClosing ? renderControls(g) : ''}
@@ -1490,7 +1506,7 @@
       if (g.step === 'guess' && !g.winner) items.push(btn('h-clearvotes', 'x', 'Снять все голоса агентов'));
       items.push(btn('cn-shuffle', 'shuffle', 'Перемешать команды'));
       if (!t) items.push(btn('cn-new', 'grid', 'Новая доска'));
-      if (!g.winner) items.push(btn('cn-end', 'skip', 'Передать ход'));
+      if (!g.winner) items.push(btn('cn-end-force', 'skip', 'Передать ход сразу'));
     } else if (g.type === 'alias') {
       if (g.phase === 'running') {
         items.push(btn('h-pauseturn', g.paused ? 'play' : 'pause', g.paused ? 'Продолжить ход' : 'Пауза хода', g.paused ? 'hot' : ''));
@@ -2246,6 +2262,18 @@
     return `<div class="cn-col t-${t}">${teamPanel(g, t)}${form}</div>`;
   }
 
+  // «Передать ход»: жмут все агенты; видно, кто уже нажал; когда все — 2 секунды и ход уходит
+  function passBtn(g) {
+    const mine = (g.passVotes || []).includes(S.me);
+    const ids = g.agentIds || [];
+    const pend = g.passPend;
+    const el = pend ? Math.max(0, pend.ms - (pend.at - now())) : 0;
+    return `<div class="cn-pass ${mine ? 'on' : ''} ${pend ? 'pending' : ''}">
+      <button class="btn ${mine ? 'ja-on' : 'primary'} big-w cta-pass" data-act="cn-end">${pend ? `<span class="pend" style="--d:${pend.ms}ms;--e:-${el}ms">${ring('fill')}</span>` : ic('skip', 18)} ${pend ? 'Передаём ход… нажмите, чтобы отменить' : mine ? 'Вы за — отменить' : 'Передать ход'}</button>
+      ${ids.length > 1 || mine ? `<span class="cn-pass-who" title="Кто нажал «Передать ход»">${ids.map((id) => `<span class="ava-wrap ${(g.passVotes || []).includes(id) ? 'on' : ''}">${pa(id, 26, 'round')}${(g.passVotes || []).includes(id) ? `<span class="rd">${ic('check', 10)}</span>` : ''}</span>`).join('')}<small>${(g.passVotes || []).length}/${ids.length}</small></span>` : ''}
+    </div>`;
+  }
+
   function rCodenames(g) {
     const me = S.me;
     const myTeam = g.team[me];
@@ -2286,8 +2314,9 @@
         <div class="cl-main"><span class="cl-label">Подсказка от ${nm(c.by)}</span><span class="cl-word">${esc(c.word)}</span></div>
         <div class="cl-nums">${clueChips(c, g.captain[c.team] === me)}</div>
         ${canEdit ? `<button class="btn sm edit-btn" data-act="cn-edit" data-until="${c.editUntil}" data-span="15000" title="Можно исправить в течение 15 секунд">${ring('', 100 - ((c.editUntil - now()) / 15000) * 100)}<span>${ic('pencil', 14)} Исправить</span><span class="secs">${Math.ceil((c.editUntil - now()) / 1000)}</span></button>` : ''}
-        ${amAgentNow ? `<button class="btn primary big-w cta-pass" data-act="cn-end">${ic('skip', 18)} Передать ход</button>` : ''}
+        ${amAgentNow ? passBtn(g) : ''}
       </div>
+      ${(g.passVotes || []).length && !amAgentNow ? `<p class="cn-pass-note small">${ic('skip', 14)} ${TN[g.turn]} хотят передать ход: ${g.passVotes.length}/${g.agentIds.length}</p>` : ''}
       <p class="cn-wait small muted">${amAgentNow ? `Кликните по карточке, чтобы проголосовать. Когда все агенты (${g.agentsNow}) выберут одну — через 2 секунды она откроется.` : myTurn && amCap ? 'Ваша команда выбирает карточки' : `Отгадывают ${TNg[g.turn]}`}</p>`;
     }
 
@@ -2815,13 +2844,13 @@
   }
   // Кнопка «Дальше» + кто уже нажал; после того как готовы все — 5 секунд отсчёта до следующего вопроса
   function nextBar(g, act) {
-    if (g.nextAt) {
-      const left = Math.max(0, g.nextAt - now());
-      return `<div class="nx" style="--nx:-${5000 - Math.min(5000, left)}ms"><div class="nx-ring"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/></svg><b data-nx="${g.nextAt}">${Math.max(1, Math.ceil(left / 1000))}</b></div><span>${g.round >= g.rounds ? 'Итоги игры' : 'Следующий вопрос'} через <b data-nx="${g.nextAt}">${Math.max(1, Math.ceil(left / 1000))}</b> с</span></div>`;
-    }
+    // Таймер результата идёт параллельно: смотрим итоги и жмём «Дальше»; нажали все — следующий вопрос сразу
+    const total = g.phaseMs || 10000;
+    const left = g.endsAt ? Math.max(0, g.endsAt - now()) : 0;
+    const ring = g.endsAt ? `<div class="nx-ring" title="До следующего вопроса" style="--nx:-${total - left}ms;--nd:${total}ms"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/></svg><b data-nx="${g.endsAt}">${Math.max(1, Math.ceil(left / 1000))}</b></div>` : '';
     const iReady = g.ready.includes(S.me);
     return `<div class="nx-wrap">
-      <button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="${act}">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button>
+      <div class="nx-row">${ring}<button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="${act}">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button></div>
       <div class="jo-ready nx-who"><span class="muted small">Нажали «Дальше» ${g.ready.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.ready.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.ready.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
     </div>`;
   }
@@ -3168,6 +3197,7 @@
     'cn-cap': (d) => act('join', { team: d.team, captain: true }),
     'cn-mark': (d) => act('mark', { i: Number(d.i) }),
     'cn-end': () => act('endTurn'),
+    'cn-end-force': () => act('endTurn', { force: true }),
     'cn-new': async () => (await ask({ title: 'Разложить новую доску?', text: 'Текущая партия закончится, карточки будут новые.', ok: 'Новая доска', icon: 'grid' })) && act('newBoard'),
     'cn-shuffle': async () => (await ask({ title: 'Перемешать команды?', text: 'Игроки разойдутся по командам случайно, капитаны тоже назначатся случайно.', ok: 'Перемешать', icon: 'shuffle' })) && act('shuffleTeams'),
     'cn-pause': () => act('pauseClock'),

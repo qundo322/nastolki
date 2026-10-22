@@ -105,6 +105,13 @@ function bot(name, real = '') {
   assert(!g(h).pending, 'cancelled');
   await agents[0].act('endTurn');
   await wait(100);
+  if (agents.length > 1) {
+    assert(g(h).turn === cn.turn && g(h).passVotes.length === 1 && !g(h).passPend, 'pass needs all agents');
+    for (const a of agents.slice(1)) await a.act('endTurn');
+    await wait(100);
+  }
+  assert(g(h).passPend && g(h).turn === cn.turn, 'all agents pressed → 2s countdown');
+  await wait(2200);
   assert(g(h).turn !== cn.turn, 'turn passed');
   // таймер: после передачи хода у капитана 60 с, после подсказки — 60 с на отгадывание
   let ck = g(h).clock;
@@ -355,15 +362,11 @@ function bot(name, real = '') {
   assert(g(h).q.mask && /^−?X+(,X+)?$/.test(g(h).q.mask), 'answer mask XXX');
   for (const b of bots) await b.act('ready');
   await wait(80);
-  assert(g(h).phase === 'reveal' && g(h).nextAt > Date.now() + 3000, 'all ready → 5s countdown');
-  assert((await bots[0].act('ready')) && g(h).ready.length === 5, 'ready locked during countdown');
-  await h.act('skip');
-  await wait(60);
-  assert(g(h).round === 2 && g(h).phase === 'answer', 'next question after countdown');
+  assert(g(h).round === 2 && g(h).phase === 'answer', 'all ready → next question at once');
   await h.act('skip');
   await wait(50);
   assert(g(h).phase === 'reveal' && g(h).res.list.length === 0, 'host can reveal early');
-  for (let k = 0; k < 5; k++) await h.act('skip');
+  for (let k = 0; k < 3; k++) await h.act('skip');
   await wait(50);
   assert(g(h).phase === 'over', 'game over after rounds');
   console.log('✓ Викторина');
@@ -401,14 +404,11 @@ function bot(name, real = '') {
     assert(g(h).groups.length === 3, 'host split answer back');
     for (const b of ps) await b.act('ready');
     await wait(60);
-    assert(g(h).phase === 'review' && g(h).nextAt, 'majority countdown');
-    await h.act('skip');
-    await wait(60);
     assert(g(h).round === 2 && g(h).phase === 'answer' && g(h).points[ps[0].st.me] === 3, 'points applied, next question');
     await h.act('skip');
     await wait(40);
     assert(g(h).phase === 'review', 'host opens answers');
-    for (let k = 0; k < 5; k++) await h.act('skip');
+    for (let k = 0; k < 3; k++) await h.act('skip');
     await wait(60);
     assert(g(h).phase === 'over', 'majority over');
   }

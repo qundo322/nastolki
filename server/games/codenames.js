@@ -213,8 +213,37 @@ function cancelPending(s, ctx) {
   }
 }
 
+// «Передать ход»: решение команды — нажать должны все агенты в сети, потом 2 секунды на «передумать»
+const PASS_MS = 2000;
+function cancelPass(s, ctx) {
+  if (s.passPend) {
+    s.passPend = null;
+    ctx.clearTimer('cn-pass');
+  }
+}
+function clearPass(s, ctx) {
+  s.passVotes = {};
+  cancelPass(s, ctx);
+}
+function checkPass(s, ctx) {
+  if (s.winner || s.step !== 'guess') return clearPass(s, ctx);
+  const ag = agents(s, ctx);
+  const votes = s.passVotes || (s.passVotes = {});
+  for (const id of Object.keys(votes)) if (s.team[id] !== s.turn || s.captain[s.turn] === id) delete votes[id];
+  if (!ag.length || !ag.every((id) => votes[id])) return cancelPass(s, ctx);
+  if (s.passPend) return;
+  s.passPend = { at: Date.now() + PASS_MS, ms: PASS_MS };
+  ctx.setTimer('cn-pass', PASS_MS, () => {
+    if (!s.passPend) return;
+    s.passPend = null;
+    s.log.push({ kind: 'pass', team: s.turn, by: TN[s.turn] });
+    passTurn(s, ctx);
+  });
+}
+
 function passTurn(s, ctx) {
   cancelPending(s, ctx);
+  clearPass(s, ctx);
   s.cards.forEach((c) => (c.marks = []));
   s.turn = enemy(s.turn);
   s.step = 'clue';
@@ -254,6 +283,7 @@ function reveal(s, i, ctx) {
     st.capHits[cap] = (st.capHits[cap] || 0) + 1;
   }
   s.cards.forEach((x) => (x.marks = []));
+  clearPass(s, ctx); // открыли карточку — решение о передаче хода принимаем заново
   s.log.push({ kind: 'reveal', team: s.turn, text: c.w, color: c.color, by: TN[s.turn] });
   if (c.color === 'assassin') {
     s.winner = enemy(s.turn);
@@ -418,8 +448,17 @@ function action(s, pid, msg, ctx) {
       const isAgent = s.team[pid] === s.turn && s.captain[s.turn] !== pid;
       if (!isAgent && !ctx.isHost) return 'Передать ход может агент ходящей команды';
       if (s.step !== 'guess' && !ctx.isHost) return 'Сначала нужна подсказка';
-      s.log.push({ kind: 'pass', team: s.turn, by: name });
-      passTurn(s, ctx);
+      // Хост из панели управления передаёт ход сразу; агенты — голосуют
+      if (msg.force && ctx.isHost) {
+        s.log.push({ kind: 'pass', team: s.turn, by: name });
+        passTurn(s, ctx);
+        return;
+      }
+      if (!isAgent) return 'Передать ход может агент ходящей команды';
+      const votes = s.passVotes || (s.passVotes = {});
+      if (votes[pid]) delete votes[pid];
+      else votes[pid] = true;
+      checkPass(s, ctx);
       return;
     }
     case 'addTime': {
@@ -478,6 +517,9 @@ function view(s, pid, ctx) {
     left: { red: left(s, 'red'), blue: left(s, 'blue') },
     agentsNow: agents(s, ctx).length,
     pending: s.pending,
+    passVotes: Object.keys(s.passVotes || {}),
+    passPend: s.passPend || null,
+    agentIds: s.winner || s.step !== 'guess' ? [] : agents(s, ctx),
     ready: s.ready || {},
     needs: setup || s.winner ? setupNeeds(s, ctx) : [],
     clock: c ? { endsAt: c.endsAt, total: c.total, over: c.over || false, paused: c.paused, left: c.paused ? c.left : Math.max(0, c.endsAt - Date.now()) } : null,
@@ -500,18 +542,22 @@ function onLeave(s, pid, ctx) {
   s.cards.forEach((c) => (c.marks = c.marks.filter((m) => m !== pid)));
   for (const c of ['red', 'blue']) if (s.captain[c] === pid) s.captain[c] = null;
   if (s.ready) delete s.ready[pid];
+  if (s.passVotes) delete s.passVotes[pid];
   checkConsensus(s, ctx);
+  checkPass(s, ctx);
   checkReady(s, ctx);
 }
 
 // Приостановка при уходе в лобби и возврат
 function pause(s, ctx) {
   cancelPending(s, ctx);
+  cancelPass(s, ctx);
   if (pauseClock(s, ctx)) s.clock.auto = true;
 }
 function resume(s, ctx) {
   if (s.clock && s.clock.auto) resumeClock(s, ctx);
   checkConsensus(s, ctx);
+  checkPass(s, ctx);
 }
 
 const isOver = (s) => !!s.winner;
@@ -520,6 +566,7 @@ const results = (s) => Object.fromEntries(Object.keys(s.team).map((id) => [id, s
 
 function onPresence(s, ctx) {
   checkConsensus(s, ctx);
+  checkPass(s, ctx);
   checkReady(s, ctx);
 }
 

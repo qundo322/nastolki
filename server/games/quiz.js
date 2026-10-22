@@ -2,8 +2,7 @@ const QUESTIONS = require('../quiz_questions');
 const { shuffle, Deck, clampInt, countLabel } = require('../util');
 
 // «Викторина»: ответ — число, балл получает тот, кто ближе всех к правильному
-const REVEAL_MS = 15000; // сколько показываем результат раунда (вместе с отсчётом)
-const NEXT_MS = 5000; // отсчёт перед следующим вопросом
+const REVEAL_MS = 10000; // 10 секунд на результат; нажали «Дальше» все — сразу следующий вопрос
 
 const meta = {
   title: 'Викторина',
@@ -70,7 +69,6 @@ function startRound(s, ctx) {
   s.q = { cat, text: q, answer: a, unit };
   s.answers = {};
   s.res = null;
-  s.nextAt = null;
   s.phase = 'answer';
   setTimer(s, ctx, s.seconds * 1000, () => reveal(s, ctx));
 }
@@ -96,20 +94,12 @@ function reveal(s, ctx) {
   s.history.push({ q: s.q.text, answer: a, unit: s.q.unit, winners });
   s.phase = 'reveal';
   s.ready = {};
-  s.nextAt = null;
-  setTimer(s, ctx, REVEAL_MS - NEXT_MS, () => soon(s, ctx));
+  setTimer(s, ctx, REVEAL_MS, () => advance(s, ctx));
 }
 
-// Отсчёт 5 секунд до следующего вопроса — чтобы все успели перевести дух
-function soon(s, ctx) {
-  if (s.phase !== 'reveal' || s.nextAt) return;
-  setTimer(s, ctx, NEXT_MS, () => advance(s, ctx));
-  s.nextAt = s.endsAt;
-}
 
 function advance(s, ctx) {
   if (s.phase !== 'reveal') return;
-  s.nextAt = null;
   if (s.round >= s.rounds) {
     s.phase = 'over';
     ctx.clearTimer('quiz');
@@ -137,15 +127,15 @@ function action(s, pid, msg, ctx) {
     }
     case 'ready': {
       // «Дальше»: когда готовы все — следующий вопрос раньше таймера
-      if (s.phase !== 'reveal' || s.nextAt) return;
+      if (s.phase !== 'reveal') return;
       s.ready[pid] = !s.ready[pid];
-      if (online(s, ctx).every((id) => s.ready[id])) soon(s, ctx);
+      if (online(s, ctx).every((id) => s.ready[id])) advance(s, ctx);
       return;
     }
     case 'skip': {
       if (!ctx.isHost) return 'Только хост';
       if (s.phase === 'answer') reveal(s, ctx);
-      else if (s.phase === 'reveal') s.nextAt ? advance(s, ctx) : soon(s, ctx);
+      else if (s.phase === 'reveal') advance(s, ctx);
       return;
     }
     case 'addTime': {
@@ -194,7 +184,6 @@ function view(s, pid) {
     endsAt: s.endsAt,
     phaseMs: s.phaseMs,
     q: s.q ? { cat: s.q.cat, text: s.q.text, unit: s.q.unit, answer: showAll ? s.q.answer : null, mask: mask(s.q.answer) } : null,
-    nextAt: s.nextAt || null,
     answered: Object.keys(s.answers || {}),
     mine: s.answers?.[pid] ?? null,
     res: showAll ? s.res : null,
@@ -230,10 +219,7 @@ function resume(s, ctx) {
   s._left = null;
   if (s.phase === 'answer') setTimer(s, ctx, left, () => reveal(s, ctx));
   else if (s.phase === 'reveal') {
-    if (s.nextAt) {
-      setTimer(s, ctx, left, () => advance(s, ctx));
-      s.nextAt = s.endsAt;
-    } else setTimer(s, ctx, left, () => soon(s, ctx));
+    setTimer(s, ctx, left, () => advance(s, ctx));
   }
 }
 
