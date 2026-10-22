@@ -6,18 +6,18 @@ const assert = (c, m) => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function bot(profile, name) {
+function bot(name, real = '') {
   const s = io(URL, { transports: ['websocket'] });
-  const b = { profile, name, s, st: null, token: (profile || name) + Math.random() };
+  const b = { name, real, s, st: null, avatar: null, token: name + Math.random() };
   s.on('state', (st) => (b.st = st));
   b.call = (ev, data) => new Promise((r) => s.emit(ev, data, r));
   b.act = (type, x = {}) => b.call('action', { type, ...x });
-  b.enter = (ev, code) => b.call(ev, { token: b.token, profile: b.profile, name: b.name, code });
+  b.enter = (ev, code) => b.call(ev, { token: b.token, name: b.name, real: b.real, avatar: b.avatar, code });
   return b;
 }
 
 (async () => {
-  const bots = [bot('vlad'), bot('kostya'), bot('ruslan'), bot('yan'), bot(null, 'Гость')];
+  const bots = [bot('Влад', 'Владислав'), bot('Костя'), bot('Руслан'), bot('Ян'), bot('Гость')];
   await wait(300);
   const [h] = bots;
   const r = await h.enter('createRoom');
@@ -25,16 +25,35 @@ function bot(profile, name) {
   for (const b of bots.slice(1)) assert((await b.enter('joinRoom', r.code)).ok, 'join');
   await wait(200);
   assert(h.st.room.players.length === 5, 'players 5');
-  assert(h.st.room.players[0].name === 'Влад' && h.st.room.players[0].profile === 'vlad', 'profile name');
-  // тот же профиль с другого устройства, пока онлайн — нельзя
-  const dup = bot('kostya');
+  assert(h.st.room.players[0].name === 'Влад' && h.st.room.players[0].real === 'Владислав', 'nick + real name');
+  assert(h.st.room.players[1].real === '', 'real name optional');
+  // без ника не пускаем
+  const noname = bot('  ');
   await wait(200);
-  assert((await dup.enter('joinRoom', r.code)).error, 'duplicate profile rejected');
+  assert((await noname.enter('joinRoom', r.code)).error, 'nickname required');
+  noname.s.disconnect();
+  // тот же ник (без учёта регистра), пока он онлайн — нельзя
+  const dup = bot('костя');
+  await wait(200);
+  assert((await dup.enter('joinRoom', r.code)).error, 'duplicate nick rejected');
   dup.s.disconnect();
-  assert((await h.call('setAvatar', { avatar: { s: 1, h: 2, hc: 3, e: 4, m: 5, b: 6, a: 7, w: 9 } })).ok, 'avatar');
-  assert((await h.call('setAvatar', { avatar: { s: 12 } })).error, 'bad avatar rejected');
+  // своё фото: загрузка → короткая ссылка → картинка по ссылке
+  const PNG1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  assert((await h.call('uploadAvatar', { data: 'data:image/png;base64,AAAA' })).error, 'not an image rejected');
+  assert((await h.call('uploadAvatar', { data: 'data:text/html;base64,PGI+' })).error, 'html rejected');
+  const up = await h.call('uploadAvatar', { data: PNG1 });
+  assert(up.ok && /^\/av\/[a-f0-9]{24}$/.test(up.url), 'upload → url');
+  const img = await fetch(URL + up.url);
+  assert(img.status === 200 && img.headers.get('content-type') === 'image/png', 'avatar served');
+  assert((await h.call('setAvatar', { avatar: up.url })).ok, 'avatar set');
+  assert((await h.call('setAvatar', { avatar: '/av/000000000000000000000000' })).error, 'unknown avatar rejected');
+  assert((await h.call('setAvatar', { avatar: 'https://evil.example/x.png' })).error, 'foreign url rejected');
   await wait(100);
-  assert(h.st.room.players[0].avatar.w === 9, 'avatar stored');
+  assert(h.st.room.players[0].avatar === up.url, 'avatar stored');
+  assert((await h.call('rename', { name: 'Костя' })).error, 'rename to taken nick rejected');
+  assert((await h.call('rename', { name: 'Влад', real: 'Влад Д.' })).ok, 'rename real');
+  await wait(60);
+  assert(h.st.room.players[0].real === 'Влад Д.', 'real updated');
   console.log('✓ Профили');
 
   const g = (b) => b.st.game;
@@ -482,14 +501,14 @@ function bot(profile, name) {
     console.log('✓ Радио комнаты');
   }
 
-  // ---- реконнект по профилю и кик
+  // ---- реконнект по нику с другого устройства и кик
   const yan = bots[3];
   yan.s.disconnect();
   await wait(200);
   assert(!h.st.room.players.find((p) => p.name === 'Ян').connected, 'offline');
-  const again = bot('yan'); // новое устройство, другой токен
+  const again = bot('Ян'); // новое устройство, другой токен
   await wait(300);
-  assert((await again.enter('joinRoom', r.code)).ok, 'rejoin by profile');
+  assert((await again.enter('joinRoom', r.code)).ok, 'rejoin by nick');
   await wait(100);
   assert(h.st.room.players.length === 5 && h.st.room.players.find((p) => p.name === 'Ян').connected, 'same seat');
   await h.call('kick', { target: again.st.me });
@@ -499,7 +518,7 @@ function bot(profile, name) {
 
   // ---- Мало игроков: игра открывается в ожидании, ошибка — только при старте
   {
-    const solo = bot(null, 'Соло');
+    const solo = bot('Соло');
     await wait(200);
     const rr = await solo.enter('createRoom');
     assert(rr.ok, 'solo room');
@@ -509,7 +528,7 @@ function bot(profile, name) {
     assert(solo.st.game && solo.st.game.waiting && /минимум 2/.test(solo.st.game.need), 'waiting view');
     const e1 = await solo.act('begin');
     assert(e1.error && /минимум 2/.test(e1.error), 'begin errors while too few');
-    const friend = bot(null, 'Друг');
+    const friend = bot('Друг');
     await wait(200);
     assert((await friend.enter('joinRoom', rr.code)).ok, 'friend joins by link');
     await wait(60);

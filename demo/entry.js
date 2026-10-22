@@ -11,7 +11,6 @@ const GAMES = {
 
 const Waiting = require('../server/waiting');
 for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
-const PROFILES = require('../server/profiles');
 const Tour = require('../server/tournament');
 const Session = require('../server/session');
 const Radio = require('../server/radio');
@@ -23,9 +22,7 @@ const origFetch = window.fetch ? window.fetch.bind(window) : null;
 window.fetch = (u, o) =>
   String(u).endsWith('/api/games')
     ? Promise.resolve({ json: () => Promise.resolve(META) })
-    : String(u).endsWith('/api/profiles')
-      ? Promise.resolve({ json: () => Promise.resolve(PROFILES) })
-      : origFetch(u, o);
+    : origFetch(u, o);
 try {
   history.replaceState = () => {};
 } catch {}
@@ -54,15 +51,22 @@ const room = {
   suspended: null,
 };
 const NAMES = ['Влад', 'Дима', 'Оля', 'Саша', 'Мила', 'Костя', 'Аня', 'Женя', 'Таня', 'Рома', 'Лена', 'Игорь'];
-const randAvatar = () => Object.fromEntries(Session.AVATAR_KEYS.map((k) => [k, Math.floor(Math.random() * 10)]));
-function addPlayer(name, profile = null) {
+// Игроки демо: ник + реальное имя (видно при наведении на аватар)
+const BOTS = [
+  ['Влад', 'Владислав'], ['Костя', 'Константин'], ['Руслан', ''], ['Ян', 'Ян Ковальчук'], ['Вадим Б.', 'Вадим Бондаренко'],
+  ['Святослав', ''], ['Юрий', 'Юрий Мельник'], ['Оля', 'Ольга'], ['Мила', ''], ['Рома', 'Роман'],
+];
+const nickKey = (n) => String(n || '').trim().toLowerCase().replace(/ё/g, 'е');
+// В демо нет сервера картинок — фото хранится как есть (data:image/...)
+const demoPhoto = (u) => (typeof u === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(u) && u.length < 220000 ? u : null);
+function addPlayer(name, real = '') {
   const id = uid();
-  room.players.set(id, { id, name, profile, avatar: randAvatar(), connected: true, sockets: new Set([1]) });
+  room.players.set(id, { id, name, real, avatar: null, connected: true, sockets: new Set([1]) });
   room.order.push(id);
   if (!room.hostId) room.hostId = id;
   return id;
 }
-PROFILES.slice(0, 5).forEach((p) => addPlayer(p.name, p.id));
+BOTS.slice(0, 5).forEach(([n, r]) => addPlayer(n, r));
 let active = room.hostId;
 let entered = false; // демо стартует с экрана входа
 const lastView = {};
@@ -103,7 +107,7 @@ function viewFor(pid) {
       code: room.code,
       hostId: room.hostId,
       gameType: room.gameType,
-      players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile, avatar: p.avatar })),
+      players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, real: p.real || '', connected: p.connected, avatar: p.avatar })),
       chat: room.chat.slice(-50),
       radio: Radio.view(room),
       tour: Tour.publicTour(room.tour),
@@ -140,27 +144,42 @@ function handle(pid, ev, msg = {}) {
   switch (ev) {
     case 'createRoom':
     case 'joinRoom': {
-      // В демо вход = выбрать, за кого играть
-      let seat = msg.profile
-        ? [...room.players.values()].find((p) => p.profile === msg.profile)
-        : [...room.players.values()].find((p) => !p.profile && p.name === msg.name);
-      if (!seat) seat = room.players.get(addPlayer(msg.profile ? PROFILES.find((p) => p.id === msg.profile).name : msg.name || 'Гость', msg.profile || null));
-      const av = Session.cleanAvatar(msg.avatar);
-      if (av) seat.avatar = av;
+      // В демо вход по нику: такой ник уже есть — играем за него
+      const nick = String(msg.name || '').trim().slice(0, 24);
+      if (!nick) return { error: 'Введите никнейм' };
+      let seat = [...room.players.values()].find((p) => nickKey(p.name) === nickKey(nick));
+      if (!seat) seat = room.players.get(addPlayer(nick));
+      seat.real = String(msg.real || '').trim().slice(0, 40);
+      seat.avatar = demoPhoto(msg.avatar);
       active = seat.id;
       if (ev === 'createRoom' && !room.game) room.hostId = seat.id;
       entered = true;
       return { ok: true, code: room.code, pid: seat.id };
     }
+    case 'uploadAvatar': {
+      const u = demoPhoto(msg.data);
+      return u ? { ok: true, url: u } : { error: 'Нужна картинка JPEG, PNG или WebP' };
+    }
     case 'setAvatar': {
-      const av = Session.cleanAvatar(msg.avatar);
-      if (!av) return 'Неверный аватар';
-      room.players.get(pid).avatar = av;
+      if (msg.avatar == null) room.players.get(pid).avatar = null;
+      else {
+        const u = demoPhoto(msg.avatar);
+        if (!u) return 'Фото не найдено — загрузите ещё раз';
+        room.players.get(pid).avatar = u;
+      }
       return;
     }
-    case 'rename':
-      room.players.get(pid).name = String(msg.name || '').slice(0, 24) || 'Игрок';
+    case 'rename': {
+      const p = room.players.get(pid);
+      if (msg.name != null) {
+        const n = String(msg.name).trim().slice(0, 24);
+        if (!n) return 'Введите никнейм';
+        if ([...room.players.values()].some((x) => x !== p && nickKey(x.name) === nickKey(n))) return 'Такой ник уже есть в комнате';
+        p.name = n;
+      }
+      if (msg.real != null) p.real = String(msg.real).trim().slice(0, 40);
       return;
+    }
     case 'chat':
       if (String(msg.text || '').trim())
         room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
@@ -344,8 +363,8 @@ bar.addEventListener('click', (e) => {
     return;
   }
   if (b.dataset.demoAdd !== undefined) {
-    const free = PROFILES.find((p) => ![...room.players.values()].some((x) => x.profile === p.id));
-    if (free) addPlayer(free.name, free.id);
+    const free = BOTS.find(([n]) => ![...room.players.values()].some((x) => nickKey(x.name) === nickKey(n)));
+    if (free) addPlayer(free[0], free[1]);
     else addPlayer('Гость ' + room.order.length);
   } else if (b.dataset.demoPid) active = b.dataset.demoPid;
   broadcast();

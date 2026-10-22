@@ -19,7 +19,7 @@ const GAMES = {
 const Waiting = require('./waiting');
 for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
 
-const PROFILES = require('./profiles');
+const Avatars = require('./avatars');
 const Tour = require('./tournament');
 const Session = require('./session');
 const Radio = require('./radio');
@@ -34,7 +34,7 @@ app.get('/health', (_req, res) => res.json({ ok: true, rooms: rooms.size }));
 app.get('/api/games', (_req, res) =>
   res.json(Object.entries(GAMES).map(([id, g]) => ({ id, ...g.meta })))
 );
-app.get('/api/profiles', (_req, res) => res.json(PROFILES));
+Avatars.route(app);
 // Красивые ссылки вида /r/ABCD
 app.get('/r/:code', (_req, res) =>
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
@@ -60,6 +60,10 @@ const newId = () => crypto.randomBytes(6).toString('hex');
 function cleanName(n) {
   return String(n || '').replace(/\s+/g, ' ').trim().slice(0, 24) || 'Игрок';
 }
+// Реальное имя — необязательное, видно при наведении на аватар
+const cleanReal = (n) => String(n || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+// Ник для сравнения: «Влад», «влад » и «ВЛАД» — один и тот же
+const nickKey = (n) => cleanName(n).toLowerCase().replace(/ё/g, 'е');
 
 function createRoom() {
   const room = {
@@ -120,7 +124,7 @@ function publicRoom(room) {
     players: room.order
       .map((id) => room.players.get(id))
       .filter(Boolean)
-      .map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile || null, avatar: p.avatar || null })),
+      .map((p) => ({ id: p.id, name: p.name, real: p.real || '', connected: p.connected, avatar: p.avatar || null })),
     chat: room.chat.slice(-50),
     radio: Radio.view(room),
     tour: Tour.publicTour(room.tour),
@@ -182,41 +186,33 @@ io.on('connection', (socket) => {
 
   const fail = (cb, msg) => cb && cb({ error: msg });
 
-  function attach(room, token, name, cb, profileId, avatar) {
-    const prof = PROFILES.find((x) => x.id === profileId);
+  function attach(room, token, { name, real, avatar }, cb) {
+    if (!String(name || '').trim()) return fail(cb, 'Введите никнейм');
     let pid = room.tokens.get(token);
     let p = pid && room.players.get(pid);
-    if (prof && (!p || p.profile !== prof.id)) {
-      // Свой игрок: занимаем его место в комнате, если оно уже есть
-      const seat = [...room.players.values()].find((x) => x.profile === prof.id);
-      if (seat) {
-        if (seat.connected && room.tokens.get(token) !== seat.id) return fail(cb, `${prof.name} уже в комнате`);
-        for (const [t, id] of room.tokens) if (id === seat.id) room.tokens.delete(t);
-        if (p && p.id !== seat.id) removePlayer(room, p.id);
-        room.tokens.set(token, seat.id);
-        pid = seat.id;
-        p = seat;
-      } else if (p) {
-        p.profile = prof.id;
-        p.name = prof.name;
-      }
+    const key = nickKey(name);
+    // Тот же ник уже в комнате: если он не в сети — это вы с другого устройства, занимаем его место
+    const same = [...room.players.values()].find((x) => nickKey(x.name) === key && x !== p);
+    if (same) {
+      if (same.connected) return fail(cb, `Ник «${same.name}» уже занят в этой комнате — выберите другой`);
+      for (const [t, id] of room.tokens) if (id === same.id) room.tokens.delete(t);
+      if (p) removePlayer(room, p.id);
+      room.tokens.set(token, same.id);
+      pid = same.id;
+      p = same;
     }
     if (!p) {
       if (room.players.size >= MAX_PLAYERS_PER_ROOM) return fail(cb, `Комната заполнена (максимум ${MAX_PLAYERS_PER_ROOM})`);
       pid = newId();
-      p = { id: pid, name: prof ? prof.name : cleanName(name), profile: prof ? prof.id : null, connected: true, sockets: new Set() };
+      p = { id: pid, name: cleanName(name), connected: true, sockets: new Set() };
       room.players.set(pid, p);
       room.tokens.set(token, pid);
       room.order.push(pid);
       if (!room.hostId) room.hostId = pid;
-    } else if (name && !p.profile) {
-      p.name = cleanName(name);
-    } else if (!prof && p.profile) {
-      p.profile = null;
-      p.name = cleanName(name);
     }
-    const av = Session.cleanAvatar(avatar);
-    if (av) p.avatar = av;
+    p.name = cleanName(name);
+    p.real = cleanReal(real);
+    p.avatar = Avatars.clean(avatar);
     p.sockets.add(socket.id);
     p.connected = true;
     socket.data.room = room.code;
@@ -245,19 +241,26 @@ io.on('connection', (socket) => {
     broadcast(room);
   }
 
-  socket.on('createRoom', ({ token, name, profile, avatar } = {}, cb) => {
-    if (!token) return fail(cb, 'Нет токена');
-    detach();
-    const room = createRoom();
-    attach(room, String(token), name, cb, profile, avatar);
+  // Своё фото: клиент присылает уже обрезанный под круг квадрат, получает короткую ссылку
+  socket.on('uploadAvatar', ({ data } = {}, cb) => {
+    const r = Avatars.put(data);
+    cb && cb(r.error ? { error: r.error } : { ok: true, url: r.url });
   });
 
-  socket.on('joinRoom', ({ token, name, code, profile, avatar } = {}, cb) => {
-    const room = rooms.get(String(code || '').toUpperCase().trim());
+  socket.on('createRoom', (msg = {}, cb) => {
+    if (!msg.token) return fail(cb, 'Нет токена');
+    if (!String(msg.name || '').trim()) return fail(cb, 'Введите никнейм');
+    detach();
+    const room = createRoom();
+    attach(room, String(msg.token), msg, cb);
+  });
+
+  socket.on('joinRoom', (msg = {}, cb) => {
+    const room = rooms.get(String(msg.code || '').toUpperCase().trim());
     if (!room) return fail(cb, 'Комната не найдена — возможно, она закрылась');
-    if (!token) return fail(cb, 'Нет токена');
+    if (!msg.token) return fail(cb, 'Нет токена');
     if (socket.data.room && socket.data.room !== room.code) detach();
-    attach(room, String(token), name, cb, profile, avatar);
+    attach(room, String(msg.token), msg, cb);
   });
 
   // Всё остальное — только внутри комнаты
@@ -286,15 +289,25 @@ io.on('connection', (socket) => {
     removePlayer(room, pid);
   }));
 
-  socket.on('rename', inRoom((room, pid, { name }) => {
+  socket.on('rename', inRoom((room, pid, { name, real }) => {
     const p = room.players.get(pid);
-    if (p.profile) return 'Имя своего игрока меняется в server/profiles.js';
-    p.name = cleanName(name);
+    if (name != null) {
+      if (!String(name).trim()) return 'Введите никнейм';
+      const key = nickKey(name);
+      if ([...room.players.values()].some((x) => x !== p && nickKey(x.name) === key)) return 'Такой ник уже есть в комнате';
+      p.name = cleanName(name);
+    }
+    if (real != null) p.real = cleanReal(real);
   }));
 
+  // Сменить фото (null — убрать, будут инициалы)
   socket.on('setAvatar', inRoom((room, pid, { avatar }) => {
-    const av = Session.cleanAvatar(avatar);
-    if (!av) return 'Неверный аватар';
+    if (avatar == null) {
+      room.players.get(pid).avatar = null;
+      return;
+    }
+    const av = Avatars.clean(avatar);
+    if (!av) return 'Фото не найдено — загрузите ещё раз';
     room.players.get(pid).avatar = av;
   }));
 

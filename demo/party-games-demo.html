@@ -267,50 +267,25 @@ select.inp { width: auto; cursor: pointer; }
 /* --- аватарки --- */
 .ava { --h: 200; position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; overflow: hidden;
   background: hsl(var(--h) 42% 34%); color: hsl(var(--h) 85% 92%); font-weight: 800; font-size: 11px; letter-spacing: 0.02em; }
-.ava.px { border-radius: 22%; background: transparent; }
-.ava.px svg { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 .ava.xs { font-size: 8px; }
 .ava.lg { font-size: 19px; }
 .ava.plus { background: transparent; border: 2px dashed var(--line-strong); color: var(--muted); border-radius: 50%; }
-.pick-tile.new:hover .ava.plus { border-color: var(--accent); color: var(--accent-text); }
 .who-n { display: inline-flex; align-items: center; gap: 7px; vertical-align: middle; }
 
 /* --- вход --- */
 .home-top { position: fixed; top: 14px; right: 14px; z-index: 5; }
 .home { max-width: 1040px; margin: 0 auto; padding: 56px 20px; display: grid; grid-template-columns: 1fr 1.25fr; gap: 36px; align-items: center; }
-.home.wide { grid-template-columns: 1fr; max-width: 980px; }
 .logo-mark { color: var(--accent-text); }
 .home h1 { font-family: var(--display); font-size: clamp(34px, 5.5vw, 54px); line-height: 1.05; margin: 10px 0 16px; }
 .home h1 span { color: var(--accent-text); display: block; }
 .lead { color: var(--muted); font-size: 17px; max-width: 460px; }
 .home-card { display: flex; flex-direction: column; gap: 14px; padding: 24px; }
-.step-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.step-h .lbl { margin: 0; }
-.home-card .h2 { margin: 0; }
 .enter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
 .code-row .inp { flex: 1; }
 .code-inp { text-transform: uppercase; letter-spacing: 0.3em; font-weight: 800; text-align: center; }
-.pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
-.pick-tile { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 6px; border-radius: 14px; border: 2px solid var(--line);
   background: var(--surface-2); cursor: pointer; font-weight: 700; font-size: 13px; text-align: center; transition: border-color 0.12s, transform 0.08s; }
-.pick-tile:hover { border-color: var(--line-strong); }
-.pick-tile:active { transform: scale(0.97); }
-.pick-tile.on { border-color: var(--accent); background: var(--accent-soft); }
 
 /* --- конструктор аватара --- */
-.av-editor { display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: start; }
-.av-preview { display: flex; flex-direction: column; align-items: center; gap: 12px; position: sticky; top: 16px; }
-.av-big { width: 180px; height: 180px; border-radius: 24px; overflow: hidden; border: 1px solid var(--line-strong); }
-.av-big svg { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
-.av-params { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.av-row { display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: center; }
-.av-lbl { font-weight: 800; font-size: 13px; display: flex; flex-direction: column; }
-.av-lbl .muted { font-weight: 600; font-size: 12px; }
-.av-opts { display: flex; flex-wrap: wrap; gap: 6px; }
-.av-opt { padding: 0; width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent; background: none; cursor: pointer; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
-.av-opt svg { width: 40px; height: 40px; border-radius: 8px; }
-.av-opt:hover { border-color: var(--line-strong); }
-.av-opt.on { border-color: var(--accent); }
 .sw-opt { width: 30px; height: 30px; border-radius: 50%; background: var(--c); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line-strong); cursor: pointer; padding: 0; }
 .sw-opt.on { box-shadow: 0 0 0 3px var(--accent); }
 
@@ -720,9 +695,6 @@ div.clue { cursor: default; }
   .tp-become { padding: 10px; font-size: 13px; }
   .tp-left b { font-size: 24px; }
   .home { grid-template-columns: 1fr; padding: 28px 16px; gap: 22px; }
-  .av-editor { grid-template-columns: 1fr; }
-  .av-preview { position: static; flex-direction: row; justify-content: center; }
-  .av-big { width: 120px; height: 120px; }
 }
 @media (max-width: 700px) {
   .hide-m { display: none; }
@@ -735,7 +707,6 @@ div.clue { cursor: default; }
   .stage { padding: 12px 10px calc(var(--ctl-h) + 90px); }
   .chat-dock { right: 10px; bottom: 10px; }
   .chat-panel { width: calc(100vw - 20px); }
-  .av-row { grid-template-columns: 1fr; gap: 4px; }
   .enter-row { grid-template-columns: 1fr; }
   #lofi { left: 10px; right: 10px; width: auto; bottom: 10px; }
   #lofi.mini { right: auto; }
@@ -748,7 +719,6 @@ div.clue { cursor: default; }
   .cta-pass { width: 100%; margin-left: 0; }
   .btn.huge { padding: 14px 20px; font-size: 17px; min-width: 130px; }
   .gtitle { font-size: 13px; }
-  .pick-grid { grid-template-columns: repeat(3, 1fr); }
   .podium .pod { width: 90px; }
   .ttop { margin-left: 0; }
   .home { padding: 18px 14px; gap: 14px; }
@@ -756,16 +726,12 @@ div.clue { cursor: default; }
   .home h1 { font-size: 28px; margin: 4px 0 0; }
   .home h1 span { display: inline; }
   .home-card { padding: 16px; }
-  .pick-tile { padding: 9px 4px; }
-  .av-opt { width: 38px; height: 38px; }
-  .av-opt svg { width: 34px; height: 34px; }
   .sw-opt { width: 26px; height: 26px; }
   .slot input[type='range'] { width: 70px; }
 }
 
 /* ============ v6 ============ */
 .ava.round { border-radius: 50%; }
-.av-note { max-width: 190px; text-align: center; margin: 0; }
 
 /* второй этаж хедера: кружок-аватар + ник */
 .pm { display: inline-flex; align-items: center; gap: 7px; padding: 3px 8px 3px 3px; border: 0; background: none; border-radius: 99px; white-space: nowrap; font-size: 13px; font-weight: 700; cursor: default; }
@@ -934,9 +900,6 @@ div.clue { cursor: default; }
 .chat-fab { transition: transform 0.15s, border-color 0.15s; }
 .chat-fab:hover { transform: translateY(-2px); }
 .num.can:active { transform: scale(0.9); }
-.pick-tile, .av-opt, .sw-opt, .gcard { transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s, background 0.15s; }
-.av-opt:hover, .sw-opt:hover { transform: translateY(-2px); }
-.av-big svg { animation: popin 0.25s ease; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -1806,6 +1769,57 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .m-est { white-space: nowrap; margin-right: 4px; }
 .m-total { color: var(--accent-text); }
 @media (max-width: 560px) { .m-presets { grid-template-columns: 1fr; } .m-pre { flex-direction: row; justify-content: space-between; align-items: center; } }
+
+/* ---------- v25: вход в один шаг, своё фото, реальное имя ---------- */
+/* Вход — по центру экрана */
+.home { min-height: 100dvh; padding: 32px 20px; grid-template-columns: 1fr minmax(0, 460px); align-content: center; justify-content: center; }
+.home-card { gap: 16px; }
+.home-card > .lbl { margin: 0; }
+@media (max-width: 820px) { .home { grid-template-columns: 1fr; max-width: 520px; gap: 20px; } .home-hero { text-align: center; } .home-hero .logo-mark { margin: 0 auto; } }
+.fld { display: flex; flex-direction: column; gap: 6px; }
+.fld > span { font-size: 13px; font-weight: 700; color: var(--muted); }
+.fld .req { color: var(--accent-text); font-style: normal; }
+.fld small { font-size: 12px; }
+.fld .inp::placeholder { color: var(--faint); }
+
+/* Аватар: фото поверх инициалов (если картинка не загрузится — останутся инициалы) */
+.ava > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.ava.ring { box-shadow: 0 0 0 2px var(--ring); }
+.ava[data-real] { cursor: help; }
+
+/* Блок «Аватар» на входе и в профиле */
+.ph-row { display: flex; align-items: center; gap: 16px; }
+.ph-circle { --h: 200; position: relative; flex: none; width: 84px; height: 84px; padding: 0; border-radius: 50%; border: 2px dashed var(--line-strong); background: var(--surface-2); color: var(--muted); display: grid; place-items: center; cursor: pointer; transition: border-color .15s, transform .15s; }
+.ph-circle:hover { border-color: var(--accent); transform: scale(1.03); }
+.ph-circle > b { font-size: 28px; color: hsl(var(--h) 85% 92%); }
+.ph-circle:not(.has):has(> b) { border-style: solid; border-color: transparent; background: hsl(var(--h) 42% 34%); }
+.ph-circle > img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.ph-circle.has { border: 2px solid var(--line-strong); }
+.ph-cam { position: absolute; right: -2px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); border: 3px solid var(--surface); }
+.ph-t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ph-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+
+/* Кадрирование под круг */
+.modal.crop-modal { width: min(360px, calc(100vw - 24px)); display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+.crop-box { position: relative; align-self: center; overflow: hidden; border-radius: 16px; background: #000; cursor: grab; touch-action: none; user-select: none; }
+.crop-box:active { cursor: grabbing; }
+.crop-box img { position: absolute; left: 50%; top: 50%; max-width: none; pointer-events: none; }
+.crop-ring { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 400px rgba(0, 0, 0, 0.62); outline: 2px solid rgba(255, 255, 255, 0.85); pointer-events: none; }
+.crop-zoom { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+.crop-zoom input { flex: 1; accent-color: var(--accent); }
+.crop-modal .c { text-align: center; margin: 0; }
+
+.modal.me-modal { width: min(440px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 14px; }
+
+/* Подсказка с реальным именем */
+.real-tip { position: fixed; z-index: 200; left: 0; top: 0; pointer-events: none; display: flex; flex-direction: column; align-items: center; padding: 7px 12px; border-radius: 10px; background: var(--text); color: var(--bg); box-shadow: var(--shadow); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; max-width: 260px; text-align: center; }
+.real-tip.on { opacity: 1; transform: none; }
+.real-tip small { font-size: 11px; opacity: .65; }
+.real-tip b { font-size: 14px; }
+.home-card .enter-row { grid-template-columns: 1fr; }
+.home-card .code-row { display: flex; gap: 8px; }
+.home-card .code-row .code-inp { flex: 1; min-width: 0; text-align: center; letter-spacing: .3em; text-transform: uppercase; }
+.home-card .code-row .btn { flex: none; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -5073,23 +5087,6 @@ body{padding-bottom:84px}
     }
   });
 
-  // server/profiles.js
-  var require_profiles = __commonJS({
-    "server/profiles.js"(exports, module) {
-      module.exports = [
-        { id: "vlad", name: "\u0412\u043B\u0430\u0434" },
-        { id: "kostya", name: "\u041A\u043E\u0441\u0442\u044F" },
-        { id: "ruslan", name: "\u0420\u0443\u0441\u043B\u0430\u043D" },
-        { id: "yan", name: "\u042F\u043D" },
-        { id: "vadim-b", name: "\u0412\u0430\u0434\u0438\u043C \u0411." },
-        { id: "vadim-v", name: "\u0412\u0430\u0434\u0438\u043C \u0412." },
-        { id: "svyatoslav", name: "\u0421\u0432\u044F\u0442\u043E\u0441\u043B\u0430\u0432" },
-        { id: "yuriy", name: "\u042E\u0440\u0438\u0439" },
-        { id: "vladislav-g", name: "\u0412\u043B\u0430\u0434\u0438\u0441\u043B\u0430\u0432 \u0413." }
-      ];
-    }
-  });
-
   // server/tournament.js
   var require_tournament = __commonJS({
     "server/tournament.js"(exports, module) {
@@ -5170,17 +5167,6 @@ body{padding-bottom:84px}
   // server/session.js
   var require_session = __commonJS({
     "server/session.js"(exports, module) {
-      var AVATAR_KEYS = ["s", "h", "hc", "e", "m", "b", "a", "w"];
-      function cleanAvatar(a) {
-        if (!a || typeof a !== "object") return null;
-        const out = {};
-        for (const k of AVATAR_KEYS) {
-          const v = Number(a[k]);
-          if (!Number.isInteger(v) || v < 0 || v > 9) return null;
-          out[k] = v;
-        }
-        return out;
-      }
       function startGame2(room2, GAMES2, makeCtx2, clearAllTimers, type, settings) {
         const g = GAMES2[type];
         clearAllTimers(room2);
@@ -5211,7 +5197,7 @@ body{padding-bottom:84px}
         g.resume && g.resume(room2.game.state, makeCtx2(room2), "suspend");
       }
       var publicSuspended = (room2) => room2.suspended ? { type: room2.suspended.game.type, tour: !!room2.suspended.tour } : null;
-      module.exports = { AVATAR_KEYS, cleanAvatar, startGame: startGame2, suspend, resume, publicSuspended };
+      module.exports = { startGame: startGame2, suspend, resume, publicSuspended };
     }
   });
 
@@ -5340,14 +5326,13 @@ body{padding-bottom:84px}
   };
   var Waiting = require_waiting();
   for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
-  var PROFILES = require_profiles();
   var Tour = require_tournament();
   var Session = require_session();
   var Radio = require_radio();
   window.AVATAR_BASE = null;
   var META = Object.entries(GAMES).map(([id, g]) => ({ id, ...g.meta }));
   var origFetch = window.fetch ? window.fetch.bind(window) : null;
-  window.fetch = (u, o) => String(u).endsWith("/api/games") ? Promise.resolve({ json: () => Promise.resolve(META) }) : String(u).endsWith("/api/profiles") ? Promise.resolve({ json: () => Promise.resolve(PROFILES) }) : origFetch(u, o);
+  window.fetch = (u, o) => String(u).endsWith("/api/games") ? Promise.resolve({ json: () => Promise.resolve(META) }) : origFetch(u, o);
   try {
     history.replaceState = () => {
     };
@@ -5375,15 +5360,28 @@ body{padding-bottom:84px}
     tour: null,
     suspended: null
   };
-  var randAvatar = () => Object.fromEntries(Session.AVATAR_KEYS.map((k) => [k, Math.floor(Math.random() * 10)]));
-  function addPlayer(name, profile = null) {
+  var BOTS = [
+    ["\u0412\u043B\u0430\u0434", "\u0412\u043B\u0430\u0434\u0438\u0441\u043B\u0430\u0432"],
+    ["\u041A\u043E\u0441\u0442\u044F", "\u041A\u043E\u043D\u0441\u0442\u0430\u043D\u0442\u0438\u043D"],
+    ["\u0420\u0443\u0441\u043B\u0430\u043D", ""],
+    ["\u042F\u043D", "\u042F\u043D \u041A\u043E\u0432\u0430\u043B\u044C\u0447\u0443\u043A"],
+    ["\u0412\u0430\u0434\u0438\u043C \u0411.", "\u0412\u0430\u0434\u0438\u043C \u0411\u043E\u043D\u0434\u0430\u0440\u0435\u043D\u043A\u043E"],
+    ["\u0421\u0432\u044F\u0442\u043E\u0441\u043B\u0430\u0432", ""],
+    ["\u042E\u0440\u0438\u0439", "\u042E\u0440\u0438\u0439 \u041C\u0435\u043B\u044C\u043D\u0438\u043A"],
+    ["\u041E\u043B\u044F", "\u041E\u043B\u044C\u0433\u0430"],
+    ["\u041C\u0438\u043B\u0430", ""],
+    ["\u0420\u043E\u043C\u0430", "\u0420\u043E\u043C\u0430\u043D"]
+  ];
+  var nickKey = (n) => String(n || "").trim().toLowerCase().replace(/ё/g, "\u0435");
+  var demoPhoto = (u) => typeof u === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(u) && u.length < 22e4 ? u : null;
+  function addPlayer(name, real = "") {
     const id = uid();
-    room.players.set(id, { id, name, profile, avatar: randAvatar(), connected: true, sockets: /* @__PURE__ */ new Set([1]) });
+    room.players.set(id, { id, name, real, avatar: null, connected: true, sockets: /* @__PURE__ */ new Set([1]) });
     room.order.push(id);
     if (!room.hostId) room.hostId = id;
     return id;
   }
-  PROFILES.slice(0, 5).forEach((p) => addPlayer(p.name, p.id));
+  BOTS.slice(0, 5).forEach(([n, r]) => addPlayer(n, r));
   var active = room.hostId;
   var entered = false;
   var lastView = {};
@@ -5422,7 +5420,7 @@ body{padding-bottom:84px}
         code: room.code,
         hostId: room.hostId,
         gameType: room.gameType,
-        players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, connected: p.connected, profile: p.profile, avatar: p.avatar })),
+        players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, real: p.real || "", connected: p.connected, avatar: p.avatar })),
         chat: room.chat.slice(-50),
         radio: Radio.view(room),
         tour: Tour.publicTour(room.tour),
@@ -5455,24 +5453,41 @@ body{padding-bottom:84px}
     switch (ev) {
       case "createRoom":
       case "joinRoom": {
-        let seat = msg.profile ? [...room.players.values()].find((p) => p.profile === msg.profile) : [...room.players.values()].find((p) => !p.profile && p.name === msg.name);
-        if (!seat) seat = room.players.get(addPlayer(msg.profile ? PROFILES.find((p) => p.id === msg.profile).name : msg.name || "\u0413\u043E\u0441\u0442\u044C", msg.profile || null));
-        const av = Session.cleanAvatar(msg.avatar);
-        if (av) seat.avatar = av;
+        const nick = String(msg.name || "").trim().slice(0, 24);
+        if (!nick) return { error: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0438\u043A\u043D\u0435\u0439\u043C" };
+        let seat = [...room.players.values()].find((p) => nickKey(p.name) === nickKey(nick));
+        if (!seat) seat = room.players.get(addPlayer(nick));
+        seat.real = String(msg.real || "").trim().slice(0, 40);
+        seat.avatar = demoPhoto(msg.avatar);
         active = seat.id;
         if (ev === "createRoom" && !room.game) room.hostId = seat.id;
         entered = true;
         return { ok: true, code: room.code, pid: seat.id };
       }
+      case "uploadAvatar": {
+        const u = demoPhoto(msg.data);
+        return u ? { ok: true, url: u } : { error: "\u041D\u0443\u0436\u043D\u0430 \u043A\u0430\u0440\u0442\u0438\u043D\u043A\u0430 JPEG, PNG \u0438\u043B\u0438 WebP" };
+      }
       case "setAvatar": {
-        const av = Session.cleanAvatar(msg.avatar);
-        if (!av) return "\u041D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0430\u0432\u0430\u0442\u0430\u0440";
-        room.players.get(pid).avatar = av;
+        if (msg.avatar == null) room.players.get(pid).avatar = null;
+        else {
+          const u = demoPhoto(msg.avatar);
+          if (!u) return "\u0424\u043E\u0442\u043E \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u2014 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 \u0435\u0449\u0451 \u0440\u0430\u0437";
+          room.players.get(pid).avatar = u;
+        }
         return;
       }
-      case "rename":
-        room.players.get(pid).name = String(msg.name || "").slice(0, 24) || "\u0418\u0433\u0440\u043E\u043A";
+      case "rename": {
+        const p = room.players.get(pid);
+        if (msg.name != null) {
+          const n = String(msg.name).trim().slice(0, 24);
+          if (!n) return "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0438\u043A\u043D\u0435\u0439\u043C";
+          if ([...room.players.values()].some((x) => x !== p && nickKey(x.name) === nickKey(n))) return "\u0422\u0430\u043A\u043E\u0439 \u043D\u0438\u043A \u0443\u0436\u0435 \u0435\u0441\u0442\u044C \u0432 \u043A\u043E\u043C\u043D\u0430\u0442\u0435";
+          p.name = n;
+        }
+        if (msg.real != null) p.real = String(msg.real).trim().slice(0, 40);
         return;
+      }
       case "chat":
         if (String(msg.text || "").trim())
           room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
@@ -5641,8 +5656,8 @@ body{padding-bottom:84px}
       return;
     }
     if (b.dataset.demoAdd !== void 0) {
-      const free = PROFILES.find((p) => ![...room.players.values()].some((x) => x.profile === p.id));
-      if (free) addPlayer(free.name, free.id);
+      const free = BOTS.find(([n]) => ![...room.players.values()].some((x) => nickKey(x.name) === nickKey(n)));
+      if (free) addPlayer(free[0], free[1]);
       else addPlayer("\u0413\u043E\u0441\u0442\u044C " + room.order.length);
     } else if (b.dataset.demoPid) active = b.dataset.demoPid;
     broadcast();
@@ -5713,6 +5728,9 @@ body{padding-bottom:84px}
     music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     herd: '<circle cx="12" cy="6.5" r="3"/><circle cx="5" cy="9" r="2.4"/><circle cx="19" cy="9" r="2.4"/><path d="M6.5 20a5.5 5.5 0 0 1 11 0M1.5 19a3.6 3.6 0 0 1 5-3.3M22.5 19a3.6 3.6 0 0 0-5-3.3"/>',
     minus: '<path d="M5 12h14"/>',
+    camera: '<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h2l1.5-2.5h6L16.5 6h2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.8"/>',
+    upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+    crop: '<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M2 6h14a2 2 0 0 1 2 2v14"/>',
   };
   // Упрощённые версии для мелких размеров (≤ 15 px): меньше деталей, заливка и жирные линии — читается как корона капитана
   const F = 'fill="currentColor" stroke="none"';
@@ -5751,6 +5769,7 @@ body{padding-bottom:84px}
     book: `<path d="M2 4h6.5A3.5 3.5 0 0 1 12 7.5V21a3 3 0 0 0-3-3H2z" ${F}/><path d="M22 4h-6.5A3.5 3.5 0 0 0 12 7.5V21a3 3 0 0 1 3-3h7z" ${F}/>`,
     hash: '<path d="M5 9h15M4 15h15M10 3 8 21M16 3l-2 18"/>',
     music: `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3.5" ${F}/><circle cx="18" cy="16" r="3.5" ${F}/>`,
+    camera: `<path fill-rule="evenodd" d="M2.5 8.5A2.5 2.5 0 0 1 5 6h2.2l1.6-2.6h6.4L16.8 6H19a2.5 2.5 0 0 1 2.5 2.5v9A2.5 2.5 0 0 1 19 20H5a2.5 2.5 0 0 1-2.5-2.5zM12 9.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6z" ${F}/>`,
     herd: `<circle cx="12" cy="6.5" r="3.5" ${F}/><circle cx="4.5" cy="9.5" r="2.6" ${F}/><circle cx="19.5" cy="9.5" r="2.6" ${F}/><path d="M5.5 21a6.5 6.5 0 0 1 13 0z" ${F}/>`,
   };
   window.ic = (name, size = 18, cls = '') => {
@@ -5760,166 +5779,6 @@ body{padding-bottom:84px}
     return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   };
   window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', majority: 'herd' };
-})();
-
-;
-/* Пиксель-аватар 16×16. 8 параметров, у каждого 10 вариантов. Фон задаёт игра (цвет команды или случайный).
-   PixelAvatar.svg(av, size, bg) → строка <svg>; PixelAvatar.random() → случайный набор. */
-(() => {
-  const KEYS = ['s', 'h', 'hc', 'e', 'm', 'b', 'a', 'w'];
-  const LABEL = { s: 'Кожа', h: 'Причёска', hc: 'Цвет волос', e: 'Цвет глаз', m: 'Рот', b: 'Борода', a: 'Аксессуар', w: 'Головной убор' };
-  const COLOR_KEYS = ['s', 'hc', 'e'];
-  const NAMES = {
-    h: ['Лысый', 'Ёжик', 'Классика', 'Ирокез', 'Шипы', 'Каре', 'Длинные', 'Афро', 'Пучок', 'Хвост'],
-    m: ['Улыбка', 'Ровно', 'Хохот', 'Ого', 'Ухмылка', 'Язык', 'Грусть', 'Зубы', 'Котик', 'Хм'],
-    b: ['Нет', 'Щетина', 'Усы', 'Борода', 'Эспаньолка', 'Шкипер', 'Усы-руль', 'Длинная', 'Под губой', 'Бакенбарды'],
-    a: ['Нет', 'Очки', 'Тёмные очки', 'Повязка', 'Монокль', 'Румянец', 'Серьги', 'Веснушки', 'Шрам', 'Визор'],
-    w: ['Нет', 'Кепка', 'Шапка', 'Ковбойская', 'Корона', 'Повязка', 'Бандана', 'Цилиндр', 'Викинг', 'Наушники'],
-  };
-  const PAL = {
-    s: ['#ffe0c7', '#f6c9a3', '#ecb489', '#dc9b6d', '#c98452', '#ae6a3f', '#8d522f', '#6e3d23', '#f3c6c6', '#a8d8a0'],
-    hc: ['#1d1816', '#3d2a1f', '#6a4426', '#9c6431', '#d6a24a', '#f0d68b', '#c2412e', '#8a8f99', '#ecebf0', '#5c7cfa'],
-    e: ['#1f1f24', '#5b3a1e', '#2f6fd6', '#2e9b65', '#7d8b97', '#8d5bd6', '#c8871f', '#d33f6a', '#1fb5c9', '#9aa6b2'],
-  };
-  // Фоны для одиночных игр (выбираются по игроку) и для команд
-  const BG = ['#ffd166', '#ff8c69', '#ff70a6', '#b388ff', '#6aa9ff', '#4fd1c5', '#7ed957', '#d4e157', '#f4a261', '#9aa5b8'];
-  const NEUTRAL = '#8b93a7';
-
-  // осветлить (f>0) или затемнить (f<0) цвет
-  function shade(hex, f) {
-    const n = parseInt(hex.slice(1), 16);
-    let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
-    const t = f < 0 ? 0 : 255, p = Math.abs(f);
-    r = Math.round((t - r) * p + r);
-    g = Math.round((t - g) * p + g);
-    b = Math.round((t - b) * p + b);
-    return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
-  }
-
-  // Причёски: [y, x1, x2]
-  const HAIR = [
-    [],
-    [[3, 5, 10], [4, 4, 11]],
-    [[2, 5, 10], [3, 4, 11], [4, 4, 11], [5, 4, 7], [5, 11, 11], [6, 4, 4], [6, 11, 11]],
-    [[0, 7, 8], [1, 7, 8], [2, 7, 8], [3, 6, 9], [4, 6, 9]],
-    [[1, 5, 5], [1, 8, 8], [1, 11, 11], [2, 5, 6], [2, 8, 9], [2, 10, 11], [3, 4, 11], [4, 4, 11], [5, 4, 4], [5, 11, 11]],
-    [[2, 5, 10], [3, 4, 11], [4, 3, 12], [5, 3, 12], ...[6, 7, 8, 9, 10].flatMap((y) => [[y, 3, 4], [y, 11, 12]])],
-    [[2, 5, 10], [3, 4, 11], [4, 3, 12], [5, 3, 5], [5, 10, 12], ...[6, 7, 8, 9, 10, 11, 12].flatMap((y) => [[y, 3, 4], [y, 11, 12]]), [13, 2, 4], [13, 11, 13], [14, 2, 4], [14, 11, 13]],
-    [[0, 5, 10], [1, 3, 12], [2, 2, 13], [3, 2, 13], [4, 2, 13], [5, 2, 4], [5, 11, 13], [6, 2, 3], [6, 12, 13], [7, 2, 3], [7, 12, 13], [8, 3, 3], [8, 12, 12]],
-    [[0, 6, 9], [1, 6, 9], [2, 5, 10], [3, 4, 11], [4, 4, 11], [5, 4, 4], [5, 11, 11]],
-    [[2, 5, 10], [3, 4, 11], [4, 4, 11], [5, 4, 5], [5, 10, 11], [4, 12, 13], [5, 12, 13], [6, 13, 14], [7, 13, 14], [8, 13, 14], [9, 13, 13]],
-  ];
-  const BEARD = [
-    [],
-    'stubble',
-    [[9, 6, 9]],
-    [[8, 4, 4], [8, 11, 11], [9, 4, 11], [10, 4, 5], [10, 10, 11], [11, 4, 5], [11, 10, 11], [12, 4, 11], [13, 5, 10]],
-    [[12, 6, 9], [13, 7, 8]],
-    [[9, 4, 4], [9, 11, 11], [10, 4, 4], [10, 11, 11], [11, 4, 4], [11, 11, 11], [12, 4, 11], [13, 6, 9]],
-    [[9, 5, 10], [10, 4, 4], [10, 11, 11]],
-    [[8, 4, 4], [8, 11, 11], [9, 4, 11], [10, 4, 5], [10, 10, 11], [11, 4, 5], [11, 10, 11], [12, 4, 11], [13, 5, 10], [14, 6, 9], [15, 7, 8]],
-    [[12, 7, 8]],
-    [6, 7, 8, 9].flatMap((y) => [[y, 4, 4], [y, 11, 11]]),
-  ];
-
-  function draw(av, bg) {
-    const R = [];
-    const px = (x, y, c, o) => R.push([x, y, 1, 1, c, o]);
-    const span = (y, x1, x2, c, o) => R.push([x1, y, x2 - x1 + 1, 1, c, o]);
-    const spans = (list, c, o) => list.forEach(([y, a, b]) => span(y, a, b, c, o));
-    const skin = PAL.s[av.s], hair = PAL.hc[av.hc], eye = PAL.e[av.e];
-    const skinD = shade(skin, -0.18);
-    const dark = '#3b2028';
-
-    R.push([0, 0, 16, 16, bg]);
-    // плечи и шея
-    const shirt = shade(bg, -0.38);
-    span(14, 3, 12, shirt);
-    span(15, 2, 13, shirt);
-    span(13, 6, 9, skinD);
-    // голова и уши
-    span(4, 5, 10, skin);
-    for (let y = 5; y <= 11; y++) span(y, 4, 11, skin);
-    span(12, 5, 10, skin);
-    px(3, 8, skin); px(3, 9, skinD); px(12, 8, skin); px(12, 9, skinD);
-    // нос
-    px(7, 9, skinD); px(8, 9, skinD);
-    // борода (до рта, чтобы рот был виден)
-    const bd = BEARD[av.b];
-    if (bd === 'stubble') spans([[10, 4, 5], [10, 10, 11], [11, 4, 11], [12, 5, 10]], hair, 0.35);
-    else spans(bd, hair);
-    // рот
-    const M = [
-      () => { px(6, 10, dark); px(9, 10, dark); span(11, 7, 8, dark); },
-      () => span(11, 6, 9, dark),
-      () => { span(10, 6, 9, dark); px(7, 10, '#fff'); px(8, 10, '#fff'); span(11, 7, 8, dark); },
-      () => { span(10, 7, 8, dark); span(11, 7, 8, dark); },
-      () => { px(9, 10, dark); span(11, 6, 8, dark); },
-      () => { span(10, 6, 9, dark); span(11, 7, 8, '#e8768a'); },
-      () => { span(10, 7, 8, dark); px(6, 11, dark); px(9, 11, dark); },
-      () => { span(10, 6, 9, '#fff'); span(11, 6, 9, dark); },
-      () => { px(6, 10, dark); px(7, 11, dark); px(8, 10, dark); px(9, 11, dark); },
-      () => px(8, 11, dark),
-    ];
-    M[av.m]();
-    // волосы, брови, глаза
-    spans(HAIR[av.h], hair);
-    const brow = av.h === 0 && av.b === 0 ? skinD : shade(hair, -0.1);
-    span(6, 5, 6, brow); span(6, 9, 10, brow);
-    px(6, 7, eye); px(6, 8, eye); px(9, 7, eye); px(9, 8, eye);
-    px(5, 8, '#ffffff', 0.85); px(10, 8, '#ffffff', 0.85);
-    // аксессуар
-    const ink = '#1a1a1f', gold = '#e8b830';
-    const frame = (x, c) => { span(6, x, x + 2, c); span(9, x, x + 2, c); px(x, 7, c); px(x, 8, c); px(x + 2, 7, c); px(x + 2, 8, c); };
-    const A = [
-      () => {},
-      () => { frame(5, ink); frame(8, ink); px(4, 7, ink); px(11, 7, ink); },
-      () => { span(7, 4, 11, ink); span(8, 5, 7, ink); span(8, 8, 10, ink); px(5, 7, '#6b7280'); px(8, 7, '#6b7280'); },
-      () => { span(6, 4, 11, ink); span(7, 8, 10, ink); span(8, 8, 10, ink); px(9, 9, ink); },
-      () => { frame(8, gold); px(10, 10, gold); px(11, 11, gold); px(11, 12, gold); },
-      () => { span(9, 4, 5, '#f28b9b', 0.8); span(9, 10, 11, '#f28b9b', 0.8); },
-      () => { px(3, 10, gold); px(12, 10, gold); },
-      () => { const f = shade(skin, -0.42); px(5, 9, f); px(10, 9, f); px(4, 10, f); px(11, 10, f); px(6, 9, f, 0.7); },
-      () => { const c = '#9b2f3a'; px(10, 9, c); px(10, 10, c); px(11, 10, c); px(9, 9, c, 0.6); },
-      () => { span(7, 4, 11, '#38e1f2', 0.9); span(8, 4, 11, '#1aa7c4', 0.9); },
-    ];
-    A[av.a]();
-    // головной убор
-    const W = [
-      () => {},
-      () => { const c = '#d64545'; span(1, 5, 10, c); span(2, 4, 11, c); span(3, 4, 11, c); span(4, 4, 14, shade(c, -0.3)); px(7, 1, shade(c, 0.3)); },
-      () => { const c = '#2bb3a3'; px(7, 0, '#fff'); px(8, 0, '#fff'); span(1, 5, 10, c); span(2, 4, 11, c); span(3, 4, 11, c); span(4, 4, 11, shade(c, 0.35)); },
-      () => { const c = '#8a5a2b'; span(0, 6, 9, c); span(1, 5, 10, c); span(2, 5, 10, shade(c, -0.45)); span(3, 1, 14, shade(c, -0.15)); },
-      () => { const c = gold; px(5, 1, c); px(7, 1, c); px(8, 1, c); px(10, 1, c); span(2, 5, 10, c); span(3, 5, 10, c); px(7, 3, '#d33f6a'); px(8, 3, '#d33f6a'); px(5, 3, '#2f6fd6'); px(10, 3, '#2f6fd6'); },
-      () => { const c = '#e04848'; span(5, 4, 11, c); px(12, 5, c); px(13, 6, c); },
-      () => { const c = '#5b3fa6'; span(2, 5, 10, c); span(3, 4, 11, c); span(4, 4, 11, c); span(4, 12, 13, c); px(13, 5, c); px(6, 3, '#fff'); px(9, 3, '#fff'); },
-      () => { const c = '#1d1b22'; for (let y = 0; y <= 3; y++) span(y, 5, 10, c); span(3, 5, 10, '#c0392b'); span(4, 3, 12, c); },
-      () => { const c = '#9aa1ab', h = '#f1e6c8'; span(2, 5, 10, c); span(3, 4, 11, c); span(4, 4, 11, shade(c, -0.25)); px(2, 1, h); span(2, 2, 3, h); px(3, 3, h); px(13, 1, h); span(2, 12, 13, h); px(12, 3, h); },
-      () => { const c = '#2a2933', k = '#ff70a6'; span(1, 5, 10, c); px(4, 2, c); px(11, 2, c); px(3, 3, c); px(12, 3, c); for (let y = 4; y <= 5; y++) { px(3, y, c); px(12, y, c); } for (let y = 6; y <= 10; y++) { span(y, 2, 3, k); span(y, 12, 13, k); } },
-    ];
-    W[av.w]();
-    return R;
-  }
-
-  const cache = new Map();
-  function svg(av, size = 32, bg = NEUTRAL) {
-    if (!av) return '';
-    const key = KEYS.map((k) => av[k]).join('') + ':' + size + bg;
-    if (cache.has(key)) return cache.get(key);
-    const rects = draw(av, bg)
-      .map(([x, y, w, h, c, o]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"${o != null ? ` fill-opacity="${o}"` : ''}/>`)
-      .join('');
-    const out = `<svg class="px" viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
-    if (cache.size > 600) cache.clear();
-    cache.set(key, out);
-    return out;
-  }
-  const random = () => Object.fromEntries(KEYS.map((k) => [k, Math.floor(Math.random() * 10)]));
-  const valid = (a) => a && KEYS.every((k) => Number.isInteger(a[k]) && a[k] >= 0 && a[k] <= 9);
-
-  // Базовый вид для превью вариантов в конструкторе: меняется только сам вариант
-  const BASE = { s: 1, h: 2, hc: 1, e: 2, m: 0, b: 0, a: 0, w: 0 };
-  window.PixelAvatar = { KEYS, LABEL, NAMES, PAL, BG, NEUTRAL, BASE, COLOR_KEYS, svg, random, valid };
 })();
 
 ;
@@ -6286,26 +6145,17 @@ window.RULES = {
     token = Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2);
     LS.set('pg_token', token);
   }
-  const loadAvatar = () => {
-    try {
-      const a = JSON.parse(LS.get('pg_avatar', 'null'));
-      return PixelAvatar.valid(a) ? a : null;
-    } catch {
-      return null;
-    }
-  };
+  // Своё фото (уже обрезанное под круг) хранится у игрока — сервер может его забыть после перезапуска
+  const myPhoto = () => LS.get('pg_photo', '') || null;
 
   const socket = io({ transports: ['websocket', 'polling'] });
   let S = null; // последнее состояние от сервера
   let GAMES = [];
-  let PROFILES = [];
   let offset = 0; // serverNow - clientNow
   let connected = false;
   const ui = {
-    homeStep: 'who', // who | avatar
-    homeSel: LS.get('pg_profile', '') || (LS.get('pg_name', '') ? 'new' : null),
-    avatar: loadAvatar() || PixelAvatar.random(),
-    avEdit: null, // черновик аватара в модалке (в комнате)
+    crop: null, // кадрирование загруженного фото: {src, w, h, z, x, y}
+    meEdit: false, // окно «Мой профиль» в комнате
     selected: null,
     settings: {},
     showRules: false,
@@ -6415,19 +6265,22 @@ window.RULES = {
   const ALIAS_BG = ['#ff6452', '#4fb8ff', '#7ed957', '#b388ff', '#ffd166'];
   function bgFor(id) {
     const g = S?.game;
-    if (id && g?.type === 'codenames') return TEAM_BG[g.team[id]] || PixelAvatar.NEUTRAL;
+    if (id && g?.type === 'codenames') return TEAM_BG[g.team[id]] || null;
     if (id && g?.type === 'alias') {
       const i = g.teams.findIndex((t) => t.members.includes(id));
       if (i >= 0) return ALIAS_BG[i];
     }
-    return PixelAvatar.BG[hue(id || 'x') % PixelAvatar.BG.length];
+    return null;
   }
+  // Аватар: своё фото или инициалы. В командных играх — кольцо цвета команды.
+  // Реальное имя (если указано) показывается при наведении — см. realTip ниже.
   function avaHtml(p, size = 'sm', cls = '') {
     const px = SIZES[size] || size;
-    if (p?.avatar && PixelAvatar.valid(p.avatar))
-      return `<span class="ava px ${size} ${cls}" style="width:${px}px;height:${px}px">${PixelAvatar.svg(p.avatar, px, p.bg || bgFor(p.id))}</span>`;
     const name = p?.name || '?';
-    return `<span class="ava ${size} ${cls}" style="--h:${hue(name)};width:${px}px;height:${px}px"><b>${esc(initials(name))}</b></span>`;
+    const team = p?.id ? bgFor(p.id) : null;
+    const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" onerror="this.remove()">` : '';
+    const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
+    return `<span class="ava ${size} ${cls} ${team ? 'ring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -6720,19 +6573,21 @@ window.RULES = {
     return m ? m[1].toUpperCase() : null;
   }
   const roomLink = (code) => `${location.origin}/r/${code}`;
-  const identity = () => {
-    const profile = LS.get('pg_profile', '') || null;
-    return {
-      profile,
-      name: profile ? PROFILES.find((p) => p.id === profile)?.name || '' : LS.get('pg_name', ''),
-      avatar: loadAvatar(),
-    };
-  };
+  const identity = () => ({ name: LS.get('pg_name', ''), real: LS.get('pg_real', '') });
+  const quietEmit = (ev, data) => new Promise((res) => socket.emit(ev, data, (r) => res(r || {})));
+  // Загружаем своё фото на сервер (он отдаёт короткую ссылку). Без фото — инициалы.
+  async function photoUrl() {
+    const data = myPhoto();
+    if (!data) return null;
+    const r = await quietEmit('uploadAvatar', { data });
+    return r.url || null;
+  }
+  const enterPayload = async () => ({ ...identity(), avatar: await photoUrl() });
 
   async function joinRoom(code) {
     const id = identity();
-    if ((!id.profile && !id.name) || !id.avatar) return render();
-    const r = await emit('joinRoom', { token, code, ...id });
+    if (!id.name) return render(); // зашёл по ссылке впервые — сначала ник
+    const r = await emit('joinRoom', { token, code, ...(await enterPayload()) });
     if (r.error) {
       history.replaceState(null, '', '/');
       render();
@@ -6861,11 +6716,12 @@ window.RULES = {
     }
   });
 
-  Promise.all([fetch('/api/games').then((r) => r.json()), fetch('/api/profiles').then((r) => r.json())]).then(([g, p]) => {
-    GAMES = g;
-    PROFILES = p;
-    render();
-  });
+  fetch('/api/games')
+    .then((r) => r.json())
+    .then((g) => {
+      GAMES = g;
+      render();
+    });
   const gameMeta = (id) => GAMES.find((g) => g.id === id) || { title: id, settings: [], rules: [] };
   const gIcon = (id, size = 18) => ic(GAME_ICON[id] || 'dice', size);
 
@@ -6956,7 +6812,7 @@ window.RULES = {
 
   // Ключ «экрана»: когда он меняется — плавно проявляем новую сцену
   function screenKey() {
-    if (!S) return 'home:' + ui.homeStep;
+    if (!S) return 'home';
     const g = S.game;
     if (!g) return 'lobby:' + ui.mode + (tour() ? ':' + tour().phase : '');
     return [g.type, g.phase, g.step === 'setup' ? 'setup' : g.winner ? 'over' : '', g.round, g.guesser, g.explainer].join(':');
@@ -6991,28 +6847,6 @@ window.RULES = {
     }, 80);
   });
 
-  // ---------- конструктор аватара ----------
-  function avatarEditor(av, scope) {
-    const rows = PixelAvatar.KEYS.map((k) => {
-      const opts = Array.from({ length: 10 }, (_, v) => {
-        const on = av[k] === v;
-        if (PixelAvatar.COLOR_KEYS.includes(k))
-          return `<button type="button" class="sw-opt ${on ? 'on' : ''}" style="--c:${PixelAvatar.PAL[k][v]}" data-act="av-set" data-scope="${scope}" data-k="${k}" data-v="${v}" title="${v + 1}"></button>`;
-        const prev = { ...PixelAvatar.BASE, [k]: v };
-        return `<button type="button" class="av-opt ${on ? 'on' : ''}" data-act="av-set" data-scope="${scope}" data-k="${k}" data-v="${v}" title="${esc(PixelAvatar.NAMES[k][v])}">${PixelAvatar.svg(prev, 40, '#3a3748')}</button>`;
-      }).join('');
-      return `<div class="av-row"><div class="av-lbl">${PixelAvatar.LABEL[k]}${PixelAvatar.NAMES[k] ? `<span class="muted">${esc(PixelAvatar.NAMES[k][av[k]])}</span>` : ''}</div><div class="av-opts">${opts}</div></div>`;
-    }).join('');
-    return `<div class="av-editor">
-      <div class="av-preview">
-        <div class="av-big">${PixelAvatar.svg(av, 160, PixelAvatar.NEUTRAL)}</div>
-        <button type="button" class="btn sm" data-act="av-random" data-scope="${scope}">${ic('dice5', 16)} Случайно</button>
-        <p class="muted small av-note">Фон подберётся сам: цвет команды в командных играх, свой цвет — в остальных.</p>
-      </div>
-      <div class="av-params">${rows}</div>
-    </div>`;
-  }
-
   // ---------- вход ----------
   // «Коднеймс, Элиас, …, Викторина и Ответ большинства» — всегда по актуальному каталогу
   function gamesLine() {
@@ -7021,49 +6855,218 @@ window.RULES = {
   }
   function renderHome() {
     const code = codeFromUrl();
-    const sel = ui.homeSel;
+    const photo = myPhoto();
+    const nick = LS.get('pg_name', '');
     const header = `<div class="home-top">${themeMenu()}</div>`;
     const hero = `<div class="home-hero">
         <div class="logo-mark">${ic('dice', 40)}</div>
         <h1>Экранки <span>а не настолки — для своих</span></h1>
         <p class="lead">${gamesLine()} — по одной или марафоном с турнирной таблицей.</p>
       </div>`;
-    if (ui.homeStep === 'avatar' && sel) {
-      const name = sel === 'new' ? LS.get('pg_name', '') : PROFILES.find((p) => p.id === sel)?.name;
-      return `${header}<main class="home wide">
-        <form class="card home-card" data-form="enter">
-          <div class="step-h"><button type="button" class="btn sm ghost" data-act="home-back">${ic('back', 16)} Назад</button><span class="lbl">Шаг 2 из 2 · Твой персонаж на эту игру</span></div>
-          <h2 class="h2">Привет, ${esc(name || 'игрок')}! Собери аватар</h2>
-          ${avatarEditor(ui.avatar, 'home')}
-          <div class="enter-row">
-            ${
-              code
-                ? `<button class="btn primary big" type="submit" name="go" value="join">Войти в комнату ${esc(code)}</button><button class="btn ghost" type="submit" name="go" value="create">или создать новую</button>`
-                : `<button class="btn primary big" type="submit" name="go" value="create">Создать комнату</button>
-                   <div class="row code-row"><input class="inp code-inp" name="code" data-keep="home-code" maxlength="4" placeholder="КОД" autocomplete="off" /><button class="btn" type="submit" name="go" value="join">Войти по коду</button></div>`
-            }
-          </div>
-          ${connected ? '' : '<p class="muted small">Подключаемся к серверу…</p>'}
-        </form>
-      </main>`;
-    }
-    // На шаге 1 аватара ещё нет — только инициалы
-    const tiles = PROFILES.map((p) =>
-      `<button type="button" class="pick-tile ${sel === p.id ? 'on' : ''}" data-act="home-pick" data-id="${p.id}">${avaHtml({ name: p.name }, 'lg')}<span>${esc(p.name)}</span></button>`
-    ).join('');
     return `${header}<main class="home">
       ${hero}
-      <form class="card home-card" data-form="who">
-        <span class="lbl">Шаг 1 из 2 · Кто ты?</span>
-        <div class="pick-grid">
-          ${tiles}
-          <button type="button" class="pick-tile new ${sel === 'new' ? 'on' : ''}" data-act="home-pick" data-id="new"><span class="ava lg plus" style="width:${SIZES.lg}px;height:${SIZES.lg}px">${ic('plus', 24)}</span><span>Новый игрок</span></button>
+      <form class="card home-card" data-form="enter" autocomplete="on">
+        <span class="lbl">${code ? `Вход в комнату ${esc(code)}` : 'Кто ты?'}</span>
+        ${photoBlock(photo, nick)}
+        <label class="fld"><span>Никнейм <i class="req">*</i></span><input class="inp" name="name" data-keep="home-name" maxlength="24" placeholder="Как тебя звать в игре" value="${esc(nick)}" autocomplete="nickname" required /></label>
+        <label class="fld"><span>Реальное имя</span><input class="inp" name="real" data-keep="home-real" maxlength="40" placeholder="пожалуйста, введите чтобы я не путался" value="${esc(LS.get('pg_real', ''))}" autocomplete="name" /><small class="muted">Видно остальным, только если навести на твой аватар</small></label>
+        <div class="enter-row">
+          ${
+            code
+              ? `<button class="btn primary big" type="submit" name="go" value="join">Войти в комнату ${esc(code)}</button><button class="btn ghost" type="submit" name="go" value="create">или создать новую</button>`
+              : `<button class="btn primary big" type="submit" name="go" value="create">Создать комнату</button>
+                 <div class="row code-row"><input class="inp code-inp" name="code" data-keep="home-code" maxlength="4" placeholder="КОД" autocomplete="off" /><button class="btn" type="submit" name="go" value="join">Войти по коду</button></div>`
+          }
         </div>
-        ${sel === 'new' ? `<input class="inp" name="name" data-keep="home-name" maxlength="24" placeholder="Как тебя зовут?" value="${esc(LS.get('pg_name', ''))}" autocomplete="nickname" />` : ''}
-        <button class="btn primary big" type="submit" ${sel ? '' : 'disabled'}>Дальше — аватар</button>
+        ${connected ? '' : '<p class="muted small">Подключаемся к серверу…</p>'}
       </form>
-    </main>`;
+    </main>
+    ${ui.crop ? renderCrop() : ''}`;
   }
+  // Круг с фото + кнопки «Загрузить / Убрать» (на входе и в «Моём профиле»)
+  function photoBlock(photo, nick) {
+    const face = photo ? `<img src="${photo}" alt="" draggable="false">` : nick ? `<b>${esc(initials(nick))}</b>` : ic('user', 34);
+    return `<div class="ph-row">
+      <button type="button" class="ph-circle ${photo ? 'has' : ''}" data-act="photo-pick" style="--h:${hue(nick || '?')}" aria-label="${photo ? 'Заменить фото' : 'Загрузить фото'}">${face}<span class="ph-cam">${ic('camera', 16)}</span></button>
+      <div class="ph-t"><b>Аватар</b><span class="muted small">${photo ? 'Готово — так тебя увидят остальные' : 'Своё фото — по желанию. Без него будут инициалы'}</span>
+        <div class="ph-btns"><button type="button" class="btn sm" data-act="photo-pick">${ic('upload', 15)} ${photo ? 'Заменить' : 'Загрузить фото'}</button>${photo ? `<button type="button" class="btn sm ghost" data-act="photo-del">Убрать</button>` : ''}</div>
+      </div>
+    </div>`;
+  }
+
+  // ---------- кадрирование фото под круг ----------
+  const CROP_V = 280; // размер окна кадрирования, px
+  const cropDims = (c) => {
+    const base = CROP_V / Math.min(c.w, c.h);
+    return { dw: c.w * base * c.z, dh: c.h * base * c.z };
+  };
+  function cropClamp(c) {
+    const { dw, dh } = cropDims(c);
+    const mx = (dw - CROP_V) / 2;
+    const my = (dh - CROP_V) / 2;
+    c.x = Math.max(-mx, Math.min(mx, c.x));
+    c.y = Math.max(-my, Math.min(my, c.y));
+  }
+  const cropStyle = (c) => {
+    const { dw, dh } = cropDims(c);
+    return `width:${dw}px;height:${dh}px;transform:translate(calc(-50% + ${c.x}px), calc(-50% + ${c.y}px))`;
+  };
+  function renderCrop() {
+    const c = ui.crop;
+    return `<div class="modal-bg ${c.anim ? '' : 'still'}" data-act="crop-cancel"></div>
+      <div class="modal card crop-modal ${c.anim ? '' : 'still'}" role="dialog" aria-modal="true" aria-label="Кадрирование фото">
+        <div class="modal-h"><b>${ic('crop', 18)} Подгони фото под круг</b><button class="icon-x" data-act="crop-cancel" aria-label="Закрыть">${ic('x', 18)}</button></div>
+        <div class="crop-box" data-crop style="width:${CROP_V}px;height:${CROP_V}px"><img src="${c.src}" alt="" draggable="false" data-crop-img style="${cropStyle(c)}"><span class="crop-ring"></span></div>
+        <div class="crop-zoom">${ic('minus', 16)}<input type="range" min="1" max="4" step="0.01" value="${c.z}" data-crop-zoom aria-label="Масштаб">${ic('plus', 16)}</div>
+        <p class="muted small c">Двигай фото пальцем или мышкой, масштаб — ползунком${matchMedia('(pointer:fine)').matches ? ' или колесом' : ''}</p>
+        <div class="row end"><button class="btn ghost" data-act="crop-cancel">Отмена</button><button class="btn primary" data-act="crop-save">${ic('check', 16)} Сохранить</button></div>
+      </div>`;
+  }
+  function cropPaint() {
+    const el = document.querySelector('[data-crop-img]');
+    if (el && ui.crop) el.setAttribute('style', cropStyle(ui.crop));
+  }
+  // Выбор файла: уменьшаем большое фото сразу (телефонные 12 Мп не нужны), потом окно кадрирования
+  const fileInp = document.createElement('input');
+  fileInp.type = 'file';
+  fileInp.accept = 'image/*';
+  fileInp.hidden = true;
+  document.body.appendChild(fileInp);
+  fileInp.addEventListener('change', () => {
+    const f = fileInp.files && fileInp.files[0];
+    fileInp.value = '';
+    if (!f) return;
+    if (!/^image\//.test(f.type)) return toast('Это не картинка');
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.naturalWidth * k);
+      cv.height = Math.round(img.naturalHeight * k);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      ui.crop = { src: cv.toDataURL('image/jpeg', 0.92), w: cv.width, h: cv.height, z: 1, x: 0, y: 0, anim: true };
+      ui.menu = null;
+      render();
+      ui.crop.anim = false;
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toast('Не получилось открыть картинку');
+    };
+    img.src = url;
+  });
+  // Готовый круг: квадрат 256×256, внутри — то, что видно в окне
+  function cropExport() {
+    const c = ui.crop;
+    const OUT = 256;
+    const f = OUT / CROP_V;
+    const { dw, dh } = cropDims(c);
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = OUT;
+    const ctx = cv.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    const img = document.querySelector('[data-crop-img]');
+    ctx.drawImage(img, (CROP_V / 2 + c.x - dw / 2) * f, (CROP_V / 2 + c.y - dh / 2) * f, dw * f, dh * f);
+    const webp = cv.toDataURL('image/webp', 0.86);
+    return webp.startsWith('data:image/webp') ? webp : cv.toDataURL('image/jpeg', 0.88);
+  }
+  let cropDrag = null;
+  document.addEventListener('pointerdown', (e) => {
+    if (!ui.crop || !e.target.closest('[data-crop]')) return;
+    e.preventDefault();
+    cropDrag = { x: e.clientX, y: e.clientY, cx: ui.crop.x, cy: ui.crop.y };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!cropDrag || !ui.crop) return;
+    ui.crop.x = cropDrag.cx + e.clientX - cropDrag.x;
+    ui.crop.y = cropDrag.cy + e.clientY - cropDrag.y;
+    cropClamp(ui.crop);
+    cropPaint();
+  });
+  const cropUp = () => (cropDrag = null);
+  document.addEventListener('pointerup', cropUp);
+  document.addEventListener('pointercancel', cropUp);
+  document.addEventListener('input', (e) => {
+    if (!ui.crop || !e.target.matches('[data-crop-zoom]')) return;
+    const c = ui.crop;
+    const z = Number(e.target.value);
+    // зум к центру окна
+    c.x *= z / c.z;
+    c.y *= z / c.z;
+    c.z = z;
+    cropClamp(c);
+    cropPaint();
+  });
+  document.addEventListener(
+    'wheel',
+    (e) => {
+      if (!ui.crop || !e.target.closest('[data-crop]')) return;
+      e.preventDefault();
+      const c = ui.crop;
+      const z = Math.max(1, Math.min(4, c.z * (e.deltaY < 0 ? 1.08 : 1 / 1.08)));
+      c.x *= z / c.z;
+      c.y *= z / c.z;
+      c.z = z;
+      cropClamp(c);
+      cropPaint();
+      const r = document.querySelector('[data-crop-zoom]');
+      if (r) r.value = z;
+    },
+    { passive: false }
+  );
+  // Фото сохранено: у себя — сразу, в комнате — загружаем и меняем аватар у всех
+  async function setPhoto(data) {
+    if (data) LS.set('pg_photo', data);
+    else LS.set('pg_photo', '');
+    if (!S) return render();
+    if (!data) return emit('setAvatar', { avatar: null });
+    const r = await emit('uploadAvatar', { data });
+    if (r.url) emit('setAvatar', { avatar: r.url });
+  }
+
+  // Реальное имя — всплывает при наведении на любой аватар (на телефоне — по касанию)
+  const realTip = document.createElement('div');
+  realTip.className = 'real-tip';
+  realTip.setAttribute('role', 'tooltip');
+  document.body.appendChild(realTip);
+  let realFor = null;
+  let realT = 0;
+  function showReal(el) {
+    if (realFor === el) return;
+    realFor = el;
+    realTip.innerHTML = `<small>${esc(el.dataset.nick || '')} — это</small><b>${esc(el.dataset.real)}</b>`;
+    const r = el.getBoundingClientRect();
+    realTip.classList.add('on');
+    const tw = realTip.offsetWidth;
+    const th = realTip.offsetHeight;
+    let left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(8, Math.min(innerWidth - tw - 8, left));
+    let top = r.top - th - 8;
+    realTip.classList.toggle('below', top < 6);
+    if (top < 6) top = r.bottom + 8;
+    realTip.style.left = left + 'px';
+    realTip.style.top = top + 'px';
+  }
+  function hideReal() {
+    realFor = null;
+    realTip.classList.remove('on');
+  }
+  document.addEventListener('mouseover', (e) => {
+    const el = e.target.closest && e.target.closest('[data-real]');
+    if (el) showReal(el);
+    else if (realFor) hideReal();
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch') return;
+    const el = e.target.closest && e.target.closest('[data-real]');
+    if (!el) return hideReal();
+    showReal(el);
+    clearTimeout(realT);
+    realT = setTimeout(hideReal, 2200);
+  });
+  addEventListener('scroll', hideReal, true);
 
   // ---------- комната ----------
   function renderRoom() {
@@ -7118,7 +7121,8 @@ window.RULES = {
           <button class="btn sm primary" data-act="glow-ok">Готово</button>
         </div>` : ''}
       ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
-      ${ui.avEdit ? renderAvatarModal() : ''}
+      ${ui.meEdit ? renderMeModal() : ''}
+      ${ui.crop ? renderCrop() : ''}
     </div>`;
   }
 
@@ -7137,8 +7141,7 @@ window.RULES = {
         const tag = cn ? (team ? (cap ? `капитан ${team === 'red' ? 'красных' : 'синих'}` : team === 'red' ? 'красные' : 'синие') : 'зритель') : '';
         const mine = p.id === S.me;
         const acts = [];
-        if (mine) acts.push(`<button class="icon-x" data-act="av-open" title="Изменить аватар">${ic('palette', 16)}</button>`);
-        if (mine && !p.profile && !g) acts.push(`<button class="icon-x" data-act="rename" title="Изменить имя">${ic('pencil', 16)}</button>`);
+        if (mine) acts.push(`<button class="icon-x" data-act="me-open" title="Мой профиль: ник, реальное имя, фото">${ic('pencil', 16)}</button>`);
         if (isHost() && !mine) {
           acts.push(`<button class="icon-x" data-act="makeHost" data-pid="${p.id}" title="Сделать хостом">${ic('crown', 16)}</button>`);
           acts.push(`<button class="icon-x danger" data-act="kick" data-pid="${p.id}" title="Выгнать">${ic('x', 16)}</button>`);
@@ -7197,13 +7200,16 @@ window.RULES = {
     </div>`;
   }
 
-  function renderAvatarModal() {
-    return `<div class="modal-bg" data-act="av-cancel"></div>
-      <div class="modal card" role="dialog" aria-label="Аватар">
-        <div class="modal-h"><b>Твой аватар</b><button class="icon-x" data-act="av-cancel">${ic('x', 18)}</button></div>
-        ${avatarEditor(ui.avEdit, 'room')}
-        <div class="row end"><button class="btn ghost" data-act="av-cancel">Отмена</button><button class="btn primary" data-act="av-save">Сохранить</button></div>
-      </div>`;
+  function renderMeModal() {
+    const me = player(S.me) || {};
+    return `<div class="modal-bg ${ui.meAnim ? '' : 'still'}" data-act="me-close"></div>
+      <form class="modal card me-modal ${ui.meAnim ? '' : 'still'}" data-form="me" role="dialog" aria-modal="true" aria-label="Мой профиль">
+        <div class="modal-h"><b>${ic('user', 18)} Мой профиль</b><button type="button" class="icon-x" data-act="me-close" aria-label="Закрыть">${ic('x', 18)}</button></div>
+        ${photoBlock(myPhoto(), me.name)}
+        <label class="fld"><span>Никнейм <i class="req">*</i></span><input class="inp" name="name" data-keep="me-name" maxlength="24" value="${esc(me.name || '')}" required /></label>
+        <label class="fld"><span>Реальное имя</span><input class="inp" name="real" data-keep="me-real" maxlength="40" placeholder="пожалуйста, введите чтобы я не путался" value="${esc(me.real || '')}" /><small class="muted">Видно остальным при наведении на твой аватар</small></label>
+        <div class="row end"><button type="button" class="btn ghost" data-act="me-close">Отмена</button><button class="btn primary">Сохранить</button></div>
+      </form>`;
   }
 
   // Правила — модалка поверх всего, вкладки по играм. Тексты — public/js/rules.js
@@ -8659,45 +8665,29 @@ window.RULES = {
   }
 
   // ---------- обработчики ----------
-  const setAv = (scope, fn) => {
-    if (scope === 'room') ui.avEdit = fn({ ...ui.avEdit });
-    else {
-      ui.avatar = fn({ ...ui.avatar });
-      LS.set('pg_avatar', JSON.stringify(ui.avatar));
-    }
-    render();
-  };
   const ACTIONS = {
-    // аватар
-    'av-set': (d) => setAv(d.scope, (a) => ({ ...a, [d.k]: Number(d.v) })),
-    'av-random': (d) => setAv(d.scope, () => PixelAvatar.random()),
-    'av-open': () => {
+    // фото и профиль
+    'photo-pick': () => fileInp.click(),
+    'photo-del': () => setPhoto(null).then(render),
+    'crop-cancel': () => {
+      ui.crop = null;
+      render();
+    },
+    'crop-save': async () => {
+      if (!ui.crop) return;
+      const data = cropExport();
+      ui.crop = null;
+      await setPhoto(data);
+      render();
+    },
+    'me-open': () => {
       ui.menu = null;
-      ui.avEdit = { ...(player(S.me)?.avatar || ui.avatar) };
+      ui.meEdit = ui.meAnim = true;
       render();
+      ui.meAnim = false;
     },
-    'av-cancel': () => {
-      ui.avEdit = null;
-      render();
-    },
-    'av-save': async () => {
-      const a = ui.avEdit;
-      const r = await emit('setAvatar', { avatar: a });
-      if (!r.error) {
-        ui.avatar = a;
-        LS.set('pg_avatar', JSON.stringify(a));
-        ui.avEdit = null;
-        render();
-      }
-    },
-    // вход
-    'home-pick': (d) => {
-      ui.homeSel = d.id;
-      render();
-      if (d.id === 'new') $app.querySelector('[name=name]')?.focus();
-    },
-    'home-back': () => {
-      ui.homeStep = 'who';
+    'me-close': () => {
+      ui.meEdit = false;
       render();
     },
     // меню, тема, чат, музыка
@@ -8982,15 +8972,6 @@ window.RULES = {
         ui.menu = null;
         if (confirm('Передать права хоста?')) emit('makeHost', { target: d.pid });
         break;
-      case 'rename': {
-        ui.menu = null;
-        const n = prompt('Новое имя:', LS.get('pg_name', ''));
-        if (n && n.trim()) {
-          LS.set('pg_name', n.trim());
-          emit('rename', { name: n.trim() });
-        }
-        break;
-      }
       case 'leave':
         // Подтверждение — своим окном поверх всего
         ui.leaveAsk = true;
@@ -9028,28 +9009,28 @@ window.RULES = {
     const fd = new FormData(f);
     const kind = f.dataset.form;
     const clear = () => f.querySelectorAll('[data-keep]').forEach((el) => (el.value = ''));
-    if (kind === 'who') {
-      const sel = ui.homeSel;
-      if (!sel) return toast('Выберите себя');
-      if (sel === 'new') {
-        const name = String(fd.get('name') || '').trim();
-        if (!name) return toast('Введите имя');
-        LS.set('pg_profile', '');
-        LS.set('pg_name', name);
-      } else LS.set('pg_profile', sel);
-      LS.set('pg_avatar', JSON.stringify(ui.avatar));
-      ui.homeStep = 'avatar';
-      render();
-      window.scrollTo({ top: 0 });
-    } else if (kind === 'enter') {
-      LS.set('pg_avatar', JSON.stringify(ui.avatar));
-      const id = identity();
+    if (kind === 'enter') {
+      const name = String(fd.get('name') || '').trim();
+      if (!name) return toast('Введите никнейм');
+      LS.set('pg_name', name);
+      LS.set('pg_real', String(fd.get('real') || '').trim());
       const go = e.submitter?.value || 'create';
       if (go === 'join') {
         const code = (codeFromUrl() && !fd.get('code') ? codeFromUrl() : String(fd.get('code') || '')).toUpperCase();
         if (code.length !== 4) return toast('Код комнаты — 4 буквы');
-        await emit('joinRoom', { token, code, ...id });
-      } else await emit('createRoom', { token, ...id });
+        await emit('joinRoom', { token, code, ...(await enterPayload()) });
+      } else await emit('createRoom', { token, ...(await enterPayload()) });
+    } else if (kind === 'me') {
+      const name = String(fd.get('name') || '').trim();
+      const real = String(fd.get('real') || '').trim();
+      if (!name) return toast('Введите никнейм');
+      const r = await emit('rename', { name, real });
+      if (!r.error) {
+        LS.set('pg_name', name);
+        LS.set('pg_real', real);
+        ui.meEdit = false;
+        render();
+      }
     } else if (kind === 'chat') {
       const text = String(fd.get('text') || '').trim();
       if (text) {
@@ -9123,12 +9104,13 @@ window.RULES = {
   };
   ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach((ev) => document.addEventListener(ev, quizLock));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum || ui.showTable || ui.leaveAsk)) {
+    if (e.key === 'Escape' && (ui.menu || ui.crop || ui.meEdit || ui.showRules || ui.showSum || ui.showTable || ui.leaveAsk)) {
       ui.leaveAsk = false;
       ui.showSum = false;
       ui.showTable = false;
       ui.menu = null;
-      ui.avEdit = null;
+      if (ui.crop) ui.crop = null;
+      else ui.meEdit = false;
       ui.showRules = false;
       render();
     }

@@ -1,18 +1,5 @@
 // Общие операции с комнатой — используются и сервером, и демо-версией.
 
-// Пиксель-аватар: 8 параметров, у каждого 10 вариантов (0–9)
-const AVATAR_KEYS = ['s', 'h', 'hc', 'e', 'm', 'b', 'a', 'w']; // фон аватара задаёт игра (цвет команды)
-function cleanAvatar(a) {
-  if (!a || typeof a !== 'object') return null;
-  const out = {};
-  for (const k of AVATAR_KEYS) {
-    const v = Number(a[k]);
-    if (!Number.isInteger(v) || v < 0 || v > 9) return null;
-    out[k] = v;
-  }
-  return out;
-}
-
 function startGame(room, GAMES, makeCtx, clearAllTimers, type, settings) {
   const g = GAMES[type];
   clearAllTimers(room);
@@ -48,4 +35,4 @@ function resume(room, GAMES, makeCtx) {
 
 const publicSuspended = (room) => (room.suspended ? { type: room.suspended.game.type, tour: !!room.suspended.tour } : null);
 
-module.exports = { AVATAR_KEYS, cleanAvatar, startGame, suspend, resume, publicSuspended };
+module.exports = { startGame, suspend, resume, publicSuspended };

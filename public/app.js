@@ -21,26 +21,17 @@
     token = Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2);
     LS.set('pg_token', token);
   }
-  const loadAvatar = () => {
-    try {
-      const a = JSON.parse(LS.get('pg_avatar', 'null'));
-      return PixelAvatar.valid(a) ? a : null;
-    } catch {
-      return null;
-    }
-  };
+  // Своё фото (уже обрезанное под круг) хранится у игрока — сервер может его забыть после перезапуска
+  const myPhoto = () => LS.get('pg_photo', '') || null;
 
   const socket = io({ transports: ['websocket', 'polling'] });
   let S = null; // последнее состояние от сервера
   let GAMES = [];
-  let PROFILES = [];
   let offset = 0; // serverNow - clientNow
   let connected = false;
   const ui = {
-    homeStep: 'who', // who | avatar
-    homeSel: LS.get('pg_profile', '') || (LS.get('pg_name', '') ? 'new' : null),
-    avatar: loadAvatar() || PixelAvatar.random(),
-    avEdit: null, // черновик аватара в модалке (в комнате)
+    crop: null, // кадрирование загруженного фото: {src, w, h, z, x, y}
+    meEdit: false, // окно «Мой профиль» в комнате
     selected: null,
     settings: {},
     showRules: false,
@@ -150,19 +141,22 @@
   const ALIAS_BG = ['#ff6452', '#4fb8ff', '#7ed957', '#b388ff', '#ffd166'];
   function bgFor(id) {
     const g = S?.game;
-    if (id && g?.type === 'codenames') return TEAM_BG[g.team[id]] || PixelAvatar.NEUTRAL;
+    if (id && g?.type === 'codenames') return TEAM_BG[g.team[id]] || null;
     if (id && g?.type === 'alias') {
       const i = g.teams.findIndex((t) => t.members.includes(id));
       if (i >= 0) return ALIAS_BG[i];
     }
-    return PixelAvatar.BG[hue(id || 'x') % PixelAvatar.BG.length];
+    return null;
   }
+  // Аватар: своё фото или инициалы. В командных играх — кольцо цвета команды.
+  // Реальное имя (если указано) показывается при наведении — см. realTip ниже.
   function avaHtml(p, size = 'sm', cls = '') {
     const px = SIZES[size] || size;
-    if (p?.avatar && PixelAvatar.valid(p.avatar))
-      return `<span class="ava px ${size} ${cls}" style="width:${px}px;height:${px}px">${PixelAvatar.svg(p.avatar, px, p.bg || bgFor(p.id))}</span>`;
     const name = p?.name || '?';
-    return `<span class="ava ${size} ${cls}" style="--h:${hue(name)};width:${px}px;height:${px}px"><b>${esc(initials(name))}</b></span>`;
+    const team = p?.id ? bgFor(p.id) : null;
+    const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" onerror="this.remove()">` : '';
+    const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
+    return `<span class="ava ${size} ${cls} ${team ? 'ring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -455,19 +449,21 @@
     return m ? m[1].toUpperCase() : null;
   }
   const roomLink = (code) => `${location.origin}/r/${code}`;
-  const identity = () => {
-    const profile = LS.get('pg_profile', '') || null;
-    return {
-      profile,
-      name: profile ? PROFILES.find((p) => p.id === profile)?.name || '' : LS.get('pg_name', ''),
-      avatar: loadAvatar(),
-    };
-  };
+  const identity = () => ({ name: LS.get('pg_name', ''), real: LS.get('pg_real', '') });
+  const quietEmit = (ev, data) => new Promise((res) => socket.emit(ev, data, (r) => res(r || {})));
+  // Загружаем своё фото на сервер (он отдаёт короткую ссылку). Без фото — инициалы.
+  async function photoUrl() {
+    const data = myPhoto();
+    if (!data) return null;
+    const r = await quietEmit('uploadAvatar', { data });
+    return r.url || null;
+  }
+  const enterPayload = async () => ({ ...identity(), avatar: await photoUrl() });
 
   async function joinRoom(code) {
     const id = identity();
-    if ((!id.profile && !id.name) || !id.avatar) return render();
-    const r = await emit('joinRoom', { token, code, ...id });
+    if (!id.name) return render(); // зашёл по ссылке впервые — сначала ник
+    const r = await emit('joinRoom', { token, code, ...(await enterPayload()) });
     if (r.error) {
       history.replaceState(null, '', '/');
       render();
@@ -596,11 +592,12 @@
     }
   });
 
-  Promise.all([fetch('/api/games').then((r) => r.json()), fetch('/api/profiles').then((r) => r.json())]).then(([g, p]) => {
-    GAMES = g;
-    PROFILES = p;
-    render();
-  });
+  fetch('/api/games')
+    .then((r) => r.json())
+    .then((g) => {
+      GAMES = g;
+      render();
+    });
   const gameMeta = (id) => GAMES.find((g) => g.id === id) || { title: id, settings: [], rules: [] };
   const gIcon = (id, size = 18) => ic(GAME_ICON[id] || 'dice', size);
 
@@ -691,7 +688,7 @@
 
   // Ключ «экрана»: когда он меняется — плавно проявляем новую сцену
   function screenKey() {
-    if (!S) return 'home:' + ui.homeStep;
+    if (!S) return 'home';
     const g = S.game;
     if (!g) return 'lobby:' + ui.mode + (tour() ? ':' + tour().phase : '');
     return [g.type, g.phase, g.step === 'setup' ? 'setup' : g.winner ? 'over' : '', g.round, g.guesser, g.explainer].join(':');
@@ -726,28 +723,6 @@
     }, 80);
   });
 
-  // ---------- конструктор аватара ----------
-  function avatarEditor(av, scope) {
-    const rows = PixelAvatar.KEYS.map((k) => {
-      const opts = Array.from({ length: 10 }, (_, v) => {
-        const on = av[k] === v;
-        if (PixelAvatar.COLOR_KEYS.includes(k))
-          return `<button type="button" class="sw-opt ${on ? 'on' : ''}" style="--c:${PixelAvatar.PAL[k][v]}" data-act="av-set" data-scope="${scope}" data-k="${k}" data-v="${v}" title="${v + 1}"></button>`;
-        const prev = { ...PixelAvatar.BASE, [k]: v };
-        return `<button type="button" class="av-opt ${on ? 'on' : ''}" data-act="av-set" data-scope="${scope}" data-k="${k}" data-v="${v}" title="${esc(PixelAvatar.NAMES[k][v])}">${PixelAvatar.svg(prev, 40, '#3a3748')}</button>`;
-      }).join('');
-      return `<div class="av-row"><div class="av-lbl">${PixelAvatar.LABEL[k]}${PixelAvatar.NAMES[k] ? `<span class="muted">${esc(PixelAvatar.NAMES[k][av[k]])}</span>` : ''}</div><div class="av-opts">${opts}</div></div>`;
-    }).join('');
-    return `<div class="av-editor">
-      <div class="av-preview">
-        <div class="av-big">${PixelAvatar.svg(av, 160, PixelAvatar.NEUTRAL)}</div>
-        <button type="button" class="btn sm" data-act="av-random" data-scope="${scope}">${ic('dice5', 16)} Случайно</button>
-        <p class="muted small av-note">Фон подберётся сам: цвет команды в командных играх, свой цвет — в остальных.</p>
-      </div>
-      <div class="av-params">${rows}</div>
-    </div>`;
-  }
-
   // ---------- вход ----------
   // «Коднеймс, Элиас, …, Викторина и Ответ большинства» — всегда по актуальному каталогу
   function gamesLine() {
@@ -756,49 +731,218 @@
   }
   function renderHome() {
     const code = codeFromUrl();
-    const sel = ui.homeSel;
+    const photo = myPhoto();
+    const nick = LS.get('pg_name', '');
     const header = `<div class="home-top">${themeMenu()}</div>`;
     const hero = `<div class="home-hero">
         <div class="logo-mark">${ic('dice', 40)}</div>
         <h1>Экранки <span>а не настолки — для своих</span></h1>
         <p class="lead">${gamesLine()} — по одной или марафоном с турнирной таблицей.</p>
       </div>`;
-    if (ui.homeStep === 'avatar' && sel) {
-      const name = sel === 'new' ? LS.get('pg_name', '') : PROFILES.find((p) => p.id === sel)?.name;
-      return `${header}<main class="home wide">
-        <form class="card home-card" data-form="enter">
-          <div class="step-h"><button type="button" class="btn sm ghost" data-act="home-back">${ic('back', 16)} Назад</button><span class="lbl">Шаг 2 из 2 · Твой персонаж на эту игру</span></div>
-          <h2 class="h2">Привет, ${esc(name || 'игрок')}! Собери аватар</h2>
-          ${avatarEditor(ui.avatar, 'home')}
-          <div class="enter-row">
-            ${
-              code
-                ? `<button class="btn primary big" type="submit" name="go" value="join">Войти в комнату ${esc(code)}</button><button class="btn ghost" type="submit" name="go" value="create">или создать новую</button>`
-                : `<button class="btn primary big" type="submit" name="go" value="create">Создать комнату</button>
-                   <div class="row code-row"><input class="inp code-inp" name="code" data-keep="home-code" maxlength="4" placeholder="КОД" autocomplete="off" /><button class="btn" type="submit" name="go" value="join">Войти по коду</button></div>`
-            }
-          </div>
-          ${connected ? '' : '<p class="muted small">Подключаемся к серверу…</p>'}
-        </form>
-      </main>`;
-    }
-    // На шаге 1 аватара ещё нет — только инициалы
-    const tiles = PROFILES.map((p) =>
-      `<button type="button" class="pick-tile ${sel === p.id ? 'on' : ''}" data-act="home-pick" data-id="${p.id}">${avaHtml({ name: p.name }, 'lg')}<span>${esc(p.name)}</span></button>`
-    ).join('');
     return `${header}<main class="home">
       ${hero}
-      <form class="card home-card" data-form="who">
-        <span class="lbl">Шаг 1 из 2 · Кто ты?</span>
-        <div class="pick-grid">
-          ${tiles}
-          <button type="button" class="pick-tile new ${sel === 'new' ? 'on' : ''}" data-act="home-pick" data-id="new"><span class="ava lg plus" style="width:${SIZES.lg}px;height:${SIZES.lg}px">${ic('plus', 24)}</span><span>Новый игрок</span></button>
+      <form class="card home-card" data-form="enter" autocomplete="on">
+        <span class="lbl">${code ? `Вход в комнату ${esc(code)}` : 'Кто ты?'}</span>
+        ${photoBlock(photo, nick)}
+        <label class="fld"><span>Никнейм <i class="req">*</i></span><input class="inp" name="name" data-keep="home-name" maxlength="24" placeholder="Как тебя звать в игре" value="${esc(nick)}" autocomplete="nickname" required /></label>
+        <label class="fld"><span>Реальное имя</span><input class="inp" name="real" data-keep="home-real" maxlength="40" placeholder="пожалуйста, введите чтобы я не путался" value="${esc(LS.get('pg_real', ''))}" autocomplete="name" /><small class="muted">Видно остальным, только если навести на твой аватар</small></label>
+        <div class="enter-row">
+          ${
+            code
+              ? `<button class="btn primary big" type="submit" name="go" value="join">Войти в комнату ${esc(code)}</button><button class="btn ghost" type="submit" name="go" value="create">или создать новую</button>`
+              : `<button class="btn primary big" type="submit" name="go" value="create">Создать комнату</button>
+                 <div class="row code-row"><input class="inp code-inp" name="code" data-keep="home-code" maxlength="4" placeholder="КОД" autocomplete="off" /><button class="btn" type="submit" name="go" value="join">Войти по коду</button></div>`
+          }
         </div>
-        ${sel === 'new' ? `<input class="inp" name="name" data-keep="home-name" maxlength="24" placeholder="Как тебя зовут?" value="${esc(LS.get('pg_name', ''))}" autocomplete="nickname" />` : ''}
-        <button class="btn primary big" type="submit" ${sel ? '' : 'disabled'}>Дальше — аватар</button>
+        ${connected ? '' : '<p class="muted small">Подключаемся к серверу…</p>'}
       </form>
-    </main>`;
+    </main>
+    ${ui.crop ? renderCrop() : ''}`;
   }
+  // Круг с фото + кнопки «Загрузить / Убрать» (на входе и в «Моём профиле»)
+  function photoBlock(photo, nick) {
+    const face = photo ? `<img src="${photo}" alt="" draggable="false">` : nick ? `<b>${esc(initials(nick))}</b>` : ic('user', 34);
+    return `<div class="ph-row">
+      <button type="button" class="ph-circle ${photo ? 'has' : ''}" data-act="photo-pick" style="--h:${hue(nick || '?')}" aria-label="${photo ? 'Заменить фото' : 'Загрузить фото'}">${face}<span class="ph-cam">${ic('camera', 16)}</span></button>
+      <div class="ph-t"><b>Аватар</b><span class="muted small">${photo ? 'Готово — так тебя увидят остальные' : 'Своё фото — по желанию. Без него будут инициалы'}</span>
+        <div class="ph-btns"><button type="button" class="btn sm" data-act="photo-pick">${ic('upload', 15)} ${photo ? 'Заменить' : 'Загрузить фото'}</button>${photo ? `<button type="button" class="btn sm ghost" data-act="photo-del">Убрать</button>` : ''}</div>
+      </div>
+    </div>`;
+  }
+
+  // ---------- кадрирование фото под круг ----------
+  const CROP_V = 280; // размер окна кадрирования, px
+  const cropDims = (c) => {
+    const base = CROP_V / Math.min(c.w, c.h);
+    return { dw: c.w * base * c.z, dh: c.h * base * c.z };
+  };
+  function cropClamp(c) {
+    const { dw, dh } = cropDims(c);
+    const mx = (dw - CROP_V) / 2;
+    const my = (dh - CROP_V) / 2;
+    c.x = Math.max(-mx, Math.min(mx, c.x));
+    c.y = Math.max(-my, Math.min(my, c.y));
+  }
+  const cropStyle = (c) => {
+    const { dw, dh } = cropDims(c);
+    return `width:${dw}px;height:${dh}px;transform:translate(calc(-50% + ${c.x}px), calc(-50% + ${c.y}px))`;
+  };
+  function renderCrop() {
+    const c = ui.crop;
+    return `<div class="modal-bg ${c.anim ? '' : 'still'}" data-act="crop-cancel"></div>
+      <div class="modal card crop-modal ${c.anim ? '' : 'still'}" role="dialog" aria-modal="true" aria-label="Кадрирование фото">
+        <div class="modal-h"><b>${ic('crop', 18)} Подгони фото под круг</b><button class="icon-x" data-act="crop-cancel" aria-label="Закрыть">${ic('x', 18)}</button></div>
+        <div class="crop-box" data-crop style="width:${CROP_V}px;height:${CROP_V}px"><img src="${c.src}" alt="" draggable="false" data-crop-img style="${cropStyle(c)}"><span class="crop-ring"></span></div>
+        <div class="crop-zoom">${ic('minus', 16)}<input type="range" min="1" max="4" step="0.01" value="${c.z}" data-crop-zoom aria-label="Масштаб">${ic('plus', 16)}</div>
+        <p class="muted small c">Двигай фото пальцем или мышкой, масштаб — ползунком${matchMedia('(pointer:fine)').matches ? ' или колесом' : ''}</p>
+        <div class="row end"><button class="btn ghost" data-act="crop-cancel">Отмена</button><button class="btn primary" data-act="crop-save">${ic('check', 16)} Сохранить</button></div>
+      </div>`;
+  }
+  function cropPaint() {
+    const el = document.querySelector('[data-crop-img]');
+    if (el && ui.crop) el.setAttribute('style', cropStyle(ui.crop));
+  }
+  // Выбор файла: уменьшаем большое фото сразу (телефонные 12 Мп не нужны), потом окно кадрирования
+  const fileInp = document.createElement('input');
+  fileInp.type = 'file';
+  fileInp.accept = 'image/*';
+  fileInp.hidden = true;
+  document.body.appendChild(fileInp);
+  fileInp.addEventListener('change', () => {
+    const f = fileInp.files && fileInp.files[0];
+    fileInp.value = '';
+    if (!f) return;
+    if (!/^image\//.test(f.type)) return toast('Это не картинка');
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.naturalWidth * k);
+      cv.height = Math.round(img.naturalHeight * k);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      ui.crop = { src: cv.toDataURL('image/jpeg', 0.92), w: cv.width, h: cv.height, z: 1, x: 0, y: 0, anim: true };
+      ui.menu = null;
+      render();
+      ui.crop.anim = false;
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toast('Не получилось открыть картинку');
+    };
+    img.src = url;
+  });
+  // Готовый круг: квадрат 256×256, внутри — то, что видно в окне
+  function cropExport() {
+    const c = ui.crop;
+    const OUT = 256;
+    const f = OUT / CROP_V;
+    const { dw, dh } = cropDims(c);
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = OUT;
+    const ctx = cv.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    const img = document.querySelector('[data-crop-img]');
+    ctx.drawImage(img, (CROP_V / 2 + c.x - dw / 2) * f, (CROP_V / 2 + c.y - dh / 2) * f, dw * f, dh * f);
+    const webp = cv.toDataURL('image/webp', 0.86);
+    return webp.startsWith('data:image/webp') ? webp : cv.toDataURL('image/jpeg', 0.88);
+  }
+  let cropDrag = null;
+  document.addEventListener('pointerdown', (e) => {
+    if (!ui.crop || !e.target.closest('[data-crop]')) return;
+    e.preventDefault();
+    cropDrag = { x: e.clientX, y: e.clientY, cx: ui.crop.x, cy: ui.crop.y };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!cropDrag || !ui.crop) return;
+    ui.crop.x = cropDrag.cx + e.clientX - cropDrag.x;
+    ui.crop.y = cropDrag.cy + e.clientY - cropDrag.y;
+    cropClamp(ui.crop);
+    cropPaint();
+  });
+  const cropUp = () => (cropDrag = null);
+  document.addEventListener('pointerup', cropUp);
+  document.addEventListener('pointercancel', cropUp);
+  document.addEventListener('input', (e) => {
+    if (!ui.crop || !e.target.matches('[data-crop-zoom]')) return;
+    const c = ui.crop;
+    const z = Number(e.target.value);
+    // зум к центру окна
+    c.x *= z / c.z;
+    c.y *= z / c.z;
+    c.z = z;
+    cropClamp(c);
+    cropPaint();
+  });
+  document.addEventListener(
+    'wheel',
+    (e) => {
+      if (!ui.crop || !e.target.closest('[data-crop]')) return;
+      e.preventDefault();
+      const c = ui.crop;
+      const z = Math.max(1, Math.min(4, c.z * (e.deltaY < 0 ? 1.08 : 1 / 1.08)));
+      c.x *= z / c.z;
+      c.y *= z / c.z;
+      c.z = z;
+      cropClamp(c);
+      cropPaint();
+      const r = document.querySelector('[data-crop-zoom]');
+      if (r) r.value = z;
+    },
+    { passive: false }
+  );
+  // Фото сохранено: у себя — сразу, в комнате — загружаем и меняем аватар у всех
+  async function setPhoto(data) {
+    if (data) LS.set('pg_photo', data);
+    else LS.set('pg_photo', '');
+    if (!S) return render();
+    if (!data) return emit('setAvatar', { avatar: null });
+    const r = await emit('uploadAvatar', { data });
+    if (r.url) emit('setAvatar', { avatar: r.url });
+  }
+
+  // Реальное имя — всплывает при наведении на любой аватар (на телефоне — по касанию)
+  const realTip = document.createElement('div');
+  realTip.className = 'real-tip';
+  realTip.setAttribute('role', 'tooltip');
+  document.body.appendChild(realTip);
+  let realFor = null;
+  let realT = 0;
+  function showReal(el) {
+    if (realFor === el) return;
+    realFor = el;
+    realTip.innerHTML = `<small>${esc(el.dataset.nick || '')} — это</small><b>${esc(el.dataset.real)}</b>`;
+    const r = el.getBoundingClientRect();
+    realTip.classList.add('on');
+    const tw = realTip.offsetWidth;
+    const th = realTip.offsetHeight;
+    let left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(8, Math.min(innerWidth - tw - 8, left));
+    let top = r.top - th - 8;
+    realTip.classList.toggle('below', top < 6);
+    if (top < 6) top = r.bottom + 8;
+    realTip.style.left = left + 'px';
+    realTip.style.top = top + 'px';
+  }
+  function hideReal() {
+    realFor = null;
+    realTip.classList.remove('on');
+  }
+  document.addEventListener('mouseover', (e) => {
+    const el = e.target.closest && e.target.closest('[data-real]');
+    if (el) showReal(el);
+    else if (realFor) hideReal();
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch') return;
+    const el = e.target.closest && e.target.closest('[data-real]');
+    if (!el) return hideReal();
+    showReal(el);
+    clearTimeout(realT);
+    realT = setTimeout(hideReal, 2200);
+  });
+  addEventListener('scroll', hideReal, true);
 
   // ---------- комната ----------
   function renderRoom() {
@@ -853,7 +997,8 @@
           <button class="btn sm primary" data-act="glow-ok">Готово</button>
         </div>` : ''}
       ${ui.showSum && g && g.type === 'codenames' && g.winner ? cnSummaryModal(g) : ''}
-      ${ui.avEdit ? renderAvatarModal() : ''}
+      ${ui.meEdit ? renderMeModal() : ''}
+      ${ui.crop ? renderCrop() : ''}
     </div>`;
   }
 
@@ -872,8 +1017,7 @@
         const tag = cn ? (team ? (cap ? `капитан ${team === 'red' ? 'красных' : 'синих'}` : team === 'red' ? 'красные' : 'синие') : 'зритель') : '';
         const mine = p.id === S.me;
         const acts = [];
-        if (mine) acts.push(`<button class="icon-x" data-act="av-open" title="Изменить аватар">${ic('palette', 16)}</button>`);
-        if (mine && !p.profile && !g) acts.push(`<button class="icon-x" data-act="rename" title="Изменить имя">${ic('pencil', 16)}</button>`);
+        if (mine) acts.push(`<button class="icon-x" data-act="me-open" title="Мой профиль: ник, реальное имя, фото">${ic('pencil', 16)}</button>`);
         if (isHost() && !mine) {
           acts.push(`<button class="icon-x" data-act="makeHost" data-pid="${p.id}" title="Сделать хостом">${ic('crown', 16)}</button>`);
           acts.push(`<button class="icon-x danger" data-act="kick" data-pid="${p.id}" title="Выгнать">${ic('x', 16)}</button>`);
@@ -932,13 +1076,16 @@
     </div>`;
   }
 
-  function renderAvatarModal() {
-    return `<div class="modal-bg" data-act="av-cancel"></div>
-      <div class="modal card" role="dialog" aria-label="Аватар">
-        <div class="modal-h"><b>Твой аватар</b><button class="icon-x" data-act="av-cancel">${ic('x', 18)}</button></div>
-        ${avatarEditor(ui.avEdit, 'room')}
-        <div class="row end"><button class="btn ghost" data-act="av-cancel">Отмена</button><button class="btn primary" data-act="av-save">Сохранить</button></div>
-      </div>`;
+  function renderMeModal() {
+    const me = player(S.me) || {};
+    return `<div class="modal-bg ${ui.meAnim ? '' : 'still'}" data-act="me-close"></div>
+      <form class="modal card me-modal ${ui.meAnim ? '' : 'still'}" data-form="me" role="dialog" aria-modal="true" aria-label="Мой профиль">
+        <div class="modal-h"><b>${ic('user', 18)} Мой профиль</b><button type="button" class="icon-x" data-act="me-close" aria-label="Закрыть">${ic('x', 18)}</button></div>
+        ${photoBlock(myPhoto(), me.name)}
+        <label class="fld"><span>Никнейм <i class="req">*</i></span><input class="inp" name="name" data-keep="me-name" maxlength="24" value="${esc(me.name || '')}" required /></label>
+        <label class="fld"><span>Реальное имя</span><input class="inp" name="real" data-keep="me-real" maxlength="40" placeholder="пожалуйста, введите чтобы я не путался" value="${esc(me.real || '')}" /><small class="muted">Видно остальным при наведении на твой аватар</small></label>
+        <div class="row end"><button type="button" class="btn ghost" data-act="me-close">Отмена</button><button class="btn primary">Сохранить</button></div>
+      </form>`;
   }
 
   // Правила — модалка поверх всего, вкладки по играм. Тексты — public/js/rules.js
@@ -2394,45 +2541,29 @@
   }
 
   // ---------- обработчики ----------
-  const setAv = (scope, fn) => {
-    if (scope === 'room') ui.avEdit = fn({ ...ui.avEdit });
-    else {
-      ui.avatar = fn({ ...ui.avatar });
-      LS.set('pg_avatar', JSON.stringify(ui.avatar));
-    }
-    render();
-  };
   const ACTIONS = {
-    // аватар
-    'av-set': (d) => setAv(d.scope, (a) => ({ ...a, [d.k]: Number(d.v) })),
-    'av-random': (d) => setAv(d.scope, () => PixelAvatar.random()),
-    'av-open': () => {
+    // фото и профиль
+    'photo-pick': () => fileInp.click(),
+    'photo-del': () => setPhoto(null).then(render),
+    'crop-cancel': () => {
+      ui.crop = null;
+      render();
+    },
+    'crop-save': async () => {
+      if (!ui.crop) return;
+      const data = cropExport();
+      ui.crop = null;
+      await setPhoto(data);
+      render();
+    },
+    'me-open': () => {
       ui.menu = null;
-      ui.avEdit = { ...(player(S.me)?.avatar || ui.avatar) };
+      ui.meEdit = ui.meAnim = true;
       render();
+      ui.meAnim = false;
     },
-    'av-cancel': () => {
-      ui.avEdit = null;
-      render();
-    },
-    'av-save': async () => {
-      const a = ui.avEdit;
-      const r = await emit('setAvatar', { avatar: a });
-      if (!r.error) {
-        ui.avatar = a;
-        LS.set('pg_avatar', JSON.stringify(a));
-        ui.avEdit = null;
-        render();
-      }
-    },
-    // вход
-    'home-pick': (d) => {
-      ui.homeSel = d.id;
-      render();
-      if (d.id === 'new') $app.querySelector('[name=name]')?.focus();
-    },
-    'home-back': () => {
-      ui.homeStep = 'who';
+    'me-close': () => {
+      ui.meEdit = false;
       render();
     },
     // меню, тема, чат, музыка
@@ -2717,15 +2848,6 @@
         ui.menu = null;
         if (confirm('Передать права хоста?')) emit('makeHost', { target: d.pid });
         break;
-      case 'rename': {
-        ui.menu = null;
-        const n = prompt('Новое имя:', LS.get('pg_name', ''));
-        if (n && n.trim()) {
-          LS.set('pg_name', n.trim());
-          emit('rename', { name: n.trim() });
-        }
-        break;
-      }
       case 'leave':
         // Подтверждение — своим окном поверх всего
         ui.leaveAsk = true;
@@ -2763,28 +2885,28 @@
     const fd = new FormData(f);
     const kind = f.dataset.form;
     const clear = () => f.querySelectorAll('[data-keep]').forEach((el) => (el.value = ''));
-    if (kind === 'who') {
-      const sel = ui.homeSel;
-      if (!sel) return toast('Выберите себя');
-      if (sel === 'new') {
-        const name = String(fd.get('name') || '').trim();
-        if (!name) return toast('Введите имя');
-        LS.set('pg_profile', '');
-        LS.set('pg_name', name);
-      } else LS.set('pg_profile', sel);
-      LS.set('pg_avatar', JSON.stringify(ui.avatar));
-      ui.homeStep = 'avatar';
-      render();
-      window.scrollTo({ top: 0 });
-    } else if (kind === 'enter') {
-      LS.set('pg_avatar', JSON.stringify(ui.avatar));
-      const id = identity();
+    if (kind === 'enter') {
+      const name = String(fd.get('name') || '').trim();
+      if (!name) return toast('Введите никнейм');
+      LS.set('pg_name', name);
+      LS.set('pg_real', String(fd.get('real') || '').trim());
       const go = e.submitter?.value || 'create';
       if (go === 'join') {
         const code = (codeFromUrl() && !fd.get('code') ? codeFromUrl() : String(fd.get('code') || '')).toUpperCase();
         if (code.length !== 4) return toast('Код комнаты — 4 буквы');
-        await emit('joinRoom', { token, code, ...id });
-      } else await emit('createRoom', { token, ...id });
+        await emit('joinRoom', { token, code, ...(await enterPayload()) });
+      } else await emit('createRoom', { token, ...(await enterPayload()) });
+    } else if (kind === 'me') {
+      const name = String(fd.get('name') || '').trim();
+      const real = String(fd.get('real') || '').trim();
+      if (!name) return toast('Введите никнейм');
+      const r = await emit('rename', { name, real });
+      if (!r.error) {
+        LS.set('pg_name', name);
+        LS.set('pg_real', real);
+        ui.meEdit = false;
+        render();
+      }
     } else if (kind === 'chat') {
       const text = String(fd.get('text') || '').trim();
       if (text) {
@@ -2858,12 +2980,13 @@
   };
   ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach((ev) => document.addEventListener(ev, quizLock));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (ui.menu || ui.avEdit || ui.showRules || ui.showSum || ui.showTable || ui.leaveAsk)) {
+    if (e.key === 'Escape' && (ui.menu || ui.crop || ui.meEdit || ui.showRules || ui.showSum || ui.showTable || ui.leaveAsk)) {
       ui.leaveAsk = false;
       ui.showSum = false;
       ui.showTable = false;
       ui.menu = null;
-      ui.avEdit = null;
+      if (ui.crop) ui.crop = null;
+      else ui.meEdit = false;
       ui.showRules = false;
       render();
     }
