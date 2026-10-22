@@ -1991,3 +1991,47 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 [data-theme='light'] .ui-tip { background: #1b1b22; color: #fff; border-color: #1b1b22; box-shadow: 0 8px 22px rgba(16, 16, 28, .22); }
 [data-theme='light'] .ui-tip::after { border-color: #1b1b22; }
 @media (prefers-reduced-motion: reduce) { .ui-tip { transition: none; } }
+
+/* ---------- радио: компактный плеер с вращающимся винилом ---------- */
+/* сам YouTube-плеер прячем — звук идёт через него, а показываем обложку на пластинке */
+#lofi .lofi-video { position: fixed; left: -10px; bottom: -10px; width: 2px; height: 2px; opacity: 0; pointer-events: none; aspect-ratio: auto; border-radius: 0; }
+.lofi-np { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lofi-np-r { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.lofi-now { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+.lofi-now .ln-t { font-weight: 700; font-size: 14px; line-height: 1.25; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ln-sub { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; color: var(--muted); }
+.ln-sub .ln-by { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vinyl { --s: 66px; position: relative; flex: none; width: var(--s); height: var(--s); padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.vy-disc { position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  background:
+    radial-gradient(circle, transparent 31%, rgba(255, 255, 255, .06) 31.5%, transparent 33%),
+    repeating-radial-gradient(circle, #0c0c0f 0 1.2px, #1d1d23 1.2px 2.6px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(255, 255, 255, .06);
+  animation: vySpin 3.6s linear infinite; animation-play-state: paused; }
+.vinyl.spin .vy-disc { animation-play-state: running; }
+@keyframes vySpin { to { transform: rotate(360deg); } }
+/* обложка — «яблоко» пластинки */
+.vy-cover { width: 58%; height: 58%; border-radius: 50%; object-fit: cover; opacity: 0; transition: opacity .3s; background: var(--accent); }
+.vy-cover.ok { opacity: 1; }
+.vy-disc::before { content: ''; position: absolute; width: 58%; height: 58%; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0 30%, color-mix(in srgb, var(--accent) 70%, #000) 100%); z-index: -1; }
+.vy-hole { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3); }
+/* неподвижный блик — пластинка «блестит», пока крутится */
+.vy-shine { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 210deg, transparent 0 8%, rgba(255, 255, 255, .16) 12%, transparent 18% 58%, rgba(255, 255, 255, .1) 62%, transparent 68%); }
+.vinyl:hover .vy-disc { box-shadow: 0 6px 18px rgba(0, 0, 0, .5), 0 0 0 2px var(--accent-line); }
+.vinyl:not(.spin)::after { content: ''; position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-bg, var(--accent));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12'/%3E%3C/svg%3E"); box-shadow: 0 0 0 3px var(--surface); }
+.vinyl:not(.spin)::before { content: ''; position: absolute; z-index: 2; right: 4px; bottom: 5px; width: 0; height: 0; border-left: 8px solid var(--accent-ink); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+@media (prefers-reduced-motion: reduce) { .vy-disc { animation: none; } }
+[data-theme='light'] .vy-hole { background: #fff; }
+
+/* очередь: свои треки, обложки, «влетание» новых */
+.lq-cov { flex: none; width: 34px; height: 24px; border-radius: 5px; object-fit: cover; background: var(--surface-3); }
+.lq-i.mine { box-shadow: inset 2px 0 0 var(--accent); }
+.lq-i.new { animation: lqIn .55s cubic-bezier(.2, .9, .25, 1.15) both; }
+@keyframes lqIn { 0% { opacity: 0; transform: translateY(26px) scale(.92); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+/* поле ссылки без кнопки: трек уходит сам */
+.lofi-add { position: relative; }
+.lofi-add .la-ic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: inline-flex; }
+.lofi-add .inp { padding-left: 32px; }
+.lofi-add .inp.sending { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); color: var(--muted); }

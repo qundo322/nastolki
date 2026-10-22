@@ -1,5 +1,5 @@
 // Общее радио комнаты: у всех играет одно и то же.
-// Сейчас играет `cur`; игроки добавляют треки в очередь `queue`, хост её правит.
+// Сейчас играет `cur`; игроки добавляют треки в очередь `queue` и могут убрать свои, хост правит всю очередь.
 // Лофи-трансляция по умолчанию — «фон»: первый добавленный трек включается сразу, не дожидаясь её конца.
 const DEFAULT = { vid: 'rFZHOHl-L8A', title: 'Лофи-радио', live: true };
 const MAX_QUEUE = 50;
@@ -66,12 +66,16 @@ function handle(room, pid, msg, isHost) {
     if (r.cur.id === msg.id && (!r.cur.title || r.cur.title === 'Трек')) r.cur.title = t;
     return;
   }
-  if (!isHost) return 'Только хост может управлять очередью';
-  if (op === 'skip') return next(r);
   if (op === 'remove') {
+    // убрать трек: хост — любой, игрок — только свой
+    const it = r.queue.find((x) => x.qid === msg.qid);
+    if (!it) return;
+    if (!isHost && it.by !== pid) return 'Убрать можно только свой трек';
     r.queue = r.queue.filter((x) => x.qid !== msg.qid);
     return;
   }
+  if (!isHost) return 'Только хост может управлять очередью';
+  if (op === 'skip') return next(r);
   if (op === 'move') {
     const i = r.queue.findIndex((x) => x.qid === msg.qid);
     const j = i + (Number(msg.d) < 0 ? -1 : 1);

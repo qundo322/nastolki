@@ -265,16 +265,23 @@
   dock.id = 'lofi';
   dock.hidden = true;
   dock.innerHTML = `<div class="lofi-head"><b class="lofi-title" data-lofi="expand" title="Показать плеер">${ic('headphones', 16)} Радио комнаты</b><span class="lofi-state muted small"></span><button class="icon-x" data-lofi="close" title="Выключить у себя">${ic('x', 16)}</button></div>
-    <div class="lofi-video"><div id="lofi-player"></div></div>
-    <div class="lofi-now"></div>
-    <div class="lofi-ctl">
-      <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть (только у вас)">${ic('pause', 16)}</button>
-      <input type="range" min="0" max="100" step="1" data-lofi="vol" aria-label="Громкость"/>
-      <span class="lofi-host"></span>
-      <button class="btn sm ghost icon-btn" data-lofi="min" title="Свернуть">${ic('chevron', 16)}</button>
+    <div class="lofi-video" aria-hidden="true"><div id="lofi-player"></div></div>
+    <div class="lofi-np">
+      <button type="button" class="vinyl" data-lofi="toggle" title="Пауза / играть (только у вас)" aria-label="Пауза / играть">
+        <span class="vy-disc"><img class="vy-cover" alt="" draggable="false"/><i class="vy-hole"></i></span><i class="vy-shine"></i>
+      </button>
+      <div class="lofi-np-r">
+        <div class="lofi-now"></div>
+        <div class="lofi-ctl">
+          <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть (только у вас)">${ic('pause', 16)}</button>
+          <input type="range" min="0" max="100" step="1" data-lofi="vol" aria-label="Громкость"/>
+          <span class="lofi-host"></span>
+          <button class="btn sm ghost icon-btn" data-lofi="min" title="Свернуть">${ic('chevron', 16)}</button>
+        </div>
+      </div>
     </div>
     <div class="lofi-queue"></div>
-    <form class="lofi-add" data-lofi-form><input class="inp" name="url" placeholder="Ссылка на YouTube" autocomplete="off"/><button class="btn sm primary" title="Добавить в очередь">${ic('plus', 16)} В очередь</button></form>`;
+    <form class="lofi-add" data-lofi-form><span class="la-ic">${ic('link', 15)}</span><input class="inp" name="url" placeholder="Вставьте ссылку на YouTube — трек сам встанет в очередь" autocomplete="off" inputmode="url"/></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
   // Кнопка радио — слева снизу, открывает мини-плеер над собой
@@ -305,7 +312,20 @@
     const r = radio();
     dock.hidden = !music.on || !r;
     dock.classList.toggle('mini', !music.open);
-    dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
+    dock.querySelector('.lofi-ctl [data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
+    // Винил крутится, пока играет; обложка — превью ролика с YouTube
+    const vinyl = dock.querySelector('.vinyl');
+    vinyl.classList.toggle('spin', music.on && music.playing);
+    const cover = dock.querySelector('.vy-cover');
+    const vid = radio()?.cur?.vid;
+    const src = vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : '';
+    if (cover.dataset.src !== src) {
+      cover.dataset.src = src;
+      cover.classList.remove('ok');
+      cover.onload = () => cover.classList.add('ok');
+      cover.onerror = () => cover.classList.remove('ok');
+      if (src) cover.src = src;
+    }
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
     fab.hidden = !r;
     pauseBtn.hidden = !r || !music.on;
@@ -319,21 +339,26 @@
     if (!r) return;
     const host = isHost();
     const c = r.cur;
-    dock.querySelector('.lofi-now').innerHTML = `<span class="ln-k">${c.live ? 'Эфир' : 'Сейчас'}</span><span class="ln-t" title="${esc(c.title)}">${esc(c.title)}</span>${c.by ? `<span class="ln-by">${pa(c.by, 'xs', 'round')}${nm(c.by)}</span>` : ''}`;
+    dock.querySelector('.lofi-now').innerHTML = `<span class="ln-t" title="${esc(c.title)}">${esc(c.title)}</span><span class="ln-sub"><span class="ln-k">${c.live ? 'Эфир' : 'Сейчас'}</span>${c.by ? `<span class="ln-by">${pa(c.by, 'xs', 'round')}${nm(c.by)}</span>` : ''}</span>`;
     dock.querySelector('.lofi-host').innerHTML = host
       ? `<button class="btn sm ghost icon-btn" data-lofi="skip" title="Следующий трек (для всех)">${ic('skip', 16)}</button>${c.live ? '' : `<button class="btn sm ghost icon-btn" data-lofi="lofi" title="Вернуть лофи-эфир">${ic('music', 16)}</button>`}`
       : '';
     const q = r.queue;
     if (dock.querySelector('.lq-i.dragging')) return; // не перерисовывать очередь посреди перетаскивания
+    // новые треки «влетают» в очередь
+    const known = (music.knownQ = music.knownQ || new Set());
+    const fresh = new Set(q.filter((x) => !known.has(x.qid)).map((x) => x.qid));
+    q.forEach((x) => known.add(x.qid));
     dock.querySelector('.lofi-queue').innerHTML = `<div class="lq-h">Очередь <span class="muted">${q.length || 'пусто'}</span></div>${q
       .map(
-        (x, i) => `<div class="lq-i ${host ? 'can-drag' : ''}" data-q="${x.qid}">${host ? `<span class="lq-grip" data-grip title="Перетащите, чтобы поменять порядок">⋮⋮</span>` : ''}<span class="lq-n">${i + 1}</span><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
-          host
-            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="Убрать">${ic('x', 14)}</button></span>`
+        (x, i) => `<div class="lq-i ${host ? 'can-drag' : ''} ${fresh.has(x.qid) && music.qReady ? 'new' : ''} ${x.by === S.me ? 'mine' : ''}" data-q="${x.qid}">${host ? `<span class="lq-grip" data-grip title="Перетащите, чтобы поменять порядок">⋮⋮</span>` : ''}<span class="lq-n">${i + 1}</span><img class="lq-cov" src="https://i.ytimg.com/vi/${x.vid}/default.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
+          host || x.by === S.me
+            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="${host && x.by !== S.me ? 'Убрать из очереди' : 'Убрать свой трек'}">${ic('x', 14)}</button></span>`
             : ''
         }</div>`
       )
       .join('')}${q.length ? '' : `<div class="muted small">${c.live ? 'Добавьте трек — он включится сразу, лофи уступит.' : 'После текущего трека вернётся лофи-эфир.'}</div>`}`;
+    music.qReady = true;
   }
 
   // Подстроиться под то, что сейчас играет в комнате
@@ -467,19 +492,36 @@
     grip.addEventListener('pointerup', up);
     grip.addEventListener('pointercancel', up);
   });
-  dock.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const inp = e.target.querySelector('input');
+  // Ссылка вставлена — трек сам улетает в очередь, без кнопок
+  let addBusy = false;
+  async function addFromInput(inp, strict) {
     const u = inp.value.trim();
-    if (!u) return;
-    if (!ytId(u)) return toast('Не похоже на ссылку YouTube');
+    if (!u || addBusy) return;
+    if (!ytId(u)) {
+      if (strict) toast('Не похоже на ссылку YouTube');
+      return;
+    }
+    addBusy = true;
+    inp.classList.add('sending');
     const r = await rEmit('add', { url: u });
+    addBusy = false;
+    inp.classList.remove('sending');
     if (!r.error) {
       inp.value = '';
-      toast('Добавлено в очередь', 'ok');
+      Sound.play('pop');
     }
+  }
+  dock.addEventListener('submit', (e) => {
+    e.preventDefault();
+    addFromInput(e.target.querySelector('input'), true);
   });
+  let addT = 0;
   dock.addEventListener('input', (e) => {
+    if (e.target.name === 'url') {
+      clearTimeout(addT);
+      addT = setTimeout(() => addFromInput(e.target, false), 200);
+      return;
+    }
     if (e.target.dataset.lofi !== 'vol') return;
     music.vol = Number(e.target.value);
     LS.set('pg_lofi_vol', String(music.vol));

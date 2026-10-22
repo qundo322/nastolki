@@ -1999,6 +1999,50 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 [data-theme='light'] .ui-tip::after { border-color: #1b1b22; }
 @media (prefers-reduced-motion: reduce) { .ui-tip { transition: none; } }
 
+/* ---------- радио: компактный плеер с вращающимся винилом ---------- */
+/* сам YouTube-плеер прячем — звук идёт через него, а показываем обложку на пластинке */
+#lofi .lofi-video { position: fixed; left: -10px; bottom: -10px; width: 2px; height: 2px; opacity: 0; pointer-events: none; aspect-ratio: auto; border-radius: 0; }
+.lofi-np { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lofi-np-r { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.lofi-now { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+.lofi-now .ln-t { font-weight: 700; font-size: 14px; line-height: 1.25; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ln-sub { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; color: var(--muted); }
+.ln-sub .ln-by { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vinyl { --s: 66px; position: relative; flex: none; width: var(--s); height: var(--s); padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.vy-disc { position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  background:
+    radial-gradient(circle, transparent 31%, rgba(255, 255, 255, .06) 31.5%, transparent 33%),
+    repeating-radial-gradient(circle, #0c0c0f 0 1.2px, #1d1d23 1.2px 2.6px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(255, 255, 255, .06);
+  animation: vySpin 3.6s linear infinite; animation-play-state: paused; }
+.vinyl.spin .vy-disc { animation-play-state: running; }
+@keyframes vySpin { to { transform: rotate(360deg); } }
+/* обложка — «яблоко» пластинки */
+.vy-cover { width: 58%; height: 58%; border-radius: 50%; object-fit: cover; opacity: 0; transition: opacity .3s; background: var(--accent); }
+.vy-cover.ok { opacity: 1; }
+.vy-disc::before { content: ''; position: absolute; width: 58%; height: 58%; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0 30%, color-mix(in srgb, var(--accent) 70%, #000) 100%); z-index: -1; }
+.vy-hole { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3); }
+/* неподвижный блик — пластинка «блестит», пока крутится */
+.vy-shine { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 210deg, transparent 0 8%, rgba(255, 255, 255, .16) 12%, transparent 18% 58%, rgba(255, 255, 255, .1) 62%, transparent 68%); }
+.vinyl:hover .vy-disc { box-shadow: 0 6px 18px rgba(0, 0, 0, .5), 0 0 0 2px var(--accent-line); }
+.vinyl:not(.spin)::after { content: ''; position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-bg, var(--accent));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12'/%3E%3C/svg%3E"); box-shadow: 0 0 0 3px var(--surface); }
+.vinyl:not(.spin)::before { content: ''; position: absolute; z-index: 2; right: 4px; bottom: 5px; width: 0; height: 0; border-left: 8px solid var(--accent-ink); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+@media (prefers-reduced-motion: reduce) { .vy-disc { animation: none; } }
+[data-theme='light'] .vy-hole { background: #fff; }
+
+/* очередь: свои треки, обложки, «влетание» новых */
+.lq-cov { flex: none; width: 34px; height: 24px; border-radius: 5px; object-fit: cover; background: var(--surface-3); }
+.lq-i.mine { box-shadow: inset 2px 0 0 var(--accent); }
+.lq-i.new { animation: lqIn .55s cubic-bezier(.2, .9, .25, 1.15) both; }
+@keyframes lqIn { 0% { opacity: 0; transform: translateY(26px) scale(.92); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+/* поле ссылки без кнопки: трек уходит сам */
+.lofi-add { position: relative; }
+.lofi-add .la-ic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: inline-flex; }
+.lofi-add .inp { padding-left: 32px; }
+.lofi-add .inp.sending { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); color: var(--muted); }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -5765,12 +5809,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           if (r.cur.id === msg.id && (!r.cur.title || r.cur.title === "\u0422\u0440\u0435\u043A")) r.cur.title = t;
           return;
         }
-        if (!isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442 \u043C\u043E\u0436\u0435\u0442 \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0442\u044C \u043E\u0447\u0435\u0440\u0435\u0434\u044C\u044E";
-        if (op2 === "skip") return next(r);
         if (op2 === "remove") {
+          const it = r.queue.find((x) => x.qid === msg.qid);
+          if (!it) return;
+          if (!isHost && it.by !== pid) return "\u0423\u0431\u0440\u0430\u0442\u044C \u043C\u043E\u0436\u043D\u043E \u0442\u043E\u043B\u044C\u043A\u043E \u0441\u0432\u043E\u0439 \u0442\u0440\u0435\u043A";
           r.queue = r.queue.filter((x) => x.qid !== msg.qid);
           return;
         }
+        if (!isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442 \u043C\u043E\u0436\u0435\u0442 \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0442\u044C \u043E\u0447\u0435\u0440\u0435\u0434\u044C\u044E";
+        if (op2 === "skip") return next(r);
         if (op2 === "move") {
           const i = r.queue.findIndex((x) => x.qid === msg.qid);
           const j = i + (Number(msg.d) < 0 ? -1 : 1);
@@ -7182,16 +7229,23 @@ window.RULES = {
   dock.id = 'lofi';
   dock.hidden = true;
   dock.innerHTML = `<div class="lofi-head"><b class="lofi-title" data-lofi="expand" title="Показать плеер">${ic('headphones', 16)} Радио комнаты</b><span class="lofi-state muted small"></span><button class="icon-x" data-lofi="close" title="Выключить у себя">${ic('x', 16)}</button></div>
-    <div class="lofi-video"><div id="lofi-player"></div></div>
-    <div class="lofi-now"></div>
-    <div class="lofi-ctl">
-      <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть (только у вас)">${ic('pause', 16)}</button>
-      <input type="range" min="0" max="100" step="1" data-lofi="vol" aria-label="Громкость"/>
-      <span class="lofi-host"></span>
-      <button class="btn sm ghost icon-btn" data-lofi="min" title="Свернуть">${ic('chevron', 16)}</button>
+    <div class="lofi-video" aria-hidden="true"><div id="lofi-player"></div></div>
+    <div class="lofi-np">
+      <button type="button" class="vinyl" data-lofi="toggle" title="Пауза / играть (только у вас)" aria-label="Пауза / играть">
+        <span class="vy-disc"><img class="vy-cover" alt="" draggable="false"/><i class="vy-hole"></i></span><i class="vy-shine"></i>
+      </button>
+      <div class="lofi-np-r">
+        <div class="lofi-now"></div>
+        <div class="lofi-ctl">
+          <button class="btn sm icon-btn" data-lofi="toggle" title="Пауза / играть (только у вас)">${ic('pause', 16)}</button>
+          <input type="range" min="0" max="100" step="1" data-lofi="vol" aria-label="Громкость"/>
+          <span class="lofi-host"></span>
+          <button class="btn sm ghost icon-btn" data-lofi="min" title="Свернуть">${ic('chevron', 16)}</button>
+        </div>
+      </div>
     </div>
     <div class="lofi-queue"></div>
-    <form class="lofi-add" data-lofi-form><input class="inp" name="url" placeholder="Ссылка на YouTube" autocomplete="off"/><button class="btn sm primary" title="Добавить в очередь">${ic('plus', 16)} В очередь</button></form>`;
+    <form class="lofi-add" data-lofi-form><span class="la-ic">${ic('link', 15)}</span><input class="inp" name="url" placeholder="Вставьте ссылку на YouTube — трек сам встанет в очередь" autocomplete="off" inputmode="url"/></form>`;
   document.body.appendChild(dock);
   dock.querySelector('[data-lofi="vol"]').value = music.vol;
   // Кнопка радио — слева снизу, открывает мини-плеер над собой
@@ -7222,7 +7276,20 @@ window.RULES = {
     const r = radio();
     dock.hidden = !music.on || !r;
     dock.classList.toggle('mini', !music.open);
-    dock.querySelector('[data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
+    dock.querySelector('.lofi-ctl [data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
+    // Винил крутится, пока играет; обложка — превью ролика с YouTube
+    const vinyl = dock.querySelector('.vinyl');
+    vinyl.classList.toggle('spin', music.on && music.playing);
+    const cover = dock.querySelector('.vy-cover');
+    const vid = radio()?.cur?.vid;
+    const src = vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : '';
+    if (cover.dataset.src !== src) {
+      cover.dataset.src = src;
+      cover.classList.remove('ok');
+      cover.onload = () => cover.classList.add('ok');
+      cover.onerror = () => cover.classList.remove('ok');
+      if (src) cover.src = src;
+    }
     dock.querySelector('.lofi-state').textContent = music.playing ? 'играет' : 'на паузе';
     fab.hidden = !r;
     pauseBtn.hidden = !r || !music.on;
@@ -7236,21 +7303,26 @@ window.RULES = {
     if (!r) return;
     const host = isHost();
     const c = r.cur;
-    dock.querySelector('.lofi-now').innerHTML = `<span class="ln-k">${c.live ? 'Эфир' : 'Сейчас'}</span><span class="ln-t" title="${esc(c.title)}">${esc(c.title)}</span>${c.by ? `<span class="ln-by">${pa(c.by, 'xs', 'round')}${nm(c.by)}</span>` : ''}`;
+    dock.querySelector('.lofi-now').innerHTML = `<span class="ln-t" title="${esc(c.title)}">${esc(c.title)}</span><span class="ln-sub"><span class="ln-k">${c.live ? 'Эфир' : 'Сейчас'}</span>${c.by ? `<span class="ln-by">${pa(c.by, 'xs', 'round')}${nm(c.by)}</span>` : ''}</span>`;
     dock.querySelector('.lofi-host').innerHTML = host
       ? `<button class="btn sm ghost icon-btn" data-lofi="skip" title="Следующий трек (для всех)">${ic('skip', 16)}</button>${c.live ? '' : `<button class="btn sm ghost icon-btn" data-lofi="lofi" title="Вернуть лофи-эфир">${ic('music', 16)}</button>`}`
       : '';
     const q = r.queue;
     if (dock.querySelector('.lq-i.dragging')) return; // не перерисовывать очередь посреди перетаскивания
+    // новые треки «влетают» в очередь
+    const known = (music.knownQ = music.knownQ || new Set());
+    const fresh = new Set(q.filter((x) => !known.has(x.qid)).map((x) => x.qid));
+    q.forEach((x) => known.add(x.qid));
     dock.querySelector('.lofi-queue').innerHTML = `<div class="lq-h">Очередь <span class="muted">${q.length || 'пусто'}</span></div>${q
       .map(
-        (x, i) => `<div class="lq-i ${host ? 'can-drag' : ''}" data-q="${x.qid}">${host ? `<span class="lq-grip" data-grip title="Перетащите, чтобы поменять порядок">⋮⋮</span>` : ''}<span class="lq-n">${i + 1}</span><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
-          host
-            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="Убрать">${ic('x', 14)}</button></span>`
+        (x, i) => `<div class="lq-i ${host ? 'can-drag' : ''} ${fresh.has(x.qid) && music.qReady ? 'new' : ''} ${x.by === S.me ? 'mine' : ''}" data-q="${x.qid}">${host ? `<span class="lq-grip" data-grip title="Перетащите, чтобы поменять порядок">⋮⋮</span>` : ''}<span class="lq-n">${i + 1}</span><img class="lq-cov" src="https://i.ytimg.com/vi/${x.vid}/default.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
+          host || x.by === S.me
+            ? `<span class="lq-ctl"><button class="icon-x" data-lofi="rm" data-q="${x.qid}" title="${host && x.by !== S.me ? 'Убрать из очереди' : 'Убрать свой трек'}">${ic('x', 14)}</button></span>`
             : ''
         }</div>`
       )
       .join('')}${q.length ? '' : `<div class="muted small">${c.live ? 'Добавьте трек — он включится сразу, лофи уступит.' : 'После текущего трека вернётся лофи-эфир.'}</div>`}`;
+    music.qReady = true;
   }
 
   // Подстроиться под то, что сейчас играет в комнате
@@ -7384,19 +7456,36 @@ window.RULES = {
     grip.addEventListener('pointerup', up);
     grip.addEventListener('pointercancel', up);
   });
-  dock.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const inp = e.target.querySelector('input');
+  // Ссылка вставлена — трек сам улетает в очередь, без кнопок
+  let addBusy = false;
+  async function addFromInput(inp, strict) {
     const u = inp.value.trim();
-    if (!u) return;
-    if (!ytId(u)) return toast('Не похоже на ссылку YouTube');
+    if (!u || addBusy) return;
+    if (!ytId(u)) {
+      if (strict) toast('Не похоже на ссылку YouTube');
+      return;
+    }
+    addBusy = true;
+    inp.classList.add('sending');
     const r = await rEmit('add', { url: u });
+    addBusy = false;
+    inp.classList.remove('sending');
     if (!r.error) {
       inp.value = '';
-      toast('Добавлено в очередь', 'ok');
+      Sound.play('pop');
     }
+  }
+  dock.addEventListener('submit', (e) => {
+    e.preventDefault();
+    addFromInput(e.target.querySelector('input'), true);
   });
+  let addT = 0;
   dock.addEventListener('input', (e) => {
+    if (e.target.name === 'url') {
+      clearTimeout(addT);
+      addT = setTimeout(() => addFromInput(e.target, false), 200);
+      return;
+    }
     if (e.target.dataset.lofi !== 'vol') return;
     music.vol = Number(e.target.value);
     LS.set('pg_lofi_vol', String(music.vol));

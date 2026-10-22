@@ -478,7 +478,14 @@ function bot(name, real = '') {
     r = h.st.room.radio;
     assert(r.cur.vid === 'dQw4w9WgXcQ' && r.queue.length === 2, 'queued, current not interrupted');
     assert((await guest.call('radio', { op: 'add', url: 'https://youtu.be/aaaaaaaaaaa' })).error, 'no duplicates');
-    assert((await guest.call('radio', { op: 'remove', qid: r.queue[0].qid })).error, 'only host removes');
+    assert((await guest.call('radio', { op: 'remove', qid: r.queue[1].qid })).error, "can't remove someone else's track");
+    // свой трек убрать можно
+    await guest.call('radio', { op: 'add', url: 'https://youtu.be/ddddddddddd' });
+    await wait(60);
+    const own = h.st.room.radio.queue.find((x) => x.vid === 'ddddddddddd');
+    assert(own && (await guest.call('radio', { op: 'remove', qid: own.qid })).ok, 'remove own track');
+    await wait(60);
+    assert(h.st.room.radio.queue.length === 2, 'own track removed');
     assert((await guest.call('radio', { op: 'now', url: 'https://youtu.be/ccccccccccc' })).error, 'only host plays now');
     await h.call('radio', { op: 'move', qid: r.queue[1].qid, d: -1 });
     await wait(80);
