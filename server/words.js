@@ -103,4 +103,7 @@ const LOCATIONS = [
   ['Аэропорт', ['Пограничник', 'Пилот', 'Пассажир', 'Грузчик', 'Таможенник', 'Диспетчер', 'Опоздавший']],
 ];
 
+// + 300 простых локаций (много — из Днепра), см. spy_locations.js
+LOCATIONS.push(...require('./spy_locations').EXTRA);
+
 module.exports = { WORDS, CHARACTERS, LOCATIONS };
