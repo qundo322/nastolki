@@ -615,14 +615,23 @@
     if (r.error) {
       history.replaceState(null, '', '/');
       render();
+      loaded('boot');
     }
   }
 
   socket.on('connect', () => {
     connected = true;
     const code = S?.room.code || codeFromUrl();
-    if (code) joinRoom(code);
-    else render();
+    if (code && identity().name) joinRoom(code);
+    else {
+      if (code) joinRoom(code);
+      else render();
+      loaded('boot');
+    }
+  });
+  socket.on('connect_error', () => {
+    // сервер недоступен — убираем экран загрузки, покажем обычное состояние «нет связи»
+    if (Loader.has('boot')) render(), loaded('boot');
   });
   socket.on('disconnect', () => {
     connected = false;
@@ -716,6 +725,8 @@
       confetti(st.game.winner);
     }
     if (st.game?.type !== 'codenames' || !st.game.winner) ui.showSum = false;
+    // Открылась другая игра (у всех, не только у хоста) — короткий экран загрузки, пока доска дорисуется
+    if (S && st.game && S.game?.type !== st.game.type) Loader.show('game');
     S = st;
     syncRadio();
     if (location.pathname !== `/r/${st.room.code}`) history.replaceState(null, '', `/r/${st.room.code}`);
@@ -730,6 +741,7 @@
       ui.cnSlots = null;
     }
     render();
+    if (Loader.has('boot') || Loader.has('enter') || Loader.has('game')) loaded('boot', 'enter', 'game');
   });
 
   // Нельзя случайно закрыть вкладку посреди игры
@@ -773,6 +785,56 @@
   }
 
   // ---------- общий рендер ----------
+  // ===== Экран загрузки =====
+  // Пока он открыт, страница дорисовывается под размытием: шрифты, фото игроков, шейдер фона.
+  // Человек видит уже готовый экран — наклоны и анимации работают с первой секунды.
+  const Loader = (() => {
+    const el = document.getElementById('boot');
+    const why = new Set(el ? ['boot'] : []);
+    let shownAt = performance.now();
+    let wall = Date.now();
+    let hideT = 0;
+    const MIN = 450; // не мигаем: если показали — держим хотя бы полсекунды
+    const show = (r) => {
+      if (!el) return;
+      why.add(r);
+      clearTimeout(hideT);
+      if (!el.classList.contains('show')) {
+        shownAt = performance.now();
+        wall = Date.now();
+        el.classList.add('show');
+      }
+    };
+    const done = (...rs) => {
+      if (!el) return;
+      rs.forEach((r) => why.delete(r));
+      if (why.size || !el.classList.contains('show')) return;
+      clearTimeout(hideT);
+      hideT = setTimeout(() => {
+        if (why.size) return;
+        el.classList.remove('show', 'first');
+        // вступительные анимации, которые успели пройти под размытием, — играем заново, уже на виду
+        let again = false;
+        if (ui.homeAt && ui.homeAt >= wall) (ui.homeAt = Date.now()), (again = true);
+        if (ui.lobbyAt && ui.lobbyAt >= wall) (ui.lobbyAt = Date.now()), (again = true);
+        if (ui.screenAt && ui.screenAt >= wall) (ui.lastScreen = null), (again = true);
+        if (again) render();
+      }, Math.max(0, MIN - (performance.now() - shownAt)));
+    };
+    const has = (r) => why.has(r);
+    return { show, done, has };
+  })();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // Ждём, пока всё на экране готово: шрифты, картинки (аватары) и пара кадров отрисовки
+  function settle() {
+    const imgs = [...$app.querySelectorAll('img')].filter((i) => !i.complete);
+    const ready = Promise.all([document.fonts ? document.fonts.ready : null, ...imgs.map((i) => new Promise((r) => ((i.onload = i.onerror = r), setTimeout(r, 2500))))]);
+    return Promise.race([ready.then(frames), sleep(4000)]);
+  }
+  const loaded = (...rs) => settle().then(() => Loader.done(...rs));
+  setTimeout(() => Loader.done('boot', 'enter', 'game'), 8000); // страховка: сервер молчит — не держим экран вечно
+
   // Анимированные счётчики очков: число «докручивается» до нового значения и подпрыгивает.
   // Значение берём из текста, прошлое — из памяти по ключу data-cnt, так что перерисовки не мешают.
   const cntMem = new Map();
@@ -827,6 +889,7 @@
     const nearBottom = !chatEl || chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
     const sk = screenKey();
     ui.enter = sk !== ui.lastScreen;
+    if (ui.enter) ui.screenAt = Date.now();
     ui.lastScreen = sk;
     // Прокрутка колонок команд сохраняется между перерисовками
     const colScroll = {};
@@ -844,6 +907,7 @@
     ui.leaveAnim = false;
     restoreInputs(keep);
     animateCounts();
+    window.FX && FX.refresh();
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
     const rb2 = $app.querySelector('.rl-body');
@@ -3271,8 +3335,14 @@
       if (go === 'join') {
         const code = (codeFromUrl() && !fd.get('code') ? codeFromUrl() : String(fd.get('code') || '')).toUpperCase();
         if (code.length !== 4) return toast('Код комнаты — 4 буквы');
-        await emit('joinRoom', { token, code, ...(await enterPayload()) });
-      } else await emit('createRoom', { token, ...(await enterPayload()) });
+        Loader.show('enter');
+        const r = await emit('joinRoom', { token, code, ...(await enterPayload()) });
+        if (r.error) Loader.done('enter');
+      } else {
+        Loader.show('enter');
+        const r = await emit('createRoom', { token, ...(await enterPayload()) });
+        if (r.error) Loader.done('enter');
+      }
     } else if (kind === 'me') {
       const name = String(fd.get('name') || '').trim();
       const real = String(fd.get('real') || '').trim();
@@ -3292,12 +3362,16 @@
       }
     } else if (kind === 'start') {
       if (S.room.suspended && !(await ask({ title: 'Начать новую игру?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'play' }))) return;
+      Loader.show('game');
       const r = await emit('startGame', { settings: collectSettings(fd, gameMeta(ui.selected)) });
+      if (r.error) Loader.done('game');
       if (!r.error) f.querySelectorAll('textarea').forEach((t) => (t.value = ''));
     } else if (kind === 'tour') {
       if (S.room.suspended && !(await ask({ title: 'Начать марафон?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'trophy' }))) return;
       const plan = ui.mOrder.filter((id) => ui.mOn[id]).map((id) => ({ type: id, rounds: ui.mRounds[id] || 1, settings: collectSettings(fd, gameMeta(id), id + '__') }));
+      Loader.show('game');
       const r = await emit('startTour', { plan });
+      if (r.error) Loader.done('game');
       if (!r.error) ui.showTable = false;
     } else if (kind === 'clue') {
       const list = ui.cnSlots || [{ v: '1' }];

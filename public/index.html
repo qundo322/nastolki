@@ -21,6 +21,8 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <!-- Экран загрузки: виден сразу, прячется, когда шрифты, данные комнаты и эффекты готовы -->
+  <div id="boot" class="boot-ov show first" role="status" aria-live="polite" aria-label="Загрузка"><div class="loader"></div></div>
   <div id="app"></div>
   <div id="toasts"></div>
   <script src="/socket.io/socket.io.js"></script>

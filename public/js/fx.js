@@ -31,7 +31,11 @@
     el.style.transform = '';
   }
 
+  const ptr = { x: -1, y: -1, mouse: false };
   document.addEventListener('pointermove', (e) => {
+    ptr.x = e.clientX;
+    ptr.y = e.clientY;
+    ptr.mouse = e.pointerType === 'mouse';
     if (e.pointerType !== 'mouse' || reduce.matches) return;
     const t = e.target.closest ? e.target : null;
     // карточка
@@ -51,6 +55,21 @@
     mcApply(mcEl, clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1));
   });
   document.addEventListener('pointerup', () => (mcPress = false));
+  // После перерисовки innerHTML карточка под курсором — уже новый элемент. Сразу наклоняем его
+  // в то же положение (без перехода), иначе карточка «падает» плашмя и догоняет с задержкой.
+  function refresh() {
+    if (!ptr.mouse || ptr.x < 0 || reduce.matches) return;
+    if (mcEl && mcEl.isConnected) return;
+    const hit = document.elementFromPoint(ptr.x, ptr.y);
+    const c = hit && hit.closest(MC);
+    mcEl = c;
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    c.classList.add('mc-on', 'mc-snap');
+    mcApply(c, clamp((ptr.x - r.left) / r.width, 0, 1), clamp((ptr.y - r.top) / r.height, 0, 1));
+    void c.offsetWidth;
+    c.classList.remove('mc-snap');
+  }
   document.addEventListener('mouseleave', () => {
     if (mcEl) mcRelease(mcEl);
     mcEl = null;
@@ -109,6 +128,7 @@ void main(){
   let on = false;
   let pal = PAL.dark;
   let last = 0;
+  let warmed = false;
   const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
   const t0 = performance.now();
   function init() {
@@ -207,6 +227,12 @@ void main(){
     if (on) {
       canvas.classList.add('on');
       frame(performance.now(), true);
+      // первый кадр компилирует шейдер на видеокарте — делаем это сразу (под экраном загрузки),
+      // а не в момент, когда человек уже водит мышью по карточкам
+      if (!warmed) {
+        warmed = true;
+        gl.finish();
+      }
       loop();
     } else {
       canvas.classList.remove('on');
@@ -286,5 +312,5 @@ void main(){
   // элемент пропал при перерисовке — прячем пузырь
   setInterval(() => tipFor && !tipFor.isConnected && tipHide(), 400);
 
-  window.FX = { setWave };
+  window.FX = { setWave, refresh };
 })();

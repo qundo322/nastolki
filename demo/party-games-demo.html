@@ -900,11 +900,11 @@ div.clue { cursor: default; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes fadeSide { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
 .cn-card.deal { animation: deal 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards; animation-delay: calc(var(--i) * 22ms); }
-@keyframes deal { from { opacity: 0; transform: translateY(-14px) rotateX(55deg) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes deal { from { opacity: 0; translate: 0 -14px; rotate: x 55deg; scale: 0.9; } to { opacity: 1; translate: none; rotate: none; scale: none; } }
 /* переворот: карта «схлопывается» до ребра со старой рубашкой и раскрывается уже цветной */
 .cn-card.flip { animation: flip 0.56s ease-in-out backwards; animation-delay: var(--fd, 0ms); }
 .cn-card.flip::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--cn-card); animation: flipface 0.56s linear both; animation-delay: var(--fd, 0ms); }
-@keyframes flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.02) scaleY(1.04); } 100% { transform: scaleX(1); } }
+@keyframes flip { 0% { scale: 1 1; } 50% { scale: 0.02 1.04; } 100% { scale: 1 1; } }
 @keyframes flipface { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
 .pop.anim { animation: popover 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: top right; }
 .ctl-pop.anim { transform-origin: bottom right; }
@@ -1758,7 +1758,7 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .mj-g.host:hover { border-color: var(--line-strong); }
 .mj-g.major { background: var(--accent-soft); border-color: var(--accent-line); }
 .mj-g.sel, .mj-s.sel { border-color: var(--accent) !important; transform: translateY(-2px); box-shadow: 0 0 0 4px var(--accent-soft); }
-@keyframes mjIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes mjIn { from { opacity: 0; translate: 0 12px; scale: .96; } to { opacity: 1; translate: none; scale: none; } }
 .mj-badge { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--accent-ink); background: var(--accent-bg); padding: 3px 9px; border-radius: 999px; }
 .mj-txt { font-family: var(--display); font-weight: 700; font-size: 24px; line-height: 1.15; overflow-wrap: anywhere; }
 .mj-txt i { color: var(--faint); font-style: normal; font-weight: 400; }
@@ -2089,7 +2089,7 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 /* новый игрок «влетает» с вспышкой */
 .ro-p.fresh { animation: roIn .7s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(0s - var(--fe, 0ms)); }
 .ro-p.fresh::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 2px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 50%, transparent); animation: roFlash 1.6s ease-out forwards; animation-delay: calc(0s - var(--fe, 0ms)); }
-@keyframes roIn { 0% { opacity: 0; transform: translateX(-30px) scale(.9); } 60% { opacity: 1; transform: translateX(4px) scale(1.02); } 100% { transform: none; } }
+@keyframes roIn { 0% { opacity: 0; translate: -30px 0; scale: .9; } 60% { opacity: 1; translate: 4px 0; scale: 1.02; } 100% { translate: none; scale: none; } }
 @keyframes roFlash { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
 .ro-add { cursor: pointer; border-style: dashed; background: transparent; }
 .ro-add:hover { border-color: var(--accent); }
@@ -2111,8 +2111,8 @@ html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--s
 /* блоки под переключателем въезжают с той стороны, куда переключили */
 .mode-pane.in-right { animation: paneR .45s cubic-bezier(.16, 1, .3, 1) both; }
 .mode-pane.in-left { animation: paneL .45s cubic-bezier(.16, 1, .3, 1) both; }
-@keyframes paneR { from { opacity: 0; transform: translateX(40px); filter: blur(4px); } }
-@keyframes paneL { from { opacity: 0; transform: translateX(-40px); filter: blur(4px); } }
+@keyframes paneR { from { opacity: 0; translate: 40px 0; filter: blur(4px); } }
+@keyframes paneL { from { opacity: 0; translate: -40px 0; filter: blur(4px); } }
 .mode-pane.in-right .games-grid > *, .mode-pane.in-left .games-grid > *, .mode-pane.in-right .mrow, .mode-pane.in-left .mrow { animation: introUp .55s cubic-bezier(.16, 1, .3, 1) both; }
 
 /* ---- выбранная игра — заметная и читаемая (без полупрозрачности) ---- */
@@ -2123,8 +2123,8 @@ html.holo .in-lobby .gcard.active, .gcard.active { background: color-mix(in srgb
 [data-theme='light'] .gcard.active { background: color-mix(in srgb, var(--accent) 16%, #fff); }
 
 /* ---- вступительные анимации (каскад, как в GSAP) ---- */
-@keyframes introUp { from { opacity: 0; transform: translateY(26px) scale(.97); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
-@keyframes introLine { from { opacity: 0; transform: translateY(100%) rotate(2deg); } to { opacity: 1; transform: none; } }
+@keyframes introUp { from { opacity: 0; translate: 0 26px; scale: .97; filter: blur(6px); } to { opacity: 1; translate: none; scale: none; filter: none; } }
+@keyframes introLine { from { opacity: 0; translate: 0 100%; rotate: 2deg; } to { opacity: 1; translate: none; rotate: none; } }
 .home.intro .home-hero > *, .home.intro .home-card > * { animation: introUp .9s cubic-bezier(.16, 1, .3, 1) both; }
 .home.intro .home-hero > :nth-child(1) { animation-delay: calc(.05s - var(--el, 0ms)); }
 .home.intro .home-hero > :nth-child(2) { animation-delay: calc(.15s - var(--el, 0ms)); }
@@ -2236,6 +2236,61 @@ html.v-bigWho .tile-ava { margin-top: 64px; }
 
 html[data-theme='light'] { background: linear-gradient(90deg, var(--bg-l), var(--bg-r)); }
 [data-cnt="alk"].cnt-run.cnt-up { color: var(--red-text, var(--red)); }
+
+/* ===== Экран загрузки: размытие на всю страницу + пиксельный лоадер ===== */
+.boot-ov { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .28s ease, visibility 0s linear .28s; }
+.boot-ov.show { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .18s ease, visibility 0s; }
+/* первый показ при открытии сайта — фон плотный, чтобы не было видно недорисованной страницы */
+#boot.first { background: var(--bg); }
+.loader {
+  --ld: var(--text);
+  --ld-red: #ff4b3e;
+  width: fit-content;
+  font-size: 17px;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  line-height: 1.4;
+  font-weight: bold;
+  color: var(--ld);
+  background: linear-gradient(var(--ld) 0 0) left, linear-gradient(var(--ld) 0 0) right;
+  background-repeat: no-repeat;
+  border-right: 5px solid #0000;
+  border-left: 5px solid #0000;
+  background-origin: border-box;
+  position: relative;
+  margin-bottom: 60px; /* место под человечка */
+  animation: l9-0 2s infinite;
+}
+.loader::before { content: 'Загрузка'; }
+.loader::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 22px;
+  height: 60px;
+  background:
+    linear-gradient(90deg, var(--ld) 4px, #0000 0 calc(100% - 4px), var(--ld) 0) bottom / 22px 20px,
+    linear-gradient(90deg, var(--ld-red) 4px, #0000 0 calc(100% - 4px), var(--ld-red) 0) bottom 10px left 0 / 22px 6px,
+    linear-gradient(var(--ld) 0 0) bottom 3px left 0 / 22px 8px,
+    linear-gradient(var(--ld) 0 0) bottom 0 left 50% / 8px 16px;
+  background-repeat: no-repeat;
+  animation: l9-1 2s infinite;
+}
+@keyframes l9-0 {
+  0%, 25% { background-size: 50% 100%; }
+  25.1%, 75% { background-size: 0 0, 50% 100%; }
+  75.1%, 100% { background-size: 0 0, 0 0; }
+}
+@keyframes l9-1 {
+  25% { background-position: bottom, bottom 54px left 0, bottom 3px left 0, bottom 0 left 50%; left: 0; }
+  25.1% { background-position: bottom, bottom 10px left 0, bottom 3px left 0, bottom 0 left 50%; left: 0; }
+  50% { background-position: bottom, bottom 10px left 0, bottom 3px left 0, bottom 0 left 50%; left: calc(100% - 22px); }
+  75% { background-position: bottom, bottom 54px left 0, bottom 3px left 0, bottom 0 left 50%; left: calc(100% - 22px); }
+  75.1% { background-position: bottom, bottom 10px left 0, bottom 3px left 0, bottom 0 left 50%; left: calc(100% - 22px); }
+}
+/* «меньше анимаций» не должен ломать сам лоадер */
+html.v-calm .loader, html.v-calm .loader::after { animation-duration: 2s !important; animation-iteration-count: infinite !important; }
+.mc-on.mc-snap { transition: none !important; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -6804,7 +6859,11 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     el.style.transform = '';
   }
 
+  const ptr = { x: -1, y: -1, mouse: false };
   document.addEventListener('pointermove', (e) => {
+    ptr.x = e.clientX;
+    ptr.y = e.clientY;
+    ptr.mouse = e.pointerType === 'mouse';
     if (e.pointerType !== 'mouse' || reduce.matches) return;
     const t = e.target.closest ? e.target : null;
     // карточка
@@ -6824,6 +6883,21 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     mcApply(mcEl, clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1));
   });
   document.addEventListener('pointerup', () => (mcPress = false));
+  // После перерисовки innerHTML карточка под курсором — уже новый элемент. Сразу наклоняем его
+  // в то же положение (без перехода), иначе карточка «падает» плашмя и догоняет с задержкой.
+  function refresh() {
+    if (!ptr.mouse || ptr.x < 0 || reduce.matches) return;
+    if (mcEl && mcEl.isConnected) return;
+    const hit = document.elementFromPoint(ptr.x, ptr.y);
+    const c = hit && hit.closest(MC);
+    mcEl = c;
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    c.classList.add('mc-on', 'mc-snap');
+    mcApply(c, clamp((ptr.x - r.left) / r.width, 0, 1), clamp((ptr.y - r.top) / r.height, 0, 1));
+    void c.offsetWidth;
+    c.classList.remove('mc-snap');
+  }
   document.addEventListener('mouseleave', () => {
     if (mcEl) mcRelease(mcEl);
     mcEl = null;
@@ -6882,6 +6956,7 @@ void main(){
   let on = false;
   let pal = PAL.dark;
   let last = 0;
+  let warmed = false;
   const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
   const t0 = performance.now();
   function init() {
@@ -6980,6 +7055,12 @@ void main(){
     if (on) {
       canvas.classList.add('on');
       frame(performance.now(), true);
+      // первый кадр компилирует шейдер на видеокарте — делаем это сразу (под экраном загрузки),
+      // а не в момент, когда человек уже водит мышью по карточкам
+      if (!warmed) {
+        warmed = true;
+        gl.finish();
+      }
       loop();
     } else {
       canvas.classList.remove('on');
@@ -7059,7 +7140,7 @@ void main(){
   // элемент пропал при перерисовке — прячем пузырь
   setInterval(() => tipFor && !tipFor.isConnected && tipHide(), 400);
 
-  window.FX = { setWave };
+  window.FX = { setWave, refresh };
 })();
 
 ;
@@ -8020,14 +8101,23 @@ window.RULES = {
     if (r.error) {
       history.replaceState(null, '', '/');
       render();
+      loaded('boot');
     }
   }
 
   socket.on('connect', () => {
     connected = true;
     const code = S?.room.code || codeFromUrl();
-    if (code) joinRoom(code);
-    else render();
+    if (code && identity().name) joinRoom(code);
+    else {
+      if (code) joinRoom(code);
+      else render();
+      loaded('boot');
+    }
+  });
+  socket.on('connect_error', () => {
+    // сервер недоступен — убираем экран загрузки, покажем обычное состояние «нет связи»
+    if (Loader.has('boot')) render(), loaded('boot');
   });
   socket.on('disconnect', () => {
     connected = false;
@@ -8121,6 +8211,8 @@ window.RULES = {
       confetti(st.game.winner);
     }
     if (st.game?.type !== 'codenames' || !st.game.winner) ui.showSum = false;
+    // Открылась другая игра (у всех, не только у хоста) — короткий экран загрузки, пока доска дорисуется
+    if (S && st.game && S.game?.type !== st.game.type) Loader.show('game');
     S = st;
     syncRadio();
     if (location.pathname !== `/r/${st.room.code}`) history.replaceState(null, '', `/r/${st.room.code}`);
@@ -8135,6 +8227,7 @@ window.RULES = {
       ui.cnSlots = null;
     }
     render();
+    if (Loader.has('boot') || Loader.has('enter') || Loader.has('game')) loaded('boot', 'enter', 'game');
   });
 
   // Нельзя случайно закрыть вкладку посреди игры
@@ -8178,6 +8271,56 @@ window.RULES = {
   }
 
   // ---------- общий рендер ----------
+  // ===== Экран загрузки =====
+  // Пока он открыт, страница дорисовывается под размытием: шрифты, фото игроков, шейдер фона.
+  // Человек видит уже готовый экран — наклоны и анимации работают с первой секунды.
+  const Loader = (() => {
+    const el = document.getElementById('boot');
+    const why = new Set(el ? ['boot'] : []);
+    let shownAt = performance.now();
+    let wall = Date.now();
+    let hideT = 0;
+    const MIN = 450; // не мигаем: если показали — держим хотя бы полсекунды
+    const show = (r) => {
+      if (!el) return;
+      why.add(r);
+      clearTimeout(hideT);
+      if (!el.classList.contains('show')) {
+        shownAt = performance.now();
+        wall = Date.now();
+        el.classList.add('show');
+      }
+    };
+    const done = (...rs) => {
+      if (!el) return;
+      rs.forEach((r) => why.delete(r));
+      if (why.size || !el.classList.contains('show')) return;
+      clearTimeout(hideT);
+      hideT = setTimeout(() => {
+        if (why.size) return;
+        el.classList.remove('show', 'first');
+        // вступительные анимации, которые успели пройти под размытием, — играем заново, уже на виду
+        let again = false;
+        if (ui.homeAt && ui.homeAt >= wall) (ui.homeAt = Date.now()), (again = true);
+        if (ui.lobbyAt && ui.lobbyAt >= wall) (ui.lobbyAt = Date.now()), (again = true);
+        if (ui.screenAt && ui.screenAt >= wall) (ui.lastScreen = null), (again = true);
+        if (again) render();
+      }, Math.max(0, MIN - (performance.now() - shownAt)));
+    };
+    const has = (r) => why.has(r);
+    return { show, done, has };
+  })();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // Ждём, пока всё на экране готово: шрифты, картинки (аватары) и пара кадров отрисовки
+  function settle() {
+    const imgs = [...$app.querySelectorAll('img')].filter((i) => !i.complete);
+    const ready = Promise.all([document.fonts ? document.fonts.ready : null, ...imgs.map((i) => new Promise((r) => ((i.onload = i.onerror = r), setTimeout(r, 2500))))]);
+    return Promise.race([ready.then(frames), sleep(4000)]);
+  }
+  const loaded = (...rs) => settle().then(() => Loader.done(...rs));
+  setTimeout(() => Loader.done('boot', 'enter', 'game'), 8000); // страховка: сервер молчит — не держим экран вечно
+
   // Анимированные счётчики очков: число «докручивается» до нового значения и подпрыгивает.
   // Значение берём из текста, прошлое — из памяти по ключу data-cnt, так что перерисовки не мешают.
   const cntMem = new Map();
@@ -8232,6 +8375,7 @@ window.RULES = {
     const nearBottom = !chatEl || chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
     const sk = screenKey();
     ui.enter = sk !== ui.lastScreen;
+    if (ui.enter) ui.screenAt = Date.now();
     ui.lastScreen = sk;
     // Прокрутка колонок команд сохраняется между перерисовками
     const colScroll = {};
@@ -8249,6 +8393,7 @@ window.RULES = {
     ui.leaveAnim = false;
     restoreInputs(keep);
     animateCounts();
+    window.FX && FX.refresh();
     const pv0 = document.getElementById('cn-preview');
     if (pv0) pv0.innerHTML = cluePreview();
     const rb2 = $app.querySelector('.rl-body');
@@ -10676,8 +10821,14 @@ window.RULES = {
       if (go === 'join') {
         const code = (codeFromUrl() && !fd.get('code') ? codeFromUrl() : String(fd.get('code') || '')).toUpperCase();
         if (code.length !== 4) return toast('Код комнаты — 4 буквы');
-        await emit('joinRoom', { token, code, ...(await enterPayload()) });
-      } else await emit('createRoom', { token, ...(await enterPayload()) });
+        Loader.show('enter');
+        const r = await emit('joinRoom', { token, code, ...(await enterPayload()) });
+        if (r.error) Loader.done('enter');
+      } else {
+        Loader.show('enter');
+        const r = await emit('createRoom', { token, ...(await enterPayload()) });
+        if (r.error) Loader.done('enter');
+      }
     } else if (kind === 'me') {
       const name = String(fd.get('name') || '').trim();
       const real = String(fd.get('real') || '').trim();
@@ -10697,12 +10848,16 @@ window.RULES = {
       }
     } else if (kind === 'start') {
       if (S.room.suspended && !(await ask({ title: 'Начать новую игру?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'play' }))) return;
+      Loader.show('game');
       const r = await emit('startGame', { settings: collectSettings(fd, gameMeta(ui.selected)) });
+      if (r.error) Loader.done('game');
       if (!r.error) f.querySelectorAll('textarea').forEach((t) => (t.value = ''));
     } else if (kind === 'tour') {
       if (S.room.suspended && !(await ask({ title: 'Начать марафон?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'trophy' }))) return;
       const plan = ui.mOrder.filter((id) => ui.mOn[id]).map((id) => ({ type: id, rounds: ui.mRounds[id] || 1, settings: collectSettings(fd, gameMeta(id), id + '__') }));
+      Loader.show('game');
       const r = await emit('startTour', { plan });
+      if (r.error) Loader.done('game');
       if (!r.error) ui.showTable = false;
     } else if (kind === 'clue') {
       const list = ui.cnSlots || [{ v: '1' }];
