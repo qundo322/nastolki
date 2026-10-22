@@ -2541,23 +2541,44 @@
                  <div class="st-txt"><b>${nm(g.asker)}</b> спрашивает <b>${nm(g.target)}</b></div>
                  ${me === g.target || me === g.asker || isHost() ? `<button class="btn primary big-w" data-act="spy-answered">${ic('check', 18)} ${me === g.target ? 'Ответил — теперь я спрашиваю' : 'Ответил — дальше'}</button>` : ''}`
               : `<div class="st-pair">${pa(g.asker, 44, 'round')}</div>
-                 <div class="st-txt">${me === g.asker ? '<b>Ваш вопрос.</b> Выберите ниже, кого спросить' : `Спрашивает <b>${nm(g.asker)}</b> — выбирает, кого`}</div>`
+                 <div class="st-txt">${me === g.asker ? '<b>Ваш вопрос.</b> Выберите в списке игроков, кого спросить' : `Спрашивает <b>${nm(g.asker)}</b> — выбирает, кого`}</div>`
           }
-          ${g.qlog.length ? `<div class="st-log">${g.qlog.slice(-5).map((q) => `<span>${nm(q.from)} → ${nm(q.to)}</span>`).join('')}</div>` : ''}
         </div>`
       : '';
+    // Игроки — слева карточками: сколько раз спрашивали, кто обвиняет, кнопки «Спросить» и «Обвинить»
     const players = g.participants
-      .map((id) => {
+      .map((id, i) => {
         const voters = Object.keys(g.votes).filter((v) => g.votes[v] === id);
         const pickable = canPick && !g.target && id !== g.asker && player(id) && !(id === g.prev && alive.length > 2);
-        return `<div class="vote-row ${g.votes[me] === id ? 'my' : ''} ${quiet(id) ? 'quiet' : ''} ${playing && (id === g.asker || id === g.target) ? 'in-q' : ''}">
-          <span>${who(id, 'sm')}${playing ? ` <em class="qcnt" title="Сколько вопросов задали этому игроку">${ic('chat', 12)} ${g.asked[id] || 0}</em>` : ''}${quiet(id) ? ' <em class="small quiet-t">ещё не спрашивали</em>' : ''}${over && g.spies.includes(id) ? ` ${ic('spy', 16)}` : ''}</span>
-          ${pickable ? `<button class="btn xs primary" data-act="spy-ask" data-pid="${id}">Спросить</button>` : ''}
-          <span class="voters">${voters.map((v) => pa(v, 'xs')).join('')}</span>
-          ${g.phase === 'play' && g.inGame && id !== me ? `<button class="btn xs ${g.votes[me] === id ? 'danger' : ''}" data-act="spy-vote" data-pid="${id}">${g.votes[me] === id ? 'Отозвать' : 'Обвинить'}</button>` : ''}
+        const st = playing && id === g.asker ? (g.target ? 'спрашивает' : 'выбирает, кого спросить') : playing && id === g.target ? 'отвечает' : '';
+        return `<div class="sp ${g.votes[me] === id ? 'my' : ''} ${quiet(id) ? 'quiet' : ''} ${st ? 'in-q' : ''} ${over && g.spies.includes(id) ? 'was-spy' : ''} ${id === me ? 'me' : ''}" style="--i:${i}">
+          <div class="sp-ava">${pa(id, 52, 'round')}${over && g.spies.includes(id) ? `<span class="sp-spy">${ic('spy', 14)}</span>` : ''}</div>
+          <div class="sp-body">
+            <span class="sp-name">${nm(id)}${id === me ? ' <small>(вы)</small>' : ''}</span>
+            <span class="sp-meta">${
+              over
+                ? g.spies.includes(id) ? '<b class="sp-tag spy">шпион</b>' : `<span class="muted">${esc(g.roles[id] || '')}</span>`
+                : `${playing ? `<span class="qcnt" title="Сколько вопросов задали этому игроку">${ic('chat', 12)} ${g.asked[id] || 0}</span>` : ''}${st ? `<b class="sp-tag">${st}</b>` : quiet(id) ? '<b class="sp-tag warn">ещё не спрашивали</b>' : ''}`
+            }</span>
+            ${voters.length ? `<span class="sp-voters" title="Кто обвиняет">${ic('target', 12)} ${voters.map((v) => pa(v, 'xs', 'round')).join('')}<small>${voters.length}</small></span>` : ''}
+          </div>
+          <div class="sp-acts">
+            ${pickable ? `<button class="btn xs primary" data-act="spy-ask" data-pid="${id}">${ic('chat', 13)} Спросить</button>` : ''}
+            ${g.phase === 'play' && g.inGame && id !== me ? `<button class="btn xs ${g.votes[me] === id ? 'danger' : 'ghost'}" data-act="spy-vote" data-pid="${id}">${g.votes[me] === id ? 'Отозвать' : 'Обвинить'}</button>` : ''}
+          </div>
         </div>`;
       })
       .join('');
+    // История: кто кого спрашивал — с аватарками, свежие сверху
+    const hist = g.qlog.length
+      ? `<div class="card spy-hist"><div class="side-h">${ic('list', 16)} Кто кого спрашивал <span class="muted small">${g.qlog.length}</span></div>
+          <div class="sh-list">${g.qlog
+            .map((q, i) => ({ ...q, n: i + 1 }))
+            .reverse()
+            .slice(0, 30)
+            .map((q, i) => `<div class="sh-row ${i === 0 ? 'last' : ''}"><span class="sh-n">${q.n}</span><span class="sh-p">${pa(q.from, 28, 'round')}<b>${nm(q.from)}</b></span><span class="sh-arrow">${ic('chat', 14)}</span><span class="sh-p">${pa(q.to, 28, 'round')}<b>${nm(q.to)}</b></span></div>`)
+            .join('')}</div></div>`
+      : '';
 
     const roundTable = over
       ? `<div class="card"><div class="side-h">Очки за раунд</div>${g.participants
@@ -2568,16 +2589,23 @@
           .join('')}</div>`
       : '';
     const score = Object.entries(g.score);
-    return `<div class="narrow spyfall">
-      <div class="spy-top"><span class="muted">Раунд ${g.round}</span></div>
-      ${card}
-      ${over && canRestart() ? `<div class="row c"><button class="btn primary mega" data-act="spy-next">${ic('play', 20)} Следующая игра</button></div>` : over ? '<p class="center muted">Ждём, пока хост начнёт следующую игру</p>' : ''}
-      ${g.phase === 'play' && g.isSpy ? `<div class="row c"><button class="btn primary big-w" data-act="spy-claim">${ic('target', 18)} Я знаю локацию</button></div><p class="center small muted">Нажмите и назовите локацию вслух — мирные решат, угадали ли вы.</p>` : ''}
-      ${claim}
-      ${guessing ? '' : turnBox}
-      ${roundTable}
-      ${!guessing ? `<div class="card"><div class="side-h">Голосование <span class="muted small">— нужны голоса всех остальных</span></div>${players}</div>` : ''}
-      ${score.length && score.some(([, n]) => n) ? `<div class="card"><div class="side-h">Общий счёт</div>${leaderboard(score)}</div>` : ''}
+    const votedN = Object.keys(g.votes).length;
+    return `<div class="spyfall spy2 ${ui.enter ? 'enter' : ''}">
+      <aside class="spy-players">
+        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${playing ? `обвинение — нужны голоса всех остальных${votedN ? ` · голосов ${votedN}` : ''}` : ''}</span></div>
+        <div class="sp-list">${players}</div>
+        ${score.length && score.some(([, n]) => n) ? `<div class="sp-score"><div class="side-h">Общий счёт</div>${leaderboard(score)}</div>` : ''}
+      </aside>
+      <div class="spy-main">
+        <div class="spy-top"><span class="muted">Раунд ${g.round}</span></div>
+        ${card}
+        ${over && canRestart() ? `<div class="row c"><button class="btn primary mega" data-act="spy-next">${ic('play', 20)} Следующая игра</button></div>` : over ? '<p class="center muted">Ждём, пока хост начнёт следующую игру</p>' : ''}
+        ${g.phase === 'play' && g.isSpy ? `<div class="spy-claim-row"><button class="btn primary big-w" data-act="spy-claim">${ic('target', 18)} Я знаю локацию</button><span class="small muted">Нажмите и назовите локацию вслух — мирные решат, угадали ли вы</span></div>` : ''}
+        ${claim}
+        ${guessing ? '' : turnBox}
+        ${roundTable}
+        ${hist}
+      </div>
     </div>`;
   }
 
@@ -2682,7 +2710,7 @@
           ${g.turnPid === me ? `<button class="btn primary mega" data-act="who-next">${ic('skip', 24)} Передать ход</button>` : ''}
           ${!myState.guessed && !myState.gaveUp ? `<button class="btn success mega" data-act="who-guessed">${ic('check', 24)} Я угадал!</button><button class="btn ghost mega" data-act="who-giveup">${ic('flag', 22)} Сдаюсь</button>` : `<span class="muted">Вы уже ${myState.guessed ? 'угадали' : 'сдались'} — помогайте остальным</span>`}
         </div>`;
-    return `<div class="who who2">
+    return `<div class="who who2 ${ui.enter ? 'enter' : ''}">
       <aside class="who-players">
         <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">${g.finishOrder.length ? `угадали ${g.finishOrder.length} из ${g.order.length}` : ''}</span></div>
         <div class="who-list">${tiles}</div>
