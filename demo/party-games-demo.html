@@ -2518,6 +2518,26 @@ html.v-bigWho .who.who2 { grid-template-columns: minmax(340px, 460px) minmax(0, 
 .rw.ro:hover { transform: none; }
 .al-last.ro { padding-bottom: 12px; }
 
+/* ===== Кто я: кто уже загадал ===== */
+.who-write-wrap { display: flex; flex-direction: column; gap: 14px; }
+.who-wait .side-h { justify-content: center; }
+.ww-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 12px; }
+.ww-p { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 104px; padding: 12px 6px 10px; border-radius: 16px; background: var(--surface-2); border: 2px solid transparent; text-align: center; }
+.ww-p b { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ww-p b small { color: var(--muted); font-weight: 600; }
+.ww-p > small { font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; }
+.ww-p.done > small { color: var(--green-text, var(--green)); }
+.ww-p.done { border-color: var(--green-line); }
+.ww-p.wait { border-color: color-mix(in srgb, var(--accent) 55%, transparent); border-style: dashed; }
+.ww-p.wait > small { color: var(--accent-text, var(--accent)); }
+.ww-p.wait .ava { animation: wwPulse 1.6s ease-in-out infinite; }
+@keyframes wwPulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.ww-dots { display: inline-flex; gap: 2px; }
+.ww-dots i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: wwDot 1.2s ease-in-out infinite; }
+.ww-dots i:nth-child(2) { animation-delay: .15s; }
+.ww-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes wwDot { 0%, 60%, 100% { opacity: .3; translate: 0 0; } 30% { opacity: 1; translate: 0 -3px; } }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -10686,8 +10706,7 @@ window.RULES = {
     const me = S.me;
     if (!g.inGame) return `<div class="narrow"><div class="stage-card"><p>Игра уже идёт.</p><button class="btn primary mega" data-act="who-add">Присоединиться со случайным персонажем</button></div></div>`;
     if (g.phase === 'write') {
-      const waiting = g.pending.map(nm).join(', ');
-      return `<div class="narrow"><div class="stage-card">
+      return `<div class="narrow who-write-wrap"><div class="stage-card">
         ${
           g.writeFor
             ? `<div class="kicker">Загадайте персонажа</div><div class="expl">${pa(g.writeFor, 96)}<h2 class="h2">для ${nm(g.writeFor)}</h2></div>
@@ -10704,8 +10723,24 @@ window.RULES = {
                }`
             : '<p>Ждём остальных…</p>'
         }
-        ${waiting ? `<p class="muted small">Ещё думают: ${waiting}</p>` : ''}
-      </div></div>`;
+      </div>
+      ${(() => {
+        // Кто уже загадал, а кто ещё думает — чтобы было видно, кого ждём
+        const ws = new Set(Object.values(g.players || {}).map((p) => p.writer).filter(Boolean));
+        const writers = g.order.filter((id) => ws.has(id) && player(id));
+        const done = writers.filter((id) => !g.pending.includes(id));
+        return `<div class="card who-wait">
+          <div class="side-h">${ic('users', 16)} Загадали ${done.length} из ${writers.length}${g.pending.length ? ` <span class="muted small">— ждём ${g.pending.length === 1 ? nm(g.pending[0]) : g.pending.length + ' ' + plural(g.pending.length, 'игрока', 'игроков', 'игроков')}</span>` : ''}</div>
+          <div class="ww-list">${[...writers]
+            .sort((a, b) => g.pending.includes(b) - g.pending.includes(a))
+            .map((id) => {
+              const wait = g.pending.includes(id);
+              return `<div class="ww-p ${wait ? 'wait' : 'done'} ${id === me ? 'me' : ''}"><span class="ava-wrap">${pa(id, 44, 'round')}${wait ? '' : `<span class="rd">${ic('check', 12)}</span>`}</span><b>${nm(id)}${id === me ? ' <small>(вы)</small>' : ''}</b><small>${wait ? '<span class="ww-dots"><i></i><i></i><i></i></span> думает' : 'загадал'}</small></div>`;
+            })
+            .join('')}</div>
+        </div>`;
+      })()}
+      </div>`;
     }
     const over = g.phase === 'over';
     const myState = g.players[me];

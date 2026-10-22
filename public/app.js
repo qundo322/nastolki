@@ -2627,8 +2627,7 @@
     const me = S.me;
     if (!g.inGame) return `<div class="narrow"><div class="stage-card"><p>Игра уже идёт.</p><button class="btn primary mega" data-act="who-add">Присоединиться со случайным персонажем</button></div></div>`;
     if (g.phase === 'write') {
-      const waiting = g.pending.map(nm).join(', ');
-      return `<div class="narrow"><div class="stage-card">
+      return `<div class="narrow who-write-wrap"><div class="stage-card">
         ${
           g.writeFor
             ? `<div class="kicker">Загадайте персонажа</div><div class="expl">${pa(g.writeFor, 96)}<h2 class="h2">для ${nm(g.writeFor)}</h2></div>
@@ -2645,8 +2644,24 @@
                }`
             : '<p>Ждём остальных…</p>'
         }
-        ${waiting ? `<p class="muted small">Ещё думают: ${waiting}</p>` : ''}
-      </div></div>`;
+      </div>
+      ${(() => {
+        // Кто уже загадал, а кто ещё думает — чтобы было видно, кого ждём
+        const ws = new Set(Object.values(g.players || {}).map((p) => p.writer).filter(Boolean));
+        const writers = g.order.filter((id) => ws.has(id) && player(id));
+        const done = writers.filter((id) => !g.pending.includes(id));
+        return `<div class="card who-wait">
+          <div class="side-h">${ic('users', 16)} Загадали ${done.length} из ${writers.length}${g.pending.length ? ` <span class="muted small">— ждём ${g.pending.length === 1 ? nm(g.pending[0]) : g.pending.length + ' ' + plural(g.pending.length, 'игрока', 'игроков', 'игроков')}</span>` : ''}</div>
+          <div class="ww-list">${[...writers]
+            .sort((a, b) => g.pending.includes(b) - g.pending.includes(a))
+            .map((id) => {
+              const wait = g.pending.includes(id);
+              return `<div class="ww-p ${wait ? 'wait' : 'done'} ${id === me ? 'me' : ''}"><span class="ava-wrap">${pa(id, 44, 'round')}${wait ? '' : `<span class="rd">${ic('check', 12)}</span>`}</span><b>${nm(id)}${id === me ? ' <small>(вы)</small>' : ''}</b><small>${wait ? '<span class="ww-dots"><i></i><i></i><i></i></span> думает' : 'загадал'}</small></div>`;
+            })
+            .join('')}</div>
+        </div>`;
+      })()}
+      </div>`;
     }
     const over = g.phase === 'over';
     const myState = g.players[me];
