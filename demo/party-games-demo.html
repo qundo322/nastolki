@@ -1862,16 +1862,6 @@ html.holo .home-card { background: color-mix(in srgb, var(--surface) 82%, transp
 html.holo .in-lobby .card { background: color-mix(in srgb, var(--surface) 86%, transparent); backdrop-filter: blur(16px) saturate(1.25); }
 html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--surface) 84%, transparent); backdrop-filter: blur(14px); }
 
-/* ---- магнитные кнопки: возврат пружиной, внутри — лёгкий параллакс ---- */
-.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn {
-  transition-property: transform, background, background-color, border-color, box-shadow, filter, color, opacity, translate;
-  transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .6s;
-  transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.3, 1.7, .55, 1);
-}
-.mag { transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .16s; transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.2, .8, .3, 1); }
-:is(.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn) > :is(svg, span, b) { translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: translate .6s cubic-bezier(.3, 1.7, .55, 1); }
-.mag > :is(svg, span, b) { transition: translate .16s cubic-bezier(.2, .8, .3, 1); }
-
 /* ---- магические карточки: наклон, прожектор, светящийся край (вдвое мягче оригинала) ---- */
 .mc-on { position: relative; z-index: 2; transition: transform .1s ease-out, background .12s, border-color .12s, box-shadow .2s, opacity .2s !important; will-change: transform; }
 .mc-on::after {
@@ -6273,27 +6263,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
 
 ;
 /* Эффекты интерфейса:
-   1) магнитные кнопки — кнопка слегка тянется к курсору, текст/иконка внутри — чуть дальше (параллакс);
-   2) «магические» карточки — лёгкий 3D-наклон за курсором, блик-прожектор и светящийся край;
-   3) голографические волны — фон на WebGL для входа и лобби (цвета под тему).
+   1) «магические» карточки — лёгкий 3D-наклон за курсором, блик-прожектор и светящийся край;
+   2) голографические волны — фон на WebGL для входа и лобби (цвета под тему).
    Всё работает через делегирование на document, поэтому переживает перерисовки innerHTML.
    Только мышь (на телефонах эффекты не нужны) и только если не включено «меньше анимации». */
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-  // ---------- 1. Магнитные кнопки ----------
-  const MAG = '.btn:not([disabled]), .chat-fab, .ctl-fab, .icon-b:not([disabled]), .exit-btn, .code-btn';
-  const MAG_K = 0.24; // сила притяжения (доля расстояния до центра)
-  const MAG_MAX = 7; // не дальше, px
-  let magEl = null;
-  function magRelease(el) {
-    el.classList.remove('mag');
-    el.style.translate = '';
-    el.style.removeProperty('--mag-x');
-    el.style.removeProperty('--mag-y');
-  }
-  // ---------- 2. Магические карточки ----------
+  // ---------- 1. Магические карточки ----------
   const MC = '.cn-card:not(.rev):not(.blank), .gcard:not([disabled]), button.jc, .rw, .m-pre, .mj-g.host, .mj-s.host, .spy-card';
   const MC_TILT = 6; // градусов — вдвое мягче оригинала
   let mcEl = null;
@@ -6313,27 +6291,6 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
   document.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse' || reduce.matches) return;
     const t = e.target.closest ? e.target : null;
-    // магнит
-    const m = t && t.closest(MAG);
-    if (magEl && magEl !== m) magRelease(magEl);
-    magEl = m;
-    if (m && !m.closest('.crop-box')) {
-      const r = m.getBoundingClientRect();
-      const dx = e.clientX - (r.left + r.width / 2);
-      const dy = e.clientY - (r.top + r.height / 2);
-      // Чем меньше кнопка, тем слабее магнит — иначе в маленькие трудно попасть.
-      // Сила и предел растут с высотой кнопки: 28px → ~1.5px, 44px → ~4px, 56px+ → 7px.
-      const size = Math.min(r.height, r.width);
-      const f = clamp((size - 22) / 34, 0.12, 1);
-      const max = MAG_MAX * f;
-      const kx = MAG_K * f * Math.min(1, 160 / r.width); // широкие — слабее по горизонтали
-      const tx = clamp(dx * kx, -max, max);
-      const ty = clamp(dy * MAG_K * f, -max * 0.7, max * 0.7);
-      m.classList.add('mag');
-      m.style.translate = `${tx.toFixed(2)}px ${ty.toFixed(2)}px`;
-      m.style.setProperty('--mag-x', (tx * 0.45).toFixed(2) + 'px');
-      m.style.setProperty('--mag-y', (ty * 0.45).toFixed(2) + 'px');
-    }
     // карточка
     const c = t && t.closest(MC);
     if (mcEl && mcEl !== c) mcRelease(mcEl);
@@ -6352,12 +6309,11 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
   });
   document.addEventListener('pointerup', () => (mcPress = false));
   document.addEventListener('mouseleave', () => {
-    if (magEl) magRelease(magEl);
     if (mcEl) mcRelease(mcEl);
-    magEl = mcEl = null;
+    mcEl = null;
   });
 
-  // ---------- 3. Голографические волны (WebGL) ----------
+  // ---------- 2. Голографические волны (WebGL) ----------
   // Цвета под тему: фон, три цвета переливов, сила
   const PAL = {
     dark: { bg: '#0e0d13', a: '#8a5cff', b: '#26c2f0', c: '#f2c14b', k: 1.15, hl: 0.09 },

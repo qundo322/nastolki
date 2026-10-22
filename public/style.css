@@ -1855,16 +1855,6 @@ html.holo .home-card { background: color-mix(in srgb, var(--surface) 82%, transp
 html.holo .in-lobby .card { background: color-mix(in srgb, var(--surface) 86%, transparent); backdrop-filter: blur(16px) saturate(1.25); }
 html.holo .in-lobby .gcard:not(.active) { background: color-mix(in srgb, var(--surface) 84%, transparent); backdrop-filter: blur(14px); }
 
-/* ---- магнитные кнопки: возврат пружиной, внутри — лёгкий параллакс ---- */
-.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn {
-  transition-property: transform, background, background-color, border-color, box-shadow, filter, color, opacity, translate;
-  transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .6s;
-  transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.3, 1.7, .55, 1);
-}
-.mag { transition-duration: .12s, .15s, .15s, .15s, .2s, .15s, .15s, .2s, .16s; transition-timing-function: ease, ease, ease, ease, ease, ease, ease, ease, cubic-bezier(.2, .8, .3, 1); }
-:is(.btn, .chat-fab, .ctl-fab, .icon-b, .exit-btn, .code-btn) > :is(svg, span, b) { translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: translate .6s cubic-bezier(.3, 1.7, .55, 1); }
-.mag > :is(svg, span, b) { transition: translate .16s cubic-bezier(.2, .8, .3, 1); }
-
 /* ---- магические карточки: наклон, прожектор, светящийся край (вдвое мягче оригинала) ---- */
 .mc-on { position: relative; z-index: 2; transition: transform .1s ease-out, background .12s, border-color .12s, box-shadow .2s, opacity .2s !important; will-change: transform; }
 .mc-on::after {
