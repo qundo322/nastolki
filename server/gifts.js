@@ -71,4 +71,14 @@ function view(room, now = Date.now()) {
 
 const forget = (room, pid) => room.gifts && room.gifts.delete(pid);
 
-module.exports = { CATALOG, ORDER, send, view, forget };
+// Хост снимает подарки с игрока: which — 'gift' (обычный слот), 'crown' или 'all'
+function clear(room, pid, which = 'all') {
+  const cur = room.gifts && room.gifts.get(pid);
+  if (!cur) return false;
+  if (which === 'gift' || which === 'all') delete cur.gift;
+  if (which === 'crown' || which === 'all') delete cur.crown;
+  if (!cur.gift && !cur.crown) room.gifts.delete(pid);
+  return true;
+}
+
+module.exports = { CATALOG, ORDER, send, view, forget, clear };

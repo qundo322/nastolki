@@ -1557,6 +1557,11 @@
         const acts = [];
         if (mine) acts.push(`<button class="icon-x" data-act="me-open" title="Мой профиль: ник, реальное имя, фото">${ic('pencil', 16)}</button>`);
         if (isHost()) acts.push(`<button class="icon-x coin-btn ${ui.grantFor === p.id ? 'on' : ''}" data-act="grant-open" data-pid="${p.id}" title="Начислить монеты">${coinIc()}</button>`);
+        const pg = isHost() ? giftsOf(p.id) : null;
+        if (pg) {
+          if (pg.gift && GIFTS[pg.gift.id]) acts.push(`<button class="icon-x gift-x" data-act="gift-clear" data-pid="${p.id}" data-which="gift" title="Снять подарок: ${esc(GIFTS[pg.gift.id].name)}">${gImg(pg.gift.id)}<i>${ic('x', 10)}</i></button>`);
+          if (pg.crown) acts.push(`<button class="icon-x gift-x" data-act="gift-clear" data-pid="${p.id}" data-which="crown" title="Снять корону">${gImg('crown')}<i>${ic('x', 10)}</i></button>`);
+        }
         if (isHost() && !mine) {
           acts.push(`<button class="icon-x" data-act="makeHost" data-pid="${p.id}" title="Сделать хостом">${ic('crown', 16)}</button>`);
           acts.push(`<button class="icon-x danger" data-act="kick" data-pid="${p.id}" title="Выгнать">${ic('x', 16)}</button>`);
@@ -3782,6 +3787,10 @@
       LS.set('pg_cnfs', String(VIEW.fs));
       applyView();
       render();
+    },
+    'gift-clear': async (d) => {
+      const r = await emit('clearGifts', { target: d.pid, which: d.which });
+      if (!r.error) toast(`${d.which === 'crown' ? 'Корона снята' : 'Подарок снят'} — ${player(d.pid)?.name || 'игрок'}`, 'ok');
     },
     'grant-open': (d) => {
       ui.grantFor = ui.grantFor === d.pid ? null : d.pid;

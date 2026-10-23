@@ -3149,3 +3149,9 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 24px; 
 body.has-ctl #gift-toasts { bottom: calc(var(--ctl-h, 70px) + 24px); }
 @media (max-width: 560px) { .gift-toast .gt-s { font-size: 13px; } .gift-toast .gt-e { font-size: 32px; } }
 html.v-calm .gift-toast, html.v-calm .gift-toast .gt-e { animation: none; }
+
+/* ---- Хост снимает подарки: кнопка с картинкой подарка и крестиком ---- */
+.icon-x.gift-x { position: relative; font-size: 20px; }
+.icon-x.gift-x img.gimg { width: 20px; height: 20px; }
+.icon-x.gift-x i { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; background: var(--red); color: #fff; }
+.icon-x.gift-x:hover img.gimg { opacity: .55; }

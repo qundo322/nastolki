@@ -591,6 +591,10 @@ function bot(name, real = '') {
     await a.call('gift', { gift: 'poop', to: b.st.me, nonce: 'n2' });
     await wait(100);
     if (a.st.coins + 500 >= 500 && seen.length === 2) assert(seen[1].from === null && !JSON.stringify(seen[1]).includes(a.st.me), 'poop is anonymous');
+    assert((await b.call('clearGifts', { target: b.st.me })).error, 'only host clears gifts');
+    assert((await a.call('clearGifts', { target: b.st.me })).ok, 'host clears gifts');
+    await wait(100);
+    assert(!c.st.room.gifts[b.st.me], 'gifts removed from avatar');
     const bc = b.st.coins;
     assert((await b.call('grantCoins', { target: c.st.me, amount: 500 })).error, 'only host grants coins');
     assert((await a.call('grantCoins', { target: b.st.me, amount: 500 })).ok, 'host grants coins');

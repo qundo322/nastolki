@@ -3157,6 +3157,12 @@ body.has-ctl #gift-toasts { bottom: calc(var(--ctl-h, 70px) + 24px); }
 @media (max-width: 560px) { .gift-toast .gt-s { font-size: 13px; } .gift-toast .gt-e { font-size: 32px; } }
 html.v-calm .gift-toast, html.v-calm .gift-toast .gt-e { animation: none; }
 
+/* ---- Хост снимает подарки: кнопка с картинкой подарка и крестиком ---- */
+.icon-x.gift-x { position: relative; font-size: 20px; }
+.icon-x.gift-x img.gimg { width: 20px; height: 20px; }
+.icon-x.gift-x i { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; background: var(--red); color: #fff; }
+.icon-x.gift-x:hover img.gimg { opacity: .55; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -8921,7 +8927,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         return out;
       }
       var forget = (room2, pid) => room2.gifts && room2.gifts.delete(pid);
-      module.exports = { CATALOG, ORDER, send, view, forget };
+      function clear(room2, pid, which = "all") {
+        const cur = room2.gifts && room2.gifts.get(pid);
+        if (!cur) return false;
+        if (which === "gift" || which === "all") delete cur.gift;
+        if (which === "crown" || which === "all") delete cur.crown;
+        if (!cur.gift && !cur.crown) room2.gifts.delete(pid);
+        return true;
+      }
+      module.exports = { CATALOG, ORDER, send, view, forget, clear };
     }
   });
 
@@ -12230,6 +12244,11 @@ void main(){
         const acts = [];
         if (mine) acts.push(`<button class="icon-x" data-act="me-open" title="Мой профиль: ник, реальное имя, фото">${ic('pencil', 16)}</button>`);
         if (isHost()) acts.push(`<button class="icon-x coin-btn ${ui.grantFor === p.id ? 'on' : ''}" data-act="grant-open" data-pid="${p.id}" title="Начислить монеты">${coinIc()}</button>`);
+        const pg = isHost() ? giftsOf(p.id) : null;
+        if (pg) {
+          if (pg.gift && GIFTS[pg.gift.id]) acts.push(`<button class="icon-x gift-x" data-act="gift-clear" data-pid="${p.id}" data-which="gift" title="Снять подарок: ${esc(GIFTS[pg.gift.id].name)}">${gImg(pg.gift.id)}<i>${ic('x', 10)}</i></button>`);
+          if (pg.crown) acts.push(`<button class="icon-x gift-x" data-act="gift-clear" data-pid="${p.id}" data-which="crown" title="Снять корону">${gImg('crown')}<i>${ic('x', 10)}</i></button>`);
+        }
         if (isHost() && !mine) {
           acts.push(`<button class="icon-x" data-act="makeHost" data-pid="${p.id}" title="Сделать хостом">${ic('crown', 16)}</button>`);
           acts.push(`<button class="icon-x danger" data-act="kick" data-pid="${p.id}" title="Выгнать">${ic('x', 16)}</button>`);
@@ -14455,6 +14474,10 @@ void main(){
       LS.set('pg_cnfs', String(VIEW.fs));
       applyView();
       render();
+    },
+    'gift-clear': async (d) => {
+      const r = await emit('clearGifts', { target: d.pid, which: d.which });
+      if (!r.error) toast(`${d.which === 'crown' ? 'Корона снята' : 'Подарок снят'} — ${player(d.pid)?.name || 'игрок'}`, 'ok');
     },
     'grant-open': (d) => {
       ui.grantFor = ui.grantFor === d.pid ? null : d.pid;

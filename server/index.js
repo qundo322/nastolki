@@ -387,6 +387,12 @@ io.on('connection', (socket) => {
     for (const sid of p.sockets) if (sid !== socket.id) io.to(sid).emit('coins', { add, by: 'host' });
   }));
 
+  // Хост снимает подарки с любого участника (и с себя)
+  socket.on('clearGifts', hostOnly((room, _pid, { target, which }) => {
+    if (!room.players.has(target)) return 'Нет такого игрока';
+    if (!Gifts.clear(room, target, ['gift', 'crown'].includes(which) ? which : 'all')) return 'На игроке нет подарков';
+  }));
+
   socket.on('makeHost', hostOnly((room, _pid, { target }) => {
     if (!room.players.has(target)) return 'Нет такого игрока';
     room.hostId = target;
