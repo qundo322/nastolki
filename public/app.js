@@ -742,8 +742,6 @@
     detectEvents(S, st);
     // Мою подсказку выбрали лучшей — сердечки
     if (st.game?.type === 'justone' && st.game.heart === st.me && S?.game?.type === 'justone' && S.game.heart !== st.me && !st.game.isGuesser) heartRain();
-    // Первая начавшаяся партия Коднеймс — предложить включить свечение хода
-    if (!st.game?.waiting && ((st.game?.type === 'codenames' && st.game.step !== 'setup' && !st.game.winner && (!S?.game || S.game.type !== 'codenames' || S.game.step === 'setup')) || (st.game?.type === 'justone' && S?.game?.type !== 'justone')) && !LS.get('pg_glow_asked', '') && !ui.glowAsk) ui.glowAsk = ui.gaAnim = true;
     // Партия Коднеймс закончилась — показываем итоги
     if (S?.game?.type === 'codenames' && !S.game.winner && st.game?.type === 'codenames' && st.game.winner && st.game.summary) {
       ui.showSum = true;
