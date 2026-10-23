@@ -3,9 +3,12 @@
   let ctx = null;
   let master = null;
   let vol = 60;
+  let giftVol = 20; // звуки подарков из файлов — по умолчанию 20% от их громкости
   try {
     const v = localStorage.getItem('pg_sfx');
     if (v !== null) vol = Math.max(0, Math.min(100, Number(v)));
+    const gv = localStorage.getItem('pg_gift_sfx');
+    if (gv !== null) giftVol = Math.max(0, Math.min(100, Number(gv)));
   } catch {}
 
   function ac() {
@@ -21,7 +24,7 @@
     return ctx;
   }
   // браузер разрешает звук только после первого действия пользователя
-  ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => ac(), { once: true, capture: true }));
+  ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => (ac(), window.Sound && window.Sound.preload()), { once: true, capture: true }));
 
   // нота: частота, длительность, тип волны, громкость, задержка, скольжение к частоте
   function tone(f, dur, { type = 'sine', gain = 0.25, delay = 0, to = null, attack = 0.005 } = {}) {
@@ -166,10 +169,53 @@
     gift_ring: () => [N.C5, N.E5, N.G5, N.C6, N.E6, N.G5 * 2].forEach((f, i) => tone(f, 0.4, { type: 'triangle', gain: 0.1, delay: 0.35 + i * 0.09 })),
   };
 
+  // Записанные звуки подарков (mp3). Грузим один раз, играем через общий регулятор громкости
+  const FILES = { gift_kiss: 1, gift_beer: 1, gift_poop: 1, gift_crown: 1, gift_bus: 1 };
+  const bufs = {};
+  function load(name) {
+    if (bufs[name]) return bufs[name];
+    const c = ac();
+    if (!c) return null;
+    const src = (window.ASSET && window.ASSET[`/sfx/${name}.mp3`]) || `/sfx/${name}.mp3`;
+    bufs[name] = fetch(src)
+      .then((r) => r.arrayBuffer())
+      .then((b) => new Promise((ok, no) => c.decodeAudioData(b, ok, no)))
+      .catch(() => (bufs[name] = null));
+    return bufs[name];
+  }
+  async function sample(name) {
+    const c = ac();
+    if (!c || !vol || !giftVol) return;
+    const buf = await load(name);
+    if (!buf) return SFX[name] && SFX[name](); // файл не загрузился — синтезированный звук
+    const s = c.createBufferSource();
+    const g = c.createGain();
+    s.buffer = buf;
+    g.gain.value = giftVol / 100;
+    s.connect(g).connect(master);
+    s.start();
+  }
+
   window.Sound = {
     play(name) {
       try {
+        if (FILES[name]) return void sample(name);
         SFX[name] && SFX[name]();
+      } catch {}
+    },
+    // заранее подгрузить файлы, чтобы первый подарок прозвучал без задержки
+    preload() {
+      try {
+        Object.keys(FILES).forEach(load);
+      } catch {}
+    },
+    get giftVol() {
+      return giftVol;
+    },
+    setGiftVol(v) {
+      giftVol = Math.max(0, Math.min(100, Math.round(v)));
+      try {
+        localStorage.setItem('pg_gift_sfx', String(giftVol));
       } catch {}
     },
     get vol() {

@@ -3000,3 +3000,33 @@ html.v-calm .wait-ic img.gic, html.v-calm .gcard:hover .gemoji img.gic { animati
 .rl-tabs img.gic, .ttable img.gic, .tm-step img.gic, .vp-sh img.gic, .mname img.gic { filter: none; }
 .gcard .gemoji:has(img.gic) { align-self: flex-start; justify-content: flex-start; }
 .gcard .gemoji img.gic { margin-left: -6px; transform-origin: 30% 70%; }
+
+/* ---- Подарки: объёмные картинки (webp без фона) вместо эмодзи ---- */
+img.gimg { display: block; width: 1em; height: 1em; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.gm-e { font-size: 44px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.3)); }
+.gm-te { display: inline-block; font-size: 22px; vertical-align: -5px; margin-right: 2px; }
+.gm-te img.gimg { display: inline-block; }
+.gm-ok-e { font-size: 52px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.3)); }
+.gm-item[data-id='bus'] { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 12px; padding: 10px 12px; background: linear-gradient(100deg, color-mix(in srgb, #8a9a6a 22%, var(--surface-2)), var(--surface-2) 70%); }
+.gm-item[data-id='bus'] .gm-e { font-size: 52px; }
+.gm-item[data-id='bus'] .gm-n { font-weight: 800; }
+/* на аватарке */
+.gft img.gimg { filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+.gft.p-crown img.gimg { filter: drop-shadow(0 0 calc(var(--s) * .08) rgba(255, 200, 40, .8)); }
+.gft.g-bus { font-size: clamp(10px, calc(var(--s) * .56), 70px); right: calc(var(--s) * -.3); bottom: calc(var(--s) * -.16); }
+.gft.g-ring, .gft.g-beer, .gft.g-whisky, .gft.g-rose { font-size: clamp(9px, calc(var(--s) * .46), 60px); }
+/* объявление */
+.go-e { filter: drop-shadow(0 14px 26px rgba(0,0,0,.5)); }
+.go-e img.gimg { width: 1.25em; height: 1.25em; }
+.go-box .go-e img.gimg { width: 1em; height: 1em; }
+.g-bus { background: radial-gradient(circle at 50% 60%, rgba(150, 165, 110, .28), rgba(8, 8, 14, .66) 62%); }
+.g-bus .go-e { font-size: clamp(110px, 22vw, 220px); animation: busIn 1.1s cubic-bezier(.2,.9,.3,1) both, busIdle .18s ease-in-out 1.1s 8 alternate; }
+.g-bus .go-e img.gimg { width: 1.5em; height: 1em; }
+@keyframes busIn { 0% { translate: 70vw 0; rotate: 0deg; } 70% { translate: -3vw 0; rotate: -2deg; } 85% { translate: 1vw 0; rotate: 1.5deg; } 100% { translate: 0 0; rotate: 0deg; } }
+@keyframes busIdle { from { translate: 0 0; } to { translate: 0 -2px; } }
+.go-fx .road { position: absolute; left: 0; right: 0; top: 62%; height: 3px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 40px, transparent 40px 80px); animation: roadRun .5s linear 2; opacity: .6; }
+@keyframes roadRun { from { background-position: 0 0; } to { background-position: -160px 0; } }
+.go-fx .p.dust { left: 50%; top: 50%; width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle, rgba(210, 200, 170, .55), rgba(210, 200, 170, 0) 70%); translate: var(--x) var(--y); scale: var(--s); opacity: 0; animation: dustPuff 1.2s ease-out both; animation-delay: var(--d); }
+@keyframes dustPuff { 0% { opacity: 0; scale: calc(var(--s) * .3); } 25% { opacity: .9; } 100% { opacity: 0; scale: calc(var(--s) * 1.8); translate: calc(var(--x) + 12vw) calc(var(--y) - 6vh); } }
+html.v-calm .g-bus .go-e { animation: none; }
+.sfx-h2 { margin-top: 10px; }

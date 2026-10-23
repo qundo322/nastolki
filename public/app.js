@@ -188,6 +188,9 @@
               <div class="ctl-h">${ic('volume', 14)} Звуки интерфейса</div>
               <div class="sfx-row"><button class="icon-x" data-act="sfx-mute" title="${Sound.vol ? 'Выключить' : 'Включить'}">${ic(Sound.vol ? 'volume' : 'mute', 18)}</button>
               <input type="range" min="0" max="100" step="1" value="${Sound.vol}" data-sfx aria-label="Громкость звуков"/><b class="sfx-v">${Sound.vol}</b></div>
+              <div class="ctl-h sfx-h2">${ic('heartf', 14)} Звуки подарков</div>
+              <div class="sfx-row"><span class="icon-x">${ic('heartf', 18)}</span>
+              <input type="range" min="0" max="100" step="1" value="${Sound.giftVol}" data-gsfx aria-label="Громкость звуков подарков"/><b class="gsfx-v">${Sound.giftVol}%</b></div>
             </div>`
           : ''
       }
@@ -237,7 +240,11 @@
     poop: { e: '💩', name: 'Какашка', price: 500, min: 10, place: 'on', anon: true, say: (_a, b) => `Кто-то обгадил ${b}!`, dur: 'Какашка на 10 минут' },
     crown: { e: '👑', name: 'Корона', price: 1000, min: 15, place: 'crown', say: (a, b) => `${a} короновал ${b}!`, dur: 'Корона на 15 минут' },
     ring: { e: '💍', name: 'Предложение руки и сердца', short: 'Предложение', price: 1500, min: 15, place: 'side', say: (a, b) => `${a} сделал предложение ${b}!`, dur: 'Кольцо на 15 минут' },
+    bus: { e: '🚐', name: 'Бусификация', price: 2000, min: 15, place: 'side', say: (a, b) => `За ${b} приехал бус! Вызвал — ${a}`, dur: 'Бусификация на 15 минут' },
   };
+  // Картинка подарка (webp без фона); размер — 1em, поэтому везде работает прежний font-size и анимации
+  const asset = (p) => (window.ASSET && window.ASSET[p]) || p;
+  const gImg = (id) => `<img class="gimg gi-${id}" src="${asset(`/img/gifts/${id}.webp`)}" alt="" draggable="false" decoding="async"/>`;
   const GIFT_ORDER = Object.keys(GIFTS);
   const giftsOf = (pid) => {
     const x = S?.room?.gifts?.[pid];
@@ -256,11 +263,11 @@
     if (x.gift) {
       const g = GIFTS[x.gift.id];
       if (g) {
-        const inner = x.gift.id === 'tomato' ? '<i class="splat"></i>' : x.gift.id === 'slap' ? `<i class="slap-mark"></i><b>${g.mark}</b>` : g.e;
+        const inner = x.gift.id === 'tomato' ? '<i class="splat"></i>' : x.gift.id === 'slap' ? `<i class="slap-mark"></i><b>${g.mark}</b>` : gImg(x.gift.id);
         h += `<span class="gft p-${g.place} g-${x.gift.id} ${fresh(x.gift)}" aria-hidden="true">${inner}</span>`;
       }
     }
-    if (x.crown) h += `<span class="gft p-crown ${fresh(x.crown)}" aria-hidden="true">👑</span>`;
+    if (x.crown) h += `<span class="gft p-crown ${fresh(x.crown)}" aria-hidden="true">${gImg('crown')}</span>`;
     return h;
   }
 
@@ -731,6 +738,8 @@
         return many(16, () => P('goo', '', { x: `${rnd(2, 98)}vw`, y: `${rnd(0, 55)}vh`, d: `${rnd(0, 250)}ms`, s: rnd(0.6, 1.8).toFixed(2) }));
       case 'crown':
         return '<i class="rays"></i>' + many(34, () => P('gold', '', { x: `${rnd(-48, 48)}vw`, y: `${rnd(-45, 45)}vh`, d: `${rnd(200, 1100)}ms`, s: rnd(0.4, 1.3).toFixed(2) })) + many(10, () => P('spark', '✨', { x: `${rnd(-35, 35)}vw`, y: `${rnd(-35, 35)}vh`, d: `${rnd(300, 1300)}ms`, s: rnd(0.6, 1.2).toFixed(2) }));
+      case 'bus':
+        return '<i class="road"></i>' + many(14, () => P('dust', '', { x: `${rnd(-6, 40)}vw`, y: `${rnd(4, 16)}vh`, d: `${rnd(500, 1300)}ms`, s: rnd(0.6, 1.7).toFixed(2) }));
       case 'ring':
         return many(16, () => P('heart late', '💖', { x: `${rnd(-45, 45)}vw`, y: `${rnd(-45, -5)}vh`, d: `${rnd(900, 1500)}ms`, r: `${rnd(-40, 40)}deg`, s: rnd(0.6, 1.4).toFixed(2) })) + many(40, (i) => P('conf', '', { x: `${rnd(-50, 50)}vw`, y: `${rnd(-50, 30)}vh`, d: `${rnd(900, 1400)}ms`, r: `${rnd(0, 720)}deg`, c: ['#f2c14b', '#ff6aa2', '#7ad1ff', '#9dff9b', '#fff'][i % 5] }));
     }
@@ -744,7 +753,7 @@
     annBusy = true;
     const a = ev.from ? `<b>${esc(player(ev.from)?.name || 'Кто-то')}</b>` : '';
     const b = `<b>${esc(player(ev.to)?.name || 'игрок')}</b>`;
-    const ms = { crown: 2800, ring: 3000, poop: 1900, tomato: 1900, slap: 1800 }[ev.gift] || 1600;
+    const ms = { crown: 2800, ring: 3000, bus: 3400, poop: 1900, tomato: 1900, slap: 1800 }[ev.gift] || 1600;
     const calm = document.documentElement.classList.contains('v-calm');
     const el = document.createElement('div');
     el.className = `gift-ov g-${ev.gift} ${ev.to === S.me ? 'to-me' : ''}`;
@@ -752,7 +761,7 @@
     el.setAttribute('role', 'status');
     el.innerHTML = `<div class="go-fx" aria-hidden="true">${calm ? '' : giftFx(ev.gift)}</div>
       <div class="go-card">
-        ${ev.gift === 'ring' ? '<div class="go-box" aria-hidden="true"><i class="lid"></i><i class="base"></i><span class="go-e">💍</span></div>' : `<div class="go-e">${g.e}</div>`}
+        ${ev.gift === 'ring' ? `<div class="go-box" aria-hidden="true"><i class="lid"></i><i class="base"></i><span class="go-e">${gImg('ring')}</span></div>` : `<div class="go-e">${gImg(ev.gift)}</div>`}
         <div class="go-t">${g.say(a, b)}</div>
         <div class="go-d">${g.dur}</div>
       </div>`;
@@ -899,7 +908,7 @@
   // Иконки игр — объёмные картинки (webp с прозрачностью); если для игры картинки нет — обычная линейная иконка
   const GAME_IMG = window.GAME_IMG || {};
   const gIcon = (id, size = 18) => {
-    const src = GAME_IMG[id] || (window.GAME_IMG ? null : GAME_ICON[id] && `/img/games/${id}.webp`);
+    const src = GAME_IMG[id] || (GAME_ICON[id] ? asset(`/img/games/${id}.webp`) : null);
     return src ? `<img class="gic" src="${src}" width="${size}" height="${size}" alt="" draggable="false" decoding="async"/>` : ic(GAME_ICON[id] || 'dice', size);
   };
 
@@ -1582,11 +1591,11 @@
       body = `<div class="gm-title">Подарки и шалости</div>
         <div class="gm-grid">${GIFT_ORDER.map((id) => {
           const x = GIFTS[id];
-          return `<button class="gm-item ${x.price > coins ? 'poor' : ''}" data-act="gift-pick" data-id="${id}"><span class="gm-e">${x.e}</span><span class="gm-n">${esc(x.short || x.name)}</span><span class="gm-p">${coinIc()}${x.price}</span></button>`;
+          return `<button class="gm-item ${x.price > coins ? 'poor' : ''}" data-act="gift-pick" data-id="${id}"><span class="gm-e">${gImg(id)}</span><span class="gm-n">${esc(x.short || x.name)}</span><span class="gm-p">${coinIc()}${x.price}</span></button>`;
         }).join('')}</div>`;
     } else if (st.step === 'to') {
       const others = S.room.players.filter((p) => p.id !== S.me);
-      body = `<div class="gm-title"><button class="gm-back" data-act="gift-back" title="Назад">${ic('back', 16)}</button>${g.e} ${esc(g.name)} — кому?</div>
+      body = `<div class="gm-title"><button class="gm-back" data-act="gift-back" title="Назад">${ic('back', 16)}</button><span class="gm-te">${gImg(st.id)}</span> ${esc(g.name)} — кому?</div>
         <div class="gm-people">${others.length ? others.map((p) => {
           const crowned = st.id === 'crown' && giftsOf(p.id)?.crown;
           return `<button class="gm-person ${crowned ? 'off' : ''}" data-act="gift-to" data-pid="${p.id}" ${crowned ? 'disabled' : ''}>${pa(p.id, 34, 'round')}<b>${nm(p.id)}</b>${crowned ? '<small>уже с короной</small>' : p.connected === false ? '<small>не в сети</small>' : ''}</button>`;
@@ -1594,7 +1603,7 @@
     } else {
       body = `<div class="gm-title"><button class="gm-back" data-act="gift-back" title="Назад">${ic('back', 16)}</button>Подтвердите</div>
         <div class="gm-ok">
-          <span class="gm-ok-e">${g.e}</span>
+          <span class="gm-ok-e">${gImg(st.id)}</span>
           <div class="gm-ok-t"><b>${esc(g.name)}</b><span>для ${pa(st.to, 22, 'round')} <b>${nm(st.to)}</b></span>${g.anon ? '<small>анонимно — никто не узнает, что это вы</small>' : ''}</div>
           <span class="gm-ok-p">${coinIc()}${g.price}</span>
         </div>
@@ -4274,6 +4283,13 @@
   });
   let sfxT;
   document.addEventListener('input', (e) => {
+    if (e.target.matches('[data-gsfx]')) {
+      Sound.setGiftVol(Number(e.target.value));
+      const v = $app.querySelector('.gsfx-v');
+      if (v) v.textContent = Sound.giftVol + '%';
+      clearTimeout(sfxT);
+      sfxT = setTimeout(() => Sound.play('gift_kiss'), 160);
+    }
     if (e.target.dataset.sfx !== undefined && e.target.matches('[data-sfx]')) {
       Sound.setVol(Number(e.target.value));
       const v = $app.querySelector('.sfx-v');

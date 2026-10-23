@@ -14,6 +14,7 @@ const CATALOG = {
   poop: { price: 500, ms: 10 * MIN, anon: true },
   crown: { price: 1000, ms: 15 * MIN, crown: true },
   ring: { price: 1500, ms: 15 * MIN },
+  bus: { price: 2000, ms: 15 * MIN },
 };
 const ORDER = Object.keys(CATALOG);
 
