@@ -984,7 +984,7 @@
     return Promise.race([ready.then(frames), sleep(4000)]);
   }
   const loaded = (...rs) => settle().then(() => Loader.done(...rs));
-  setTimeout(() => Loader.done('boot', 'enter', 'game'), 8000); // 'login' держится свои 10 секунд // страховка: сервер молчит — не держим экран вечно
+  setTimeout(() => Loader.done('boot', 'enter', 'game'), 8000); // 'login' держится свои 2 секунды // страховка: сервер молчит — не держим экран вечно
 
   // Анимированные счётчики очков: число «докручивается» до нового значения и подпрыгивает.
   // Значение берём из текста, прошлое — из памяти по ключу data-cnt, так что перерисовки не мешают.
@@ -4171,7 +4171,7 @@
       const go = e.submitter?.value || 'create';
       // После входа — солидная загрузка на 10 секунд (только при логине, не при переподключении)
       Loader.show('login');
-      setTimeout(() => Loader.done('login'), 10000);
+      setTimeout(() => Loader.done('login'), 2000);
       if (go === 'join') {
         const code = (codeFromUrl() && !fd.get('code') ? codeFromUrl() : String(fd.get('code') || '')).toUpperCase();
         if (code.length !== 4) return toast('Код комнаты — 4 буквы');
