@@ -2312,7 +2312,7 @@
           <span class="rb-list">${pool.map((id) => `<span class="ava-wrap ${g.ready[id] ? 'is-ready' : ''}" title="${nm(id)}${g.ready[id] ? ' — готов' : ''}">${pa(id, 'sm', 'round')}${g.ready[id] ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span>`).join('')}<span class="muted small">${n}/${pool.length}</span></span>
         </div>
         <div class="rb-actions">
-          ${myTeam ? `<button class="btn ready-btn ${mine ? 'on' : ''}" data-act="cn-ready">${ic('check', 24)} ${mine ? 'Готов!' : 'Готов'}</button>` : `<span class="muted">Выберите команду слева или справа</span>`}
+          ${myTeam ? `<button class="btn ready-btn ${mine ? 'on' : ''}" data-act="cn-ready" ${mine ? '' : 'data-hotkey'}>${ic('check', 24)} ${mine ? 'Готов!' : 'Готов'}</button>` : `<span class="muted">Выберите команду слева или справа</span>`}
           ${isHost() ? `<button class="btn ghost rb-force" data-act="cn-force" title="Только для хоста: запустить партию, не дожидаясь «Готов» от всех">${ic('play', 16)} Начать без ожидания</button>` : ''}
         </div>
       </div>`;
@@ -2427,12 +2427,13 @@
       center = `<div class="stage-card">
         <div class="kicker" style="color:${ALIAS_BG[g.turnTeam]}">Ход команды «${esc(team.name)}»</div>
         <div class="expl">${pa(g.explainer, 96)}<h2 class="h2">Объясняет ${nm(g.explainer)}</h2></div>
-        ${isExpl ? `<button class="btn primary mega" data-act="al-go">${ic('play', 26)} Поехали!</button><p class="muted">У вас ${g.seconds} секунд.</p>` : `<p class="muted">Ждём, когда ${nm(g.explainer)} нажмёт «Поехали».</p>`}
+        ${isExpl ? `<button class="btn primary mega" data-act="al-go" data-hotkey>${ic('play', 26)} Поехали!</button><p class="muted">У вас ${g.seconds} секунд.</p>` : `<p class="muted">Ждём, когда ${nm(g.explainer)} нажмёт «Поехали».</p>`}
       </div>`;
     } else if (g.phase === 'running') {
       center = `<div class="stage-card run">
         ${aliasStack(g)}${g.word ? '' : `<p class="muted">Слушайте ${nm(g.explainer)} и угадывайте!</p>`}
-        ${isExpl ? `<div class="mega-row"><button class="btn danger mega" data-act="al-skip">${ic('x', 26)} Пропуск${g.penalty ? ' −1' : ''}</button><button class="btn success mega" data-act="al-got">${ic('check', 26)} Угадали +1</button></div>` : ''}
+        ${isExpl ? `<div class="mega-row"><button class="btn danger mega" data-act="al-skip">${ic('x', 26)} Пропуск${g.penalty ? ' −1' : ''}</button><button class="btn success mega" data-act="al-got">${ic('check', 26)} Угадали +1</button></div>
+        <p class="kbd-hint"><kbd>←</kbd> пропуск <span class="sep">·</span> <kbd>→</kbd> угадали — можно стрелками на клавиатуре</p>` : ''}
         <div class="counters"><span>Угадано <b data-cnt="alg">${g.guessedNow}</b></span><span>Пропущено <b data-cnt="alk">${g.skippedNow}</b></span></div>
       </div>`;
     } else if (g.phase === 'last') {
@@ -2494,10 +2495,12 @@
           const ids = g.confirmers || [];
           const done = g.confirms || [];
           const mine = done.includes(me);
-          const inTeam = g.myTeam !== -1 && g.myTeam != null;
+          const canConfirm = ids.includes(me);
+          const rivals = ids.some((id) => g.teams[g.turnTeam]?.members.includes(id)) ? '' : 'соперники';
           return `<div class="rv-cta">
-            ${inTeam ? `<button class="btn ${mine ? 'ja-on' : 'primary'} mega" data-act="al-confirm">${mine ? `${ic('check', 20)} Подтвердили — ждём остальных` : `${ic('check', 20)} Подтвердить очки`}</button>` : ''}
-            <div class="jo-ready nx-who"><span class="muted small">Подтвердили ${done.length}/${ids.length}${done.length ? '' : ' — игра продолжится, когда нажмут все'}</span><span class="jr-list">${ids.map((id) => `<span class="jr ${done.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${done.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
+            <p class="al-fair">${ic('eye', 16)} ${rivals ? `Команда соперников проверяет слова на честность и подтверждает очки, если всё в порядке.` : 'Соперников нет в сети — подтвердить может любой игрок.'}</p>
+            ${canConfirm ? `<button class="btn ${mine ? 'ja-on' : 'primary'} mega" data-act="al-confirm" ${mine ? '' : 'data-hotkey'}>${mine ? `${ic('check', 20)} Подтвердили — ждём остальных` : `${ic('check', 20)} Всё честно — подтвердить`}</button>` : g.myTeam === g.turnTeam ? `<p class="muted small">Ждём, пока соперники проверят ваши слова.</p>` : ''}
+            <div class="jo-ready nx-who"><span class="muted small">Подтвердили ${done.length}/${ids.length}${done.length ? '' : ' — ход перейдёт, когда подтвердят все соперники'}</span><span class="jr-list">${ids.map((id) => `<span class="jr ${done.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${done.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
           </div>`;
         })()}
       </div>`;
@@ -2856,7 +2859,7 @@
         ? `<div class="stage-card">${T}<div class="big-ic">${ic('eyeoff', 48)}</div><h2 class="h2">Подсказчики убирают совпадения…</h2>${readyRow(g.helpers, g.show, 'Готовы показать')}</div>`
         : `<div class="stage-card">${T}<div class="kicker">Слово: ${esc(g.word)}</div><p>Вычеркните одинаковые и однокоренные подсказки — совпадения уже отмечены. Нажмите на подсказку, чтобы переключить.</p>
             <div class="jc-grid">${g.clues.map((c) => clueEl(c, 'button', `data-act="jo-toggle" data-pid="${c.pid}"`)).join('')}</div>
-            <button class="btn ${iShow ? 'ja-on' : 'primary'} mega" data-act="jo-filterdone">${iShow ? `${ic('check', 22)} Вы готовы — отменить` : `Показать угадывающему ${ic('play', 22)}`}</button>
+            <button class="btn ${iShow ? 'ja-on' : 'primary'} mega" data-act="jo-filterdone" ${iShow ? '' : 'data-hotkey'}>${iShow ? `${ic('check', 22)} Вы готовы — отменить` : `Показать угадывающему ${ic('play', 22)}`}</button>
             ${readyRow(g.helpers, g.show, 'Нажали «Показать»')}</div>`;
     } else if (g.phase === 'guess') {
       const cl = g.clues.map((c) => clueEl(c)).join('');
@@ -2891,7 +2894,7 @@
         ? isHost() ? `<button class="btn ghost" data-act="jo-next">Хост: дальше без решения ${ic('play', 16)}</button>` : ''
         : g.correct && !g.isGuesser && !isHost()
           ? `<span class="muted">${g.heart == null ? `Ждём отметку от ${nm(g.guesser)}` : `${ic('heartf', 14)} Лучшая подсказка выбрана`}</span>`
-          : `<button class="btn primary mega" data-act="jo-next">${g.isGuesser && g.correct && g.heart == null ? 'Дальше без отметки' : 'Дальше'} ${ic('play', 20)}</button>`;
+          : `<button class="btn primary mega" data-act="jo-next" data-hotkey>${g.isGuesser && g.correct && g.heart == null ? 'Дальше без отметки' : 'Дальше'} ${ic('play', 20)}</button>`;
       body = `<div class="stage-card">${T}<div class="kicker">Было слово</div><div class="mega-word">${esc(g.word)}</div>
         <p class="jo-ans">Ответ: <b>${esc(g.guess || '—')}</b></p><h2 class="h2 res">${res}</h2>
         ${decide}${hearts}
@@ -2951,7 +2954,7 @@
     const ring = g.endsAt ? `<div class="nx-ring" title="До следующего вопроса" style="--nx:-${total - left}ms;--nd:${total}ms"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19"/></svg><b data-nx="${g.endsAt}">${Math.max(1, Math.ceil(left / 1000))}</b></div>` : '';
     const iReady = g.ready.includes(S.me);
     return `<div class="nx-wrap">
-      <div class="nx-row">${ring}<button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="${act}">${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button></div>
+      <div class="nx-row">${ring}<button class="btn ${iReady ? 'ja-on' : 'primary'} big-w" data-act="${act}" ${iReady ? '' : 'data-hotkey'}>${iReady ? `${ic('check', 18)} Готов — ждём остальных` : `Дальше ${ic('play', 18)}`}</button></div>
       <div class="jo-ready nx-who"><span class="muted small">Нажали «Дальше» ${g.ready.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.ready.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.ready.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>
     </div>`;
   }
@@ -3222,7 +3225,7 @@
           if (!r) return '';
           return `<div class="pk-rr">${pa(id, 26, 'round')}<b>${nm(id)}</b><span class="muted small">${r.bid == null ? '' : r.bid === 0 ? 'пас' : `заказ ${r.bid}`} · взял ${r.took}</span><em class="${r.pts > 0 ? 'up' : r.pts < 0 ? 'down' : ''}">${r.pts > 0 ? '+' : ''}${r.pts}</em><b class="pk-rt">${r.total}</b></div>`;
         })
-        .join('')}${isHost() ? `<button class="btn primary" data-act="pk-next">Следующая сдача ${ic('play', 16)}</button>` : '<p class="muted small center">Следующая сдача через пару секунд</p>'}</div>`;
+        .join('')}${isHost() ? `<button class="btn primary" data-act="pk-next" data-hotkey>Следующая сдача ${ic('play', 16)}</button>` : '<p class="muted small center">Следующая сдача через пару секунд</p>'}</div>`;
     }
     const over = g.phase === 'over'
       ? `<div class="pk-res"><div class="big-ic">${ic('trophy', 48)}</div><h2 class="h2 center">Победа: ${(g.winner || []).map(nm).join(', ')}!</h2>${canRestart() ? `<button class="btn primary big-w" data-act="pk-restart">${ic('reset', 18)} Ещё партию</button>` : ''}</div>`
@@ -3855,6 +3858,36 @@
     document.addEventListener('pointercancel', () => { released = 0; stop(); });
     return { take: () => { const v = released; released = 0; return v; } };
   })();
+
+  // Горячие клавиши: Enter/пробел — главная кнопка «Подтвердить / Готов / Дальше» на экране (помечена data-hotkey);
+  // в Элиасе объясняющий жмёт → «угадали» и ← «пропуск»
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t && (t.closest('input, textarea, select, [contenteditable]') || (t.closest('button, a') && (e.key === 'Enter' || e.key === ' ')))) return; // кнопку в фокусе браузер нажмёт сам
+    if (document.querySelector('.modal-bg, [aria-modal="true"]')) return; // открыто окно — не трогаем
+    const g = S?.game;
+    if (g?.type === 'alias' && g.phase === 'running' && g.explainer === S.me && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+      e.preventDefault();
+      if (e.repeat) return; // зажатая стрелка не должна пролистать пачку слов
+      const b = $app.querySelector(`[data-act="${e.key === 'ArrowRight' ? 'al-got' : 'al-skip'}"]`);
+      if (b && !b.disabled) {
+        b.classList.add('kbd-press');
+        setTimeout(() => b.classList.remove('kbd-press'), 160);
+        b.click();
+      }
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (e.repeat) return;
+      const b = [...$app.querySelectorAll('[data-hotkey]')].find((x) => !x.disabled && x.offsetParent !== null);
+      if (!b) return;
+      e.preventDefault();
+      b.classList.add('kbd-press');
+      setTimeout(() => b.classList.remove('kbd-press'), 160);
+      b.click();
+    }
+  });
 
   document.addEventListener('click', async (e) => {
     // клик мимо открытого меню — закрыть его

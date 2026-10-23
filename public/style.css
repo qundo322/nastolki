@@ -2918,3 +2918,19 @@ html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none
 .tp-role + .al-brought { margin-left: 6px; }
 .al-brought.up { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green-text); }
 .al-brought.down { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red-text); }
+
+/* ---- Подсказки по клавишам и проверка честности в Элиасе ---- */
+.kbd-hint { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+.kbd-hint .sep { opacity: .5; }
+kbd { display: inline-grid; place-items: center; min-width: 26px; height: 24px; padding: 0 6px; border-radius: 7px; border: 1px solid var(--line-strong); border-bottom-width: 3px; background: var(--surface-2); color: var(--text); font: 700 13px/1 var(--font, inherit); }
+.btn.kbd-press { transform: scale(.96); filter: brightness(1.1); }
+.al-fair { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--text); text-align: center; }
+.al-fair svg { color: var(--accent-text); flex: none; }
+/* у кнопок, которые жмутся Enter/пробелом, — маленькая подсказка (только на компьютере) */
+@media (hover: hover) and (pointer: fine) {
+  [data-hotkey]::after { content: 'Enter'; margin-left: 10px; padding: 2px 6px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: .02em; background: rgba(0, 0, 0, .16); color: inherit; opacity: .65; }
+  .btn.primary[data-hotkey]::after { position: static; inset: auto; z-index: auto; transform: none; width: auto; height: auto; }
+}
+.al-fair { display: block; text-wrap: balance; }
+.al-fair svg { display: inline-block; vertical-align: -3px; margin-right: 6px; }
+.kbd-hint { font-size: 14px; margin-top: 14px; }
