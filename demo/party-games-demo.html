@@ -10493,7 +10493,7 @@ void main(){
     poop: { e: '💩', name: 'Какашка', price: 500, min: 10, place: 'on', anon: true, say: (_a, b) => `Кто-то обгадил ${b}!`, dur: 'Какашка на 10 минут' },
     crown: { e: '👑', name: 'Корона', price: 1000, min: 15, place: 'crown', say: (a, b) => `${a} короновал ${b}!`, dur: 'Корона на 15 минут' },
     ring: { e: '💍', name: 'Предложение руки и сердца', short: 'Предложение', price: 1500, min: 15, place: 'side', say: (a, b) => `${a} сделал предложение ${b}!`, dur: 'Кольцо на 15 минут' },
-    bus: { e: '🚐', name: 'Бусификация', price: 2000, min: 15, place: 'side', say: (a, b) => `За ${b} приехал бус! Вызвал — ${a}`, dur: 'Бусификация на 15 минут' },
+    bus: { e: '🚐', name: 'Бусификация', price: 2000, min: 15, place: 'side', say: (a, b) => `${a} отправил в учебку ${b}`, dur: 'Бусификация на 15 минут' },
   };
   // Картинка подарка (webp без фона); размер — 1em, поэтому везде работает прежний font-size и анимации
   const asset = (p) => (window.ASSET && window.ASSET[p]) || p;
