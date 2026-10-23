@@ -3388,7 +3388,8 @@
   // Поворот кубика, при котором грань v смотрит на нас (противоположные грани в сумме 7)
   const FACE_ROT = { 1: [0, 0], 2: [-90, 0], 3: [0, -90], 4: [0, 90], 5: [90, 0], 6: [0, 180] };
   const faceHtml = (v) => `<span class="face f${v}">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
-  const CUBE = [1, 2, 3, 4, 5, 6].map(faceHtml).join('');
+  // Кубик = 6 граней + внутренние перегородки, чтобы на скруглённых рёбрах не просвечивала пустота
+  const CUBE = [1, 2, 3, 4, 5, 6].map(faceHtml).join('') + '<span class="core cx"></span><span class="core cy"></span><span class="core cz"></span>';
   const hash = (n) => {
     let x = (n * 2654435761) >>> 0;
     x ^= x >>> 15;
@@ -3401,7 +3402,9 @@
     const sy = fy + 720 + Math.floor(r2 * 4) * 90;
     const el = now() - (g.rollAt || 0);
     const rolling = d.fresh && g.rollAt && el < g.rollMs + 400;
-    const style = `--fx:${fx}deg;--fy:${fy}deg;--sx:${sx}deg;--sy:${sy}deg;--de:${-el + i * 70}ms;--tilt:${((r1 - 0.5) * 16).toFixed(1)}deg`;
+    // в покое кубик чуть повёрнут к нам — видно верх и бок, как у настоящего
+    const yaw = opts.small ? 14 : Math.round((r2 - 0.5) * 14 + (r2 > 0.5 ? 10 : -10)); // небольшой поворот: лицевая грань (очки) читается сразу
+    const style = `--fx:${fx}deg;--fy:${fy}deg;--sx:${sx}deg;--sy:${sy}deg;--de:${-el + i * 70}ms;--tilt:${((r1 - 0.5) * 16).toFixed(1)}deg;--yaw:${yaw}deg`;
     const cls = `die3 ${rolling ? 'rolling' : ''} ${opts.sel ? 'sel' : ''} ${opts.can ? 'can' : ''} ${opts.dim ? 'dim' : ''} ${opts.small ? 'small' : ''}`;
     return opts.act ? `<button class="${cls}" data-act="dc-pick" data-i="${i}" style="${style}" aria-label="Кубик ${d.v}${opts.sel ? ', выбран' : ''}"><span class="cube">${CUBE}</span></button>` : `<span class="${cls}" style="${style}"><span class="cube">${CUBE}</span></span>`;
   }
@@ -3470,6 +3473,32 @@
     const status = g.phase === 'bust'
       ? `<div class="dc-bust">${ic('x', 20)} Пусто! ${g.bust?.lost ? `Сгорело ${g.bust.lost} очков` : 'Ни одной зачётной кости'} — ход переходит</div>`
       : '';
+    // Справа — шпаргалка: все зачётные кости и комбинации; то, что есть в текущем броске, подсвечено
+    const live = g.phase === 'pick' ? free.map((x) => x.d.v) : [];
+    const cnt = [0, 0, 0, 0, 0, 0, 0];
+    live.forEach((v) => cnt[v]++);
+    const sortedLive = live.slice().sort((a, b) => a - b).join('');
+    const md = (v) => `<i class="md">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''} ${(v === 1 || v === 4) && PIPS[v].includes(k + 1) ? 'r' : ''}"></i>`).join('')}</i>`;
+    const comboPts = (f, n) => (n === 3 ? (f === 1 ? 100 : f * 10) : n === 4 ? (f === 1 ? 200 : f * 20) : f === 1 ? 1000 : f * 100);
+    const combos = `<aside class="dice-help" data-scroll="dice-help">
+      <div class="side-h">${ic('bulb', 16)} Что приносит очки</div>
+      <div class="dh-sec">Одиночные кости</div>
+      <div class="dh-row ${cnt[1] ? 'hot' : ''}">${md(1)}<span>каждая единица</span><b>10</b></div>
+      <div class="dh-row ${cnt[5] ? 'hot' : ''}">${md(5)}<span>каждая пятёрка</span><b>5</b></div>
+      <p class="dh-note">2, 3, 4 и 6 по одной очков не дают</p>
+      <div class="dh-sec">Одинаковые за один бросок</div>
+      <table class="dh-t"><thead><tr><th></th><th>×3</th><th>×4</th><th>×5</th></tr></thead><tbody>${[1, 2, 3, 4, 5, 6]
+        .map((f) => `<tr><td>${md(f)}</td>${[3, 4, 5].map((n) => `<td class="${cnt[f] === n ? 'hot' : ''}">${comboPts(f, n)}</td>`).join('')}</tr>`)
+        .join('')}</tbody></table>
+      <div class="dh-sec">Стриты — все 5 кубиков</div>
+      <div class="dh-row ${sortedLive === '12345' ? 'hot' : ''}"><span class="mds">${[1, 2, 3, 4, 5].map(md).join('')}</span><b>125</b></div>
+      <div class="dh-row ${sortedLive === '23456' ? 'hot' : ''}"><span class="mds">${[2, 3, 4, 5, 6].map(md).join('')}</span><b>250</b></div>
+      <div class="dh-sec">Пороги</div>
+      <div class="dh-rule"><b>75</b><span>допуск — первая запись не меньше 75 за ход</span></div>
+      <div class="dh-rule"><b>850</b><span>бочка — выше не записать, дальше нужно 150 за один ход</span></div>
+      <div class="dh-rule"><b>5/5</b><span>все кубики зачётные — подтверждающий бросок всеми пятью</span></div>
+      <div class="dh-rule"><b>0</b><span>в броске нет зачётных — ход сгорает</span></div>
+    </aside>`;
     return `<div class="dice-g ${ui.enter ? 'enter' : ''}">
       <aside class="dice-side" data-scroll="dice-side">
         <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">допуск ${g.entry} · бочка ${g.barrel} · до ${g.target}</span></div>
@@ -3490,6 +3519,7 @@
         ${g.phase === 'pick' && myTurn ? '<p class="muted small center">Нажмите на кубик, чтобы взять или вернуть. Подсвечены зачётные</p>' : ''}
         <div class="dc-actions">${actions}</div>
       </section>
+      ${combos}
     </div>`;
   }
 

@@ -2882,3 +2882,48 @@ html.v-calm .die3.rolling, html.v-calm .die3.rolling .cube { animation: none; }
 .pk-sheet tr.cur { outline: 2px solid var(--accent); outline-offset: -2px; }
 .pk-sheet tr.spx th { color: var(--accent-text, var(--accent)); }
 @media (max-width: 640px) { .pk-hand .pc { --cw: 52px; } .pc { --cw: 60px; } .pk-seats { grid-template-columns: 1fr 1fr; } }
+
+/* ---- Кости: настоящие 3D-кубики ---- */
+.die3 .cube { transform: rotateX(-15deg) rotateY(var(--yaw, 0deg)) rotateX(var(--fx)) rotateY(var(--fy)); }
+@keyframes dieSpin { from { transform: rotateX(-15deg) rotateY(var(--yaw, 0deg)) rotateX(var(--sx)) rotateY(var(--sy)); } to { transform: rotateX(-15deg) rotateY(var(--yaw, 0deg)) rotateX(var(--fx)) rotateY(var(--fy)); } }
+.die3 .face { border-radius: 14%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), inset 0 -3px 6px rgba(0,0,0,.1); }
+/* грани разной освещённости — объём читается под любым углом */
+.die3 .face.f1, .die3 .face.f6 { background: radial-gradient(circle at 30% 25%, #ffffff, #f4f0e8 60%, #e4ddcf); }
+.die3 .face.f2, .die3 .face.f5 { background: radial-gradient(circle at 30% 25%, #fbf8f1, #ebe5d8 60%, #d9d1c1); }
+.die3 .face.f3, .die3 .face.f4 { background: radial-gradient(circle at 30% 25%, #f3eee4, #e2dacb 60%, #cfc6b4); }
+.die3 .core { position: absolute; inset: 4%; background: #ddd5c5; border-radius: 6%; }
+.die3 .core.cx { transform: rotateY(90deg); }
+.die3 .core.cy { transform: rotateX(90deg); }
+/* выбор — без рамок на гранях: кубик приподнимается, под ним светится круг */
+.die3.can:not(.sel) .face, .die3.sel .face { box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), inset 0 -3px 6px rgba(0,0,0,.1); }
+.die3::before { content: ''; position: absolute; left: -12%; right: -12%; bottom: -26%; height: 34%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 211, 77, .0), transparent); transition: background .2s; z-index: -1; }
+.die3.can:not(.sel)::before { background: radial-gradient(closest-side, rgba(255, 211, 77, .35), transparent); }
+.die3.sel::before { background: radial-gradient(closest-side, rgba(255, 211, 77, .9), rgba(255, 211, 77, .25) 70%, transparent); }
+.die3.sel { translate: 0 -16px; }
+.die3.sel::after { opacity: .5; bottom: -30%; }
+.die3.small .cube { transform: rotateX(-14deg) rotateY(14deg) rotateX(var(--fx)) rotateY(var(--fy)); }
+/* три колонки: игроки · стол · шпаргалка */
+.dice-g { max-width: 1560px; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr) minmax(240px, 300px); }
+.dice-help { position: sticky; top: 76px; max-height: calc(100vh - 170px); overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: thin; padding: 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.dh-sec { margin: 12px 0 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.dh-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; background: var(--surface-2); margin-bottom: 4px; font-size: 13px; transition: background .2s, box-shadow .2s; }
+.dh-row span { flex: 1; }
+.dh-row b { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.dh-row.hot, .dh-t td.hot { background: color-mix(in srgb, var(--accent) 22%, var(--surface-2)); box-shadow: inset 0 0 0 2px var(--accent); }
+.dh-note { margin: 2px 2px 0; font-size: 11.5px; color: var(--muted); }
+.dh-t { width: 100%; border-collapse: separate; border-spacing: 3px; font-variant-numeric: tabular-nums; }
+.dh-t th { font-size: 11px; color: var(--muted); font-weight: 800; }
+.dh-t td { padding: 5px 4px; border-radius: 8px; background: var(--surface-2); text-align: center; font-weight: 800; font-size: 13px; }
+.dh-t td:first-child { background: none; width: 26px; }
+.mds { display: inline-flex; gap: 3px; flex: 1; }
+.md { display: inline-grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 22px; height: 22px; padding: 3px; border-radius: 5px; background: linear-gradient(160deg, #fff, #e7e1d3); box-shadow: 0 1px 2px rgba(0,0,0,.3); vertical-align: middle; flex: none; }
+.md i { border-radius: 50%; margin: 12%; }
+.md i.on { background: #1b1b22; }
+.md i.on.r { background: #c8161c; }
+.dh-rule { display: grid; grid-template-columns: 42px 1fr; gap: 8px; align-items: center; padding: 5px 2px; font-size: 12.5px; color: var(--muted); }
+.dh-rule b { font-size: 14px; color: var(--text); text-align: center; padding: 3px 0; border-radius: 8px; background: var(--surface-2); }
+@media (max-width: 1280px) { .dice-g { grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); } .dice-help { grid-column: 1 / -1; position: static; max-height: none; } }
+@media (max-width: 1000px) { .dice-g { grid-template-columns: 1fr; } .dice-help { grid-column: auto; } }
+
+.dc-row { gap: clamp(22px, 3.4vw, 40px); }
+.die3 .face i.on { box-shadow: inset 0 1px 1px rgba(255,255,255,.25), 0 0 0 .5px rgba(0,0,0,.2); }
