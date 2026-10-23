@@ -233,7 +233,7 @@ em { font-style: normal; color: var(--muted); }
 .btn:hover { border-color: var(--line-strong); background: var(--surface-3); }
 .btn:active { transform: scale(0.97); }
 .btn.primary { background: var(--accent-bg); color: var(--accent-ink); border-color: var(--accent); }
-.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.primary:hover { border-color: var(--accent-hover); } /* фон-градиент не меняем: он не анимируется и мигает */
 .btn.success { background: var(--green); color: var(--green-ink); border-color: var(--green); }
 .btn.danger { background: var(--red); color: var(--red-ink); border-color: var(--red); }
 .btn.ghost { background: transparent; }
@@ -3061,6 +3061,15 @@ html.v-calm .g-bus .go-e { animation: none; }
 .tabs.seg2 button:not(.on):hover { color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .tabs.seg2 .tab-ind, .tabs.seg2 button { animation: none !important; } }
 html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none !important; }
+
+/* ---- Основная кнопка: ховер без мигания ----
+   Градиент нельзя плавно сменить на другой фон, поэтому подсветка — отдельным слоем поверх, он плавно проявляется */
+.btn.primary { position: relative; isolation: isolate; overflow: hidden; }
+.btn.primary::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(160deg, rgba(255,255,255,.38), rgba(255,255,255,.08) 55%, rgba(255,255,255,0)); opacity: 0; transition: opacity .25s ease; }
+.btn.primary:hover:not([disabled])::before { opacity: 1; }
+.btn.primary:hover:not([disabled]) { filter: none; }
+.btn.primary { transition: transform .12s, border-color .25s, box-shadow .25s, filter .15s; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
