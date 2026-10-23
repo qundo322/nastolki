@@ -3083,8 +3083,8 @@
       ${rows.map(([id, n], i) => `<div class="jb-row ${id === g.guesser ? 'turn' : ''} ${id === me ? 'me' : ''}"><span class="jb-place">${i + 1}</span>${pa(id, 28, 'round')}<span class="jb-n">${nm(id)}</span>${g.hearts[id] ? `<span class="jb-h" title="Сколько раз его подсказку выбрали лучшей">${ic('heartf', 15)}${g.hearts[id]}</span>` : ''}<b class="jb-p" data-cnt="jb-${id}">${n}</b></div>`).join('')}</div>`;
     if (!g.inGame) return `<div class="narrow justone">${head}<div class="stage-card"><button class="btn primary mega" data-act="jo-add">Присоединиться</button></div>${board}</div>`;
     // Кто уже готов (видят все)
-    const readyRow = (ids, done, label) =>
-      `<div class="jo-ready"><span class="muted small">${label} ${done.length}/${ids.length}</span><span class="jr-list">${ids
+    const readyRow = (ids, done, label, suffix = '') =>
+      `<div class="jo-ready"><span class="muted small">${label} ${done.length}/${ids.length}${suffix}</span><span class="jr-list">${ids
         .map((id) => `<span class="jr ${done.includes(id) ? 'on' : ''}" title="${nm(id)}${done.includes(id) ? ' — готов' : ' — думает'}"><span class="ava-wrap">${pa(id, 34, 'round')}${done.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`)
         .join('')}</span></div>`;
     const hearted = (c) => (g.isGuesser ? g.heart != null && c.key === g.heart : c.pid === g.heart);
@@ -3112,7 +3112,7 @@
         : `<div class="stage-card">${T}<div class="kicker">Слово: ${esc(g.word)}</div><p>Вычеркните одинаковые и однокоренные подсказки — совпадения уже отмечены. Нажмите на подсказку, чтобы переключить.</p>
             <div class="jc-grid">${g.clues.map((c) => clueEl(c, 'button', `data-act="jo-toggle" data-pid="${c.pid}"`)).join('')}</div>
             <button class="btn ${iShow ? 'ja-on' : 'primary'} mega" data-act="jo-filterdone" ${iShow ? '' : 'data-hotkey'}>${iShow ? `${ic('check', 22)} Вы готовы — отменить` : `Показать угадывающему ${ic('play', 22)}`}</button>
-            ${readyRow(g.helpers, g.show, 'Нажали «Показать»')}</div>`;
+            ${readyRow(g.helpers, g.show, 'Нажали «Показать»', ` · хватит ${g.showNeed || Math.ceil(g.helpers.length / 2)}`)}</div>`;
     } else if (g.phase === 'guess') {
       const cl = g.clues.map((c) => clueEl(c)).join('');
       body = g.isGuesser

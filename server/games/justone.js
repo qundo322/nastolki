@@ -15,7 +15,7 @@ const meta = {
   short: 'Все пишут по одной подсказке, одинаковые сгорают. Угадал — и выбери лучшую подсказку.',
   rules: [
     'Один игрок угадывает, остальные видят загаданное слово и за минуту пишут по одной подсказке — одно слово (буквы и цифры, можно через дефис). Подсказку нельзя заменить после отправки.',
-    'Затем за 30 секунд подсказчики вычёркивают одинаковые и однокоренные подсказки. Совпадения отмечаются автоматически: кто написал такую подсказку первым — сохраняет её и получает медаль «первым», у остальных она сгорает. Подсказки уходят угадывающему, когда «Показать» нажмут все подсказчики или выйдет время.',
+    'Затем за 30 секунд подсказчики вычёркивают одинаковые и однокоренные подсказки. Совпадения отмечаются автоматически: кто написал такую подсказку первым — сохраняет её и получает медаль «первым», у остальных она сгорает. Подсказки уходят угадывающему, когда «Показать» нажмёт хотя бы половина подсказчиков или выйдет время.',
     'Угадывающий видит оставшиеся подсказки анонимно и пишет ответ. Угадал — за 30 секунд отмечает лучшую подсказку сердечком.',
     'Ответ не совпал точь-в-точь? Подсказчики решают: «Засчитать» или «Не засчитывать» — решение принимается, когда так нажмут все. За 30 секунд не договорились — не засчитано.',
     'Очки, если слово угадано: угадывающему +2; каждому, чья подсказка не сгорела, +1; автору лучшей подсказки — ещё +3.',
@@ -167,9 +167,15 @@ const allOf = (s, ctx, votes) => {
   const need = online(s, ctx, s.helpers);
   return need.length > 0 && need.every((id) => votes[id]);
 };
+// «Показать угадывающему» — хватит половины подсказчиков в сети (не нужно ждать всех)
+const showNeed = (s, ctx) => Math.max(1, Math.ceil(online(s, ctx, s.helpers).length / 2));
+const halfOf = (s, ctx, votes) => {
+  const on = online(s, ctx, s.helpers);
+  return on.length > 0 && on.filter((id) => votes[id]).length >= showNeed(s, ctx);
+};
 function checkVotes(s, ctx) {
   if (s.phase === 'clues' && s.helpers.length && online(s, ctx, s.helpers).every((id) => s.clues[id])) toFilter(s, ctx);
-  else if (s.phase === 'filter' && allOf(s, ctx, s.show)) toGuess(s, ctx);
+  else if (s.phase === 'filter' && halfOf(s, ctx, s.show)) toGuess(s, ctx);
   else if (s.phase === 'result' && s.guess && !s.correct) {
     if (allOf(s, ctx, s.accept)) {
       s.correct = true;
@@ -236,7 +242,7 @@ function action(s, pid, msg, ctx) {
       return;
     }
     case 'filterDone': {
-      // «Показать угадывающему» — нужно нажать всем подсказчикам
+      // «Показать угадывающему» — достаточно половины подсказчиков
       if (s.phase !== 'filter') return;
       if (!isHelper) return 'Решают подсказчики';
       if (s.show[pid]) delete s.show[pid];
@@ -311,7 +317,7 @@ function action(s, pid, msg, ctx) {
   return 'Неизвестное действие';
 }
 
-function view(s, pid) {
+function view(s, pid, ctx) {
   const isGuesser = pid === s.guesser;
   const showClues = s.phase === 'filter' ? !isGuesser : s.phase === 'guess' || s.phase === 'result';
   return {
@@ -334,6 +340,7 @@ function view(s, pid) {
             .filter((c) => c.text && !(s.phase === 'guess' && c.removed))
         : Object.entries(s.clues).map(([id, c]) => ({ pid: id, key: (s.anon || []).indexOf(id), text: c.text, removed: c.removed, by: c.removed ? c.by || null : null, beat: c.removed ? c.beat || null : null, first: !!c.first })),
     show: Object.keys(s.show || {}),
+    showNeed: ctx ? showNeed(s, ctx) : null,
     guess: s.guess,
     correct: s.correct,
     accept: Object.keys(s.accept || {}),

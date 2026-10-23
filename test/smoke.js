@@ -258,10 +258,10 @@ function bot(name, real = '') {
   }
   await helpers[0].act('filterDone');
   await wait(50);
-  assert(g(h).phase === 'filter' && g(h).show.length === 1, 'show needs everyone');
-  for (const b of helpers.slice(1)) await b.act('filterDone');
+  assert(g(h).phase === 'filter' && g(h).show.length === 1 && g(h).showNeed === Math.ceil(helpers.length / 2), 'show needs half of helpers');
+  for (const b of helpers.slice(1, Math.ceil(helpers.length / 2))) await b.act('filterDone');
   await wait(50);
-  assert(g(h).phase === 'guess', 'all pressed show');
+  assert(g(h).phase === 'guess', 'half pressed show → clues go to the guesser');
   await guesser.act('guess', { text: word });
   await wait(100);
   assert(g(h).correct, 'correct');
