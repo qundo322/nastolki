@@ -558,6 +558,45 @@ function bot(name, real = '') {
     console.log('✓ Ожидание игроков');
   }
 
+  // ---- Монеты и подарки (сервер для теста запускается с COIN_EVERY_MS=1500)
+  if (process.env.COIN_EVERY_MS) {
+    const a = bot('Даритель');
+    const b = bot('Получатель');
+    const c = bot('Зритель');
+    await wait(200);
+    const rr = await a.enter('createRoom');
+    await b.enter('joinRoom', rr.code);
+    await c.enter('joinRoom', rr.code);
+    await wait(100);
+    assert(a.st.coins === 0, 'no coins in lobby');
+    await wait(Number(process.env.COIN_EVERY_MS) + 400);
+    assert(a.st.coins === 0, 'no coins before first game');
+    await a.call('selectGame', { type: 'quiz' });
+    assert((await a.call('startGame', { settings: {} })).ok, 'game for coins');
+    let earned = 0;
+    a.s.on('coins', (x) => (earned += x.add));
+    await wait(Number(process.env.COIN_EVERY_MS) * 2 + 1200);
+    assert(a.st.coins >= 300 && earned >= 300 && a.st.coins % 300 === 0, 'coins earned during game: ' + a.st.coins);
+    const seen = [];
+    c.s.on('gift', (ev) => seen.push(ev));
+    assert((await a.call('gift', { gift: 'kiss', to: a.st.me })).error, 'no gifts to self');
+    assert((await a.call('gift', { gift: 'ring', to: b.st.me })).error && a.st.coins >= 300, 'not enough coins');
+    const before = a.st.coins;
+    assert((await a.call('gift', { gift: 'kiss', to: b.st.me, nonce: 'n1' })).ok, 'kiss sent');
+    assert((await a.call('gift', { gift: 'kiss', to: b.st.me, nonce: 'n1' })).dup, 'double click ignored');
+    await wait(100);
+    assert(a.st.coins === before - 20, 'charged once');
+    assert(seen.length === 1 && seen[0].from === a.st.me && seen[0].to === b.st.me, 'everyone sees announcement');
+    assert(c.st.room.gifts[b.st.me].gift.id === 'kiss', 'gift on avatar in state');
+    await a.call('gift', { gift: 'poop', to: b.st.me, nonce: 'n2' });
+    await wait(100);
+    if (a.st.coins + 500 >= 500 && seen.length === 2) assert(seen[1].from === null && !JSON.stringify(seen[1]).includes(a.st.me), 'poop is anonymous');
+    a.s.disconnect();
+    b.s.disconnect();
+    c.s.disconnect();
+    console.log('✓ Монеты и подарки');
+  }
+
   console.log('\nВСЕ ТЕСТЫ ПРОШЛИ');
   process.exit(0);
 })().catch((e) => {

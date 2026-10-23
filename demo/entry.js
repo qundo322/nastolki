@@ -14,6 +14,18 @@ for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
 const Tour = require('../server/tournament');
 const Session = require('../server/session');
 const Radio = require('../server/radio');
+const Gifts = require('../server/gifts');
+// В демо у каждого игрока сразу 2000 монет — чтобы попробовать подарки
+const demoCoins = new Map();
+const DemoWallet = {
+  balance: (k) => (demoCoins.has(k) ? demoCoins.get(k) : 2000),
+  spend(k, n) {
+    const b = DemoWallet.balance(k);
+    if (b < n) return false;
+    demoCoins.set(k, b - n);
+    return true;
+  },
+};
 window.AVATAR_BASE = null; // в демо картинок нет — инициалы
 
 // ---- окружение для app.js ----
@@ -46,7 +58,7 @@ const room = {
   gameType: 'codenames',
   game: null,
   timers: new Map(),
-  chat: [],
+  gifts: new Map(),
   tour: null,
   suspended: null,
 };
@@ -103,12 +115,13 @@ function viewFor(pid) {
   return {
     me: pid,
     serverNow: Date.now(),
+    coins: DemoWallet.balance(pid),
     room: {
       code: room.code,
       hostId: room.hostId,
       gameType: room.gameType,
       players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, real: p.real || '', connected: p.connected, avatar: p.avatar })),
-      chat: room.chat.slice(-50),
+      gifts: Gifts.view(room),
       radio: Radio.view(room),
       tour: Tour.publicTour(room.tour),
       suspended: Session.publicSuspended(room),
@@ -180,10 +193,13 @@ function handle(pid, ev, msg = {}) {
       if (msg.real != null) p.real = String(msg.real).trim().slice(0, 40);
       return;
     }
-    case 'chat':
-      if (String(msg.text || '').trim())
-        room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
+    case 'gift': {
+      for (const p of room.players.values()) p.wallet = p.id;
+      const r = Gifts.send(room, pid, msg, DemoWallet);
+      if (typeof r === 'string') return r;
+      if (!r.dup) setTimeout(() => fire('gift', r), 0);
       return;
+    }
     case 'radio':
       return Radio.handle(room, pid, msg, room.hostId === pid);
     case 'leaveRoom':

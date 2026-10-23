@@ -601,13 +601,6 @@ button.num { font: inherit; font-weight: 800; }
 .chat-fab { position: relative; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
 .chat-fab:hover { border-color: var(--accent); }
 .badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: var(--red-ink); font-size: 11px; font-style: normal; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
-.chat-panel { width: 340px; height: 440px; max-height: calc(100vh - 220px); margin: 0; display: flex; flex-direction: column; padding: 12px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); }
-.chat-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.chat-h b { display: inline-flex; align-items: center; gap: 6px; }
-.chat-log { flex: 1; overflow-y: auto; font-size: 14px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
-.msg { display: flex; gap: 8px; align-items: flex-start; word-wrap: break-word; }
-.msg > div { min-width: 0; }
-.chat-form { display: flex; gap: 6px; }
 
 /* --- лофи-радио --- */
 #lofi { position: fixed; left: 16px; bottom: 16px; z-index: 70; width: 300px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; box-shadow: var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
@@ -728,7 +721,6 @@ div.clue { cursor: default; }
   .code-btn span { letter-spacing: 0.08em; }
   .stage { padding: 12px 10px calc(var(--ctl-h) + 90px); }
   .chat-dock { right: 10px; bottom: 10px; }
-  .chat-panel { width: calc(100vw - 20px); }
   .enter-row { grid-template-columns: 1fr; }
   #lofi { left: 10px; right: 10px; width: auto; bottom: 10px; }
   #lofi.mini { right: auto; }
@@ -1645,9 +1637,6 @@ button.jc:hover { transform: translateY(-2px); border-color: var(--accent-line);
 .qa-rn .n { color: var(--red-text); }
 @media (max-width: 640px) { .qa-cols { grid-template-columns: 1fr; } }
 /* время в чате */
-.msg { position: relative; }
-.msg-t { margin-left: auto; flex: none; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; padding-left: 6px; }
-.msg > div { flex: 1; min-width: 0; }
 
 /* Панель хоста — ряд круглых кнопок рядом с шестерёнкой, открыта до закрытия */
 .ctl-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap-reverse; justify-content: flex-end; max-width: min(560px, calc(100vw - 150px)); padding: 6px; border-radius: 99px; background: color-mix(in srgb, var(--surface) 70%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); }
@@ -2589,6 +2578,153 @@ html { scrollbar-gutter: stable; }
 .ws-h { display: flex; align-items: center; gap: 5px; margin: 12px 2px 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
 .ws-h:first-of-type { margin-top: 4px; }
 .ws-item.new { background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--accent); }
+
+/* ===================== Подарки, шалости и монеты ===================== */
+.gift-wrap { position: relative; }
+.gift-fab { color: #ff4f7b; }
+.gift-fab.on { color: var(--text); }
+.gift-fab svg { transition: scale .2s cubic-bezier(.3,1.6,.5,1); }
+.gift-fab:hover svg { scale: 1.15; }
+.coin { display: inline-block; width: .95em; height: .95em; border-radius: 50%; vertical-align: -.12em; background: radial-gradient(circle at 35% 30%, #fff6c4 0 18%, #ffd34d 40%, #e3a10f 75%, #b97a06); box-shadow: inset 0 0 0 1.5px rgba(150, 95, 0, .55); flex: none; }
+/* меню: раскрывается вверх, не выходит за экран */
+.gift-pop { position: absolute; right: 0; left: auto; bottom: calc(100% + 12px); top: auto; margin: 0; width: min(360px, calc(100vw - 24px)); max-height: calc(100vh - 120px); overflow-y: auto; padding: 12px; transform-origin: bottom right; }
+.gift-pop.anim { animation: giftPop .22s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes giftPop { from { opacity: 0; translate: 0 10px; scale: .94; } }
+.gm-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 4px 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.gm-coins { display: inline-flex; align-items: center; gap: 7px; font-size: 20px; }
+.gm-coins b { font-weight: 900; font-variant-numeric: tabular-nums; }
+.gm-head small { color: var(--muted); font-size: 11.5px; text-align: right; }
+.gm-title { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; margin: 0 2px 10px; }
+.gm-back { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); cursor: pointer; }
+.gm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.gm-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 4px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); cursor: pointer; font: inherit; transition: translate .15s, border-color .15s, background .15s; }
+.gm-item:hover { translate: 0 -2px; border-color: var(--accent); }
+.gm-e { font-size: 30px; line-height: 1; transition: scale .2s cubic-bezier(.3,1.6,.5,1); }
+.gm-item:hover .gm-e { scale: 1.15; }
+.gm-n { font-size: 12px; font-weight: 800; text-align: center; line-height: 1.15; }
+.gm-p { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: var(--accent-text, var(--accent)); }
+.gm-item.poor { opacity: .45; filter: grayscale(.6); }
+.gm-item.poor .gm-p { color: var(--muted); }
+.gm-item.poor:hover { translate: none; border-color: var(--line); }
+.gm-people { display: grid; gap: 6px; }
+.gm-person { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); cursor: pointer; font: inherit; text-align: left; }
+.gm-person b { flex: 1; font-size: 14px; }
+.gm-person small { color: var(--muted); font-size: 11.5px; }
+.gm-person:hover { border-color: var(--accent); }
+.gm-person.off { opacity: .5; cursor: not-allowed; }
+.gm-ok { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--line); }
+.gm-ok-e { font-size: 44px; line-height: 1; }
+.gm-ok-t { flex: 1; display: grid; gap: 4px; min-width: 0; }
+.gm-ok-t > b { font-size: 15px; }
+.gm-ok-t span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.gm-ok-t span b { color: var(--text); }
+.gm-ok-t small { color: var(--accent-text, var(--accent)); font-size: 11.5px; font-weight: 700; }
+.gm-ok-p { display: inline-flex; align-items: center; gap: 5px; font-size: 18px; font-weight: 900; }
+.gm-btns { display: flex; gap: 8px; margin-top: 12px; }
+.gm-btns .btn { flex: 1; justify-content: center; }
+.toast.coinup { background: linear-gradient(135deg, #ffd34d, #f2b524); color: #3a2600; border-color: #e3a10f; font-weight: 800; }
+
+/* подарки на аватарках: всё в долях размера аватарки (--s) */
+.ava-gw { position: relative; display: inline-flex; flex: none; vertical-align: middle; }
+.ava-gw.hit > .ava { animation: avaHit .55s cubic-bezier(.36,.07,.19,.97) both; animation-delay: calc(var(--ge, 0ms) + 250ms); }
+@keyframes avaHit { 10%, 90% { translate: -1px 0; } 20%, 80% { translate: 3px 0; rotate: 4deg; } 30%, 50%, 70% { translate: -5px 0; rotate: -6deg; } 40%, 60% { translate: 5px 0; rotate: 5deg; } }
+.gft { position: absolute; z-index: 2; pointer-events: none; line-height: 1; display: grid; place-items: center; font-size: clamp(9px, calc(var(--s) * .4), 56px); }
+.gft.p-side { right: calc(var(--s) * -.16); bottom: calc(var(--s) * -.1); filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); animation: giftBob 3s ease-in-out infinite; }
+.gft.p-on { left: 50%; top: 58%; translate: -50% -50%; font-size: clamp(9px, calc(var(--s) * .44), 60px); }
+.gft.p-crown { left: 50%; top: calc(var(--s) * -.52); translate: -50% 0; font-size: clamp(11px, calc(var(--s) * .72), 96px); filter: drop-shadow(0 0 calc(var(--s) * .06) rgba(255, 200, 40, .85)); animation: crownGlow 2.4s ease-in-out infinite; }
+.gft.g-kiss { opacity: .9; rotate: -14deg; top: 62%; left: 64%; mix-blend-mode: multiply; }
+.gft.g-poop { top: 66%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.gft.g-beer.fresh::after, .gft.g-whisky.fresh::after { content: ''; }
+/* след от леща: красный отпечаток + 💢 */
+.gft.g-slap { left: 38%; top: 52%; width: calc(var(--s) * .5); height: calc(var(--s) * .4); font-size: clamp(8px, calc(var(--s) * .26), 34px); }
+.gft.g-slap .slap-mark { position: absolute; inset: 0; border-radius: 45% 55% 50% 50%; background: radial-gradient(ellipse at 50% 50%, rgba(255, 40, 40, .55), rgba(255, 40, 40, .25) 55%, transparent 72%); }
+.gft.g-slap b { position: absolute; right: -10%; top: -20%; }
+/* помидорное пятно */
+.gft.g-tomato { width: calc(var(--s) * .62); height: calc(var(--s) * .62); }
+.gft.g-tomato .splat { position: absolute; inset: 0; background:
+  radial-gradient(circle at 50% 50%, #e8261b 0 32%, transparent 33%),
+  radial-gradient(circle at 18% 30%, #e8261b 0 10%, transparent 11%),
+  radial-gradient(circle at 82% 26%, #e8261b 0 9%, transparent 10%),
+  radial-gradient(circle at 76% 80%, #e8261b 0 12%, transparent 13%),
+  radial-gradient(circle at 22% 78%, #e8261b 0 8%, transparent 9%),
+  radial-gradient(circle at 50% 8%, #e8261b 0 7%, transparent 8%),
+  radial-gradient(circle at 46% 46%, rgba(255,255,255,.5) 0 5%, transparent 6%);
+  opacity: .88; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+/* появление подарка на аватарке (только в первые секунды) */
+.gft.fresh { animation-delay: var(--ge, 0ms); }
+.gft.p-side.fresh { animation: giftIn .7s cubic-bezier(.2,1.5,.4,1) both, giftBob 3s ease-in-out .7s infinite; animation-delay: var(--ge, 0ms), calc(var(--ge, 0ms) + .7s); }
+.gft.p-on.fresh { animation: giftSlam .5s cubic-bezier(.2,1.4,.4,1) both; animation-delay: calc(var(--ge, 0ms) + 200ms); }
+.gft.p-crown.fresh { animation: crownIn 1.1s cubic-bezier(.2,1.2,.3,1) both, crownGlow 2.4s ease-in-out 1.1s infinite; animation-delay: var(--ge, 0ms), calc(var(--ge, 0ms) + 1.1s); }
+@keyframes giftIn { from { scale: 0; rotate: -40deg; opacity: 0; } }
+@keyframes giftSlam { 0% { scale: 2.6; opacity: 0; } 60% { scale: .85; opacity: 1; } 100% { scale: 1; } }
+@keyframes crownIn { 0% { translate: -50% -140%; scale: 1.8; opacity: 0; } 60% { translate: -50% 8%; scale: 1; opacity: 1; } 80% { translate: -50% -6%; } 100% { translate: -50% 0; } }
+@keyframes giftBob { 0%, 100% { translate: 0 0; rotate: -4deg; } 50% { translate: 0 -2px; rotate: 4deg; } }
+@keyframes crownGlow { 0%, 100% { filter: drop-shadow(0 0 calc(var(--s) * .04) rgba(255, 200, 40, .7)); } 50% { filter: drop-shadow(0 0 calc(var(--s) * .12) rgba(255, 210, 60, 1)); } }
+
+/* полноэкранное объявление */
+.gift-ov { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; pointer-events: none; background: rgba(8, 8, 14, .5); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); animation: govIn .28s ease both; overflow: hidden; }
+.gift-ov.out { animation: govOut .38s ease forwards; }
+@keyframes govIn { from { opacity: 0; } }
+@keyframes govOut { to { opacity: 0; } }
+.go-card { position: relative; z-index: 2; display: grid; justify-items: center; gap: 10px; padding: 0 20px; text-align: center; animation: goCard .5s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes goCard { from { scale: .6; opacity: 0; translate: 0 20px; } }
+.go-e { font-size: clamp(72px, 14vw, 140px); line-height: 1; filter: drop-shadow(0 10px 24px rgba(0,0,0,.45)); animation: goE .7s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes goE { 0% { scale: 0; rotate: -30deg; } 100% { scale: 1; rotate: 0deg; } }
+.go-t { font-family: var(--display); font-weight: 800; font-size: clamp(26px, 4.6vw, 52px); line-height: 1.12; color: #fff; text-shadow: 0 3px 18px rgba(0,0,0,.55); max-width: 900px; }
+.go-t b { color: #ffd34d; }
+.go-d { font-size: clamp(13px, 1.5vw, 16px); font-weight: 700; color: rgba(255,255,255,.75); }
+.gift-ov.to-me .go-t::after { content: ' (это вы!)'; color: rgba(255,255,255,.6); font-size: .5em; }
+/* частицы */
+.go-fx { position: absolute; inset: 0; }
+.go-fx .p { position: absolute; left: 50%; top: 50%; font-style: normal; line-height: 1; animation-delay: var(--d, 0ms) !important; }
+.p.heart { font-size: calc(34px * var(--s, 1)); animation: pFly 1.3s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes pFly { 0% { translate: -50% -50%; scale: 0; opacity: 0; } 25% { opacity: 1; scale: var(--s); } 100% { translate: calc(-50% + var(--x)) calc(-50% + var(--y)); rotate: var(--r); opacity: 0; } }
+.p.petal { top: -6vh; left: var(--x); width: calc(16px * var(--s)); height: calc(10px * var(--s)); border-radius: 80% 0 80% 0; background: linear-gradient(135deg, #ff5b7a, #c8102e); animation: pFall 1.5s ease-in both; }
+@keyframes pFall { from { translate: 0 0; rotate: 0deg; opacity: 1; } to { translate: var(--dx) 112vh; rotate: calc(var(--r) + 540deg); opacity: .8; } }
+.p.bubble { top: 70%; width: calc(14px * var(--s)); height: calc(14px * var(--s)); margin-left: var(--x); border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, rgba(255,240,200,.6) 60%, rgba(255,220,120,.3)); animation: pRise 1.2s ease-out both; }
+@keyframes pRise { from { translate: 0 0; opacity: 0; } 20% { opacity: 1; } to { translate: 0 -48vh; opacity: 0; } }
+.p.boom { font-size: 120px; translate: -50% -50%; animation: pBoom .5s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes pBoom { 0% { scale: 0; opacity: 0; } 50% { scale: 1.3; opacity: 1; } 100% { scale: 1; opacity: 0; } }
+.g-slap .go-e { animation: slapIn .45s cubic-bezier(.5,0,.8,.4) both, slapHit .35s ease .45s; }
+@keyframes slapIn { from { translate: -70vw 0; rotate: -30deg; } to { translate: 0 0; rotate: 10deg; } }
+@keyframes slapHit { 30% { translate: -14px 0; rotate: -6deg; } 60% { translate: 8px 0; } }
+.g-slap .go-card { animation: goCard .5s cubic-bezier(.2,1.4,.4,1) both, ovShake .4s ease .45s; }
+@keyframes ovShake { 20%, 60% { translate: -10px 0; } 40%, 80% { translate: 10px 0; } }
+.p.ice { font-size: calc(40px * var(--s)); animation: pFly 1.3s ease-out both; }
+.p.splash { width: calc(70px * var(--s)); height: calc(70px * var(--s)); translate: calc(-50% + var(--x)) calc(-50% + var(--y)); border-radius: 45% 55% 40% 60%; background: radial-gradient(circle at 40% 40%, #ff5a4a, #d81e12 60%, #a3120a); rotate: var(--r); animation: pSplat .9s cubic-bezier(.2,1.5,.4,1) both; }
+@keyframes pSplat { 0% { scale: 0; opacity: 0; } 30% { scale: 1.1; opacity: .95; } 100% { scale: 1; opacity: 0; } }
+.g-tomato .go-e { animation: tomatoFly .4s cubic-bezier(.4,0,.8,.6) both, tomatoSquash .3s ease .4s forwards; }
+@keyframes tomatoFly { from { translate: 60vw -40vh; rotate: 260deg; scale: .5; } to { translate: 0 0; rotate: 0deg; scale: 1; } }
+@keyframes tomatoSquash { to { scale: 1.5 .45; opacity: .2; } }
+/* какашка: коричневые брызги растекаются и стекают вниз за ~1 секунду */
+.p.goo { left: var(--x); top: var(--y); width: calc(46px * var(--s)); height: calc(46px * var(--s)); border-radius: 50% 50% 46% 54%; background: radial-gradient(circle at 38% 34%, #a8743f, #7a4a1e 60%, #5b3412); animation: pGoo 1.3s cubic-bezier(.3,.6,.4,1) both; }
+.p.goo::after { content: ''; position: absolute; left: 38%; top: 70%; width: 26%; height: 0; border-radius: 0 0 50% 50%; background: inherit; animation: pDrip 1.1s ease-in both; animation-delay: inherit; }
+@keyframes pGoo { 0% { scale: 0; opacity: 0; } 18% { scale: 1.15; opacity: .95; } 35% { scale: 1; } 100% { translate: 0 24vh; scale: .9 1.2; opacity: 0; } }
+@keyframes pDrip { 0%, 20% { height: 0; } 100% { height: 160%; } }
+.g-poop .go-e { animation: goE .6s cubic-bezier(.2,1.6,.4,1) both, poopWob .8s ease-in-out .6s infinite; }
+@keyframes poopWob { 50% { rotate: -6deg; scale: 1.05 .95; } }
+/* корона: лучи и золотые частицы */
+.g-crown { background: radial-gradient(circle at 50% 45%, rgba(255, 200, 60, .3), rgba(8, 8, 14, .6) 60%); }
+.g-crown .go-e { animation: crownDrop .9s cubic-bezier(.2,1.3,.3,1) both; filter: drop-shadow(0 0 30px rgba(255, 200, 40, .9)); }
+@keyframes crownDrop { 0% { translate: 0 -60vh; scale: 1.6; } 70% { translate: 0 10px; scale: 1; } 100% { translate: 0 0; } }
+.rays { position: absolute; left: 50%; top: 45%; width: 160vmax; height: 160vmax; translate: -50% -50%; background: repeating-conic-gradient(from 0deg, rgba(255, 210, 80, .22) 0 6deg, transparent 6deg 18deg); mask: radial-gradient(circle, #000 0 18%, transparent 52%); -webkit-mask: radial-gradient(circle, #000 0 18%, transparent 52%); animation: raysSpin 3s linear both, govIn .6s ease both; }
+@keyframes raysSpin { to { rotate: 40deg; } }
+.p.gold { width: calc(10px * var(--s)); height: calc(10px * var(--s)); border-radius: 50%; background: radial-gradient(circle, #fff7c2, #ffcc33 50%, #c98a0b); box-shadow: 0 0 12px #ffcc33; translate: calc(-50% + var(--x)) calc(-50% + var(--y)); animation: pTwinkle 1.4s ease-in-out both; }
+.p.spark { font-size: calc(30px * var(--s)); translate: calc(-50% + var(--x)) calc(-50% + var(--y)); animation: pTwinkle 1.2s ease-in-out both; }
+@keyframes pTwinkle { 0% { scale: 0; opacity: 0; } 40% { scale: 1.2; opacity: 1; } 100% { scale: .4; opacity: 0; } }
+/* кольцо: коробочка открывается */
+.go-box { position: relative; width: clamp(110px, 16vw, 160px); height: clamp(100px, 14vw, 140px); }
+.go-box .base { position: absolute; left: 0; right: 0; bottom: 0; height: 55%; border-radius: 12px; background: linear-gradient(#c2185b, #880e4f); box-shadow: inset 0 -6px 0 rgba(0,0,0,.25), 0 14px 30px rgba(0,0,0,.4); }
+.go-box .lid { position: absolute; left: -4%; right: -4%; top: 22%; height: 30%; border-radius: 12px 12px 6px 6px; background: linear-gradient(#e91e63, #ad1457); transform-origin: 50% 100%; animation: lidOpen .6s cubic-bezier(.3,1.4,.5,1) .55s both; z-index: 2; }
+@keyframes lidOpen { to { rotate: -105deg; translate: -10% -30%; } }
+.go-box .go-e { position: absolute; left: 50%; bottom: 30%; translate: -50% 0; font-size: clamp(56px, 8vw, 84px); animation: ringUp .7s cubic-bezier(.2,1.6,.4,1) .85s both; z-index: 1; }
+@keyframes ringUp { from { translate: -50% 40%; scale: .3; opacity: 0; } to { translate: -50% -30%; scale: 1; opacity: 1; } }
+.g-ring { background: radial-gradient(circle at 50% 45%, rgba(255, 90, 160, .28), rgba(8, 8, 14, .6) 60%); }
+.p.late { animation-name: pFly; }
+.p.conf { width: 8px; height: 14px; border-radius: 2px; background: var(--c); translate: -50% -50%; animation: pConf 1.6s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes pConf { 0% { translate: -50% -50%; opacity: 0; } 15% { opacity: 1; } 100% { translate: calc(-50% + var(--x)) calc(-50% + var(--y) + 30vh); rotate: var(--r); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .go-fx { display: none; } .gift-ov * { animation-duration: .01ms !important; } }
+html.v-calm .gift-ov .go-fx { display: none; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
@@ -7008,6 +7144,73 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     }
   });
 
+  // server/gifts.js
+  var require_gifts = __commonJS({
+    "server/gifts.js"(exports, module) {
+      var MIN = 60 * 1e3;
+      var CATALOG = {
+        kiss: { price: 20, ms: 5 * MIN },
+        rose: { price: 50, ms: 5 * MIN },
+        beer: { price: 100, ms: 10 * MIN },
+        slap: { price: 150, ms: 5 * MIN },
+        whisky: { price: 200, ms: 10 * MIN },
+        tomato: { price: 250, ms: 5 * MIN },
+        poop: { price: 500, ms: 10 * MIN, anon: true },
+        crown: { price: 1e3, ms: 15 * MIN, crown: true },
+        ring: { price: 1500, ms: 15 * MIN }
+      };
+      var ORDER = Object.keys(CATALOG);
+      var live = (slot, now) => slot && slot.until > now;
+      function send(room2, fromPid, msg, Wallet, now = Date.now()) {
+        const id = String(msg.gift || "");
+        const g = CATALOG[id];
+        if (!g) return "\u0422\u0430\u043A\u043E\u0433\u043E \u043F\u043E\u0434\u0430\u0440\u043A\u0430 \u043D\u0435\u0442";
+        const to = String(msg.to || "");
+        if (to === fromPid) return "\u0421\u0435\u0431\u0435 \u0434\u0430\u0440\u0438\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F";
+        if (!room2.players.has(to)) return "\u042D\u0442\u043E\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430 \u043D\u0435\u0442 \u0432 \u043A\u043E\u043C\u043D\u0430\u0442\u0435";
+        const from = room2.players.get(fromPid);
+        room2.giftNonces = room2.giftNonces || /* @__PURE__ */ new Map();
+        const nonce = String(msg.nonce || "");
+        if (nonce && room2.giftNonces.has(nonce)) return { dup: true };
+        room2.gifts = room2.gifts || /* @__PURE__ */ new Map();
+        const cur = room2.gifts.get(to) || {};
+        if (g.crown && live(cur.crown, now)) return "\u0423 \u0438\u0433\u0440\u043E\u043A\u0430 \u0443\u0436\u0435 \u0435\u0441\u0442\u044C \u043A\u043E\u0440\u043E\u043D\u0430 \u2014 \u0435\u0451 \u043D\u0435\u043B\u044C\u0437\u044F \u043F\u0435\u0440\u0435\u0431\u0438\u0442\u044C";
+        if (!Wallet.spend(from.wallet, g.price)) return `\u041D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u043C\u043E\u043D\u0435\u0442: \u043D\u0443\u0436\u043D\u043E ${g.price}, \u0443 \u0432\u0430\u0441 ${Wallet.balance(from.wallet)}`;
+        if (nonce) {
+          room2.giftNonces.set(nonce, now);
+          if (room2.giftNonces.size > 300) room2.giftNonces.delete(room2.giftNonces.keys().next().value);
+        }
+        const slot = { id, at: now, until: now + g.ms };
+        if (g.crown) cur.crown = slot;
+        else cur.gift = slot;
+        room2.gifts.set(to, cur);
+        return {
+          eid: `${now.toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+          gift: id,
+          to,
+          from: g.anon ? null : fromPid,
+          // какашка — анонимно: отправителя не видит никто
+          at: now,
+          ms: g.ms
+        };
+      }
+      function view(room2, now = Date.now()) {
+        const out = {};
+        if (!room2.gifts) return out;
+        for (const [pid, s] of room2.gifts) {
+          const v = {};
+          if (live(s.gift, now)) v.gift = s.gift;
+          if (live(s.crown, now)) v.crown = s.crown;
+          if (v.gift || v.crown) out[pid] = v;
+          else room2.gifts.delete(pid);
+        }
+        return out;
+      }
+      var forget = (room2, pid) => room2.gifts && room2.gifts.delete(pid);
+      module.exports = { CATALOG, ORDER, send, view, forget };
+    }
+  });
+
   // demo/entry.js
   var GAMES = {
     codenames: require_codenames(),
@@ -7023,6 +7226,17 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
   var Tour = require_tournament();
   var Session = require_session();
   var Radio = require_radio();
+  var Gifts = require_gifts();
+  var demoCoins = /* @__PURE__ */ new Map();
+  var DemoWallet = {
+    balance: (k) => demoCoins.has(k) ? demoCoins.get(k) : 2e3,
+    spend(k, n) {
+      const b = DemoWallet.balance(k);
+      if (b < n) return false;
+      demoCoins.set(k, b - n);
+      return true;
+    }
+  };
   window.AVATAR_BASE = null;
   var META = Object.entries(GAMES).map(([id, g]) => ({ id, ...g.meta }));
   var origFetch = window.fetch ? window.fetch.bind(window) : null;
@@ -7050,7 +7264,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     gameType: "codenames",
     game: null,
     timers: /* @__PURE__ */ new Map(),
-    chat: [],
+    gifts: /* @__PURE__ */ new Map(),
     tour: null,
     suspended: null
   };
@@ -7110,12 +7324,13 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     return {
       me: pid,
       serverNow: Date.now(),
+      coins: DemoWallet.balance(pid),
       room: {
         code: room.code,
         hostId: room.hostId,
         gameType: room.gameType,
         players: room.order.map((id) => room.players.get(id)).map((p) => ({ id: p.id, name: p.name, real: p.real || "", connected: p.connected, avatar: p.avatar })),
-        chat: room.chat.slice(-50),
+        gifts: Gifts.view(room),
         radio: Radio.view(room),
         tour: Tour.publicTour(room.tour),
         suspended: Session.publicSuspended(room)
@@ -7182,10 +7397,13 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         if (msg.real != null) p.real = String(msg.real).trim().slice(0, 40);
         return;
       }
-      case "chat":
-        if (String(msg.text || "").trim())
-          room.chat.push({ id: uid(), pid, name: room.players.get(pid).name, text: String(msg.text).slice(0, 300), at: Date.now() });
+      case "gift": {
+        for (const p of room.players.values()) p.wallet = p.id;
+        const r = Gifts.send(room, pid, msg, DemoWallet);
+        if (typeof r === "string") return r;
+        if (!r.dup) setTimeout(() => fire("gift", r), 0);
         return;
+      }
       case "radio":
         return Radio.handle(room, pid, msg, room.hostId === pid);
       case "leaveRoom":
@@ -7920,6 +8138,44 @@ void main(){
     },
     strike: () => noise(0.12, { gain: 0.1, from: 3000, to: 1200, q: 2 }),
     open: () => tone(600, 0.08, { type: 'sine', gain: 0.08, to: 900 }),
+    // ---- подарки ----
+    coin: () => [1318, 1760].forEach((f, i) => tone(f, 0.12, { type: 'square', gain: 0.05, delay: i * 0.07 })),
+    gift_kiss: () => {
+      tone(900, 0.06, { gain: 0.16, to: 1500 });
+      tone(1100, 0.06, { gain: 0.14, to: 1700, delay: 0.12 });
+    },
+    gift_rose: () => [N.E5, N.G5, N.C6].forEach((f, i) => tone(f, 0.25, { type: 'triangle', gain: 0.12, delay: i * 0.08 })),
+    gift_beer: () => {
+      noise(0.35, { gain: 0.12, from: 300, to: 1200, q: 3 });
+      tone(220, 0.12, { type: 'triangle', gain: 0.12, delay: 0.25, to: 330 });
+    },
+    // смешной шлепок: удар + «бэмс»
+    gift_slap: () => {
+      noise(0.09, { gain: 0.35, from: 2500, to: 600, q: 0.8 });
+      tone(160, 0.18, { type: 'square', gain: 0.12, to: 70, delay: 0.02 });
+      tone(700, 0.25, { type: 'sine', gain: 0.08, to: 1400, delay: 0.12 });
+    },
+    gift_whisky: () => [2637, 3136, 2637].forEach((f, i) => tone(f, 0.18, { type: 'sine', gain: 0.07, delay: i * 0.09 })),
+    // помидор: мокрый «шмяк»
+    gift_tomato: () => {
+      tone(420, 0.06, { type: 'sine', gain: 0.12, to: 900 });
+      noise(0.22, { gain: 0.3, from: 900, to: 180, q: 0.7, delay: 0.32 });
+    },
+    // какашка: мультяшное «пффф» вниз
+    gift_poop: () => {
+      tone(180, 0.45, { type: 'sawtooth', gain: 0.08, to: 70 });
+      noise(0.3, { gain: 0.14, from: 400, to: 120, q: 1.5, delay: 0.05 });
+    },
+    // корона: фанфары
+    gift_crown: () => {
+      const f = [N.C5, N.C5, N.G5, N.C6];
+      const d = [0, 0.12, 0.24, 0.42];
+      f.forEach((x, i) => {
+        tone(x, i === 3 ? 0.6 : 0.14, { type: 'sawtooth', gain: 0.07, delay: d[i] });
+        tone(x * 2, i === 3 ? 0.6 : 0.14, { type: 'triangle', gain: 0.05, delay: d[i] });
+      });
+    },
+    gift_ring: () => [N.C5, N.E5, N.G5, N.C6, N.E6, N.G5 * 2].forEach((f, i) => tone(f, 0.4, { type: 'triangle', gain: 0.1, delay: 0.35 + i * 0.09 })),
   };
 
   window.Sound = {
@@ -8301,8 +8557,7 @@ window.RULES = {
     selected: null,
     settings: {},
     showRules: false,
-    chatOpen: false,
-    chatSeen: 0,
+    gs: null, // меню подарков: { step: 'list' | 'to' | 'ok', id, to, busy }
     menu: null, // открытое всплывающее меню: 'theme' | 'p:<pid>'
     hideCard: false,
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
@@ -8491,6 +8746,45 @@ window.RULES = {
     }
     return null;
   }
+  // ===== Подарки =====
+  // place: on — прямо на аватарке (след, пятно), side — рядом в углу, crown — отдельный слот сверху
+  const GIFTS = {
+    kiss: { e: '💋', name: 'Поцелуй', price: 20, min: 5, place: 'on', say: (a, b) => `${a} поцеловал ${b}!`, dur: 'Поцелуй на 5 минут' },
+    rose: { e: '🌹', name: 'Роза', price: 50, min: 5, place: 'side', say: (a, b) => `${a} подарил розу ${b}!`, dur: 'Роза на 5 минут' },
+    beer: { e: '🍺', name: 'Пиво', price: 100, min: 10, place: 'side', say: (a, b) => `${a} угостил ${b} пивом!`, dur: 'Пиво на 10 минут' },
+    slap: { e: '🥊', mark: '💢', name: 'Дать леща', price: 150, min: 5, place: 'on', say: (a, b) => `${a} отвесил леща ${b}!`, dur: 'След от леща на 5 минут' },
+    whisky: { e: '🥃', name: 'Виски', price: 200, min: 10, place: 'side', say: (a, b) => `${a} налил виски для ${b}!`, dur: 'Виски на 10 минут' },
+    tomato: { e: '🍅', name: 'Помидор', price: 250, min: 5, place: 'on', say: (a, b) => `${a} закидал помидорами ${b}!`, dur: 'Помидор на 5 минут' },
+    poop: { e: '💩', name: 'Какашка', price: 500, min: 10, place: 'on', anon: true, say: (_a, b) => `Кто-то обгадил ${b}!`, dur: 'Какашка на 10 минут' },
+    crown: { e: '👑', name: 'Корона', price: 1000, min: 15, place: 'crown', say: (a, b) => `${a} короновал ${b}!`, dur: 'Корона на 15 минут' },
+    ring: { e: '💍', name: 'Предложение руки и сердца', short: 'Предложение', price: 1500, min: 15, place: 'side', say: (a, b) => `${a} сделал предложение ${b}!`, dur: 'Кольцо на 15 минут' },
+  };
+  const GIFT_ORDER = Object.keys(GIFTS);
+  const giftsOf = (pid) => {
+    const x = S?.room?.gifts?.[pid];
+    if (!x) return null;
+    const t = now();
+    const gift = x.gift && x.gift.until > t ? x.gift : null;
+    const crown = x.crown && x.crown.until > t ? x.crown : null;
+    return gift || crown ? { gift, crown } : null;
+  };
+  // Подарок на аватарке: размер — от размера аватарки (--s), без таймеров
+  function giftDeco(pid, px) {
+    const x = giftsOf(pid);
+    if (!x) return '';
+    let h = '';
+    const fresh = (slot) => (now() - slot.at < 2600 ? `fresh" style="--ge:-${Math.max(0, now() - slot.at)}ms` : '');
+    if (x.gift) {
+      const g = GIFTS[x.gift.id];
+      if (g) {
+        const inner = x.gift.id === 'tomato' ? '<i class="splat"></i>' : x.gift.id === 'slap' ? `<i class="slap-mark"></i><b>${g.mark}</b>` : g.e;
+        h += `<span class="gft p-${g.place} g-${x.gift.id} ${fresh(x.gift)}" aria-hidden="true">${inner}</span>`;
+      }
+    }
+    if (x.crown) h += `<span class="gft p-crown ${fresh(x.crown)}" aria-hidden="true">👑</span>`;
+    return h;
+  }
+
   // Аватар: своё фото или инициалы. В командных играх — кольцо цвета команды.
   // Реальное имя (если указано) показывается при наведении — см. realTip ниже.
   function avaHtml(p, size = 'sm', cls = '') {
@@ -8499,7 +8793,12 @@ window.RULES = {
     const team = p?.id ? bgFor(p.id) : null;
     const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" decoding="sync" onerror="this.remove()">` : '';
     const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
-    return `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${typeof size === 'number' && px > 44 ? `;font-size:${Math.round(px * 0.34)}px` : ''}${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
+    const ava = `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${typeof size === 'number' && px > 44 ? `;font-size:${Math.round(px * 0.34)}px` : ''}${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
+    const deco = p?.id ? giftDeco(p.id, px) : '';
+    if (!deco) return ava;
+    const hit = giftsOf(p.id)?.gift;
+    const shake = hit && ['slap', 'tomato'].includes(hit.id) && now() - hit.at < 1200 ? ` hit" style="--s:${px}px;--ge:-${now() - hit.at}ms` : `" style="--s:${px}px`;
+    return `<span class="ava-gw${shake}">${ava}${deco}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -8918,6 +9217,76 @@ window.RULES = {
     connected = false;
     render();
   });
+  // ===== Объявления о подарках: затемнение + размытие, крупный текст, анимация; по очереди =====
+  const annQ = [];
+  let annBusy = false;
+  socket.on('gift', (ev) => {
+    if (!S) return;
+    annQ.push(ev);
+    playAnn();
+    setTimeout(render, 30); // подарок на аватарке появится с анимацией
+  });
+  socket.on('coins', ({ add }) => {
+    toast(`+${add} монет за время в игре`, 'coinup');
+    Sound.play('coin');
+  });
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  // Частицы для каждого подарка — чем дороже, тем богаче
+  function giftFx(id) {
+    const many = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join('');
+    const P = (cls, html, vars) => `<i class="p ${cls}" style="${Object.entries(vars).map(([k, v]) => `--${k}:${v}`).join(';')}">${html}</i>`;
+    switch (id) {
+      case 'kiss':
+        return many(12, () => P('heart', '❤️', { x: `${rnd(-45, 45)}vw`, y: `${rnd(-40, -10)}vh`, d: `${rnd(0, 300)}ms`, r: `${rnd(-40, 40)}deg`, s: rnd(0.6, 1.3).toFixed(2) }));
+      case 'rose':
+        return many(26, () => P('petal', '', { x: `${rnd(0, 100)}vw`, d: `${rnd(0, 500)}ms`, r: `${rnd(0, 360)}deg`, dx: `${rnd(-12, 12)}vw`, s: rnd(0.6, 1.4).toFixed(2) }));
+      case 'beer':
+        return many(18, () => P('bubble', '', { x: `${rnd(-14, 14)}vw`, d: `${rnd(0, 600)}ms`, s: rnd(0.4, 1.2).toFixed(2) }));
+      case 'slap':
+        return P('boom', '💥', { x: '0vw', d: '330ms', s: 1 });
+      case 'whisky':
+        return many(8, () => P('ice', '🧊', { x: `${rnd(-30, 30)}vw`, y: `${rnd(-30, 20)}vh`, d: `${rnd(0, 300)}ms`, r: `${rnd(-60, 60)}deg`, s: rnd(0.6, 1).toFixed(2) }));
+      case 'tomato':
+        return many(14, () => P('splash', '', { x: `${rnd(-30, 30)}vw`, y: `${rnd(-25, 25)}vh`, d: `${380 + rnd(0, 120)}ms`, s: rnd(0.5, 1.6).toFixed(2), r: `${rnd(0, 360)}deg` }));
+      case 'poop':
+        return many(16, () => P('goo', '', { x: `${rnd(2, 98)}vw`, y: `${rnd(0, 55)}vh`, d: `${rnd(0, 250)}ms`, s: rnd(0.6, 1.8).toFixed(2) }));
+      case 'crown':
+        return '<i class="rays"></i>' + many(34, () => P('gold', '', { x: `${rnd(-48, 48)}vw`, y: `${rnd(-45, 45)}vh`, d: `${rnd(200, 1100)}ms`, s: rnd(0.4, 1.3).toFixed(2) })) + many(10, () => P('spark', '✨', { x: `${rnd(-35, 35)}vw`, y: `${rnd(-35, 35)}vh`, d: `${rnd(300, 1300)}ms`, s: rnd(0.6, 1.2).toFixed(2) }));
+      case 'ring':
+        return many(16, () => P('heart late', '💖', { x: `${rnd(-45, 45)}vw`, y: `${rnd(-45, -5)}vh`, d: `${rnd(900, 1500)}ms`, r: `${rnd(-40, 40)}deg`, s: rnd(0.6, 1.4).toFixed(2) })) + many(40, (i) => P('conf', '', { x: `${rnd(-50, 50)}vw`, y: `${rnd(-50, 30)}vh`, d: `${rnd(900, 1400)}ms`, r: `${rnd(0, 720)}deg`, c: ['#f2c14b', '#ff6aa2', '#7ad1ff', '#9dff9b', '#fff'][i % 5] }));
+    }
+    return '';
+  }
+  function playAnn() {
+    if (annBusy || !annQ.length) return;
+    const ev = annQ.shift();
+    const g = GIFTS[ev.gift];
+    if (!g || now() - ev.at > 15000) return playAnn(); // старое объявление (вкладка спала) — не показываем
+    annBusy = true;
+    const a = ev.from ? `<b>${esc(player(ev.from)?.name || 'Кто-то')}</b>` : '';
+    const b = `<b>${esc(player(ev.to)?.name || 'игрок')}</b>`;
+    const ms = { crown: 2800, ring: 3000, poop: 1900, tomato: 1900, slap: 1800 }[ev.gift] || 1600;
+    const calm = document.documentElement.classList.contains('v-calm');
+    const el = document.createElement('div');
+    el.className = `gift-ov g-${ev.gift} ${ev.to === S.me ? 'to-me' : ''}`;
+    el.style.setProperty('--ms', ms + 'ms');
+    el.setAttribute('role', 'status');
+    el.innerHTML = `<div class="go-fx" aria-hidden="true">${calm ? '' : giftFx(ev.gift)}</div>
+      <div class="go-card">
+        ${ev.gift === 'ring' ? '<div class="go-box" aria-hidden="true"><i class="lid"></i><i class="base"></i><span class="go-e">💍</span></div>' : `<div class="go-e">${g.e}</div>`}
+        <div class="go-t">${g.say(a, b)}</div>
+        <div class="go-d">${g.dur}</div>
+      </div>`;
+    document.body.appendChild(el);
+    Sound.play('gift_' + ev.gift);
+    setTimeout(() => el.classList.add('out'), ms - 380);
+    setTimeout(() => {
+      el.remove();
+      annBusy = false;
+      playAnn();
+    }, ms);
+  }
+
   socket.on('kicked', () => {
     S = null;
     syncRadio();
@@ -8929,8 +9298,6 @@ window.RULES = {
   function detectEvents(prev, next) {
     if (!prev) return;
     const me = next.me;
-    const pc = prev.room.chat, nc = next.room.chat;
-    if (nc.length > pc.length && nc[nc.length - 1]?.pid !== me) Sound.play('pop');
     const a = prev.game, b = next.game;
     if (!b) return;
     if (!a || a.type !== b.type) return Sound.play('start');
@@ -9165,9 +9532,6 @@ window.RULES = {
 
   function render() {
     const keep = snapshotInputs();
-    const chatEl = $app.querySelector('.chat-log');
-    const chatScroll = chatEl?.scrollTop;
-    const nearBottom = !chatEl || chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 40;
     const sk = screenKey();
     ui.enter = sk !== ui.lastScreen;
     if (ui.enter) ui.screenAt = Date.now();
@@ -9200,8 +9564,6 @@ window.RULES = {
       if (ui.rulesTabScroll) $app.querySelector('.rl-tabs .on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
       ui.rulesTabScroll = false;
     }
-    const c = $app.querySelector('.chat-log');
-    if (c) c.scrollTop = nearBottom ? c.scrollHeight : chatScroll;
     $app.querySelectorAll('.cn-col').forEach((el) => {
       if (colScroll[el.className] != null) el.scrollTop = colScroll[el.className];
     });
@@ -9618,7 +9980,7 @@ window.RULES = {
       <main class="stage ${ui.enter ? 'enter' : ''}">
         ${stage}
       </main>
-      ${renderChat()}
+      ${renderDock()}
       ${ui.showRules ? renderRules() : ''}
       ${renderTourModal()}
       ${
@@ -9689,35 +10051,61 @@ window.RULES = {
     </div>`;
   }
 
-  function renderChat() {
-    const r = S.room;
+  // Нижний правый угол: кубок марафона, управление хоста, подарки (вместо прежнего чата)
+  function renderDock() {
     const g = S.game;
-    if (ui.chatOpen) ui.chatSeen = r.chat.length;
-    const unread = Math.max(0, r.chat.length - ui.chatSeen);
     const hostTools = g && isHost();
     const ctlOpen = hostTools && ui.ctlOpen; // панель хоста открыта, пока её не закроют шестерёнкой
-    return `<div class="chat-dock ${ui.chatOpen ? 'open' : ''}">
-      ${
-        ui.chatOpen
-          ? `<div class="chat-panel card">
-              <div class="chat-h"><b>${ic('chat', 16)} Чат</b><button class="icon-x" data-act="chat" title="Свернуть">${ic('chevron', 18)}</button></div>
-              <div class="chat-log">${r.chat.length ? r.chat.map((m) => `<div class="msg">${pa(m.pid, 'xs')}<div><b>${esc(m.name)}</b> ${esc(m.text)}</div><time class="msg-t" title="${new Date(m.at).toLocaleString('ru-RU')}">${new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</time></div>`).join('') : '<div class="muted small">Сообщений пока нет</div>'}</div>
-              <form data-form="chat" class="chat-form"><input class="inp" name="text" data-keep="chat" maxlength="300" placeholder="Сообщение…" autocomplete="off"/><button class="btn sm primary icon-btn" title="Отправить">${ic('send', 16)}</button></form>
-            </div>`
-          : ''
-      }
+    const giftOpen = ui.menu === 'gift';
+    return `<div class="chat-dock">
       <div class="fab-row">
-        ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''} ${ui.chatOpen ? '' : 'up'}" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
+        ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''} up" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
         ${
           hostTools
             ? `<div class="ctl-wrap">${ctlOpen || ui.ctlClosing ? renderControls(g) : ''}
                <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="ctl-toggle" title="${ctlOpen ? 'Скрыть управление игрой' : 'Управление игрой (хост)'}" aria-expanded="${!!ctlOpen}">${ic(ctlOpen ? 'x' : 'gear', 22)}${g.clock?.paused && !ctlOpen ? '<i class="badge warn-b">II</i>' : ''}</button></div>`
             : ''
         }
-        <button class="chat-fab" data-act="chat" title="${ui.chatOpen ? 'Свернуть чат' : 'Чат'}">${ic(ui.chatOpen ? 'x' : 'chat', 22)}${unread && !ui.chatOpen ? `<i class="badge">${unread > 9 ? '9+' : unread}</i>` : ''}</button>
+        <div class="gift-wrap" data-pop>
+          ${giftOpen ? renderGiftMenu() : ''}
+          <button class="chat-fab gift-fab ${giftOpen ? 'on' : ''}" data-act="gift-open" ${giftOpen ? "" : `title="Подарки и шалости"`} aria-expanded="${giftOpen}">${ic(giftOpen ? 'x' : 'heartf', 22)}</button>
+        </div>
       </div>
     </div>`;
   }
+
+  // Меню подарков: выбор подарка → кому → подтверждение
+  function renderGiftMenu() {
+    const coins = S.coins || 0;
+    const st = ui.gs || { step: 'list' };
+    const g = st.id && GIFTS[st.id];
+    const head = `<div class="gm-head"><span class="gm-coins">${coinIc()}<b data-cnt="coins">${coins}</b></span><small>+300 за каждые 10 минут игры</small></div>`;
+    let body = '';
+    if (st.step === 'list' || !g) {
+      body = `<div class="gm-title">Подарки и шалости</div>
+        <div class="gm-grid">${GIFT_ORDER.map((id) => {
+          const x = GIFTS[id];
+          return `<button class="gm-item ${x.price > coins ? 'poor' : ''}" data-act="gift-pick" data-id="${id}"><span class="gm-e">${x.e}</span><span class="gm-n">${esc(x.short || x.name)}</span><span class="gm-p">${coinIc()}${x.price}</span></button>`;
+        }).join('')}</div>`;
+    } else if (st.step === 'to') {
+      const others = S.room.players.filter((p) => p.id !== S.me);
+      body = `<div class="gm-title"><button class="gm-back" data-act="gift-back" title="Назад">${ic('back', 16)}</button>${g.e} ${esc(g.name)} — кому?</div>
+        <div class="gm-people">${others.length ? others.map((p) => {
+          const crowned = st.id === 'crown' && giftsOf(p.id)?.crown;
+          return `<button class="gm-person ${crowned ? 'off' : ''}" data-act="gift-to" data-pid="${p.id}" ${crowned ? 'disabled' : ''}>${pa(p.id, 34, 'round')}<b>${nm(p.id)}</b>${crowned ? '<small>уже с короной</small>' : p.connected === false ? '<small>не в сети</small>' : ''}</button>`;
+        }).join('') : '<p class="muted small">В комнате пока никого, кроме вас</p>'}</div>`;
+    } else {
+      body = `<div class="gm-title"><button class="gm-back" data-act="gift-back" title="Назад">${ic('back', 16)}</button>Подтвердите</div>
+        <div class="gm-ok">
+          <span class="gm-ok-e">${g.e}</span>
+          <div class="gm-ok-t"><b>${esc(g.name)}</b><span>для ${pa(st.to, 22, 'round')} <b>${nm(st.to)}</b></span>${g.anon ? '<small>анонимно — никто не узнает, что это вы</small>' : ''}</div>
+          <span class="gm-ok-p">${coinIc()}${g.price}</span>
+        </div>
+        <div class="gm-btns"><button class="btn ghost" data-act="gift-back">Отмена</button><button class="btn primary" data-act="gift-send" ${st.busy ? 'disabled' : ''}>${st.busy ? 'Отправляем…' : `Подарить за ${g.price}`}</button></div>`;
+    }
+    return `<div class="pop gift-pop ${ui.popAnim ? 'anim' : ''}">${head}${body}</div>`;
+  }
+  const coinIc = () => '<i class="coin" aria-hidden="true"></i>';
 
   function renderMeModal() {
     const me = player(S.me) || {};
@@ -11536,10 +11924,46 @@ window.RULES = {
       applyView();
       render();
     },
-    chat: () => {
-      ui.chatOpen = !ui.chatOpen;
+    'gift-open': () => {
+      ui.menu = ui.menu === 'gift' ? null : 'gift';
+      ui.gs = { step: 'list' };
+      ui.popAnim = !!ui.menu;
+      if (ui.menu) Sound.play('open');
       render();
-      if (ui.chatOpen) $app.querySelector('[data-keep="chat"]')?.focus();
+    },
+    'gift-pick': (d) => {
+      const g = GIFTS[d.id];
+      if (!g) return;
+      if (g.price > (S.coins || 0)) {
+        Sound.play('error');
+        return toast(`Не хватает монет: ${g.name} стоит ${g.price}, у вас ${S.coins || 0}. Монеты дают за время в игре — 300 каждые 10 минут`);
+      }
+      ui.gs = { step: 'to', id: d.id };
+      render();
+    },
+    'gift-to': (d) => {
+      ui.gs = { ...ui.gs, step: 'ok', to: d.pid };
+      render();
+    },
+    'gift-back': () => {
+      const st = ui.gs || {};
+      ui.gs = st.step === 'ok' ? { step: 'to', id: st.id } : { step: 'list' };
+      render();
+    },
+    'gift-send': async () => {
+      const st = ui.gs;
+      if (!st || st.busy || !st.id || !st.to) return; // защита от двойного нажатия
+      st.busy = true;
+      st.nonce = st.nonce || Math.random().toString(36).slice(2) + Date.now().toString(36);
+      render();
+      const r = await emit('gift', { gift: st.id, to: st.to, nonce: st.nonce });
+      if (r.error) {
+        st.busy = false;
+        return render();
+      }
+      ui.menu = null;
+      ui.gs = null;
+      render();
     },
     lofi: () => {
       if (!music.on) return startMusic();
@@ -11862,12 +12286,6 @@ window.RULES = {
         LS.set('pg_real', real);
         ui.meEdit = false;
         render();
-      }
-    } else if (kind === 'chat') {
-      const text = String(fd.get('text') || '').trim();
-      if (text) {
-        clear();
-        emit('chat', { text });
       }
     } else if (kind === 'start') {
       if (S.room.suspended && !(await ask({ title: 'Начать новую игру?', text: 'Игра на паузе будет удалена.', ok: 'Начать', danger: true, icon: 'play' }))) return;

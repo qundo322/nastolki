@@ -122,6 +122,44 @@
     },
     strike: () => noise(0.12, { gain: 0.1, from: 3000, to: 1200, q: 2 }),
     open: () => tone(600, 0.08, { type: 'sine', gain: 0.08, to: 900 }),
+    // ---- подарки ----
+    coin: () => [1318, 1760].forEach((f, i) => tone(f, 0.12, { type: 'square', gain: 0.05, delay: i * 0.07 })),
+    gift_kiss: () => {
+      tone(900, 0.06, { gain: 0.16, to: 1500 });
+      tone(1100, 0.06, { gain: 0.14, to: 1700, delay: 0.12 });
+    },
+    gift_rose: () => [N.E5, N.G5, N.C6].forEach((f, i) => tone(f, 0.25, { type: 'triangle', gain: 0.12, delay: i * 0.08 })),
+    gift_beer: () => {
+      noise(0.35, { gain: 0.12, from: 300, to: 1200, q: 3 });
+      tone(220, 0.12, { type: 'triangle', gain: 0.12, delay: 0.25, to: 330 });
+    },
+    // смешной шлепок: удар + «бэмс»
+    gift_slap: () => {
+      noise(0.09, { gain: 0.35, from: 2500, to: 600, q: 0.8 });
+      tone(160, 0.18, { type: 'square', gain: 0.12, to: 70, delay: 0.02 });
+      tone(700, 0.25, { type: 'sine', gain: 0.08, to: 1400, delay: 0.12 });
+    },
+    gift_whisky: () => [2637, 3136, 2637].forEach((f, i) => tone(f, 0.18, { type: 'sine', gain: 0.07, delay: i * 0.09 })),
+    // помидор: мокрый «шмяк»
+    gift_tomato: () => {
+      tone(420, 0.06, { type: 'sine', gain: 0.12, to: 900 });
+      noise(0.22, { gain: 0.3, from: 900, to: 180, q: 0.7, delay: 0.32 });
+    },
+    // какашка: мультяшное «пффф» вниз
+    gift_poop: () => {
+      tone(180, 0.45, { type: 'sawtooth', gain: 0.08, to: 70 });
+      noise(0.3, { gain: 0.14, from: 400, to: 120, q: 1.5, delay: 0.05 });
+    },
+    // корона: фанфары
+    gift_crown: () => {
+      const f = [N.C5, N.C5, N.G5, N.C6];
+      const d = [0, 0.12, 0.24, 0.42];
+      f.forEach((x, i) => {
+        tone(x, i === 3 ? 0.6 : 0.14, { type: 'sawtooth', gain: 0.07, delay: d[i] });
+        tone(x * 2, i === 3 ? 0.6 : 0.14, { type: 'triangle', gain: 0.05, delay: d[i] });
+      });
+    },
+    gift_ring: () => [N.C5, N.E5, N.G5, N.C6, N.E6, N.G5 * 2].forEach((f, i) => tone(f, 0.4, { type: 'triangle', gain: 0.1, delay: 0.35 + i * 0.09 })),
   };
 
   window.Sound = {
