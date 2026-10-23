@@ -13,7 +13,7 @@ const app = ['public/js/icons.js', 'public/js/fx.js', 'public/js/sound.js', 'pub
 // Иконки игр встраиваем в файл (data URI), чтобы демо работало без сервера
 const MIME = { webp: 'image/webp', mp3: 'audio/mpeg' };
 const assets = {};
-for (const dir of ['img/games']) {
+for (const dir of ['img/games', 'img/gifts', 'sfx']) {
   for (const f of fs.readdirSync(path.join(root, 'public', dir))) {
     const ext = f.split('.').pop();
     if (MIME[ext]) assets[`/${dir}/${f}`] = `data:${MIME[ext]};base64,` + fs.readFileSync(path.join(root, 'public', dir, f)).toString('base64');

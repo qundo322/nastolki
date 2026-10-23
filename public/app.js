@@ -36,6 +36,7 @@
     selected: null,
     settings: {},
     showRules: false,
+    gs: null, // меню подарков: { step: 'list' | 'to' | 'ok', id, to, busy }
     menu: null, // открытое всплывающее меню: 'theme' | 'p:<pid>'
     hideCard: false,
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
@@ -187,6 +188,9 @@
               <div class="ctl-h">${ic('volume', 14)} Звуки интерфейса</div>
               <div class="sfx-row"><button class="icon-x" data-act="sfx-mute" title="${Sound.vol ? 'Выключить' : 'Включить'}">${ic(Sound.vol ? 'volume' : 'mute', 18)}</button>
               <input type="range" min="0" max="100" step="1" value="${Sound.vol}" data-sfx aria-label="Громкость звуков"/><b class="sfx-v">${Sound.vol}</b></div>
+              <div class="ctl-h sfx-h2">${ic('heartf', 14)} Звуки подарков</div>
+              <div class="sfx-row"><span class="icon-x">${ic('heartf', 18)}</span>
+              <input type="range" min="0" max="100" step="1" value="${Sound.giftVol}" data-gsfx aria-label="Громкость звуков подарков"/><b class="gsfx-v">${Sound.giftVol}%</b></div>
             </div>`
           : ''
       }
@@ -224,8 +228,54 @@
     }
     return null;
   }
-  // Путь к статике (в демо — встроенные data URI)
+  // ===== Подарки =====
+  // place: on — прямо на аватарке (след, пятно), side — рядом в углу, crown — отдельный слот сверху
+  const GIFTS = {
+    kiss: { e: '💋', name: 'Поцелуй', price: 20, min: 5, place: 'on', say: (a, b) => `${a} поцеловал ${b}!`, dur: 'Поцелуй на 5 минут' },
+    rose: { e: '🌹', name: 'Роза', price: 50, min: 5, place: 'side', say: (a, b) => `${a} подарил розу ${b}!`, dur: 'Роза на 5 минут' },
+    beer: { e: '🍺', name: 'Пиво', price: 100, min: 10, place: 'side', say: (a, b) => `${a} угостил ${b} пивом!`, dur: 'Пиво на 10 минут' },
+    slap: { e: '🥊', mark: '💢', name: 'Дать леща', price: 150, min: 5, place: 'on', say: (a, b) => `${a} отвесил леща ${b}!`, dur: 'След от леща на 5 минут' },
+    whisky: { e: '🥃', name: 'Виски', price: 200, min: 10, place: 'side', say: (a, b) => `${a} налил виски для ${b}!`, dur: 'Виски на 10 минут' },
+    tomato: { e: '🍅', name: 'Помидор', price: 250, min: 5, place: 'on', say: (a, b) => `${a} закидал помидорами ${b}!`, dur: 'Помидор на 5 минут' },
+    poop: { e: '💩', name: 'Какашка', price: 500, min: 10, place: 'on', anon: true, say: (_a, b) => `Кто-то обгадил ${b}!`, dur: 'Какашка на 10 минут' },
+    crown: { e: '👑', name: 'Корона', price: 1000, min: 15, place: 'crown', say: (a, b) => `${a} короновал ${b}!`, dur: 'Корона на 15 минут' },
+    ring: { e: '💍', name: 'Предложение руки и сердца', short: 'Предложение', price: 1500, min: 15, place: 'side', say: (a, b) => `${a} сделал предложение ${b}!`, dur: 'Кольцо на 15 минут' },
+    bus: { e: '🚐', name: 'Бусификация', price: 2000, min: 15, place: 'side', say: (a, b) => `${a} отправил в учебку ${b}`, dur: 'Бусификация на 15 минут' },
+  };
+  // Картинка подарка (webp без фона); размер — 1em, поэтому везде работает прежний font-size и анимации
   const asset = (p) => (window.ASSET && window.ASSET[p]) || p;
+  const gImg = (id) => `<img class="gimg gi-${id}" src="${asset(`/img/gifts/${id}.webp`)}" alt="" draggable="false" decoding="async"/>`;
+  const GIFT_ORDER = Object.keys(GIFTS);
+  const giftsOf = (pid) => {
+    const x = S?.room?.gifts?.[pid];
+    if (!x) return null;
+    const t = now();
+    const gift = x.gift && x.gift.until > t ? x.gift : null;
+    const crown = x.crown && x.crown.until > t ? x.crown : null;
+    return gift || crown ? { gift, crown } : null;
+  };
+  // Подарок на аватарке: размер — от размера аватарки (--s), без таймеров
+  const GIFT_FLY_MS = 1000;
+  function giftDeco(pid, px) {
+    let x = giftsOf(pid);
+    if (!x) return '';
+    let h = '';
+    // подарок «летит» от дарителя: пока летит — на аватарке его нет, анимация появления — с момента посадки
+    const flying = (slot) => ui.giftFly && ui.giftFly[`${pid}:${slot.at}`] > Date.now();
+    const landAt = (slot) => slot.at + (ui.giftFly && ui.giftFly[`${pid}:${slot.at}`] ? GIFT_FLY_MS : 0);
+    const fresh = (slot) => (now() - landAt(slot) < 2600 ? `fresh" style="--ge:-${Math.max(0, now() - landAt(slot))}ms` : '');
+    if (x.gift && flying(x.gift)) x = { ...x, gift: null };
+    if (x.crown && flying(x.crown)) x = { ...x, crown: null };
+    if (x.gift) {
+      const g = GIFTS[x.gift.id];
+      if (g) {
+        const inner = x.gift.id === 'tomato' ? '<i class="splat"></i>' : x.gift.id === 'slap' ? `<i class="slap-mark"></i><b>${g.mark}</b>` : gImg(x.gift.id);
+        h += `<span class="gft p-${g.place} g-${x.gift.id} ${fresh(x.gift)}" aria-hidden="true">${inner}</span>`;
+      }
+    }
+    if (x.crown) h += `<span class="gft p-crown ${fresh(x.crown)}" aria-hidden="true">${gImg('crown')}</span>`;
+    return h;
+  }
 
   // Аватар: своё фото или инициалы. В командных играх — кольцо цвета команды.
   // Реальное имя (если указано) показывается при наведении — см. realTip ниже.
@@ -235,8 +285,12 @@
     const team = p?.id ? bgFor(p.id) : null;
     const img = p?.avatar ? `<img src="${esc(p.avatar)}" alt="" draggable="false" decoding="sync" onerror="this.remove()">` : '';
     const real = p?.real ? ` data-real="${esc(p.real)}" data-nick="${esc(name)}"` : '';
-    const ava = `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" style="--h:${hue(name)};width:${px}px;height:${px}px${typeof size === 'number' && px > 44 ? `;font-size:${Math.round(px * 0.34)}px` : ''}${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
-    return ava;
+    const ava = `<span class="ava ${size} ${cls} ${team ? 'tring' : ''}" ${p?.id ? `data-pid="${p.id}"` : ''} style="--h:${hue(name)};width:${px}px;height:${px}px${typeof size === 'number' && px > 44 ? `;font-size:${Math.round(px * 0.34)}px` : ''}${team ? `;--ring:${team}` : ''}"${real}><b>${esc(initials(name))}</b>${img}</span>`;
+    const deco = p?.id ? giftDeco(p.id, px) : '';
+    if (!deco.trim()) return ava;
+    const hit = giftsOf(p.id)?.gift;
+    const shake = hit && ['slap', 'tomato'].includes(hit.id) && now() - hit.at < 1200 ? ` hit" style="--s:${px}px;--ge:-${now() - hit.at}ms` : `" style="--s:${px}px`;
+    return `<span class="ava-gw${shake}">${ava}${deco}</span>`;
   }
   const pa = (pid, size = 'sm', cls = '') => avaHtml(player(pid) || { name: '?' }, size, cls);
   const who = (pid, size = 'xs') => `<span class="who-n">${pa(pid, size)}<span>${nm(pid)}</span></span>`;
@@ -655,6 +709,103 @@
     connected = false;
     render();
   });
+  // ===== Объявления о подарках: затемнение + размытие, крупный текст, анимация; по очереди =====
+  const annQ = [];
+  socket.on('gift', (ev) => {
+    if (!S) return;
+    annQ.push(ev);
+    playAnn();
+    setTimeout(render, 30); // подарок на аватарке появится с анимацией
+  });
+  socket.on('coins', ({ add, by }) => {
+    toast(by ? `+${add} монет от хоста` : `+${add} монет за время в игре`, 'coinup');
+    Sound.play('coin');
+  });
+  // Подарок летит из аватарки дарителя в аватарку получателя и приклеивается; внизу — небольшой тост
+  function avaRect(pid) {
+    if (!pid) return null;
+    let best = null;
+    for (const el of document.querySelectorAll(`.ava[data-pid="${pid}"]`)) {
+      const r = el.getBoundingClientRect();
+      if (!r.width || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) continue;
+      if (el.closest('.pop, .modal')) continue;
+      if (!best || r.width > best.width) best = r;
+    }
+    return best;
+  }
+  function giftToast(ev, g) {
+    let box = document.getElementById('gift-toasts');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'gift-toasts';
+      box.setAttribute('aria-live', 'polite');
+      document.body.appendChild(box);
+    }
+    const a = ev.from ? `<b>${esc(player(ev.from)?.name || 'Кто-то')}</b>` : '';
+    const b = `<b>${esc(player(ev.to)?.name || 'игрок')}</b>`;
+    const el = document.createElement('div');
+    el.className = `gift-toast g-${ev.gift} ${ev.to === S.me ? 'to-me' : ''}`;
+    el.innerHTML = `<span class="gt-e">${gImg(ev.gift)}</span><span class="gt-t"><span class="gt-s">${g.say(a, b)}${ev.to === S.me ? ' <em>это вам!</em>' : ''}</span><small>${g.dur}</small></span>`;
+    box.appendChild(el);
+    while (box.children.length > 3) box.firstChild.remove();
+    setTimeout(() => el.classList.add('out'), 3600);
+    setTimeout(() => el.remove(), 4000);
+  }
+  function playAnn() {
+    if (!annQ.length) return;
+    const ev = annQ.shift();
+    const g = GIFTS[ev.gift];
+    if (!g || now() - ev.at > 15000) return playAnn(); // старое событие (вкладка спала) — не показываем
+    const calm = document.documentElement.classList.contains('v-calm');
+    const to = avaRect(ev.to);
+    const from = avaRect(ev.from);
+    giftToast(ev, g);
+    if (calm || !to) {
+      Sound.play('gift_' + ev.gift);
+      render();
+      return playAnn();
+    }
+    ui.giftFly = ui.giftFly || {};
+    const key = `${ev.to}:${ev.at}`;
+    ui.giftFly[key] = Date.now() + GIFT_FLY_MS;
+    render();
+    // откуда: аватарка дарителя, а у анонимной какашки — снизу экрана
+    const sx = from ? from.left + from.width / 2 : innerWidth / 2;
+    const sy = from ? from.top + from.height / 2 : innerHeight + 40;
+    const toR = avaRect(ev.to) || to;
+    const ex = toR.left + toR.width / 2, ey = toR.top + toR.height / 2;
+    const size = Math.max(44, Math.min(72, toR.width * 0.8));
+    const fly = document.createElement('div');
+    fly.className = 'gift-fly';
+    fly.innerHTML = gImg(ev.gift);
+    fly.style.cssText = `width:${size}px;height:${size}px;left:${sx - size / 2}px;top:${sy - size / 2}px`;
+    document.body.appendChild(fly);
+    const dx = ex - sx, dy = ey - sy;
+    const lift = -Math.min(160, 60 + Math.hypot(dx, dy) * 0.25); // дуга вверх
+    const anim = fly.animate(
+      [
+        { transform: 'translate(0,0) scale(.4) rotate(-20deg)', opacity: 0 },
+        { transform: `translate(${dx * 0.15}px, ${dy * 0.15 + lift * 0.6}px) scale(1.15) rotate(-8deg)`, opacity: 1, offset: 0.2 },
+        { transform: `translate(${dx * 0.6}px, ${dy * 0.6 + lift}px) scale(1.05) rotate(10deg)`, offset: 0.6 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.55) rotate(0deg)`, opacity: 1 },
+      ],
+      { duration: GIFT_FLY_MS, easing: 'cubic-bezier(.45,.05,.4,1)', fill: 'forwards' },
+    );
+    anim.onfinish = () => {
+      fly.remove();
+      // «шлёп» на аватарке
+      const pop = document.createElement('div');
+      pop.className = 'gift-land';
+      pop.style.cssText = `left:${ex}px;top:${ey}px;--s:${toR.width}px`;
+      document.body.appendChild(pop);
+      setTimeout(() => pop.remove(), 700);
+      Sound.play('gift_' + ev.gift);
+      delete ui.giftFly[key];
+      render();
+    };
+    setTimeout(playAnn, 250); // следующий подарок может полететь почти сразу
+  }
+
   socket.on('kicked', () => {
     S = null;
     syncRadio();
@@ -1347,6 +1498,7 @@
           <div class="gtitle">${title}</div>
           ${peopleMenu()}
           <div class="top-actions">
+            <button class="btn sm ghost coin-chip" data-act="gift-open" title="Ваши монеты — открыть подарки">${coinIc()}<b data-cnt="coins-top">${S.coins || 0}</b></button>
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
             ${sfxMenu()}
             ${themeToggle()}
@@ -1404,6 +1556,7 @@
         const mine = p.id === S.me;
         const acts = [];
         if (mine) acts.push(`<button class="icon-x" data-act="me-open" title="Мой профиль: ник, реальное имя, фото">${ic('pencil', 16)}</button>`);
+        if (isHost()) acts.push(`<button class="icon-x coin-btn ${ui.grantFor === p.id ? 'on' : ''}" data-act="grant-open" data-pid="${p.id}" title="Начислить монеты">${coinIc()}</button>`);
         if (isHost() && !mine) {
           acts.push(`<button class="icon-x" data-act="makeHost" data-pid="${p.id}" title="Сделать хостом">${ic('crown', 16)}</button>`);
           acts.push(`<button class="icon-x danger" data-act="kick" data-pid="${p.id}" title="Выгнать">${ic('x', 16)}</button>`);
@@ -1414,7 +1567,7 @@
             <small>${p.connected ? tag || (p.id === r.hostId ? 'хост' : 'в комнате') : 'офлайн'}</small></div>
           <div class="pp-acts">${acts.join('')}</div>
         </div>
-`;
+        ${isHost() && ui.grantFor === p.id ? `<div class="pp-grant"><span class="muted small">Начислить ${mine ? 'себе' : esc(p.name)}:</span>${[100, 300, 500, 1000].map((n) => `<button class="btn xs ghost" data-act="grant" data-pid="${p.id}" data-n="${n}">+${n}</button>`).join('')}</div>` : ''}`;
       })
       .join('');
     return `<div class="menu-wrap" data-pop>
@@ -1433,11 +1586,12 @@
     </div>`;
   }
 
-  // Нижний правый угол: кубок марафона, управление хоста
+  // Нижний правый угол: кубок марафона, управление хоста, подарки (вместо прежнего чата)
   function renderDock() {
     const g = S.game;
     const hostTools = g && isHost();
     const ctlOpen = hostTools && ui.ctlOpen; // панель хоста открыта, пока её не закроют шестерёнкой
+    const giftOpen = ui.menu === 'gift';
     return `<div class="chat-dock">
       <div class="fab-row">
         ${tour() && tour().phase !== 'final' ? `<button class="chat-fab trophy-fab ${ui.showTable ? 'on' : ''} up" data-act="tour-table" title="Таблица марафона">${ic('trophy', 22)}</button>` : ''}
@@ -1447,10 +1601,46 @@
                <button class="chat-fab gear ${ctlOpen ? 'on' : ''}" data-act="ctl-toggle" title="${ctlOpen ? 'Скрыть управление игрой' : 'Управление игрой (хост)'}" aria-expanded="${!!ctlOpen}">${ic(ctlOpen ? 'x' : 'gear', 22)}${g.clock?.paused && !ctlOpen ? '<i class="badge warn-b">II</i>' : ''}</button></div>`
             : ''
         }
+        <div class="gift-wrap" data-pop>
+          ${giftOpen ? renderGiftMenu() : ''}
+          <button class="chat-fab gift-fab ${giftOpen ? 'on' : ''}" data-act="gift-open" ${giftOpen ? "" : `title="Подарки и шалости"`} aria-expanded="${giftOpen}">${ic(giftOpen ? 'x' : 'heartf', 22)}</button>
+        </div>
       </div>
     </div>`;
   }
 
+  // Меню подарков: выбор подарка → кому → подтверждение
+  function renderGiftMenu() {
+    const coins = S.coins || 0;
+    const st = ui.gs || { step: 'list' };
+    const g = st.id && GIFTS[st.id];
+    const head = `<div class="gm-head"><span class="gm-coins">${coinIc()}<b data-cnt="coins">${coins}</b></span><small>+300 за каждые 10 минут игры</small></div>`;
+    let body = '';
+    if (st.step === 'list' || !g) {
+      body = `<div class="gm-title">Подарки и шалости</div>
+        <div class="gm-grid">${GIFT_ORDER.map((id) => {
+          const x = GIFTS[id];
+          return `<button class="gm-item ${x.price > coins ? 'poor' : ''}" data-act="gift-pick" data-id="${id}"><span class="gm-e">${gImg(id)}</span><span class="gm-n">${esc(x.short || x.name)}</span><span class="gm-p">${coinIc()}${x.price}</span></button>`;
+        }).join('')}</div>`;
+    } else if (st.step === 'to') {
+      const others = S.room.players.filter((p) => p.id !== S.me);
+      body = `<div class="gm-title"><button class="gm-back" data-act="gift-back" title="Назад">${ic('back', 16)}</button><span class="gm-te">${gImg(st.id)}</span> ${esc(g.name)} — кому?</div>
+        <div class="gm-people">${others.length ? others.map((p) => {
+          const crowned = st.id === 'crown' && giftsOf(p.id)?.crown;
+          return `<button class="gm-person ${crowned ? 'off' : ''}" data-act="gift-to" data-pid="${p.id}" ${crowned ? 'disabled' : ''}>${pa(p.id, 34, 'round')}<b>${nm(p.id)}</b>${crowned ? '<small>уже с короной</small>' : p.connected === false ? '<small>не в сети</small>' : ''}</button>`;
+        }).join('') : '<p class="muted small">В комнате пока никого, кроме вас</p>'}</div>`;
+    } else {
+      body = `<div class="gm-title"><button class="gm-back" data-act="gift-back" title="Назад">${ic('back', 16)}</button>Подтвердите</div>
+        <div class="gm-ok">
+          <span class="gm-ok-e">${gImg(st.id)}</span>
+          <div class="gm-ok-t"><b>${esc(g.name)}</b><span>для ${pa(st.to, 22, 'round')} <b>${nm(st.to)}</b></span>${g.anon ? '<small>анонимно — никто не узнает, что это вы</small>' : ''}</div>
+          <span class="gm-ok-p">${coinIc()}${g.price}</span>
+        </div>
+        <div class="gm-btns"><button class="btn ghost" data-act="gift-back">Отмена</button><button class="btn primary" data-act="gift-send" ${st.busy ? 'disabled' : ''}>${st.busy ? 'Отправляем…' : `Подарить за ${g.price}`}</button></div>`;
+    }
+    return `<div class="pop gift-pop ${ui.popAnim ? 'anim' : ''}">${head}${body}</div>`;
+  }
+  const coinIc = () => '<i class="coin" aria-hidden="true"></i>';
 
   function renderMeModal() {
     const me = player(S.me) || {};
@@ -3593,6 +3783,58 @@
       applyView();
       render();
     },
+    'grant-open': (d) => {
+      ui.grantFor = ui.grantFor === d.pid ? null : d.pid;
+      render();
+    },
+    grant: async (d) => {
+      const r = await emit('grantCoins', { target: d.pid, amount: Number(d.n) });
+      if (!r.error) {
+        toast(`+${d.n} монет — ${player(d.pid)?.name || 'игроку'}`, 'coinup');
+        Sound.play('coin');
+      }
+    },
+    'gift-open': () => {
+      ui.menu = ui.menu === 'gift' ? null : 'gift';
+      ui.gs = { step: 'list' };
+      ui.popAnim = !!ui.menu;
+      if (ui.menu) Sound.play('open');
+      render();
+    },
+    'gift-pick': (d) => {
+      const g = GIFTS[d.id];
+      if (!g) return;
+      if (g.price > (S.coins || 0)) {
+        Sound.play('error');
+        return toast(`Не хватает монет: ${g.name} стоит ${g.price}, у вас ${S.coins || 0}. Монеты дают за время в игре — 300 каждые 10 минут`);
+      }
+      ui.gs = { step: 'to', id: d.id };
+      render();
+    },
+    'gift-to': (d) => {
+      ui.gs = { ...ui.gs, step: 'ok', to: d.pid };
+      render();
+    },
+    'gift-back': () => {
+      const st = ui.gs || {};
+      ui.gs = st.step === 'ok' ? { step: 'to', id: st.id } : { step: 'list' };
+      render();
+    },
+    'gift-send': async () => {
+      const st = ui.gs;
+      if (!st || st.busy || !st.id || !st.to) return; // защита от двойного нажатия
+      st.busy = true;
+      st.nonce = st.nonce || Math.random().toString(36).slice(2) + Date.now().toString(36);
+      render();
+      const r = await emit('gift', { gift: st.id, to: st.to, nonce: st.nonce });
+      if (r.error) {
+        st.busy = false;
+        return render();
+      }
+      ui.menu = null;
+      ui.gs = null;
+      render();
+    },
     lofi: () => {
       if (!music.on) return startMusic();
       music.open = !music.open;
@@ -4112,6 +4354,13 @@
   });
   let sfxT;
   document.addEventListener('input', (e) => {
+    if (e.target.matches('[data-gsfx]')) {
+      Sound.setGiftVol(Number(e.target.value));
+      const v = $app.querySelector('.gsfx-v');
+      if (v) v.textContent = Sound.giftVol + '%';
+      clearTimeout(sfxT);
+      sfxT = setTimeout(() => Sound.play('gift_kiss'), 160);
+    }
     if (e.target.dataset.sfx !== undefined && e.target.matches('[data-sfx]')) {
       Sound.setVol(Number(e.target.value));
       const v = $app.querySelector('.sfx-v');

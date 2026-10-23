@@ -27,6 +27,8 @@ const Avatars = require('./avatars');
 const Tour = require('./tournament');
 const Session = require('./session');
 const Radio = require('./radio');
+const Wallet = require('./wallet');
+const Gifts = require('./gifts');
 
 const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS_PER_ROOM = Number(process.env.MAX_PLAYERS || 20);
@@ -93,6 +95,7 @@ function createRoom() {
     game: null,
     timers: new Map(),
     lastActive: Date.now(),
+    gifts: new Map(), // pid → { gift, crown } — подарки на аватарках
     tour: null,
     suspended: null,
   };
@@ -141,6 +144,7 @@ function publicRoom(room) {
       .map((id) => room.players.get(id))
       .filter(Boolean)
       .map((p) => ({ id: p.id, name: p.name, real: p.real || '', connected: p.connected, avatar: p.avatar || null })),
+    gifts: Gifts.view(room),
     radio: Radio.view(room),
     tour: Tour.publicTour(room.tour),
     suspended: Session.publicSuspended(room),
@@ -152,6 +156,7 @@ function viewFor(room, pid) {
   return {
     me: pid,
     serverNow: Date.now(),
+    coins: Wallet.balance(room.players.get(pid)?.wallet),
     room: publicRoom(room),
     game: g ? { type: room.game.type, ...g.view(room.game.state, pid, makeCtx(room)) } : null,
   };
@@ -188,6 +193,7 @@ function removePlayer(room, pid) {
   room.players.delete(pid);
   room.order = room.order.filter((x) => x !== pid);
   for (const [t, id] of room.tokens) if (id === pid) room.tokens.delete(t);
+  Gifts.forget(room, pid);
   if (room.game) {
     const g = GAMES[room.game.type];
     g.onLeave && g.onLeave(room.game.state, pid, makeCtx(room));
@@ -228,6 +234,7 @@ io.on('connection', (socket) => {
     p.name = cleanName(name);
     p.real = cleanReal(real);
     p.avatar = Avatars.clean(avatar);
+    if (!p.wallet) p.wallet = 'w:' + token; // кошелёк — по токену браузера, общий для всех комнат
     p.sockets.add(socket.id);
     p.connected = true;
     socket.data.room = room.code;
@@ -326,6 +333,20 @@ io.on('connection', (socket) => {
     room.players.get(pid).avatar = av;
   }));
 
+  // Подарок другому игроку: сервер проверяет баланс, списывает монеты и рассылает объявление всем в комнате
+  socket.on('gift', (msg = {}, cb) => {
+    const room = rooms.get(socket.data.room);
+    const pid = socket.data.pid;
+    if (!room || !room.players.has(pid)) return fail(cb, 'Вы не в комнате');
+    const r = Gifts.send(room, pid, msg, Wallet);
+    if (typeof r === 'string') return fail(cb, r);
+    if (r.dup) return cb && cb({ ok: true, dup: true });
+    room.lastActive = Date.now();
+    io.to(room.code).emit('gift', r);
+    cb && cb({ ok: true });
+    broadcast(room);
+  });
+
   // Общее радио комнаты
   // Ссылка Spotify: ищем этот трек на YouTube (асинхронно), потом добавляем как обычный
   const radioSync = inRoom((room, pid, msg) => {
@@ -355,6 +376,15 @@ io.on('connection', (socket) => {
   socket.on('kick', hostOnly((room, pid, { target }) => {
     if (target === pid) return 'Нельзя выгнать себя';
     removePlayer(room, target);
+  }));
+
+  // Хост начисляет монеты любому участнику (и себе)
+  socket.on('grantCoins', hostOnly((room, _pid, { target, amount }) => {
+    const p = room.players.get(target);
+    if (!p) return 'Нет такого игрока';
+    if (!p.wallet) return 'У игрока ещё нет кошелька';
+    const add = Wallet.grant(p.wallet, amount);
+    for (const sid of p.sockets) if (sid !== socket.id) io.to(sid).emit('coins', { add, by: 'host' });
   }));
 
   socket.on('makeHost', hostOnly((room, _pid, { target }) => {
@@ -450,6 +480,14 @@ function presence(room) {
   const g = GAMES[room.game.type];
   if (g.onPresence) g.onPresence(room.game.state, makeCtx(room));
 }
+
+// Монеты за время в игре: начислили — показываем игроку и обновляем баланс
+Wallet.start(rooms, (room, pid) => {
+  const p = room.players.get(pid);
+  if (!p) return;
+  for (const sid of p.sockets) io.to(sid).emit('coins', { add: Wallet.EARN });
+  broadcast(room);
+});
 
 // Уборка заброшенных комнат
 setInterval(() => {
