@@ -1,7 +1,7 @@
 // Словари. Можно свободно дополнять — дубли отсекаются автоматически.
 const uniq = (s) => [...new Set(s.split(/[,\n]/).map((w) => w.trim()).filter(Boolean))];
 
-// Общий набор слов для Коднеймс, Элиаса и «Намёк понял»: около 1100 слов (только одиночные слова, без фраз) —
+// Основной набор (для «Намёк понял» — целиком, для Коднеймс и Элиаса — вместе с words_extra.js): около 1100 слов (только одиночные слова, без фраз) —
 // очень простые, простые и немного средние по сложности. Полный исходник по темам — server/words_base.txt
 // Последние 5 строк — игровые термины (базовые, которые знают все)
 const WORDS = uniq(`
@@ -106,4 +106,17 @@ const LOCATIONS = [
 // + 300 простых локаций (много — из Днепра), см. spy_locations.js
 LOCATIONS.push(...require('./spy_locations').EXTRA);
 
-module.exports = { WORDS, CHARACTERS, LOCATIONS };
+// Расширенный набор для Элиаса и Коднеймс: основной + ещё ~5000 простых слов (без дублей, регистр и «ё» не важны)
+const WORDS_BASE = WORDS;
+const WORDS_ALL = (() => {
+  const seen = new Set(WORDS.map((w) => w.toLowerCase().replace(/ё/g, 'е')));
+  const extra = uniq(require('./words_extra')).filter((w) => {
+    const k = w.toLowerCase().replace(/ё/g, 'е');
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  return [...WORDS, ...extra];
+})();
+
+module.exports = { WORDS: WORDS_ALL, WORDS_BASE, CHARACTERS, LOCATIONS };

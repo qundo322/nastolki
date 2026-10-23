@@ -1,4 +1,4 @@
-const { WORDS } = require('../words');
+const { WORDS_BASE: WORDS } = require('../words'); // в «Намёк понял» — основной набор попроще
 const { shuffle, Deck, norm, clampInt, customWords, countLabel } = require('../util');
 
 // Время фаз
