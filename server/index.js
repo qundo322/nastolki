@@ -191,6 +191,7 @@ function removePlayer(room, pid) {
     }
   }
   room.players.delete(pid);
+  if (room.listeners) room.listeners.delete(pid);
   room.order = room.order.filter((x) => x !== pid);
   for (const [t, id] of room.tokens) if (id === pid) room.tokens.delete(t);
   Gifts.forget(room, pid);

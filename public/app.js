@@ -385,6 +385,7 @@
         </div>
       </div>
     </div>
+    <div class="lofi-listeners"></div>
     <div class="lofi-queue"></div>
     <div class="lofi-paste">
       <button type="button" class="btn lp-btn" data-lofi="paste">${ic('clip', 17)}<span><b>Вставить из буфера</b><small>ссылка YouTube или Spotify</small></span></button>
@@ -416,8 +417,22 @@
   });
   const rEmit = (op, x = {}) => emit('radio', { op, ...x });
 
+  // Кто слушает радио: сообщаем серверу, когда у нас радио заиграло или замолчало
+  function reportListening() {
+    if (!S || !connected) return;
+    const on = !!(music.on && music.playing);
+    if (music.sentListen === on) return;
+    music.sentListen = on;
+    emit('radio', { op: 'listen', on });
+  }
+  // Аватарки слушателей — на кнопке радио и в мини-плеере
+  const listenersHtml = (ids, max = 4) =>
+    ids.length
+      ? `<span class="rl-stack">${ids.slice(0, max).map((id) => pa(id, 22, 'round')).join('')}${ids.length > max ? `<i>+${ids.length - max}</i>` : ''}</span>`
+      : '';
   function syncMusicUI() {
     const r = radio();
+    reportListening();
     dock.hidden = !music.on || !r;
     dock.classList.toggle('mini', !music.open);
     dock.querySelector('.lofi-ctl [data-lofi="toggle"]').innerHTML = ic(music.playing ? 'pause' : 'play', 16);
@@ -444,6 +459,22 @@
     fab.classList.toggle('playing', music.on && music.playing);
     fab.classList.toggle('open', music.on && music.open);
     fab.querySelector('.rf-sub').textContent = !music.on ? 'включить' : music.playing ? (r?.cur?.live ? 'эфир' : 'играет') : 'пауза';
+    // кто слушает — видно всем, даже если у вас радио выключено
+    const ls = (r?.listeners || []).filter((id) => player(id));
+    let fl = fab.querySelector('.rf-ls');
+    if (!fl) {
+      fl = document.createElement('span');
+      fl.className = 'rf-ls';
+      fab.appendChild(fl);
+    }
+    const lsKey = ls.join(',');
+    if (fl.dataset.k !== lsKey) {
+      fl.dataset.k = lsKey;
+      fl.innerHTML = listenersHtml(ls);
+    }
+    fab.title = ls.length ? `Радио комнаты. Сейчас слушают: ${ls.map((id) => player(id)?.name).join(', ')}` : 'Радио комнаты — у всех играет одно и то же';
+    const dl = dock.querySelector('.lofi-listeners');
+    if (dl) dl.innerHTML = ls.length ? `${ic('headphones', 13)} слушают: ${ls.map((id) => `<span class="ll-p">${pa(id, 18, 'round')}${esc(player(id)?.name || '')}</span>`).join('')}` : `${ic('headphones', 13)} пока никто не слушает`;
     if (!r) return;
     const host = isHost();
     const c = r.cur;
@@ -692,6 +723,7 @@
   }
 
   socket.on('connect', () => {
+    if (typeof music !== 'undefined') music.sentListen = undefined; // после переподключения заново сообщим, слушаем ли радио
     connected = true;
     const code = S?.room.code || codeFromUrl();
     if (code && identity().name) joinRoom(code);
@@ -1568,7 +1600,7 @@
         }
         return `<div class="pp-row ${p.connected ? '' : 'off'} ${mine ? 'me' : ''} ${team ? 't-' + team : ''}">
           ${avaHtml(p, 32, 'round')}
-          <div class="pp-n"><span>${esc(p.name)}${mine ? ' <small class="muted">(вы)</small>' : ''}${p.id === r.hostId ? ` <span class="pm-host" title="Хост">${ic('crown', 13)}</span>` : ''}</span>
+          <div class="pp-n"><span>${esc(p.name)}${mine ? ' <small class="muted">(вы)</small>' : ''}${(radio()?.listeners || []).includes(p.id) ? ` <span class="ro-listen" title="Слушает радио">${ic('headphones', 12)}</span>` : ''}${p.id === r.hostId ? ` <span class="pm-host" title="Хост">${ic('crown', 13)}</span>` : ''}</span>
             <small>${p.connected ? tag || (p.id === r.hostId ? 'хост' : 'в комнате') : 'офлайн'}</small></div>
           <div class="pp-acts">${acts.join('')}</div>
         </div>
@@ -1831,7 +1863,7 @@
         .map(
           (p, i) => `<div class="ro-p ${p.connected ? '' : 'off'} ${p.id === S.me ? 'me' : ''} ${fresh.has(p.id) ? 'fresh' : ''}" style="--i:${i}${fresh.has(p.id) ? `;--fe:${fe(p)}ms` : ''}">
             <span class="ro-ava">${avaHtml(p, 52, 'round')}${p.connected ? '<i class="ro-dot"></i>' : ''}</span>
-            <span class="ro-t"><b>${esc(p.name)}${p.id === S.me ? ' <small class="muted">(вы)</small>' : ''}</b><small>${p.id === r.hostId ? `${ic('crown', 12)} хост` : p.connected ? (p.real ? esc(p.real) : 'в игре') : 'не в сети'}</small></span>
+            <span class="ro-t"><b>${esc(p.name)}${p.id === S.me ? ' <small class="muted">(вы)</small>' : ''}${(radio()?.listeners || []).includes(p.id) ? `<span class="ro-listen" title="Слушает радио">${ic('headphones', 13)}</span>` : ''}</b><small>${p.id === r.hostId ? `${ic('crown', 12)} хост` : p.connected ? (p.real ? esc(p.real) : 'в игре') : 'не в сети'}</small></span>
             ${p.id === r.hostId ? `<span class="ro-crown">${ic('crown', 16)}</span>` : ''}
           </div>`
         )

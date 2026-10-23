@@ -47,6 +47,13 @@ function handle(room, pid, msg, isHost) {
     if (r.cur.live && r.cur.vid === DEFAULT.vid) next(r); // фон-лофи уступает первому треку
     return;
   }
+  if (op === 'listen') {
+    // кто сейчас слушает радио (у себя включил и не на паузе) — видно всем
+    room.listeners = room.listeners || new Set();
+    if (msg.on) room.listeners.add(pid);
+    else room.listeners.delete(pid);
+    return;
+  }
   if (op === 'ended') {
     // первый, кто сообщил о конце текущего трека, переключает всех
     if (msg.id !== r.cur.id || r.cur.live) return;
@@ -101,7 +108,8 @@ function handle(room, pid, msg, isHost) {
 
 function view(room) {
   const r = getRadio(room);
-  return { cur: { id: r.cur.id, vid: r.cur.vid, title: r.cur.title, live: r.cur.live, by: r.cur.by, startedAt: r.cur.startedAt }, queue: r.queue.map(({ qid, vid, title, by }) => ({ qid, vid, title, by })) };
+  const listeners = [...(room.listeners || [])].filter((id) => room.players.has(id) && room.players.get(id).connected !== false);
+  return { listeners, cur: { id: r.cur.id, vid: r.cur.vid, title: r.cur.title, live: r.cur.live, by: r.cur.by, startedAt: r.cur.startedAt }, queue: r.queue.map(({ qid, vid, title, by }) => ({ qid, vid, title, by })) };
 }
 
 // Подтянуть название трека с YouTube (только на сервере, без ключей)
