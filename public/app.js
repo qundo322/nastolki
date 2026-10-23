@@ -3385,28 +3385,15 @@
     return pts;
   }
   const PIPS = { 1: [5], 2: [3, 7], 3: [3, 5, 7], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
-  // Поворот кубика, при котором грань v смотрит на нас (противоположные грани в сумме 7)
-  const FACE_ROT = { 1: [0, 0], 2: [-90, 0], 3: [0, -90], 4: [0, 90], 5: [90, 0], 6: [0, 180] };
-  const faceHtml = (v) => `<span class="face f${v}">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
-  // Кубик = 6 граней + внутренние перегородки, чтобы на скруглённых рёбрах не просвечивала пустота
-  const CUBE = [1, 2, 3, 4, 5, 6].map(faceHtml).join('') + '<span class="core cx"></span><span class="core cy"></span><span class="core cz"></span>';
-  const hash = (n) => {
-    let x = (n * 2654435761) >>> 0;
-    x ^= x >>> 15;
-    return x / 4294967295;
-  };
   function die3(d, i, g, opts = {}) {
-    const [fx, fy] = FACE_ROT[d.v];
-    const r1 = hash(g.rollId * 13 + i), r2 = hash(g.rollId * 29 + i * 7);
-    const sx = fx - 720 - Math.floor(r1 * 4) * 90;
-    const sy = fy + 720 + Math.floor(r2 * 4) * 90;
+    // Тело кубика рисует WebGL (js/dice3d.js) по data-атрибутам; анимация считается от времени броска
     const el = now() - (g.rollAt || 0);
     const rolling = d.fresh && g.rollAt && el < g.rollMs + 400;
-    // в покое кубик чуть повёрнут к нам — видно верх и бок, как у настоящего
-    const yaw = opts.small ? 14 : Math.round((r2 - 0.5) * 14 + (r2 > 0.5 ? 10 : -10)); // небольшой поворот: лицевая грань (очки) читается сразу
-    const style = `--fx:${fx}deg;--fy:${fy}deg;--sx:${sx}deg;--sy:${sy}deg;--de:${-el + i * 70}ms;--tilt:${((r1 - 0.5) * 16).toFixed(1)}deg;--yaw:${yaw}deg`;
+    const t0 = Date.now() - el + i * 70;
+    const cv = `<canvas class="dgl" data-v="${d.v}" data-seed="${g.rollId * 31 + i * 7}" data-t0="${rolling ? t0 : 0}" data-dur="${rolling ? 1150 : 0}" aria-hidden="true"></canvas>`;
+    const style = `--de:${-el + i * 70}ms`;
     const cls = `die3 ${rolling ? 'rolling' : ''} ${opts.sel ? 'sel' : ''} ${opts.can ? 'can' : ''} ${opts.dim ? 'dim' : ''} ${opts.small ? 'small' : ''}`;
-    return opts.act ? `<button class="${cls}" data-act="dc-pick" data-i="${i}" style="${style}" aria-label="Кубик ${d.v}${opts.sel ? ', выбран' : ''}"><span class="cube">${CUBE}</span></button>` : `<span class="${cls}" style="${style}"><span class="cube">${CUBE}</span></span>`;
+    return opts.act ? `<button class="${cls}" data-act="dc-pick" data-i="${i}" style="${style}" aria-label="Кубик ${d.v}${opts.sel ? ', выбран' : ''}">${cv}</button>` : `<span class="${cls}" style="${style}" aria-label="Кубик ${d.v}">${cv}</span>`;
   }
   function rDice(g) {
     const me = S.me;

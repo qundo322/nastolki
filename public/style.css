@@ -2931,3 +2931,13 @@ html.v-calm .die3.rolling, html.v-calm .die3.rolling .cube { animation: none; }
 .die3 .face { border-radius: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.07), inset 0 0 calc(var(--ds) * .12) rgba(0,0,0,.08); }
 .die3.can:not(.sel) .face, .die3.sel .face { box-shadow: inset 0 0 0 1px rgba(0,0,0,.07), inset 0 0 calc(var(--ds) * .12) rgba(0,0,0,.08); }
 .die3 .core { display: none; }
+
+/* ---- Кости: настоящий 3D-кубик (WebGL, js/dice3d.js) — цельное скруглённое тело без склеек ---- */
+.die3 { rotate: none; transform-style: flat; }
+.die3 .dgl { position: absolute; left: -40%; top: -40%; width: 180%; height: 180%; pointer-events: none; transition: filter .2s; }
+.die3::after { left: 10%; right: 10%; bottom: -10%; height: 16%; background: rgba(0,0,0,.32); filter: blur(5px); }
+.die3.dim .dgl { filter: brightness(.78); }
+.die3.can:not(.sel) .dgl { filter: drop-shadow(0 0 2px rgba(255, 211, 77, .9)) drop-shadow(0 0 6px rgba(255, 211, 77, .45)); }
+.die3.sel .dgl { filter: drop-shadow(0 0 2px #ffd34d) drop-shadow(0 0 3px #ffd34d) drop-shadow(0 0 12px rgba(255, 211, 77, .85)); }
+.die3.rolling { animation-duration: 1.15s; }
+.die3.rolling .dgl { filter: none; }
