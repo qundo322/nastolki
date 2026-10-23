@@ -2886,3 +2886,9 @@ html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none
 /* капитан — жёлтым */
 .cn .tp-role { color: #f2c14b; }
 [data-theme='light'] .cn .tp-role { color: #a26f00; }
+
+/* ---- Коднеймс: аватарки голосующих на карточке крупнее ---- */
+.cn-card .marks { bottom: 6px; left: 6px; right: 6px; gap: 0; }
+.cn-card .marks .ava { width: 28px !important; height: 28px !important; font-size: 11px; box-shadow: 0 0 0 2px rgba(0, 0, 0, .45), 0 3px 8px rgba(0, 0, 0, .35); }
+.cn-card .marks .ava + .ava { margin-left: -6px; }
+@media (max-width: 700px) { .cn-card .marks .ava { width: 20px !important; height: 20px !important; font-size: 8px; } .cn-card .marks .ava + .ava { margin-left: -5px; } }

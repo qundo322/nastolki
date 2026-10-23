@@ -2355,7 +2355,7 @@
         return `<button class="cn-card ${c.color ? 'c-' + c.color : ''} ${c.revealed ? 'rev' : ''} ${c.marks.includes(me) ? 'mine' : ''} ${pend ? 'pending' : ''} ${ui.flip && ui.flip.has(i) ? 'flip' : ''} ${ui.enter && g.step === 'clue' ? 'deal' : ''}" style="--i:${i};${ui.flip && ui.flip.has(i) ? `--fd:-${Date.now() - ui.flip.get(i)}ms` : ''}${ui.cnSort ? `;order:${cnRank(c, i, myTeam)}` : ''}" data-act="cn-mark" data-i="${i}">
           <span class="w ${/\s/.test(c.w) ? 'phrase' : ''}" lang="ru">${hy(c.w)}</span>
           ${c.color ? `<i class="cb-mark" aria-hidden="true">${{ red: '▲', blue: '●', neutral: '–', assassin: '✕' }[c.color] || ''}</i>` : ''}
-          ${c.marks.length ? `<span class="marks">${c.marks.map((m) => pa(m, 'xs')).join('')}</span>` : ''}
+          ${c.marks.length ? `<span class="marks">${c.marks.map((m) => pa(m, 28, 'round')).join('')}</span>` : ''}
           ${pend ? `<span class="pend" style="--d:${g.pending.ms}ms;--e:-${elapsed}ms">${ring('fill')}</span>` : ''}
         </button>`;
       })
@@ -2367,26 +2367,6 @@
         <section class="cn-center">
           <div class="cn-status">${status}</div>
           <div class="cn-board ${amCap ? 'captain own-' + myTeam : ''} ${amCap || g.winner ? 'allcolors' : ''} ${ui.cnSort ? 'sorted' : ''}">${cards}</div>
-          <details class="log card"><summary>${ic('list', 16)} Журнал ходов</summary>${g.log
-            .slice()
-            .reverse()
-            .map(
-              (l) =>
-                `<div class="log-i ${l.team}">${
-                  l.kind === 'clue'
-                    ? `${ic('chat', 14)} ${esc(l.by)}: <b>${esc(l.text)}</b>`
-                    : l.kind === 'edit'
-                      ? `${ic('pencil', 14)} ${esc(l.by)} исправил: <b>${esc(l.text)}</b>`
-                      : l.kind === 'pass'
-                        ? `${ic('skip', 14)} ${esc(l.by)} передал ход`
-                        : l.kind === 'overtime'
-                          ? `${ic('clock', 14)} ${esc(l.by)}: капитан думает за счёт времени команды`
-                          : l.kind === 'timeout'
-                          ? `${ic('clock', 14)} ${esc(l.by)}: время вышло`
-                          : `${ic('grid', 14)} ${esc(l.by)} открыли <b>${esc(l.text)}</b> <span class="sw c-${l.color}"></span>`
-                }</div>`
-            )
-            .join('') || '<div class="muted small">Пока пусто</div>'}</details>
         </section>
         ${sideCol(g, 'blue')}
       </div>`;
