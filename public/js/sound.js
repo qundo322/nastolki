@@ -3,12 +3,9 @@
   let ctx = null;
   let master = null;
   let vol = 60;
-  let giftVol = 20; // звуки подарков из файлов — по умолчанию 20% от их громкости
   try {
     const v = localStorage.getItem('pg_sfx');
     if (v !== null) vol = Math.max(0, Math.min(100, Number(v)));
-    const gv = localStorage.getItem('pg_gift_sfx');
-    if (gv !== null) giftVol = Math.max(0, Math.min(100, Number(gv)));
   } catch {}
 
   function ac() {
@@ -24,7 +21,7 @@
     return ctx;
   }
   // браузер разрешает звук только после первого действия пользователя
-  ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => (ac(), window.Sound && window.Sound.preload()), { once: true, capture: true }));
+  ['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => ac(), { once: true, capture: true }));
 
   // нота: частота, длительность, тип волны, громкость, задержка, скольжение к частоте
   function tone(f, dur, { type = 'sine', gain = 0.25, delay = 0, to = null, attack = 0.005 } = {}) {
@@ -129,93 +126,12 @@
     dice: () => {
       for (let i = 0; i < 7; i++) noise(0.05, { gain: 0.16 - i * 0.015, from: 2500, to: 1200, q: 2.5, delay: 0.08 + i * 0.11 + Math.random() * 0.05 });
     },
-    // ---- подарки ----
-    coin: () => [1318, 1760].forEach((f, i) => tone(f, 0.12, { type: 'square', gain: 0.05, delay: i * 0.07 })),
-    gift_kiss: () => {
-      tone(900, 0.06, { gain: 0.16, to: 1500 });
-      tone(1100, 0.06, { gain: 0.14, to: 1700, delay: 0.12 });
-    },
-    gift_rose: () => [N.E5, N.G5, N.C6].forEach((f, i) => tone(f, 0.25, { type: 'triangle', gain: 0.12, delay: i * 0.08 })),
-    gift_beer: () => {
-      noise(0.35, { gain: 0.12, from: 300, to: 1200, q: 3 });
-      tone(220, 0.12, { type: 'triangle', gain: 0.12, delay: 0.25, to: 330 });
-    },
-    // смешной шлепок: удар + «бэмс»
-    gift_slap: () => {
-      noise(0.09, { gain: 0.35, from: 2500, to: 600, q: 0.8 });
-      tone(160, 0.18, { type: 'square', gain: 0.12, to: 70, delay: 0.02 });
-      tone(700, 0.25, { type: 'sine', gain: 0.08, to: 1400, delay: 0.12 });
-    },
-    gift_whisky: () => [2637, 3136, 2637].forEach((f, i) => tone(f, 0.18, { type: 'sine', gain: 0.07, delay: i * 0.09 })),
-    // помидор: мокрый «шмяк»
-    gift_tomato: () => {
-      tone(420, 0.06, { type: 'sine', gain: 0.12, to: 900 });
-      noise(0.22, { gain: 0.3, from: 900, to: 180, q: 0.7, delay: 0.32 });
-    },
-    // какашка: мультяшное «пффф» вниз
-    gift_poop: () => {
-      tone(180, 0.45, { type: 'sawtooth', gain: 0.08, to: 70 });
-      noise(0.3, { gain: 0.14, from: 400, to: 120, q: 1.5, delay: 0.05 });
-    },
-    // корона: фанфары
-    gift_crown: () => {
-      const f = [N.C5, N.C5, N.G5, N.C6];
-      const d = [0, 0.12, 0.24, 0.42];
-      f.forEach((x, i) => {
-        tone(x, i === 3 ? 0.6 : 0.14, { type: 'sawtooth', gain: 0.07, delay: d[i] });
-        tone(x * 2, i === 3 ? 0.6 : 0.14, { type: 'triangle', gain: 0.05, delay: d[i] });
-      });
-    },
-    gift_ring: () => [N.C5, N.E5, N.G5, N.C6, N.E6, N.G5 * 2].forEach((f, i) => tone(f, 0.4, { type: 'triangle', gain: 0.1, delay: 0.35 + i * 0.09 })),
   };
-
-  // Записанные звуки подарков (mp3). Грузим один раз, играем через общий регулятор громкости
-  const FILES = { gift_kiss: 1, gift_beer: 1, gift_poop: 1, gift_crown: 1, gift_bus: 1 };
-  const bufs = {};
-  function load(name) {
-    if (bufs[name]) return bufs[name];
-    const c = ac();
-    if (!c) return null;
-    const src = (window.ASSET && window.ASSET[`/sfx/${name}.mp3`]) || `/sfx/${name}.mp3`;
-    bufs[name] = fetch(src)
-      .then((r) => r.arrayBuffer())
-      .then((b) => new Promise((ok, no) => c.decodeAudioData(b, ok, no)))
-      .catch(() => (bufs[name] = null));
-    return bufs[name];
-  }
-  async function sample(name) {
-    const c = ac();
-    if (!c || !vol || !giftVol) return;
-    const buf = await load(name);
-    if (!buf) return SFX[name] && SFX[name](); // файл не загрузился — синтезированный звук
-    const s = c.createBufferSource();
-    const g = c.createGain();
-    s.buffer = buf;
-    g.gain.value = giftVol / 100;
-    s.connect(g).connect(master);
-    s.start();
-  }
 
   window.Sound = {
     play(name) {
       try {
-        if (FILES[name]) return void sample(name);
         SFX[name] && SFX[name]();
-      } catch {}
-    },
-    // заранее подгрузить файлы, чтобы первый подарок прозвучал без задержки
-    preload() {
-      try {
-        Object.keys(FILES).forEach(load);
-      } catch {}
-    },
-    get giftVol() {
-      return giftVol;
-    },
-    setGiftVol(v) {
-      giftVol = Math.max(0, Math.min(100, Math.round(v)));
-      try {
-        localStorage.setItem('pg_gift_sfx', String(giftVol));
       } catch {}
     },
     get vol() {
