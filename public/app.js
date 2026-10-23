@@ -705,8 +705,8 @@
     playAnn();
     setTimeout(render, 30); // подарок на аватарке появится с анимацией
   });
-  socket.on('coins', ({ add }) => {
-    toast(`+${add} монет за время в игре`, 'coinup');
+  socket.on('coins', ({ add, by }) => {
+    toast(by ? `+${add} монет от хоста` : `+${add} монет за время в игре`, 'coinup');
     Sound.play('coin');
   });
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -1445,6 +1445,7 @@
           <div class="gtitle">${title}</div>
           ${peopleMenu()}
           <div class="top-actions">
+            <button class="btn sm ghost coin-chip" data-act="gift-open" title="Ваши монеты — открыть подарки">${coinIc()}<b data-cnt="coins-top">${S.coins || 0}</b></button>
             ${g || !t ? `<button class="btn sm ghost" data-act="rules" title="Правила">${ic('book')}<span class="hide-m">Правила</span></button>` : ''}
             ${sfxMenu()}
             ${themeToggle()}
@@ -1502,6 +1503,7 @@
         const mine = p.id === S.me;
         const acts = [];
         if (mine) acts.push(`<button class="icon-x" data-act="me-open" title="Мой профиль: ник, реальное имя, фото">${ic('pencil', 16)}</button>`);
+        if (isHost()) acts.push(`<button class="icon-x coin-btn ${ui.grantFor === p.id ? 'on' : ''}" data-act="grant-open" data-pid="${p.id}" title="Начислить монеты">${coinIc()}</button>`);
         if (isHost() && !mine) {
           acts.push(`<button class="icon-x" data-act="makeHost" data-pid="${p.id}" title="Сделать хостом">${ic('crown', 16)}</button>`);
           acts.push(`<button class="icon-x danger" data-act="kick" data-pid="${p.id}" title="Выгнать">${ic('x', 16)}</button>`);
@@ -1511,7 +1513,8 @@
           <div class="pp-n"><span>${esc(p.name)}${mine ? ' <small class="muted">(вы)</small>' : ''}${p.id === r.hostId ? ` <span class="pm-host" title="Хост">${ic('crown', 13)}</span>` : ''}</span>
             <small>${p.connected ? tag || (p.id === r.hostId ? 'хост' : 'в комнате') : 'офлайн'}</small></div>
           <div class="pp-acts">${acts.join('')}</div>
-        </div>`;
+        </div>
+        ${isHost() && ui.grantFor === p.id ? `<div class="pp-grant"><span class="muted small">Начислить ${mine ? 'себе' : esc(p.name)}:</span>${[100, 300, 500, 1000].map((n) => `<button class="btn xs ghost" data-act="grant" data-pid="${p.id}" data-n="${n}">+${n}</button>`).join('')}</div>` : ''}`;
       })
       .join('');
     return `<div class="menu-wrap" data-pop>
@@ -3402,6 +3405,17 @@
       LS.set('pg_cnfs', String(VIEW.fs));
       applyView();
       render();
+    },
+    'grant-open': (d) => {
+      ui.grantFor = ui.grantFor === d.pid ? null : d.pid;
+      render();
+    },
+    grant: async (d) => {
+      const r = await emit('grantCoins', { target: d.pid, amount: Number(d.n) });
+      if (!r.error) {
+        toast(`+${d.n} монет — ${player(d.pid)?.name || 'игроку'}`, 'coinup');
+        Sound.play('coin');
+      }
     },
     'gift-open': () => {
       ui.menu = ui.menu === 'gift' ? null : 'gift';

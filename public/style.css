@@ -2718,3 +2718,9 @@ html { scrollbar-gutter: stable; }
 @keyframes pConf { 0% { translate: -50% -50%; opacity: 0; } 15% { opacity: 1; } 100% { translate: calc(-50% + var(--x)) calc(-50% + var(--y) + 30vh); rotate: var(--r); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .go-fx { display: none; } .gift-ov * { animation-duration: .01ms !important; } }
 html.v-calm .gift-ov .go-fx { display: none; }
+/* монеты в шапке и начисление хостом */
+.coin-chip { gap: 6px; font-variant-numeric: tabular-nums; }
+.coin-chip b { font-weight: 900; }
+.coin-btn .coin { width: 15px; height: 15px; }
+.coin-btn.on { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.pp-grant { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 2px 10px 10px 12px; } .pp-grant > span { width: 100%; }

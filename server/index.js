@@ -375,6 +375,15 @@ io.on('connection', (socket) => {
     removePlayer(room, target);
   }));
 
+  // Хост начисляет монеты любому участнику (и себе)
+  socket.on('grantCoins', hostOnly((room, _pid, { target, amount }) => {
+    const p = room.players.get(target);
+    if (!p) return 'Нет такого игрока';
+    if (!p.wallet) return 'У игрока ещё нет кошелька';
+    const add = Wallet.grant(p.wallet, amount);
+    for (const sid of p.sockets) if (sid !== socket.id) io.to(sid).emit('coins', { add, by: 'host' });
+  }));
+
   socket.on('makeHost', hostOnly((room, _pid, { target }) => {
     if (!room.players.has(target)) return 'Нет такого игрока';
     room.hostId = target;

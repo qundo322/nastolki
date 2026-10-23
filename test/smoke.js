@@ -585,12 +585,17 @@ function bot(name, real = '') {
     assert((await a.call('gift', { gift: 'kiss', to: b.st.me, nonce: 'n1' })).ok, 'kiss sent');
     assert((await a.call('gift', { gift: 'kiss', to: b.st.me, nonce: 'n1' })).dup, 'double click ignored');
     await wait(100);
-    assert(a.st.coins === before - 20, 'charged once');
+    assert((a.st.coins - (before - 20)) % 300 === 0, 'charged once (±начисления за время)');
     assert(seen.length === 1 && seen[0].from === a.st.me && seen[0].to === b.st.me, 'everyone sees announcement');
     assert(c.st.room.gifts[b.st.me].gift.id === 'kiss', 'gift on avatar in state');
     await a.call('gift', { gift: 'poop', to: b.st.me, nonce: 'n2' });
     await wait(100);
     if (a.st.coins + 500 >= 500 && seen.length === 2) assert(seen[1].from === null && !JSON.stringify(seen[1]).includes(a.st.me), 'poop is anonymous');
+    const bc = b.st.coins;
+    assert((await b.call('grantCoins', { target: c.st.me, amount: 500 })).error, 'only host grants coins');
+    assert((await a.call('grantCoins', { target: b.st.me, amount: 500 })).ok, 'host grants coins');
+    await wait(100);
+    assert((b.st.coins - bc - 500) % 300 === 0 && b.st.coins >= bc + 500, 'granted coins arrive');
     a.s.disconnect();
     b.s.disconnect();
     c.s.disconnect();

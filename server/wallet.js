@@ -59,6 +59,15 @@ function spend(key, n) {
   return true;
 }
 
+// Начисление хостом (подарок от хоста), с разумным пределом за раз
+function grant(key, n) {
+  const add = Math.max(1, Math.min(10000, Math.floor(Number(n) || 0)));
+  const w = get(key);
+  w.coins += add;
+  dirty = true;
+  return add;
+}
+
 // Сессия комнаты: включается первой игрой, гаснет после долгого простоя без игры
 function sessionActive(room, now) {
   if (room.game) {
@@ -102,4 +111,4 @@ function start(rooms, onEarn) {
   }, TICK_MS).unref();
 }
 
-module.exports = { get, balance, spend, start, save, EARN, EVERY_MS };
+module.exports = { get, balance, spend, grant, start, save, EARN, EVERY_MS };
