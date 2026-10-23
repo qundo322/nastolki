@@ -78,9 +78,9 @@
   // ---------- 2. Голографические волны (WebGL) ----------
   // Цвета под тему: фон, три цвета переливов, сила
   const PAL = {
-    dark: { bg: '#0e0d13', a: '#8a5cff', b: '#26c2f0', c: '#f2c14b', k: 1.15, hl: 0.09 },
-    oled: { bg: '#000000', a: '#7a4cf5', b: '#1fa8d8', c: '#e0ae35', k: 0.7, hl: 0.06 },
-    light: { bg: '#f5f5f7', a: '#9d86ff', b: '#5fc4f5', c: '#f5bf45', k: 0.85, hl: 0.35 },
+    dark: { bg: '#0e0d13', a: '#8a5cff', b: '#26c2f0', c: '#6db3ff', k: 1.15, hl: 0.09 },
+    oled: { bg: '#000000', a: '#7a4cf5', b: '#1fa8d8', c: '#5aa6f5', k: 0.7, hl: 0.06 },
+    light: { bg: '#f5f5f7', a: '#9d86ff', b: '#5fc4f5', c: '#7ab8f5', k: 0.85, hl: 0.35 },
   };
   const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
   const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';

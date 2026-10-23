@@ -10,6 +10,9 @@ const bundle = esbuild.buildSync({
 }).outputFiles[0].text;
 const css = fs.readFileSync(path.join(root, 'public/style.css'), 'utf8');
 const app = ['public/js/icons.js', 'public/js/fx.js', 'public/js/sound.js', 'public/js/rules.js', 'public/js/who-sugg.js', 'public/js/dice3d.js', 'public/app.js'].map((f) => fs.readFileSync(path.join(root, f), 'utf8')).join('\n;\n');
+// Иконки игр встраиваем в файл (data URI), чтобы демо работало без сервера
+const imgDir = path.join(root, 'public/img/games');
+const gameImg = Object.fromEntries(fs.readdirSync(imgDir).filter((f) => f.endsWith('.webp')).map((f) => [f.replace('.webp', ''), 'data:image/webp;base64,' + fs.readFileSync(path.join(imgDir, f)).toString('base64')]));
 const demoCss = `
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -33,6 +36,7 @@ const html = `<!doctype html>
 <style>${css}\n${demoCss}</style></head>
 <body><div id="app"></div><div id="toasts"></div>
 <script>${bundle}</script>
+<script>window.GAME_IMG=${JSON.stringify(gameImg)}</script>
 <script>${app.replace(/<\/script/g, '<\\/script')}</script>
 </body></html>`;
 fs.writeFileSync(path.join(__dirname, 'party-games-demo.html'), html);

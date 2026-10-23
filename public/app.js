@@ -896,7 +896,12 @@
       render();
     });
   const gameMeta = (id) => GAMES.find((g) => g.id === id) || { title: id, settings: [], rules: [] };
-  const gIcon = (id, size = 18) => ic(GAME_ICON[id] || 'dice', size);
+  // Иконки игр — объёмные картинки (webp с прозрачностью); если для игры картинки нет — обычная линейная иконка
+  const GAME_IMG = window.GAME_IMG || {};
+  const gIcon = (id, size = 18) => {
+    const src = GAME_IMG[id] || (window.GAME_IMG ? null : GAME_ICON[id] && `/img/games/${id}.webp`);
+    return src ? `<img class="gic" src="${src}" width="${size}" height="${size}" alt="" draggable="false" decoding="async"/>` : ic(GAME_ICON[id] || 'dice', size);
+  };
 
   // ---------- сохранение ввода при перерисовке ----------
   function snapshotInputs() {
@@ -1625,7 +1630,7 @@
       </div>
       <div class="rl-body" data-g="${id}">
         <div class="rl-hero">
-          <span class="rl-ic">${id === 'tour' ? ic('trophy', 30) : gIcon(id, 30)}</span>
+          <span class="rl-ic">${id === 'tour' ? ic('trophy', 30) : gIcon(id, 58)}</span>
           <div><h3>${esc(R.title)}</h3><p>${esc(R.goal)}</p>${R.meta ? `<div class="rl-meta">${R.meta.map((m) => `<span>${esc(m)}</span>`).join('')}</div>` : ''}</div>
         </div>
         ${R.roles ? sec('users', 'Кто есть кто', `<div class="rl-roles">${R.roles.map((r) => `<div class="rl-role"><b>${esc(r[0])}</b><span>${esc(r[1])}</span></div>`).join('')}</div>`) : ''}
@@ -1727,7 +1732,7 @@
     const sp = S.room.suspended;
     const paused = sp
       ? `<div class="card resume-card">
-          <div class="rc-ic">${gIcon(sp.type, 28)}</div>
+          <div class="rc-ic">${gIcon(sp.type, 40)}</div>
           <div class="rc-txt"><b>${sp.tour ? 'Марафон' : `«${esc(gameMeta(sp.type).title)}»`} на паузе</b><span class="muted small">${host ? 'Игра сохранена — можно вернуться в любой момент. Новая игра её заменит.' : 'Ждём, пока хост вернётся к игре.'}</span></div>
           ${host ? `<button class="btn primary big-w" data-act="resume">${ic('play', 16)} Вернуться к игре</button>` : ''}
         </div>`
@@ -1793,7 +1798,7 @@
   }
 
   const gameCard = (g, clickable, sel) => `<button class="gcard ${g.id === sel && clickable ? 'active' : ''}" ${clickable ? `data-act="pick" data-id="${g.id}"` : 'disabled'}>
-      <span class="gemoji">${gIcon(g.id, 28)}</span>
+      <span class="gemoji">${gIcon(g.id, 60)}</span>
       <span class="gname">${esc(g.title)}</span>
       <span class="gshort">${esc(g.short)}</span>
       <span class="gfoot"><span class="gplayers">${ic('users', 14)} ${esc(g.players)}</span>${g.content ? `<span class="gplayers gcontent">${ic('book', 14)} ${esc(g.content)}</span>` : ''}</span>
@@ -2035,7 +2040,7 @@
     const link = roomLink(S.room.code);
     return `<section class="wait-screen">
       <div class="card wait-card">
-        <div class="wait-ic">${gIcon(g.type, 34)}</div>
+        <div class="wait-ic">${gIcon(g.type, 72)}</div>
         <h2>${esc(meta.title)}</h2>
         <p class="wait-sub"><span class="wait-dots"><i></i><i></i><i></i></span>Ждём игроков</p>
         ${g.need ? `<p class="wait-need">${esc(g.need)} · сейчас ${ps.length}</p>` : ''}
@@ -2212,7 +2217,7 @@
     const c = cv.getContext('2d');
     const left = team === 'red';
     const base = left ? ['#ff6452', '#ff9a8c', '#ffd2cb'] : ['#4fb8ff', '#9ad6ff', '#d4eeff'];
-    const cols = [...base, '#f2c14b', '#ffffff'];
+    const cols = [...base, '#8cc8ff', '#ffffff'];
     const P = [];
     const spawn = (n) => {
       for (let i = 0; i < n; i++) {
