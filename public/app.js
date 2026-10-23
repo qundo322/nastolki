@@ -488,7 +488,9 @@
     const known = (music.knownQ = music.knownQ || new Set());
     const fresh = new Set(q.filter((x) => !known.has(x.qid)).map((x) => x.qid));
     q.forEach((x) => known.add(x.qid));
-    dock.querySelector('.lofi-queue').innerHTML = `<div class="lq-h">Очередь <span class="muted">${q.length || 'пусто'}</span></div>${q
+    const qBox = dock.querySelector('.lofi-queue');
+    const prevScroll = qBox.querySelector('.lq-list')?.scrollTop || 0; // при перерисовке не сбрасываем прокрутку
+    qBox.innerHTML = `<div class="lq-h">Очередь <span class="muted">${q.length || 'пусто'}</span></div><div class="lq-list ${q.length > 6 ? 'scroll' : ''}">${q
       .map(
         (x, i) => `<div class="lq-i ${host ? 'can-drag' : ''} ${fresh.has(x.qid) && music.qReady ? 'new' : ''} ${x.by === S.me ? 'mine' : ''}" data-q="${x.qid}">${host ? `<span class="lq-grip" data-grip title="Перетащите, чтобы поменять порядок">⋮⋮</span>` : ''}<span class="lq-n">${i + 1}</span><img class="lq-cov" src="https://i.ytimg.com/vi/${x.vid}/default.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="lq-t" title="${esc(x.title)}">${esc(x.title)}</span>${x.by ? `<span class="lq-by" title="Добавил ${nm(x.by)}">${pa(x.by, 'xs', 'round')}</span>` : ''}${
           host || x.by === S.me
@@ -496,7 +498,9 @@
             : ''
         }</div>`
       )
-      .join('')}${q.length ? '' : `<div class="muted small">${c.live ? 'Добавьте трек — он включится сразу, лофи уступит.' : 'После текущего трека вернётся лофи-эфир.'}</div>`}`;
+      .join('')}</div>${q.length ? '' : `<div class="muted small">${c.live ? 'Добавьте трек — он включится сразу, лофи уступит.' : 'После текущего трека вернётся лофи-эфир.'}</div>`}`;
+    const ql = qBox.querySelector('.lq-list');
+    if (ql) ql.scrollTop = prevScroll;
     music.qReady = true;
   }
 

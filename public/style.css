@@ -3176,3 +3176,8 @@ html.v-calm .wt-clock.run.low { animation: none; }
 .ro-listen { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; color: var(--accent-text); vertical-align: -1px; }
 .ro-listen .eq { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 10px; }
 .ro-listen .eq b { width: 2px; height: 100%; }
+
+/* ---- Радио: больше 6 треков в очереди — список прокручивается, плеер не растёт ---- */
+.lq-list { display: flex; flex-direction: column; gap: 4px; }
+.lq-list.scroll { max-height: 222px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-gutter: stable; padding-right: 2px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); }
