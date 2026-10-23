@@ -2754,7 +2754,9 @@
         </div>
         ${myQa.length ? `<div class="card qa-card"><div class="side-h">${ic('list', 16)} Ваши вопросы</div>${qaCards(myQa)}</div>` : ''}`;
     } else if (!over) {
+      const askerChar = g.players[asker]?.char;
       qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 32, 'round')}<span>Спрашивает <b>${nm(asker)}</b></span></div>
+        ${askerChar ? `<div class="qa-char" title="Персонаж игрока — он его не видит"><small>его персонаж</small>${esc(askerChar)}</div>` : ''}
         ${
           q
             ? `<div class="qa-big">«${esc(q.text)}»</div>

@@ -2942,6 +2942,11 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 24px; 
 .al-fair svg { display: inline-block; vertical-align: -3px; margin-right: 6px; }
 .kbd-hint { font-size: 14px; margin-top: 14px; }
 
+/* ---- Кто я: персонаж спрашивающего крупно между ником и вопросом ---- */
+.qa-char { display: grid; justify-items: center; gap: 2px; margin: 8px auto 4px; padding: 10px 22px; max-width: 100%; border-radius: 16px; background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); border: 1px solid var(--accent-line); text-align: center;
+  font-family: var(--display); font-weight: 900; font-size: clamp(24px, 3.4vw, 38px); line-height: 1.1; color: var(--accent-text); overflow-wrap: anywhere; }
+.qa-char small { font-family: inherit; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -13039,7 +13044,9 @@ void main(){
         </div>
         ${myQa.length ? `<div class="card qa-card"><div class="side-h">${ic('list', 16)} Ваши вопросы</div>${qaCards(myQa)}</div>` : ''}`;
     } else if (!over) {
+      const askerChar = g.players[asker]?.char;
       qBox = `<div class="card qa-card"><div class="qa-asker">${pa(asker, 32, 'round')}<span>Спрашивает <b>${nm(asker)}</b></span></div>
+        ${askerChar ? `<div class="qa-char" title="Персонаж игрока — он его не видит"><small>его персонаж</small>${esc(askerChar)}</div>` : ''}
         ${
           q
             ? `<div class="qa-big">«${esc(q.text)}»</div>

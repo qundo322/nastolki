@@ -2934,3 +2934,8 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 24px; 
 .al-fair { display: block; text-wrap: balance; }
 .al-fair svg { display: inline-block; vertical-align: -3px; margin-right: 6px; }
 .kbd-hint { font-size: 14px; margin-top: 14px; }
+
+/* ---- Кто я: персонаж спрашивающего крупно между ником и вопросом ---- */
+.qa-char { display: grid; justify-items: center; gap: 2px; margin: 8px auto 4px; padding: 10px 22px; max-width: 100%; border-radius: 16px; background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); border: 1px solid var(--accent-line); text-align: center;
+  font-family: var(--display); font-weight: 900; font-size: clamp(24px, 3.4vw, 38px); line-height: 1.1; color: var(--accent-text); overflow-wrap: anywhere; }
+.qa-char small { font-family: inherit; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
