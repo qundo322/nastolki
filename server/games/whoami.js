@@ -2,7 +2,7 @@ const { CHARACTERS } = require('../words');
 const { shuffle, Deck, countLabel } = require('../util');
 const Avatars = require('../avatars'); // картинки персонажей хранятся там же, где аватарки
 
-const Q_MS = 60000; // минута на один вопрос
+const BANK_MS = 5 * 60 * 1000; // у каждого игрока свои 5 минут на все его ходы (как шахматные часы)
 
 const meta = {
   title: 'Кто я?',
@@ -13,7 +13,8 @@ const meta = {
   rules: [
     'Каждому игроку достаётся персонаж: его видят все, кроме самого игрока. Персонажей раздают случайно или каждый загадывает персонажа соседу.',
     'В свой ход пиши вопросы, на которые можно ответить «да» или «нет». Остальные отвечают кнопками «Да / Нет / Не знаю» — вопрос и ответ попадают в твою историю.',
-    'Когда ответили все: больше «да» — задавай следующий вопрос; больше «нет» — ход переходит дальше. Как только большинство ответило одинаково, решение принимается сразу: «да» — спрашиваешь дальше, «нет» — спрашивает следующий игрок. Если «да» и «нет» поровну — ждём, пока игроки договорятся. На то, чтобы придумать вопрос, — минута; не успел — ход переходит.',
+    'У каждого игрока свои часы — 5 минут на всю игру. В твой ход тикают только твои часы; задавай сколько угодно вопросов — ответы «да» или «нет» ход не передают.',
+    'Не знаешь, что спросить, — нажми «Передать ход»: твои часы остановятся и пойдут часы следующего игрока. В следующий раз они продолжат с того же места. Время кончилось — ты выбываешь (как если бы сдался).',
     'Думаешь, что знаешь ответ, — назови персонажа вслух. Угадал — нажми «Я угадал», и персонаж откроется тебе.',
     'Очки: угадал персонажа — +1. Бонус за скорость: первый угадавший +2, второй +1. Сдался — 0.',
   ],
@@ -46,7 +47,7 @@ function create(ctx, st) {
     qn: 0,
   };
   ids.forEach((id, i) => {
-    s.a[id] = { char: s.mode === 'random' ? s.deck.draw() : null, writer: ids[(i + ids.length - 1) % ids.length], qa: [] };
+    s.a[id] = { char: s.mode === 'random' ? s.deck.draw() : null, writer: ids[(i + ids.length - 1) % ids.length], qa: [], left: BANK_MS };
   });
   s.phase = s.mode === 'random' ? 'play' : 'write';
   if (s.phase === 'play') startQ(s, ctx);
@@ -84,15 +85,41 @@ function newQ(s, asker, text) {
   archive(s);
   s.q = { id: ++s.qn, asker, text: String(text || '').trim().slice(0, 120), answers: {} };
 }
-// Таймер вопроса: минута на каждый вопрос, вышло время — ход переходит
-function startQ(s, ctx) {
+// Часы игрока: в его ход тикает только его запас времени. Кончился — игрок выбывает, ход переходит
+function stopClock(s, ctx) {
   ctx.clearTimer('who-q');
-  if (s.phase !== 'play') return (s.qEnds = null);
-  s.qEnds = Date.now() + Q_MS;
-  ctx.setTimer('who-q', Q_MS, () => {
-    if (s.phase !== 'play') return;
-    advance(s, ctx);
+  const id = s.clockPid;
+  if (id && s.a[id] && s.turnAt) s.a[id].left = Math.max(0, s.a[id].left - (Date.now() - s.turnAt));
+  s.clockPid = null;
+  s.turnAt = null;
+  s.qEnds = null;
+}
+function startQ(s, ctx) {
+  stopClock(s, ctx);
+  if (s.phase !== 'play') return;
+  const id = s.order[s.turn];
+  const a = s.a[id];
+  if (!a || a.guessedAt || a.gaveUp) return;
+  if (a.left == null) a.left = BANK_MS;
+  s.clockPid = id;
+  s.turnAt = Date.now();
+  s.qEnds = s.turnAt + a.left;
+  ctx.setTimer('who-q', a.left, () => {
+    if (s.phase !== 'play' || s.clockPid !== id) return;
+    stopClock(s, ctx);
+    a.left = 0;
+    a.gaveUp = true;
+    a.timeUp = true;
+    if (!finishIfDone(s, ctx)) advance(s, ctx);
   });
+}
+function finishIfDone(s, ctx) {
+  if (Object.entries(s.a).every(([id, x]) => x.guessedAt || x.gaveUp || !ctx.room.players.get(id))) {
+    s.phase = 'over';
+    stopClock(s, ctx);
+    return true;
+  }
+  return false;
 }
 // Кто должен ответить: все в игре и в сети, кроме спрашивающего
 const voters = (s, ctx) => Object.keys(s.a).filter((id) => id !== s.order[s.turn] && ctx.room.players.get(id) && ctx.room.players.get(id).connected !== false);
@@ -102,31 +129,13 @@ function cancelPend(s, ctx) {
     ctx.clearTimer('who-pend');
   }
 }
-// Большинство (или все) ответили → решение: «да» — следующий вопрос, «нет» — ход дальше
+// Ответы больше не передают ход: игрок спрашивает, пока сам не нажмёт «Передать ход» (или не кончится время)
 function checkAnswers(s, ctx) {
-  const q = s.q;
-  if (!q || s.phase !== 'play') return cancelPend(s, ctx);
-  const need = voters(s, ctx);
-  if (!need.length) return cancelPend(s, ctx);
-  const t = tally(q);
-  // Большинство уже ответило одинаково — не ждём тех, кто задумался
-  const half = Math.floor(need.length / 2) + 1;
-  let v = t.yes >= half ? 'yes' : t.no >= half ? 'no' : null;
-  if (!v) {
-    if (!need.every((id) => q.answers[id])) return cancelPend(s, ctx);
-    if (t.yes === t.no && t.yes > 0) return cancelPend(s, ctx); // поровну — ждём, пока договорятся
-    v = verdict(t);
-  }
-  // Решение сразу, без отсчёта: «да» — тот же игрок спрашивает дальше, «нет» — спрашивает следующий
   cancelPend(s, ctx);
-  if (v === 'no') advance(s, ctx);
-  else {
-    archive(s); // «да» (или «не знаю») — следующий вопрос
-    startQ(s, ctx);
-  }
 }
 
 function advance(s, ctx) {
+  stopClock(s, ctx);
   archive(s);
   const act = active(s, ctx);
   if (act.length) {
@@ -180,9 +189,6 @@ function action(s, pid, msg, ctx) {
       if (!String(msg.text || '').trim()) return 'Напишите вопрос';
       if (s.q && !Object.keys(s.q.answers).length) s.q.text = String(msg.text).trim().slice(0, 120); // поправить ещё не отвеченный
       else newQ(s, pid, msg.text);
-      // Минута — только на то, чтобы придумать вопрос; пока отвечают, таймер не идёт
-      ctx.clearTimer('who-q');
-      s.qEnds = null;
       return;
     }
     case 'answer': {
@@ -198,10 +204,13 @@ function action(s, pid, msg, ctx) {
       return;
     }
     case 'addTime': {
+      // Хост добавляет минуту на часы того, кто сейчас ходит
       if (!ctx.isHost) return 'Только хост';
-      if (s.phase !== 'play' || !s.qEnds) return;
-      s.qEnds += 30000;
-      ctx.setTimer('who-q', s.qEnds - Date.now(), () => s.phase === 'play' && advance(s, ctx));
+      if (s.phase !== 'play' || !s.clockPid) return;
+      const a = s.a[s.clockPid];
+      stopClock(s, ctx);
+      a.left += 60000;
+      startQ(s, ctx);
       return;
     }
     case 'clearVotes': {
@@ -217,7 +226,6 @@ function action(s, pid, msg, ctx) {
       if (!s.q) return;
       s.q = null;
       cancelPend(s, ctx);
-      startQ(s, ctx);
       return;
     }
     case 'next': {
@@ -235,19 +243,16 @@ function action(s, pid, msg, ctx) {
         a.guessedAt = Date.now();
         s.finishOrder.push(pid);
       } else a.gaveUp = true;
+      if (s.clockPid === pid) stopClock(s, ctx);
+      if (finishIfDone(s, ctx)) return;
       if (s.order[s.turn] === pid) advance(s, ctx);
-      if (Object.entries(s.a).every(([id, x]) => x.guessedAt || x.gaveUp || !ctx.room.players.get(id))) {
-        s.phase = 'over';
-        ctx.clearTimer('who-q');
-        s.qEnds = null;
-      }
       return;
     }
     case 'addMe': {
       // Опоздавший игрок получает случайного персонажа
       if (s.a[pid]) return;
       s.order.push(pid);
-      s.a[pid] = { char: s.deck.draw(), writer: null, qa: [] };
+      s.a[pid] = { char: s.deck.draw(), writer: null, qa: [], left: BANK_MS };
       return;
     }
   }
@@ -269,6 +274,8 @@ function view(s, pid, ctx) {
     finishOrder: s.finishOrder,
     points: points(s),
     qEnds: s.phase === 'play' ? s.qEnds : null,
+    bank: BANK_MS,
+    clockPid: s.phase === 'play' ? s.clockPid : null,
     q: s.q && s.phase === 'play' ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0 && (!ctx || voters(s, ctx).every((id) => s.q.answers[id])), pend: s.pend && s.pend.qid === s.q.id ? { v: s.pend.v, at: s.pend.at, ms: s.pend.ms } : null } : null,
     players: Object.fromEntries(
       Object.entries(s.a).map(([id, a]) => [
@@ -279,6 +286,8 @@ function view(s, pid, ctx) {
           writer: a.writer,
           guessed: !!a.guessedAt,
           gaveUp: !!a.gaveUp,
+          timeUp: !!a.timeUp,
+          left: a.left ?? BANK_MS,
           qa: a.qa.slice(-40),
         },
       ])
@@ -291,7 +300,10 @@ function onLeave(s, pid, ctx) {
   if (!s.a[pid]) return;
   const cur = s.order[s.turn];
   const wasTurn = cur === pid;
-  if (wasTurn) archive(s);
+  if (wasTurn) {
+    stopClock(s, ctx);
+    archive(s);
+  }
   // кому он должен был загадать — получает случайного персонажа
   for (const a of Object.values(s.a)) if (a.writer === pid) {
     a.writer = null;
@@ -313,25 +325,24 @@ function onLeave(s, pid, ctx) {
   }
   if (s.phase === 'play' && Object.entries(s.a).every(([, x]) => x.guessedAt || x.gaveUp)) {
     s.phase = 'over';
-    ctx.clearTimer('who-q');
-    s.qEnds = null;
+    stopClock(s, ctx);
     return;
   }
   if (wasTurn) advance(s, ctx); // ход переходит следующему
   else checkAnswers(s, ctx);
 }
 const onPresence = (s, ctx) => checkAnswers(s, ctx);
-// Пауза (лобби): таймер вопроса замирает
+// Пауза (лобби): часы игрока замирают
 function pause(s, ctx) {
-  if (!s.qEnds) return;
-  s._left = Math.max(0, s.qEnds - Date.now());
-  ctx.clearTimer('who-q');
+  if (s.phase === 'play' && s.clockPid) {
+    s._paused = true;
+    stopClock(s, ctx);
+  }
 }
 function resume(s, ctx) {
-  if (s._left == null || s.phase !== 'play') return;
-  s.qEnds = Date.now() + s._left;
-  ctx.setTimer('who-q', s._left, () => s.phase === 'play' && advance(s, ctx));
-  s._left = null;
+  if (!s._paused || s.phase !== 'play') return;
+  s._paused = false;
+  startQ(s, ctx);
 }
 
 function points(s) {

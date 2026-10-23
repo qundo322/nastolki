@@ -214,29 +214,20 @@ function bot(name, real = '') {
   const w2o = bots.filter((b) => b !== wAsk2);
   assert((await w2o[0].act('answer', { v: 'yes' })).error, 'no voice questions — need text');
   assert((await wAsk2.act('ask', { text: '' })).error, 'empty question rejected');
-  assert(g(h).qEnds > Date.now() + 50000, 'question timer ~60s');
+  // у каждого свои 5 минут: идут часы того, кто ходит; ответы ход не передают
+  const bank2 = g(h).players[wAsk2.st.me].left;
+  assert(g(h).clockPid === wAsk2.st.me && g(h).qEnds > Date.now() + 4 * 60000, 'own 5-minute clock is running');
+  assert(g(h).players[wAsk.st.me].left < 5 * 60000 && g(h).players[wAsk.st.me].left > 4 * 60000, 'previous player clock stopped and saved');
   await wAsk2.act('ask', { text: 'Я живой?' });
-  await wait(40);
-  assert(!g(h).qEnds, 'timer only while composing a question');
-  for (const b of w2o.slice(0, Math.floor(w2o.length / 2) + 1)) await b.act('answer', { v: 'yes' });
-  await wait(60);
-
-  assert(g(h).turnPid === wAsk2.st.me && !g(h).q && g(h).players[wAsk2.st.me].qa.length === 1, 'all yes → same asker, next question');
-  // ничья «да»/«нет» — ждём
-  await wAsk2.act('ask', { text: 'Я из сериала?' });
-  await w2o[0].act('answer', { v: 'yes' });
-  await w2o[1].act('answer', { v: 'yes' });
-  await w2o[2].act('answer', { v: 'no' });
-  await w2o[3].act('answer', { v: 'no' });
-  await wait(60);
-  assert(g(h).turnPid === wAsk2.st.me && g(h).q && g(h).q.split, 'tie → wait for agreement');
-  await w2o[3].act('answer', { v: 'yes' });
-  await wait(2200);
-  assert(!g(h).q && g(h).turnPid === wAsk2.st.me, 'tie resolved by change of vote');
-  await wAsk2.act('ask', { text: 'Я из книги?' });
   for (const b of w2o) await b.act('answer', { v: 'no' });
-  await wait(2200);
-  assert(g(h).turnPid !== wAsk2.st.me, 'all no → turn passes');
+  await wait(60);
+  assert(g(h).turnPid === wAsk2.st.me, 'all no → turn does NOT pass');
+  await wAsk2.act('ask', { text: 'Я из книги?' });
+  await wait(30);
+  assert(g(h).players[wAsk2.st.me].qa.length === 1, 'new question archives the previous one');
+  await wAsk2.act('next');
+  await wait(40);
+  assert(g(h).turnPid !== wAsk2.st.me && g(h).players[wAsk2.st.me].left <= bank2, 'pass turn → own clock stops');
   for (const b of bots) await b.act('guessed');
   await wait(100);
   const pts = g(h).points;

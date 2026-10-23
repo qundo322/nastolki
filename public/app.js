@@ -1725,7 +1725,7 @@
       if (!t) items.push(btn('spy-next', 'reset', 'Новый раунд'));
     } else if (g.type === 'whoami') {
       if (g.phase === 'play') {
-        items.push(plusT('h-addtime', 30));
+        items.push(plusT('h-addtime', 60));
         if (g.q) items.push(btn('h-clearvotes', 'x', 'Сбросить ответы на вопрос'));
         if (g.q) items.push(btn('h-skipq', 'reset', 'Не засчитывать вопрос'));
         items.push(btn('who-next', 'skip', 'Передать ход'));
@@ -2340,7 +2340,7 @@
     let c = null;
     if (g.type === 'alias' && g.phase === 'running' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
     else if (g.type === 'spyfall' && g.phase === 'play' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
-    else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'придумывает вопрос' };
+    else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: g.bank || 300000, team: nm(g.turnPid), phase: 'его время' };
     else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', guess: `угадывает ${nm(g.guesser)}`, result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
     else if ((g.type === 'quiz' || g.type === 'wot') && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
     else if (g.type === 'majority' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 45000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'тайные ответы' : 'разбор совпадений' };
@@ -2848,6 +2848,19 @@
     'Я связан с комедией?', 'Я персонаж Disney или Pixar?', 'Я персонаж Marvel или DC?',
   ];
 
+  const fmtClock = (ms) => {
+    const t = Math.ceil(ms / 1000);
+    return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+  };
+  // Часы игроков в «Кто я» тикают без перерисовки
+  setInterval(() => {
+    for (const el of document.querySelectorAll('[data-wclock]')) {
+      const left = Math.max(0, Number(el.dataset.wclock) - now());
+      const b = el.querySelector('b');
+      if (b) b.textContent = fmtClock(left);
+      el.classList.toggle('low', left < 60000);
+    }
+  }, 500);
   function rWho(g) {
     const me = S.me;
     if (!g.inGame) return `<div class="narrow"><div class="stage-card"><p>Игра уже идёт.</p><button class="btn primary mega" data-act="who-add">Присоединиться со случайным персонажем</button></div></div>`;
@@ -2908,7 +2921,13 @@
           <div class="wt-body">
             <span class="wt-name">${speaking ? `<span class="wt-mic">${ic('mic', 12)}</span>` : ''}${nm(id)}${isMe ? ' <small>(вы)</small>' : ''}</span>
             <div class="wt-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 16)} это вы`}</div>
-            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ans === null ? '<b class="wt-slow">ещё не ответил</b>' : ans ? `<span class="wt-did">ответил${ans === 'yes' ? ' «да»' : ans === 'no' ? ' «нет»' : ' «не знаю»'}</span>` : ''}</span>
+            ${!over && !p.guessed && !p.gaveUp ? (() => {
+              // свои часы игрока: тикают только в его ход
+              const run = g.clockPid === id && g.qEnds;
+              const left = run ? Math.max(0, g.qEnds - now()) : p.left ?? g.bank;
+              return `<span class="wt-clock ${run ? 'run' : ''} ${left < 60000 ? 'low' : ''}" ${run ? `data-wclock="${g.qEnds}"` : ''} title="Осталось времени на ходы">${ic('clock', 12)}<b>${fmtClock(left)}</b></span>`;
+            })() : ''}
+            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.timeUp ? 'время вышло' : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ans === null ? '<b class="wt-slow">ещё не ответил</b>' : ans ? `<span class="wt-did">ответил${ans === 'yes' ? ' «да»' : ans === 'no' ? ' «нет»' : ' «не знаю»'}</span>` : ''}</span>
           </div>
           ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" decoding="sync">` : ''}
         </div>`;
@@ -2988,7 +3007,7 @@
         <div class="who-list">${tiles}</div>
       </aside>
       <div class="who-main">
-      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута, чтобы придумать вопрос. Большинство «нет» — ход переходит.</span>`}</div>
+      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — идут его часы. Ход передаёт сам игрок кнопкой «Передать ход»; у каждого 5 минут на всю игру.</span>`}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>

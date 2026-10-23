@@ -3163,6 +3163,15 @@ html.v-calm .gift-toast, html.v-calm .gift-toast .gt-e { animation: none; }
 .icon-x.gift-x i { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; background: var(--red); color: #fff; }
 .icon-x.gift-x:hover img.gimg { opacity: .55; }
 
+/* ---- Кто я: свои часы у каждого игрока ---- */
+.wt-clock { display: inline-flex; align-items: center; gap: 4px; width: max-content; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--surface-3); font-variant-numeric: tabular-nums; }
+.wt-clock b { font-weight: 800; }
+.wt-clock.run { color: var(--accent-ink); background: var(--accent-bg); box-shadow: 0 0 0 3px var(--accent-soft); }
+.wt-clock.low { color: #fff; background: var(--red); }
+.wt-clock.run.low { animation: wcPulse 1s ease-in-out infinite; }
+@keyframes wcPulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--red) 30%, transparent); } }
+html.v-calm .wt-clock.run.low { animation: none; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -5142,7 +5151,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       var { CHARACTERS } = require_words();
       var { shuffle, Deck, countLabel } = require_util();
       var Avatars = require_avatars();
-      var Q_MS = 6e4;
+      var BANK_MS = 5 * 60 * 1e3;
       var meta = {
         title: "\u041A\u0442\u043E \u044F?",
         emoji: "\u{1F914}",
@@ -5152,7 +5161,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         rules: [
           "\u041A\u0430\u0436\u0434\u043E\u043C\u0443 \u0438\u0433\u0440\u043E\u043A\u0443 \u0434\u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436: \u0435\u0433\u043E \u0432\u0438\u0434\u044F\u0442 \u0432\u0441\u0435, \u043A\u0440\u043E\u043C\u0435 \u0441\u0430\u043C\u043E\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430. \u041F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0435\u0439 \u0440\u0430\u0437\u0434\u0430\u044E\u0442 \u0441\u043B\u0443\u0447\u0430\u0439\u043D\u043E \u0438\u043B\u0438 \u043A\u0430\u0436\u0434\u044B\u0439 \u0437\u0430\u0433\u0430\u0434\u044B\u0432\u0430\u0435\u0442 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u0441\u043E\u0441\u0435\u0434\u0443.",
           "\u0412 \u0441\u0432\u043E\u0439 \u0445\u043E\u0434 \u043F\u0438\u0448\u0438 \u0432\u043E\u043F\u0440\u043E\u0441\u044B, \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043C\u043E\u0436\u043D\u043E \u043E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \xAB\u0434\u0430\xBB \u0438\u043B\u0438 \xAB\u043D\u0435\u0442\xBB. \u041E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043E\u0442\u0432\u0435\u0447\u0430\u044E\u0442 \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438 \xAB\u0414\u0430 / \u041D\u0435\u0442 / \u041D\u0435 \u0437\u043D\u0430\u044E\xBB \u2014 \u0432\u043E\u043F\u0440\u043E\u0441 \u0438 \u043E\u0442\u0432\u0435\u0442 \u043F\u043E\u043F\u0430\u0434\u0430\u044E\u0442 \u0432 \u0442\u0432\u043E\u044E \u0438\u0441\u0442\u043E\u0440\u0438\u044E.",
-          "\u041A\u043E\u0433\u0434\u0430 \u043E\u0442\u0432\u0435\u0442\u0438\u043B\u0438 \u0432\u0441\u0435: \u0431\u043E\u043B\u044C\u0448\u0435 \xAB\u0434\u0430\xBB \u2014 \u0437\u0430\u0434\u0430\u0432\u0430\u0439 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0432\u043E\u043F\u0440\u043E\u0441; \u0431\u043E\u043B\u044C\u0448\u0435 \xAB\u043D\u0435\u0442\xBB \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442 \u0434\u0430\u043B\u044C\u0448\u0435. \u041A\u0430\u043A \u0442\u043E\u043B\u044C\u043A\u043E \u0431\u043E\u043B\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u043E \u043E\u0442\u0432\u0435\u0442\u0438\u043B\u043E \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u043E, \u0440\u0435\u0448\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u043D\u0438\u043C\u0430\u0435\u0442\u0441\u044F \u0441\u0440\u0430\u0437\u0443: \xAB\u0434\u0430\xBB \u2014 \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0448\u044C \u0434\u0430\u043B\u044C\u0448\u0435, \xAB\u043D\u0435\u0442\xBB \u2014 \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0438\u0433\u0440\u043E\u043A. \u0415\u0441\u043B\u0438 \xAB\u0434\u0430\xBB \u0438 \xAB\u043D\u0435\u0442\xBB \u043F\u043E\u0440\u043E\u0432\u043D\u0443 \u2014 \u0436\u0434\u0451\u043C, \u043F\u043E\u043A\u0430 \u0438\u0433\u0440\u043E\u043A\u0438 \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u044F\u0442\u0441\u044F. \u041D\u0430 \u0442\u043E, \u0447\u0442\u043E\u0431\u044B \u043F\u0440\u0438\u0434\u0443\u043C\u0430\u0442\u044C \u0432\u043E\u043F\u0440\u043E\u0441, \u2014 \u043C\u0438\u043D\u0443\u0442\u0430; \u043D\u0435 \u0443\u0441\u043F\u0435\u043B \u2014 \u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0438\u0442.",
+          "\u0423 \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430 \u0441\u0432\u043E\u0438 \u0447\u0430\u0441\u044B \u2014 5 \u043C\u0438\u043D\u0443\u0442 \u043D\u0430 \u0432\u0441\u044E \u0438\u0433\u0440\u0443. \u0412 \u0442\u0432\u043E\u0439 \u0445\u043E\u0434 \u0442\u0438\u043A\u0430\u044E\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0442\u0432\u043E\u0438 \u0447\u0430\u0441\u044B; \u0437\u0430\u0434\u0430\u0432\u0430\u0439 \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0443\u0433\u043E\u0434\u043D\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432 \u2014 \u043E\u0442\u0432\u0435\u0442\u044B \xAB\u0434\u0430\xBB \u0438\u043B\u0438 \xAB\u043D\u0435\u0442\xBB \u0445\u043E\u0434 \u043D\u0435 \u043F\u0435\u0440\u0435\u0434\u0430\u044E\u0442.",
+          "\u041D\u0435 \u0437\u043D\u0430\u0435\u0448\u044C, \u0447\u0442\u043E \u0441\u043F\u0440\u043E\u0441\u0438\u0442\u044C, \u2014 \u043D\u0430\u0436\u043C\u0438 \xAB\u041F\u0435\u0440\u0435\u0434\u0430\u0442\u044C \u0445\u043E\u0434\xBB: \u0442\u0432\u043E\u0438 \u0447\u0430\u0441\u044B \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u044F\u0442\u0441\u044F \u0438 \u043F\u043E\u0439\u0434\u0443\u0442 \u0447\u0430\u0441\u044B \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u0433\u043E \u0438\u0433\u0440\u043E\u043A\u0430. \u0412 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0440\u0430\u0437 \u043E\u043D\u0438 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442 \u0441 \u0442\u043E\u0433\u043E \u0436\u0435 \u043C\u0435\u0441\u0442\u0430. \u0412\u0440\u0435\u043C\u044F \u043A\u043E\u043D\u0447\u0438\u043B\u043E\u0441\u044C \u2014 \u0442\u044B \u0432\u044B\u0431\u044B\u0432\u0430\u0435\u0448\u044C (\u043A\u0430\u043A \u0435\u0441\u043B\u0438 \u0431\u044B \u0441\u0434\u0430\u043B\u0441\u044F).",
           "\u0414\u0443\u043C\u0430\u0435\u0448\u044C, \u0447\u0442\u043E \u0437\u043D\u0430\u0435\u0448\u044C \u043E\u0442\u0432\u0435\u0442, \u2014 \u043D\u0430\u0437\u043E\u0432\u0438 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u0432\u0441\u043B\u0443\u0445. \u0423\u0433\u0430\u0434\u0430\u043B \u2014 \u043D\u0430\u0436\u043C\u0438 \xAB\u042F \u0443\u0433\u0430\u0434\u0430\u043B\xBB, \u0438 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436 \u043E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F \u0442\u0435\u0431\u0435.",
           "\u041E\u0447\u043A\u0438: \u0443\u0433\u0430\u0434\u0430\u043B \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0430 \u2014 +1. \u0411\u043E\u043D\u0443\u0441 \u0437\u0430 \u0441\u043A\u043E\u0440\u043E\u0441\u0442\u044C: \u043F\u0435\u0440\u0432\u044B\u0439 \u0443\u0433\u0430\u0434\u0430\u0432\u0448\u0438\u0439 +2, \u0432\u0442\u043E\u0440\u043E\u0439 +1. \u0421\u0434\u0430\u043B\u0441\u044F \u2014 0."
         ],
@@ -5186,7 +5196,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           qn: 0
         };
         ids.forEach((id, i) => {
-          s.a[id] = { char: s.mode === "random" ? s.deck.draw() : null, writer: ids[(i + ids.length - 1) % ids.length], qa: [] };
+          s.a[id] = { char: s.mode === "random" ? s.deck.draw() : null, writer: ids[(i + ids.length - 1) % ids.length], qa: [], left: BANK_MS };
         });
         s.phase = s.mode === "random" ? "play" : "write";
         if (s.phase === "play") startQ(s, ctx);
@@ -5220,14 +5230,40 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         archive(s);
         s.q = { id: ++s.qn, asker, text: String(text || "").trim().slice(0, 120), answers: {} };
       }
-      function startQ(s, ctx) {
+      function stopClock(s, ctx) {
         ctx.clearTimer("who-q");
-        if (s.phase !== "play") return s.qEnds = null;
-        s.qEnds = Date.now() + Q_MS;
-        ctx.setTimer("who-q", Q_MS, () => {
-          if (s.phase !== "play") return;
-          advance(s, ctx);
+        const id = s.clockPid;
+        if (id && s.a[id] && s.turnAt) s.a[id].left = Math.max(0, s.a[id].left - (Date.now() - s.turnAt));
+        s.clockPid = null;
+        s.turnAt = null;
+        s.qEnds = null;
+      }
+      function startQ(s, ctx) {
+        stopClock(s, ctx);
+        if (s.phase !== "play") return;
+        const id = s.order[s.turn];
+        const a = s.a[id];
+        if (!a || a.guessedAt || a.gaveUp) return;
+        if (a.left == null) a.left = BANK_MS;
+        s.clockPid = id;
+        s.turnAt = Date.now();
+        s.qEnds = s.turnAt + a.left;
+        ctx.setTimer("who-q", a.left, () => {
+          if (s.phase !== "play" || s.clockPid !== id) return;
+          stopClock(s, ctx);
+          a.left = 0;
+          a.gaveUp = true;
+          a.timeUp = true;
+          if (!finishIfDone(s, ctx)) advance(s, ctx);
         });
+      }
+      function finishIfDone(s, ctx) {
+        if (Object.entries(s.a).every(([id, x]) => x.guessedAt || x.gaveUp || !ctx.room.players.get(id))) {
+          s.phase = "over";
+          stopClock(s, ctx);
+          return true;
+        }
+        return false;
       }
       var voters = (s, ctx) => Object.keys(s.a).filter((id) => id !== s.order[s.turn] && ctx.room.players.get(id) && ctx.room.players.get(id).connected !== false);
       function cancelPend(s, ctx) {
@@ -5237,26 +5273,10 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         }
       }
       function checkAnswers(s, ctx) {
-        const q = s.q;
-        if (!q || s.phase !== "play") return cancelPend(s, ctx);
-        const need = voters(s, ctx);
-        if (!need.length) return cancelPend(s, ctx);
-        const t = tally(q);
-        const half = Math.floor(need.length / 2) + 1;
-        let v = t.yes >= half ? "yes" : t.no >= half ? "no" : null;
-        if (!v) {
-          if (!need.every((id) => q.answers[id])) return cancelPend(s, ctx);
-          if (t.yes === t.no && t.yes > 0) return cancelPend(s, ctx);
-          v = verdict(t);
-        }
         cancelPend(s, ctx);
-        if (v === "no") advance(s, ctx);
-        else {
-          archive(s);
-          startQ(s, ctx);
-        }
       }
       function advance(s, ctx) {
+        stopClock(s, ctx);
         archive(s);
         const act = active2(s, ctx);
         if (act.length) {
@@ -5309,8 +5329,6 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             if (!String(msg.text || "").trim()) return "\u041D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u043E\u043F\u0440\u043E\u0441";
             if (s.q && !Object.keys(s.q.answers).length) s.q.text = String(msg.text).trim().slice(0, 120);
             else newQ(s, pid, msg.text);
-            ctx.clearTimer("who-q");
-            s.qEnds = null;
             return;
           }
           case "answer": {
@@ -5327,9 +5345,11 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           }
           case "addTime": {
             if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
-            if (s.phase !== "play" || !s.qEnds) return;
-            s.qEnds += 3e4;
-            ctx.setTimer("who-q", s.qEnds - Date.now(), () => s.phase === "play" && advance(s, ctx));
+            if (s.phase !== "play" || !s.clockPid) return;
+            const a = s.a[s.clockPid];
+            stopClock(s, ctx);
+            a.left += 6e4;
+            startQ(s, ctx);
             return;
           }
           case "clearVotes": {
@@ -5344,7 +5364,6 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             if (!s.q) return;
             s.q = null;
             cancelPend(s, ctx);
-            startQ(s, ctx);
             return;
           }
           case "next": {
@@ -5362,18 +5381,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
               a.guessedAt = Date.now();
               s.finishOrder.push(pid);
             } else a.gaveUp = true;
+            if (s.clockPid === pid) stopClock(s, ctx);
+            if (finishIfDone(s, ctx)) return;
             if (s.order[s.turn] === pid) advance(s, ctx);
-            if (Object.entries(s.a).every(([id, x]) => x.guessedAt || x.gaveUp || !ctx.room.players.get(id))) {
-              s.phase = "over";
-              ctx.clearTimer("who-q");
-              s.qEnds = null;
-            }
             return;
           }
           case "addMe": {
             if (s.a[pid]) return;
             s.order.push(pid);
-            s.a[pid] = { char: s.deck.draw(), writer: null, qa: [] };
+            s.a[pid] = { char: s.deck.draw(), writer: null, qa: [], left: BANK_MS };
             return;
           }
         }
@@ -5394,19 +5410,26 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           finishOrder: s.finishOrder,
           points: points(s),
           qEnds: s.phase === "play" ? s.qEnds : null,
+          bank: BANK_MS,
+          clockPid: s.phase === "play" ? s.clockPid : null,
           q: s.q && s.phase === "play" ? { id: s.q.id, asker: s.q.asker, text: s.q.text, ...tally(s.q), mine: s.q.answers[pid] || null, who: s.q.answers, split: tally(s.q).yes === tally(s.q).no && tally(s.q).yes > 0 && (!ctx || voters(s, ctx).every((id) => s.q.answers[id])), pend: s.pend && s.pend.qid === s.q.id ? { v: s.pend.v, at: s.pend.at, ms: s.pend.ms } : null } : null,
           players: Object.fromEntries(
-            Object.entries(s.a).map(([id, a]) => [
-              id,
-              {
-                char: s.phase === "write" ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== "over" ? null : a.char,
-                img: s.phase === "write" ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== "over" ? null : a.img || null,
-                writer: a.writer,
-                guessed: !!a.guessedAt,
-                gaveUp: !!a.gaveUp,
-                qa: a.qa.slice(-40)
-              }
-            ])
+            Object.entries(s.a).map(([id, a]) => {
+              var _a;
+              return [
+                id,
+                {
+                  char: s.phase === "write" ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== "over" ? null : a.char,
+                  img: s.phase === "write" ? null : id === pid && !a.guessedAt && !a.gaveUp && s.phase !== "over" ? null : a.img || null,
+                  writer: a.writer,
+                  guessed: !!a.guessedAt,
+                  gaveUp: !!a.gaveUp,
+                  timeUp: !!a.timeUp,
+                  left: (_a = a.left) != null ? _a : BANK_MS,
+                  qa: a.qa.slice(-40)
+                }
+              ];
+            })
           )
         };
       }
@@ -5414,7 +5437,10 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         if (!s.a[pid]) return;
         const cur = s.order[s.turn];
         const wasTurn = cur === pid;
-        if (wasTurn) archive(s);
+        if (wasTurn) {
+          stopClock(s, ctx);
+          archive(s);
+        }
         for (const a of Object.values(s.a)) if (a.writer === pid) {
           a.writer = null;
           if (!a.char) a.char = s.deck.draw();
@@ -5435,8 +5461,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
         }
         if (s.phase === "play" && Object.entries(s.a).every(([, x]) => x.guessedAt || x.gaveUp)) {
           s.phase = "over";
-          ctx.clearTimer("who-q");
-          s.qEnds = null;
+          stopClock(s, ctx);
           return;
         }
         if (wasTurn) advance(s, ctx);
@@ -5444,15 +5469,15 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
       }
       var onPresence = (s, ctx) => checkAnswers(s, ctx);
       function pause(s, ctx) {
-        if (!s.qEnds) return;
-        s._left = Math.max(0, s.qEnds - Date.now());
-        ctx.clearTimer("who-q");
+        if (s.phase === "play" && s.clockPid) {
+          s._paused = true;
+          stopClock(s, ctx);
+        }
       }
       function resume(s, ctx) {
-        if (s._left == null || s.phase !== "play") return;
-        s.qEnds = Date.now() + s._left;
-        ctx.setTimer("who-q", s._left, () => s.phase === "play" && advance(s, ctx));
-        s._left = null;
+        if (!s._paused || s.phase !== "play") return;
+        s._paused = false;
+        startQ(s, ctx);
       }
       function points(s) {
         const out = {};
@@ -10078,16 +10103,17 @@ window.RULES = {
       'Персонажей раздают случайно или каждый загадывает персонажа соседу — как решит хост.',
       'В свой ход задавай вопросы, на которые отвечают только «да» или «нет»: «Я человек?», «Я из фильма?». Вопрос можно напечатать или сказать голосом.',
       'Остальные отвечают кнопками «Да / Нет / Не знаю». Вопрос и ответ сами попадают в твою историю — видно, что ты уже спрашивал.',
-      'Ответили «да» — спрашивай дальше. Ответили «нет» — нажми «Передать ход».',
+      'У каждого свои часы — 5 минут на всю игру, как в шахматах. В твой ход идут только твои часы. Ответы «да» и «нет» ход не передают — спрашивай сколько хочешь.',
+      'Не знаешь, что спросить, — жми «Передать ход»: твои часы остановятся и пойдут часы следующего. В следующий ход продолжат с того же места. Время кончилось — ты выбываешь.',
       'Думаешь, что знаешь, — назови персонажа вслух. Угадал — жми «Я угадал», и он откроется тебе.',
     ],
     points: [
       ['+1', 'угадал своего персонажа'],
       ['+2', 'бонус тому, кто угадал первым'],
       ['+1', 'бонус второму угадавшему'],
-      ['0', 'если сдался'],
+      ['0', 'если сдался или кончилось время'],
     ],
-    win: 'Больше всех очков, когда все угадали или сдались.',
+    win: 'Больше всех очков, когда все угадали, сдались или потратили своё время.',
     tips: ['Начинай с широких вопросов (реальный? живой? мужчина?), потом сужай.', 'Записывай ответы в заметки — они видны только тебе.'],
   },
   justone: {
@@ -12412,7 +12438,7 @@ void main(){
       if (!t) items.push(btn('spy-next', 'reset', 'Новый раунд'));
     } else if (g.type === 'whoami') {
       if (g.phase === 'play') {
-        items.push(plusT('h-addtime', 30));
+        items.push(plusT('h-addtime', 60));
         if (g.q) items.push(btn('h-clearvotes', 'x', 'Сбросить ответы на вопрос'));
         if (g.q) items.push(btn('h-skipq', 'reset', 'Не засчитывать вопрос'));
         items.push(btn('who-next', 'skip', 'Передать ход'));
@@ -13027,7 +13053,7 @@ void main(){
     let c = null;
     if (g.type === 'alias' && g.phase === 'running' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.seconds * 1000, team: g.teams?.[g.turnTeam]?.name, phase: `объясняет ${nm(g.explainer)}`, tc: ALIAS_BG[g.turnTeam] };
     else if (g.type === 'spyfall' && g.phase === 'play' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
-    else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'придумывает вопрос' };
+    else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: g.bank || 300000, team: nm(g.turnPid), phase: 'его время' };
     else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', guess: `угадывает ${nm(g.guesser)}`, result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
     else if ((g.type === 'quiz' || g.type === 'wot') && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
     else if (g.type === 'majority' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 45000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'тайные ответы' : 'разбор совпадений' };
@@ -13535,6 +13561,19 @@ void main(){
     'Я связан с комедией?', 'Я персонаж Disney или Pixar?', 'Я персонаж Marvel или DC?',
   ];
 
+  const fmtClock = (ms) => {
+    const t = Math.ceil(ms / 1000);
+    return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+  };
+  // Часы игроков в «Кто я» тикают без перерисовки
+  setInterval(() => {
+    for (const el of document.querySelectorAll('[data-wclock]')) {
+      const left = Math.max(0, Number(el.dataset.wclock) - now());
+      const b = el.querySelector('b');
+      if (b) b.textContent = fmtClock(left);
+      el.classList.toggle('low', left < 60000);
+    }
+  }, 500);
   function rWho(g) {
     const me = S.me;
     if (!g.inGame) return `<div class="narrow"><div class="stage-card"><p>Игра уже идёт.</p><button class="btn primary mega" data-act="who-add">Присоединиться со случайным персонажем</button></div></div>`;
@@ -13595,7 +13634,13 @@ void main(){
           <div class="wt-body">
             <span class="wt-name">${speaking ? `<span class="wt-mic">${ic('mic', 12)}</span>` : ''}${nm(id)}${isMe ? ' <small>(вы)</small>' : ''}</span>
             <div class="wt-char ${p.char ? '' : 'hidden-char'}">${p.char ? esc(p.char) : `${ic('question', 16)} это вы`}</div>
-            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ans === null ? '<b class="wt-slow">ещё не ответил</b>' : ans ? `<span class="wt-did">ответил${ans === 'yes' ? ' «да»' : ans === 'no' ? ' «нет»' : ' «не знаю»'}</span>` : ''}</span>
+            ${!over && !p.guessed && !p.gaveUp ? (() => {
+              // свои часы игрока: тикают только в его ход
+              const run = g.clockPid === id && g.qEnds;
+              const left = run ? Math.max(0, g.qEnds - now()) : p.left ?? g.bank;
+              return `<span class="wt-clock ${run ? 'run' : ''} ${left < 60000 ? 'low' : ''}" ${run ? `data-wclock="${g.qEnds}"` : ''} title="Осталось времени на ходы">${ic('clock', 12)}<b>${fmtClock(left)}</b></span>`;
+            })() : ''}
+            <span class="wt-st">${p.guessed ? `${ic('check', 13)} угадал${place >= 0 ? ` #${place + 1}` : ''} · +${g.points[id]}` : p.timeUp ? 'время вышло' : p.gaveUp ? 'сдался' : speaking ? 'спрашивает' : ans === null ? '<b class="wt-slow">ещё не ответил</b>' : ans ? `<span class="wt-did">ответил${ans === 'yes' ? ' «да»' : ans === 'no' ? ' «нет»' : ' «не знаю»'}</span>` : ''}</span>
           </div>
           ${p.img ? `<img class="wt-img" src="${esc(p.img)}" alt="" decoding="sync">` : ''}
         </div>`;
@@ -13675,7 +13720,7 @@ void main(){
         <div class="who-list">${tiles}</div>
       </aside>
       <div class="who-main">
-      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — минута, чтобы придумать вопрос. Большинство «нет» — ход переходит.</span>`}</div>
+      <div class="banner">${over ? `${ic('sparkles', 18)} Все персонажи угаданы!` : `<span>${ic('mic', 16)} Спрашивает <b>${nm(g.turnPid)}</b> — идут его часы. Ход передаёт сам игрок кнопкой «Передать ход»; у каждого 5 минут на всю игру.</span>`}</div>
       ${over ? `<div class="card"><div class="side-h">Очки <span class="muted small">— угадал +1, первый +2, второй +1</span></div>${leaderboard(Object.entries(g.points))}</div>` : ''}
       ${qBox}
       <div class="card notes-card">${myQa.length && asker !== me ? `<div class="side-h">${ic('list', 16)} Мои вопросы и ответы</div>${qaCards(myQa)}` : ''}<div class="side-h">${ic('pencil', 16)} Мои заметки <span class="muted small">— видно только вам</span></div><textarea class="inp notes" data-keep="notes" data-notes="${notesKey}" rows="2" placeholder="Не человек, мужчина, из фильма…">${esc(LS.get(notesKey, ''))}</textarea></div>

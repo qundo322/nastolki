@@ -3155,3 +3155,12 @@ html.v-calm .gift-toast, html.v-calm .gift-toast .gt-e { animation: none; }
 .icon-x.gift-x img.gimg { width: 20px; height: 20px; }
 .icon-x.gift-x i { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; background: var(--red); color: #fff; }
 .icon-x.gift-x:hover img.gimg { opacity: .55; }
+
+/* ---- Кто я: свои часы у каждого игрока ---- */
+.wt-clock { display: inline-flex; align-items: center; gap: 4px; width: max-content; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--surface-3); font-variant-numeric: tabular-nums; }
+.wt-clock b { font-weight: 800; }
+.wt-clock.run { color: var(--accent-ink); background: var(--accent-bg); box-shadow: 0 0 0 3px var(--accent-soft); }
+.wt-clock.low { color: #fff; background: var(--red); }
+.wt-clock.run.low { animation: wcPulse 1s ease-in-out infinite; }
+@keyframes wcPulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--red) 30%, transparent); } }
+html.v-calm .wt-clock.run.low { animation: none; }
