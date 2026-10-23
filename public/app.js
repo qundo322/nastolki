@@ -4169,7 +4169,7 @@
       LS.set('pg_name', name);
       LS.set('pg_real', String(fd.get('real') || '').trim());
       const go = e.submitter?.value || 'create';
-      // После входа — солидная загрузка на 10 секунд (только при логине, не при переподключении)
+      // После входа — загрузка на 2 секунды (только при логине, не при переподключении)
       Loader.show('login');
       setTimeout(() => Loader.done('login'), 2000);
       if (go === 'join') {
