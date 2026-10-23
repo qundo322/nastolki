@@ -50,6 +50,7 @@
     userplus: '<circle cx="10" cy="8" r="4"/><path d="M3 21v-1a6 6 0 0 1 6-6h2M19 14v6M16 17h6"/>',
     palette: '<circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.3" fill="currentColor"/><circle cx="12" cy="7.5" r="1.3" fill="currentColor"/><circle cx="16" cy="10" r="1.3" fill="currentColor"/><path d="M12 21a2.5 2.5 0 0 1 0-5h1.5a2.5 2.5 0 0 0 0-5"/>',
     dice5: '<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="16" cy="8" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="8" cy="16" r="1.3" fill="currentColor"/><circle cx="16" cy="16" r="1.3" fill="currentColor"/>',
+    cards: '<rect x="7" y="3" width="12" height="17" rx="2" transform="rotate(12 13 11.5)"/><path d="M5.5 6.5 4 7.2a2 2 0 0 0-1 2.4l3.6 10.1a2 2 0 0 0 2.5 1.2l2.4-.9"/><path d="M13.2 9.5c-.8-1-2.6-.6-2.6.9 0 1.4 2.6 3.1 2.6 3.1s2.6-1.7 2.6-3.1c0-1.5-1.8-1.9-2.6-.9z" fill="currentColor"/>',
     flag: '<path d="M4 21V4M4 4h12l-2 4 2 4H4"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     star: '<path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4 6.5 20.3l1-6.2L3 9.7l6.2-.9z"/>',
@@ -113,5 +114,5 @@
     const sw = small ? 2.7 : 2;
     return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   };
-  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', dice: 'dice5', majority: 'herd' };
+  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', dice: 'dice5', poker: 'cards', majority: 'herd' };
 })();

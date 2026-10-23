@@ -42,9 +42,9 @@
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
     cnEdit: false, // капитан исправляет подсказку
     mode: 'single',
-    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice'],
+    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice', 'poker'],
     mOn: { codenames: true, quiz: true, majority: true, spyfall: true },
-    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1 },
+    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1, poker: 1 },
     mOpen: {},
     showTable: false,
     ctlOpen: LS.get('pg_ctl', '') === '1',
@@ -813,6 +813,11 @@
     } else if (b.type === 'spyfall') {
       if (a.phase !== 'over' && b.phase === 'over') Sound.play(b.result?.winner === 'spy' ? (b.spies?.includes(me) ? 'win' : 'lose') : b.result?.winner === 'town' ? (b.spies?.includes(me) ? 'lose' : 'win') : 'turn');
       if (a.phase !== 'guessing' && b.phase === 'guessing') Sound.play('myturn');
+    } else if (b.type === 'poker') {
+      if (a.trick.length !== b.trick.length && b.trick.length) Sound.play('tap');
+      if (a.phase !== 'trick' && b.phase === 'trick') setTimeout(() => Sound.play(b.lastTrick?.winner === me ? 'good' : 'turn'), 300);
+      if (a.turnPid !== b.turnPid && b.turnPid === me) Sound.play('myturn');
+      if (b.phase === 'over' && a.phase !== 'over') Sound.play((b.winner || []).includes(me) ? 'win' : 'lose');
     } else if (b.type === 'dice') {
       if (a.rollId !== b.rollId && b.rollAt) Sound.play('dice');
       if (a.phase !== 'bust' && b.phase === 'bust') setTimeout(() => Sound.play('bad'), b.rollMs);
@@ -1701,6 +1706,9 @@
       }
       if (g.phase === 'review') items.push(btn('mj-skip', 'play', 'Следующий вопрос'));
       if (!t) items.push(btn('mj-restart', 'reset', 'Начать заново'));
+    } else if (g.type === 'poker') {
+      if (g.phase !== 'over') items.push(btn('pk-redeal', 'shuffle', 'Пересдать'));
+      if (!t) items.push(btn('pk-restart', 'reset', 'Начать заново'));
     } else if (g.type === 'dice') {
       if (g.phase !== 'over') items.push(btn('dc-skip', 'skip', 'Пропустить ход'));
       if (!t) items.push(btn('dc-restart', 'reset', 'Начать заново'));
@@ -1827,6 +1835,7 @@
     quiz: (id) => ((setv(id, 'rounds') || 15) * ((setv(id, 'seconds') || 30) + 12)) / 60,
     majority: (id) => ((setv(id, 'rounds') || 10) * ((setv(id, 'seconds') || 45) + 20)) / 60,
     dice: () => 25,
+    poker: (id) => ({ mini: 30, short: 50, full: 120 })[ui.settings[id + '__length'] || 'short'] || 50,
   };
   const estMin = (id) => (EST[id] ? EST[id](id) : 15);
   function fmtDur(min) {
@@ -2013,7 +2022,7 @@
   // ---------- игры ----------
   function renderGame(g) {
     if (g.waiting) return rWaiting(g);
-    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority, dice: rDice }[g.type];
+    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority, dice: rDice, poker: rPoker }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
@@ -3239,6 +3248,118 @@
     return `<div class="narrow quiz majority">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
   }
 
+  // ---------- Расписной покер ----------
+  const SUIT_SYM = { s: '♠', c: '♣', d: '♦', h: '♥' };
+  const SUIT_NAME = { s: 'пики', c: 'трефы', d: 'бубны', h: 'червы' };
+  const RANK_L = { 11: 'В', 12: 'Д', 13: 'К', 14: 'Т' };
+  const pcSuit = (c) => c.slice(-1);
+  const pcRank = (c) => Number(c.slice(0, -1));
+  // Карта: null — рубашка
+  function pcard(c, g, opts = {}) {
+    const cls = `pc ${opts.cls || ''}`;
+    if (!c) return `<span class="${cls} back"></span>`;
+    if (c === g.joker) return `<${opts.btn ? 'button' : 'span'} class="${cls} joker" ${opts.btn || ''}><b>🃏</b><small>джокер</small></${opts.btn ? 'button' : 'span'}>`;
+    const su = pcSuit(c), r = pcRank(c);
+    const red = su === 'h' || su === 'd';
+    const lbl = RANK_L[r] || r;
+    return `<${opts.btn ? 'button' : 'span'} class="${cls} ${red ? 'red' : ''} ${su === g.trump ? 'trump' : ''}" ${opts.btn || ''}><i class="tl">${lbl}<em>${SUIT_SYM[su]}</em></i><b>${SUIT_SYM[su]}</b><i class="br">${lbl}<em>${SUIT_SYM[su]}</em></i></${opts.btn ? 'button' : 'span'}>`;
+  }
+  function rPoker(g) {
+    const me = S.me;
+    const myTurn = g.turnPid === me;
+    const trumpTxt = g.trump ? `${SUIT_SYM[g.trump]} ${SUIT_NAME[g.trump]}` : 'без козыря';
+    // Места за столом: заказ / взято, кто ходит, кто сдаёт
+    const seats = g.order
+      .map((id) => {
+        const bid = g.bids[id];
+        const took = g.took[id] || 0;
+        const st = g.noBid ? `взял ${took}` : bid == null ? (g.phase === 'bid' ? 'думает…' : '—') : `${bid === 0 ? 'пас' : 'заказ ' + bid} · взял ${took}`;
+        const good = !g.noBid && bid != null && took === bid;
+        const over = !g.noBid && bid != null && took > bid;
+        return `<div class="pk-seat ${id === g.turnPid ? 'on' : ''} ${id === me ? 'me' : ''} ${good ? 'good' : ''} ${over ? 'over' : ''}">
+          ${pa(id, 40, 'round')}${id === g.dealer ? '<span class="pk-dealer" title="Сдаёт">С</span>' : ''}
+          <div class="pk-sb"><b>${nm(id)}</b><small>${st}</small></div>
+          <span class="pk-cnt" title="Карт на руках">${g.counts[id]}</span>
+          <b class="pk-tot" data-cnt="pk-${id}">${g.total[id]}</b>
+        </div>`;
+      })
+      .join('');
+    // Стол: текущая взятка (или только что собранная)
+    const showTrick = g.phase === 'trick' && g.lastTrick ? g.lastTrick.cards : g.trick;
+    const win = g.phase === 'trick' && g.lastTrick ? g.lastTrick.winner : null;
+    const jName = (j) => (j === 'low' ? 'младшая' : j === 'high' ? 'забирает' : j?.startsWith('high-') ? `старшие ${SUIT_SYM[j.slice(5)]}` : '');
+    const trick = showTrick.length
+      ? showTrick.map((x, i) => `<div class="pk-play ${x.pid === win ? 'win' : ''}" style="--i:${i}">${pcard(x.c, g)}${x.j ? `<em class="pk-j">${jName(x.j)}</em>` : ''}<span>${pa(x.pid, 22, 'round')}${nm(x.pid)}</span></div>`).join('')
+      : `<p class="pk-hint">${g.phase === 'bid' ? (myTurn ? 'Ваш заказ' : `Заказывает ${nm(g.turnPid)}`) : g.phase === 'play' ? (myTurn ? 'Ваш ход — выберите карту' : `Ходит ${nm(g.turnPid)}`) : ''}</p>`;
+    // Заказ взяток
+    let bidBox = '';
+    if (g.phase === 'bid' && myTurn) {
+      bidBox = `<div class="pk-bid"><span class="muted small">Сколько возьмёте взяток?${g.forbidden != null ? ` Сдающему нельзя ${g.forbidden} — сумма не должна равняться ${g.k}` : ''}</span><div class="pk-bid-b">${Array.from({ length: g.k + 1 }, (_, n) => `<button class="btn ${n === 0 ? 'ghost' : ''}" data-act="pk-bid" data-n="${n}" ${n === g.forbidden ? 'disabled' : ''}>${n === 0 ? 'Пас' : n}</button>`).join('')}</div></div>`;
+    }
+    // Рука
+    const canPlay = g.phase === 'play' && myTurn;
+    const hand = g.hand
+      .map((c) => {
+        const ok = canPlay && c && g.playable.includes(c);
+        return pcard(c, g, { cls: `${ok ? 'ok' : canPlay ? 'no' : ''} ${ui.pkJ === c ? 'sel' : ''}`, btn: c ? `data-act="pk-play" data-c="${c}" ${canPlay && !ok ? 'aria-disabled="true"' : ''}` : '' });
+      })
+      .join('');
+    // Как сыграть джокер
+    let jBox = '';
+    if (ui.pkJ && canPlay) {
+      const lead = !g.trick.length;
+      const opts = lead ? [...(g.trump ? [['high-' + g.trump, `Забрать: по старшим козырям ${SUIT_SYM[g.trump]}`]] : []), ...['s', 'c', 'd', 'h'].filter((x) => x !== g.trump).map((x) => ['high-' + x, `Забрать: по старшим ${SUIT_SYM[x]} ${SUIT_NAME[x]}`]), ['low', 'Скинуть как самую младшую']] : [['high', 'Забрать взятку'], ['low', 'Скинуть (младшая карта)']];
+      jBox = `<div class="pk-jbox"><b>🃏 Как сыграть джокер?</b>${opts.map(([v, t]) => `<button class="btn ${v === 'low' ? 'ghost' : 'primary'}" data-act="pk-joker" data-j="${v}">${t}</button>`).join('')}<button class="btn ghost" data-act="pk-joker-x">Отмена</button></div>`;
+    }
+    // Итоги сдачи
+    let result = '';
+    if (g.phase === 'dealEnd' && g.dealResult) {
+      result = `<div class="pk-res"><div class="side-h">Итоги сдачи${g.spName ? ` · ${g.spName}` : ` · по ${g.k}`}</div>${g.order
+        .map((id) => {
+          const r = g.dealResult.rows[id];
+          if (!r) return '';
+          return `<div class="pk-rr">${pa(id, 26, 'round')}<b>${nm(id)}</b><span class="muted small">${r.bid == null ? '' : r.bid === 0 ? 'пас' : `заказ ${r.bid}`} · взял ${r.took}</span><em class="${r.pts > 0 ? 'up' : r.pts < 0 ? 'down' : ''}">${r.pts > 0 ? '+' : ''}${r.pts}</em><b class="pk-rt">${r.total}</b></div>`;
+        })
+        .join('')}${isHost() ? `<button class="btn primary" data-act="pk-next">Следующая сдача ${ic('play', 16)}</button>` : '<p class="muted small center">Следующая сдача через пару секунд</p>'}</div>`;
+    }
+    const over = g.phase === 'over'
+      ? `<div class="pk-res"><div class="big-ic">${ic('trophy', 48)}</div><h2 class="h2 center">Победа: ${(g.winner || []).map(nm).join(', ')}!</h2>${canRestart() ? `<button class="btn primary big-w" data-act="pk-restart">${ic('reset', 18)} Ещё партию</button>` : ''}</div>`
+      : '';
+    return `<div class="poker ${ui.enter ? 'enter' : ''}">
+      <div class="pk-top">
+        <div class="pk-info"><span class="pk-chip">Сдача <b>${g.deal}</b> из ${g.deals}</span><span class="pk-chip">${g.spName ? `<b class="pk-sp">${g.spName}</b>` : `по <b>${g.k}</b> ${plural(g.k, 'карте', 'карты', 'карт')}`}</span><span class="pk-chip">Сдаёт ${nm(g.dealer)}</span></div>
+        <div class="pk-trump"><span class="muted small">Козырь</span>${g.trumpCard ? pcard(g.trumpCard, g, { cls: 'mini' }) : ''}<b>${trumpTxt}</b></div>
+        <button class="btn sm ghost" data-act="pk-sheet">${ic('list', 15)} Таблица</button>
+      </div>
+      <div class="pk-seats">${seats}</div>
+      <div class="pk-table ${g.phase === 'trick' ? 'done' : ''}">${over || result || `<div class="pk-trick">${trick}</div>`}</div>
+      ${bidBox}${jBox}
+      ${g.inGame ? `<div class="pk-hand ${canPlay ? 'turn' : ''} ${g.dark && g.phase === 'bid' ? 'dark' : ''}">${g.dark && g.phase === 'bid' ? '<span class="pk-dark">Тёмная: заказ — не глядя в карты</span>' : ''}${hand}</div>` : ''}
+      ${ui.pkSheet ? pokerSheet(g) : ''}
+    </div>`;
+  }
+  // Таблица записи, как на бумаге: строки — сдачи, у каждого игрока заказ и очки (накопительно)
+  function pokerSheet(g) {
+    const rows = g.plan
+      .map((lbl, i) => {
+        const r = g.sheet[i];
+        const nowRow = i === g.deal - 1 && g.phase !== 'over';
+        return `<tr class="${nowRow ? 'cur' : ''} ${/[BMTZ]/.test(lbl) ? 'spx' : ''}"><th>${{ B: 'Б', M: 'М', T: 'Т', Z: 'З' }[lbl] || lbl}</th>${g.order
+          .map((id) => {
+            const x = r?.rows[id];
+            const bid = x ? (x.bid == null ? '' : x.bid === 0 ? '–' : x.bid) : nowRow && g.bids[id] != null ? (g.bids[id] === 0 ? '–' : g.bids[id]) : '';
+            return `<td class="b">${bid}</td><td class="${x && x.pts < 0 ? 'neg' : ''}">${x ? x.total : ''}</td>`;
+          })
+          .join('')}</tr>`;
+      })
+      .join('');
+    return `<div class="modal-bg" data-act="pk-sheet"></div><div class="modal card pk-sheet" role="dialog" aria-label="Таблица">
+      <div class="side-h">${ic('list', 16)} Таблица записи <button class="icon-x" data-act="pk-sheet" style="margin-left:auto">${ic('x', 16)}</button></div>
+      <div class="pk-sheet-w"><table><thead><tr><th rowspan="2">Сдача</th>${g.order.map((id) => `<th colspan="2">${nm(id)}</th>`).join('')}</tr><tr>${g.order.map(() => '<th class="b">заказ</th><th>очки</th>').join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="muted small">Б — бескозырка, М — мизер, Т — тёмная, З — золотая. «–» — пас.</p>
+    </div>`;
+  }
+
   // ---------- Кости 1000 ----------
   // Подсчёт очков для подсказки при выборе (сервер считает так же и всё проверяет)
   function diceScore(vals) {
@@ -3712,6 +3833,36 @@
     'mj-ready': () => act('ready'),
     'mj-restart': () => act('restart'),
     'dc-restart': () => act('restart'),
+    'pk-restart': () => act('restart'),
+    'pk-redeal': () => act('redeal'),
+    'pk-next': () => act('next'),
+    'pk-bid': (d) => act('bid', { n: Number(d.n) }),
+    'pk-sheet': () => {
+      ui.pkSheet = !ui.pkSheet;
+      render();
+    },
+    'pk-play': (d) => {
+      const g = S.game;
+      if (!g || g.turnPid !== S.me || g.phase !== 'play') return;
+      if (!g.playable.includes(d.c)) {
+        Sound.play('error');
+        return toast(g.trick.length ? 'Этой картой ходить нельзя: нужно в масть, а если её нет — козырем' : 'Этой картой сейчас нельзя');
+      }
+      if (d.c === g.joker) {
+        ui.pkJ = d.c;
+        return render();
+      }
+      act('play', { c: d.c });
+    },
+    'pk-joker': (d) => {
+      const c = ui.pkJ;
+      ui.pkJ = null;
+      act('play', { c, j: d.j });
+    },
+    'pk-joker-x': () => {
+      ui.pkJ = null;
+      render();
+    },
     'dc-skip': () => act('skipTurn'),
     'dc-pick': (d) => {
       const i = Number(d.i);

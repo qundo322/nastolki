@@ -2812,6 +2812,84 @@ button.die3:hover:not(.rolling) { translate: 0 -6px; }
 @media (max-width: 560px) { .dc-head { flex-wrap: wrap; } .dc-pts b { font-size: 24px; } }
 html.v-calm .die3.rolling, html.v-calm .die3.rolling .cube { animation: none; }
 
+/* ===================== Расписной покер ===================== */
+.poker { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 30px; }
+.pk-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.pk-info { flex: 1; display: flex; gap: 8px; flex-wrap: wrap; }
+.pk-chip { padding: 6px 12px; border-radius: 99px; background: var(--surface-2); font-size: 13px; font-weight: 700; }
+.pk-sp { color: var(--accent-text, var(--accent)); }
+.pk-trump { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.pk-seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.pk-seat { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--surface); border: 2px solid var(--line); }
+.pk-seat.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.pk-seat.me { background: var(--surface-2); }
+.pk-seat.good { border-color: var(--green-line); }
+.pk-seat.over { border-color: var(--red-line); }
+.pk-dealer { position: absolute; left: 40px; top: 6px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 900; background: var(--text); color: var(--bg); }
+.pk-sb { flex: 1; min-width: 0; display: grid; }
+.pk-sb b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-sb small { font-size: 12px; color: var(--muted); font-weight: 700; }
+.pk-seat.good .pk-sb small { color: var(--green-text, var(--green)); }
+.pk-seat.over .pk-sb small { color: var(--red-text, var(--red)); }
+.pk-cnt { font-size: 11px; font-weight: 800; padding: 3px 6px; border-radius: 6px; background: var(--surface-3); color: var(--muted); }
+.pk-tot { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; min-width: 40px; text-align: right; }
+/* стол */
+.pk-table { display: grid; place-items: center; min-height: 230px; padding: 22px; border-radius: 24px; background: radial-gradient(120% 90% at 50% 20%, #1f6b47, #124331 70%, #0c2f22); box-shadow: inset 0 0 0 6px #6b4422, inset 0 0 0 9px #4a2d15, inset 0 18px 40px rgba(0,0,0,.35); }
+.pk-trick { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+.pk-play { display: grid; justify-items: center; gap: 6px; animation: pkIn .3s cubic-bezier(.2,1.2,.4,1) backwards; }
+.pk-play span { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,.85); font-size: 12px; font-weight: 700; }
+.pk-play.win .pc { box-shadow: 0 0 0 3px #ffd34d, 0 0 22px rgba(255, 211, 77, .7); }
+.pk-table.done .pk-play:not(.win) { opacity: .55; transition: opacity .3s; }
+@keyframes pkIn { from { translate: 0 30px; opacity: 0; rotate: -6deg; } }
+.pk-j { font-style: normal; font-size: 11px; font-weight: 800; color: #ffd34d; }
+.pk-hint { color: rgba(255,255,255,.75); font-weight: 700; margin: 0; }
+/* карта */
+.pc { --cw: 74px; position: relative; display: inline-grid; place-items: center; width: var(--cw); height: calc(var(--cw) * 1.42); border-radius: calc(var(--cw) * .1); background: linear-gradient(160deg, #fff, #f3efe6); color: #1b1b22; border: 1px solid rgba(0,0,0,.18); box-shadow: 0 6px 14px -6px rgba(0,0,0,.45); font-family: var(--card-font); padding: 0; flex: none; }
+.pc.red { color: #d0202a; }
+.pc > b { font-size: calc(var(--cw) * .48); line-height: 1; }
+.pc .tl, .pc .br { position: absolute; display: grid; justify-items: center; line-height: .95; font-style: normal; font-weight: 800; font-size: calc(var(--cw) * .2); }
+.pc .tl em, .pc .br em { font-style: normal; font-size: .8em; }
+.pc .tl { left: 7%; top: 5%; }
+.pc .br { right: 7%; bottom: 5%; rotate: 180deg; }
+.pc.trump { background: linear-gradient(160deg, #fffaf0, #ffe9b8); }
+.pc.joker { background: linear-gradient(160deg, #fff4fb, #f1dcff); color: #6a2aa5; }
+.pc.joker b { font-size: calc(var(--cw) * .5); }
+.pc.joker small { position: absolute; bottom: 7%; font-size: calc(var(--cw) * .15); font-weight: 800; text-transform: uppercase; }
+.pc.back { background: repeating-linear-gradient(45deg, #b3263a 0 6px, #8e1b2c 6px 12px); border: 3px solid #fff; }
+.pc.mini { --cw: 34px; }
+/* рука */
+.pk-hand { display: flex; justify-content: center; flex-wrap: wrap; gap: 0; padding: 18px 10px 10px; min-height: 150px; }
+.pk-hand .pc { --cw: clamp(58px, 7.2vw, 84px); margin: 0 calc(var(--cw) * -.14); transition: translate .15s, box-shadow .15s; }
+.pk-hand button.pc { cursor: pointer; }
+.pk-hand.turn .pc.ok:hover, .pk-hand .pc.sel { translate: 0 -16px; box-shadow: 0 0 0 3px var(--accent), 0 12px 22px -8px rgba(0,0,0,.5); z-index: 2; }
+.pk-hand.turn .pc.no { filter: brightness(.6) saturate(.6); }
+.pk-hand.dark { position: relative; }
+.pk-dark { position: absolute; top: -6px; left: 50%; translate: -50% 0; font-size: 12px; font-weight: 800; color: var(--accent-text, var(--accent)); white-space: nowrap; }
+/* заказ и джокер */
+.pk-bid, .pk-jbox { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--accent); }
+.pk-bid-b { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.pk-bid-b .btn { min-width: 52px; justify-content: center; font-size: 17px; font-weight: 900; }
+.pk-jbox .btn { width: min(360px, 100%); justify-content: center; }
+/* итоги сдачи */
+.pk-res { width: min(520px, 100%); display: grid; gap: 6px; padding: 16px; border-radius: 18px; background: var(--surface); color: var(--text); box-shadow: 0 18px 40px -16px rgba(0,0,0,.6); }
+.pk-rr { display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; background: var(--surface-2); }
+.pk-rr em { font-style: normal; font-weight: 900; color: var(--muted); }
+.pk-rr em.up { color: var(--green-text, var(--green)); }
+.pk-rr em.down { color: var(--red-text, var(--red)); }
+.pk-rt { min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+/* таблица записи */
+.pk-sheet-w { overflow: auto; max-height: calc(100vh - 200px); margin-top: 10px; }
+.pk-sheet table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+.pk-sheet th, .pk-sheet td { border: 1px solid color-mix(in srgb, #d0202a 45%, var(--line)); padding: 4px 8px; text-align: center; }
+.pk-sheet thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.pk-sheet tbody tr:nth-child(even) { background: color-mix(in srgb, #d0202a 7%, transparent); }
+.pk-sheet tbody th { font-weight: 900; }
+.pk-sheet td.b { color: var(--muted); font-size: 12px; }
+.pk-sheet td.neg { color: var(--red-text, var(--red)); }
+.pk-sheet tr.cur { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pk-sheet tr.spx th { color: var(--accent-text, var(--accent)); }
+@media (max-width: 640px) { .pk-hand .pc { --cw: 52px; } .pc { --cw: 60px; } .pk-seats { grid-template-columns: 1fr 1fr; } }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -7176,6 +7254,341 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     }
   });
 
+  // server/games/poker.js
+  var require_poker = __commonJS({
+    "server/games/poker.js"(exports, module) {
+      var { shuffle } = require_util();
+      var SUITS = ["s", "c", "d", "h"];
+      var RANKS = [6, 7, 8, 9, 10, 11, 12, 13, 14];
+      var JOKER = "7s";
+      var TRICK_MS = 1600;
+      var DEAL_END_MS = 5e3;
+      var SPECIAL = {
+        B: { name: "\u0411\u0435\u0441\u043A\u043E\u0437\u044B\u0440\u043A\u0430", mult: 2, noTrump: true },
+        M: { name: "\u041C\u0438\u0437\u0435\u0440", mult: 2, noBid: true },
+        T: { name: "\u0422\u0451\u043C\u043D\u0430\u044F", mult: 2, dark: true },
+        Z: { name: "\u0417\u043E\u043B\u043E\u0442\u0430\u044F", mult: 2, noBid: true }
+      };
+      var meta = {
+        title: "\u0420\u0430\u0441\u043F\u0438\u0441\u043D\u043E\u0439 \u043F\u043E\u043A\u0435\u0440",
+        emoji: "\u{1F0CF}",
+        players: "3\u20136",
+        content: "36 \u043A\u0430\u0440\u0442 + \u0434\u0436\u043E\u043A\u0435\u0440",
+        short: "\u0417\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u0439, \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u043E\u0437\u044C\u043C\u0451\u0448\u044C \u0432\u0437\u044F\u0442\u043E\u043A, \u2014 \u0438 \u0432\u043E\u0437\u044C\u043C\u0438 \u0440\u043E\u0432\u043D\u043E \u0441\u0442\u043E\u043B\u044C\u043A\u043E. \u041F\u0435\u0440\u0435\u0431\u043E\u0440 \u0438 \u043D\u0435\u0434\u043E\u0431\u043E\u0440 \u043D\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u044E\u0442\u0441\u044F. \u0414\u0436\u043E\u043A\u0435\u0440 \u2014 \u0441\u0435\u043C\u0451\u0440\u043A\u0430 \u043F\u0438\u043A.",
+        rules: [
+          "\u041A\u0430\u0436\u0434\u0443\u044E \u0441\u0434\u0430\u0447\u0443 \u043A\u0430\u0440\u0442 \u043D\u0430 \u0440\u0443\u043A\u0430\u0445 \u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u0441\u044F \u0431\u043E\u043B\u044C\u0448\u0435: 1, 2, 3\u2026 \u0434\u043E \u043C\u0430\u043A\u0441\u0438\u043C\u0443\u043C\u0430, \u043F\u043E\u0442\u043E\u043C \u043E\u0431\u0440\u0430\u0442\u043D\u043E. \u0412 \u043A\u043E\u043D\u0446\u0435 \u2014 \u0431\u0435\u0441\u043A\u043E\u0437\u044B\u0440\u043A\u0430, \u043C\u0438\u0437\u0435\u0440, \u0442\u0451\u043C\u043D\u0430\u044F \u0438 \u0437\u043E\u043B\u043E\u0442\u0430\u044F.",
+          "\u041F\u043E\u0441\u043B\u0435 \u0441\u0434\u0430\u0447\u0438 \u043A\u0430\u0436\u0434\u044B\u0439 \u0437\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442, \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0432\u043E\u0437\u044C\u043C\u0451\u0442 \u0432\u0437\u044F\u0442\u043E\u043A (\u0438\u043B\u0438 \xAB\u043F\u0430\u0441\xBB). \u0421\u0434\u0430\u044E\u0449\u0438\u0439 \u0437\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u043C, \u0438 \u0441\u0443\u043C\u043C\u0430 \u0437\u0430\u043A\u0430\u0437\u043E\u0432 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0440\u0430\u0432\u043D\u0430 \u0447\u0438\u0441\u043B\u0443 \u043A\u0430\u0440\u0442.",
+          "\u0425\u043E\u0434\u0438\u0442\u0435 \u0432 \u043C\u0430\u0441\u0442\u044C; \u043D\u0435\u0442 \u043C\u0430\u0441\u0442\u0438 \u2014 \u043A\u043E\u0437\u044B\u0440\u0435\u043C; \u043D\u0435\u0442 \u043A\u043E\u0437\u044B\u0440\u044F \u2014 \u043B\u044E\u0431\u043E\u0439 \u043A\u0430\u0440\u0442\u043E\u0439. \u0412\u0437\u044F\u0442\u043A\u0443 \u0431\u0435\u0440\u0451\u0442 \u0441\u0442\u0430\u0440\u0448\u0438\u0439 \u043A\u043E\u0437\u044B\u0440\u044C \u0438\u043B\u0438 \u0441\u0442\u0430\u0440\u0448\u0430\u044F \u043A\u0430\u0440\u0442\u0430 \u043C\u0430\u0441\u0442\u0438 \u0437\u0430\u0445\u043E\u0434\u0430.",
+          "\u0414\u0436\u043E\u043A\u0435\u0440 (\u0441\u0435\u043C\u0451\u0440\u043A\u0430 \u043F\u0438\u043A) \u043A\u043B\u0430\u0434\u0451\u0442\u0441\u044F \u0432 \u043B\u044E\u0431\u043E\u0439 \u043C\u043E\u043C\u0435\u043D\u0442: \u043C\u043E\u0436\u043D\u043E \u0437\u0430\u0431\u0440\u0430\u0442\u044C \u0438\u043C \u0432\u0437\u044F\u0442\u043A\u0443 \u0438\u043B\u0438 \u0441\u043A\u0438\u043D\u0443\u0442\u044C. \u0417\u0430\u0439\u0442\u0438 \u0441 \u0434\u0436\u043E\u043A\u0435\u0440\u0430 \u2014 \u043F\u043E\u0442\u0440\u0435\u0431\u043E\u0432\u0430\u0442\u044C \u0441\u0442\u0430\u0440\u0448\u0438\u0435 \u043A\u043E\u0437\u044B\u0440\u0438 \u0438\u043B\u0438 \u0441\u0442\u0430\u0440\u0448\u0443\u044E \u043A\u0430\u0440\u0442\u0443 \u043C\u0430\u0441\u0442\u0438, \u043B\u0438\u0431\u043E \u0441\u044B\u0433\u0440\u0430\u0442\u044C \u0435\u0433\u043E \u043A\u0430\u043A \u0441\u0430\u043C\u0443\u044E \u043C\u043B\u0430\u0434\u0448\u0443\u044E.",
+          "\u041E\u0447\u043A\u0438: \u0432\u0437\u044F\u043B \u0440\u043E\u0432\u043D\u043E \u0437\u0430\u043A\u0430\u0437 \u2014 \u043F\u043E 10 \u0437\u0430 \u0432\u0437\u044F\u0442\u043A\u0443; \u043F\u0430\u0441 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D \u2014 5; \u043F\u0435\u0440\u0435\u0431\u043E\u0440 \u2014 \u043F\u043E 1 \u0437\u0430 \u0432\u0437\u044F\u0442\u043A\u0443; \u043D\u0435\u0434\u043E\u0431\u043E\u0440 \u2014 \u043C\u0438\u043D\u0443\u0441 10 \u0437\u0430 \u043A\u0430\u0436\u0434\u0443\u044E \u043D\u0435\u0434\u043E\u0441\u0442\u0430\u044E\u0449\u0443\u044E. \u0421\u043F\u0435\u0446\u0441\u0434\u0430\u0447\u0438 \u2014 \u0432\u0434\u0432\u043E\u0435. \u0417\u043E\u043B\u043E\u0442\u0430\u044F \u2014 +20 \u0437\u0430 \u0432\u0437\u044F\u0442\u043A\u0443, \u043C\u0438\u0437\u0435\u0440 \u2014 \u221220."
+        ],
+        restartActions: ["restart"],
+        settings: [
+          {
+            key: "length",
+            label: "\u0414\u043B\u0438\u043D\u0430 \u0438\u0433\u0440\u044B",
+            type: "select",
+            options: [
+              { v: "mini", t: "\u0411\u044B\u0441\u0442\u0440\u0430\u044F: 1\u2026\u043C\u0430\u043A\u0441\u0438\u043C\u0443\u043C, \u0437\u043E\u043B\u043E\u0442\u0430\u044F \u0438 \u043C\u0438\u0437\u0435\u0440" },
+              { v: "short", t: "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F: \u0442\u0443\u0434\u0430-\u043E\u0431\u0440\u0430\u0442\u043D\u043E + 4 \u0441\u043F\u0435\u0446\u0441\u0434\u0430\u0447\u0438" },
+              { v: "full", t: "\u041F\u043E\u043B\u043D\u0430\u044F, \u043A\u0430\u043A \u043D\u0430 \u0431\u0443\u043C\u0430\u0433\u0435" }
+            ],
+            default: "short"
+          }
+        ]
+      };
+      var suitOf = (c) => c.slice(-1);
+      var rankOf = (c) => Number(c.slice(0, -1));
+      var isJoker = (c) => c === JOKER;
+      function schedule(n, length) {
+        const max = Math.min(9, Math.floor(36 / n));
+        const up = Array.from({ length: max - 1 }, (_, i) => i + 1);
+        const down = up.slice().reverse();
+        const deals = [];
+        const add = (k, sp) => deals.push({ k, sp: sp || null });
+        if (length === "mini") {
+          up.forEach((k) => add(k));
+          add(max);
+          add(max, "Z");
+          add(max, "M");
+        } else if (length === "full") {
+          up.forEach((k) => add(k));
+          for (let i = 0; i < n; i++) add(max);
+          down.forEach((k) => add(k));
+          for (const sp of ["B", "M", "T", "Z"]) for (let i = 0; i < n; i++) add(max, sp);
+        } else {
+          up.forEach((k) => add(k));
+          add(max);
+          down.forEach((k) => add(k));
+          for (const sp of ["B", "M", "T", "Z"]) add(max, sp);
+        }
+        return deals;
+      }
+      function create(ctx, st) {
+        const ids = shuffle(ctx.players().map((p) => p.id));
+        if (ids.length < 3) return "\u0414\u043B\u044F \xAB\u0420\u0430\u0441\u043F\u0438\u0441\u043D\u043E\u0433\u043E \u043F\u043E\u043A\u0435\u0440\u0430\xBB \u043D\u0443\u0436\u043D\u043E \u043C\u0438\u043D\u0438\u043C\u0443\u043C 3 \u0438\u0433\u0440\u043E\u043A\u0430";
+        if (ids.length > 6) return "\u0412 \xAB\u0420\u0430\u0441\u043F\u0438\u0441\u043D\u043E\u0439 \u043F\u043E\u043A\u0435\u0440\xBB \u043A\u043E\u043B\u043E\u0434\u043E\u0439 36 \u043A\u0430\u0440\u0442 \u0438\u0433\u0440\u0430\u044E\u0442 \u043C\u0430\u043A\u0441\u0438\u043C\u0443\u043C \u0432\u0448\u0435\u0441\u0442\u0435\u0440\u043E\u043C";
+        const length = ["mini", "short", "full"].includes(st.length) ? st.length : "short";
+        const s = {
+          order: ids,
+          length,
+          deals: schedule(ids.length, length),
+          di: -1,
+          // номер сдачи
+          dealer: Math.floor(Math.random() * ids.length) - 1,
+          total: Object.fromEntries(ids.map((id) => [id, 0])),
+          sheet: [],
+          // строки таблицы: { label, sp, rows: { pid: { bid, took, pts, total } } }
+          winner: null
+        };
+        nextDeal(s, ctx);
+        return s;
+      }
+      function nextDeal(s, ctx) {
+        var _a, _b;
+        s.di++;
+        if (s.di >= s.deals.length) {
+          s.phase = "over";
+          const best = Math.max(...s.order.map((id) => s.total[id]));
+          s.winner = s.order.filter((id) => s.total[id] === best);
+          return;
+        }
+        const n = s.order.length;
+        s.dealer = (s.dealer + 1) % n;
+        const { k, sp } = s.deals[s.di];
+        const deck = shuffle(SUITS.flatMap((su) => RANKS.map((r) => r + su)));
+        s.hands = {};
+        for (let i = 0; i < k; i++) for (let j = 1; j <= n; j++) {
+          const pid = s.order[(s.dealer + j) % n];
+          (s.hands[pid] = s.hands[pid] || []).push(deck.pop());
+        }
+        const sideCard = deck.length ? deck.pop() : s.hands[s.order[s.dealer]][k - 1];
+        s.trumpCard = ((_a = SPECIAL[sp]) == null ? void 0 : _a.noTrump) ? null : sideCard;
+        s.trump = !s.trumpCard || isJoker(s.trumpCard) ? null : suitOf(s.trumpCard);
+        s.k = k;
+        s.sp = sp;
+        s.bids = {};
+        s.took = Object.fromEntries(s.order.map((id) => [id, 0]));
+        s.trick = [];
+        s.lastTrick = null;
+        s.first = (s.dealer + 1) % n;
+        s.turn = s.first;
+        s.phase = ((_b = SPECIAL[sp]) == null ? void 0 : _b.noBid) ? "play" : "bid";
+        s.dealAt = Date.now();
+      }
+      var cur = (s) => s.order[s.turn];
+      var handOf = (s, pid) => s.hands[pid] || [];
+      function forbiddenBid(s, pid) {
+        const n = s.order.length;
+        if (pid !== s.order[s.dealer]) return null;
+        const sum = Object.values(s.bids).reduce((a, b) => a + b, 0);
+        const f = s.k - sum;
+        return Object.keys(s.bids).length === n - 1 && f >= 0 && f <= s.k ? f : null;
+      }
+      function demand(s) {
+        var _a;
+        if (!s.trick.length) return null;
+        const lead = s.trick[0];
+        if (isJoker(lead.c)) {
+          if (lead.j === "low") return s.trick[1] ? { suit: suitOf(s.trick[1].c), high: false } : null;
+          if ((_a = lead.j) == null ? void 0 : _a.startsWith("high-")) return { suit: lead.j.slice(5), high: true };
+          return null;
+        }
+        return { suit: suitOf(lead.c), high: false };
+      }
+      function legal(s, pid, c) {
+        const hand = handOf(s, pid);
+        if (!hand.includes(c)) return "\u0422\u0430\u043A\u043E\u0439 \u043A\u0430\u0440\u0442\u044B \u043D\u0435\u0442";
+        if (isJoker(c)) return null;
+        const d = demand(s);
+        if (!d) return null;
+        const real = hand.filter((x) => !isJoker(x));
+        const ofSuit = real.filter((x) => suitOf(x) === d.suit);
+        if (ofSuit.length) {
+          if (suitOf(c) !== d.suit) return "\u041D\u0443\u0436\u043D\u043E \u0445\u043E\u0434\u0438\u0442\u044C \u0432 \u043C\u0430\u0441\u0442\u044C";
+          if (d.high && rankOf(c) !== Math.max(...ofSuit.map(rankOf))) return "\u0414\u0436\u043E\u043A\u0435\u0440 \u043F\u043E\u0442\u0440\u0435\u0431\u043E\u0432\u0430\u043B \u0441\u0442\u0430\u0440\u0448\u0443\u044E \u043A\u0430\u0440\u0442\u0443 \u044D\u0442\u043E\u0439 \u043C\u0430\u0441\u0442\u0438";
+          return null;
+        }
+        const trumps = s.trump ? real.filter((x) => suitOf(x) === s.trump) : [];
+        if (trumps.length && suitOf(c) !== s.trump) return "\u041C\u0430\u0441\u0442\u0438 \u043D\u0435\u0442 \u2014 \u043D\u0443\u0436\u043D\u043E \u0431\u0438\u0442\u044C \u043A\u043E\u0437\u044B\u0440\u0435\u043C";
+        return null;
+      }
+      function trickWinner(s) {
+        const t = s.trick;
+        const jk = t.find((x) => isJoker(x.c));
+        if (jk && jk.j !== "low") return jk.pid;
+        const d = demand(s);
+        const real = t.filter((x) => !isJoker(x.c));
+        const trumps = s.trump ? real.filter((x) => suitOf(x.c) === s.trump) : [];
+        const pool = trumps.length ? trumps : real.filter((x) => d && suitOf(x.c) === d.suit);
+        if (!pool.length) return (real[0] || t[0]).pid;
+        return pool.reduce((a, b) => rankOf(b.c) > rankOf(a.c) ? b : a).pid;
+      }
+      function scoreDeal(s) {
+        var _a;
+        const sp = SPECIAL[s.sp];
+        const mult = sp ? sp.mult : 1;
+        const row = { label: s.sp || String(s.k), sp: s.sp, rows: {} };
+        for (const id of s.order) {
+          const t = s.took[id] || 0;
+          let pts;
+          if (s.sp === "Z") pts = 10 * t * mult;
+          else if (s.sp === "M") pts = -10 * t * mult;
+          else {
+            const b = s.bids[id] || 0;
+            if (b === 0) pts = t === 0 ? 5 : t;
+            else if (t === b) pts = 10 * b;
+            else if (t > b) pts = t;
+            else pts = -10 * (b - t);
+            pts *= mult;
+          }
+          s.total[id] += pts;
+          row.rows[id] = { bid: s.sp === "Z" || s.sp === "M" ? null : (_a = s.bids[id]) != null ? _a : 0, took: t, pts, total: s.total[id] };
+        }
+        s.sheet.push(row);
+        s.dealResult = row;
+      }
+      function action(s, pid, msg, ctx) {
+        if (msg.type === "restart") {
+          if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
+          for (const id of s.order) s.total[id] = 0;
+          s.sheet = [];
+          s.winner = null;
+          s.di = -1;
+          ctx.clearTimer("pk");
+          nextDeal(s, ctx);
+          return;
+        }
+        if (msg.type === "redeal") {
+          if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
+          if (s.phase === "over") return;
+          ctx.clearTimer("pk");
+          s.di--;
+          s.dealer = (s.dealer - 1 + s.order.length) % s.order.length;
+          nextDeal(s, ctx);
+          return;
+        }
+        if (s.phase === "over") return "\u0418\u0433\u0440\u0430 \u043E\u043A\u043E\u043D\u0447\u0435\u043D\u0430";
+        if (!s.order.includes(pid)) return "\u0412\u044B \u043D\u0435 \u0432 \u0438\u0433\u0440\u0435";
+        switch (msg.type) {
+          case "bid": {
+            if (s.phase !== "bid") return "\u0421\u0435\u0439\u0447\u0430\u0441 \u043D\u0435 \u0437\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u044E\u0442";
+            if (pid !== cur(s)) return "\u0421\u0435\u0439\u0447\u0430\u0441 \u0437\u0430\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u0434\u0440\u0443\u0433\u043E\u0439 \u0438\u0433\u0440\u043E\u043A";
+            const b = Math.floor(Number(msg.n));
+            if (!(b >= 0 && b <= s.k)) return "\u0417\u0430\u043A\u0430\u0437 \u2014 \u043E\u0442 0 \u0434\u043E " + s.k;
+            if (forbiddenBid(s, pid) === b) return `\u0421\u0434\u0430\u044E\u0449\u0435\u043C\u0443 \u043D\u0435\u043B\u044C\u0437\u044F \u0437\u0430\u043A\u0430\u0437\u0430\u0442\u044C ${b}: \u0441\u0443\u043C\u043C\u0430 \u0437\u0430\u043A\u0430\u0437\u043E\u0432 \u043D\u0435 \u0434\u043E\u043B\u0436\u043D\u0430 \u0440\u0430\u0432\u043D\u044F\u0442\u044C\u0441\u044F \u0447\u0438\u0441\u043B\u0443 \u043A\u0430\u0440\u0442`;
+            s.bids[pid] = b;
+            if (Object.keys(s.bids).length === s.order.length) {
+              s.phase = "play";
+              s.turn = s.first;
+            } else s.turn = (s.turn + 1) % s.order.length;
+            return;
+          }
+          case "play": {
+            if (s.phase !== "play") return "\u0421\u0435\u0439\u0447\u0430\u0441 \u043D\u0435 \u0445\u043E\u0434\u044F\u0442";
+            if (pid !== cur(s)) return "\u0421\u0435\u0439\u0447\u0430\u0441 \u0445\u043E\u0434\u0438\u0442 \u0434\u0440\u0443\u0433\u043E\u0439 \u0438\u0433\u0440\u043E\u043A";
+            const c = String(msg.c || "");
+            const err = legal(s, pid, c);
+            if (err) return err;
+            let j = null;
+            if (isJoker(c)) {
+              const lead = !s.trick.length;
+              const ok = lead ? ["low", ...s.trump ? ["high-" + s.trump] : [], ...SUITS.map((x) => "high-" + x)] : ["high", "low"];
+              j = String(msg.j || "");
+              if (!ok.includes(j)) return "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435, \u043A\u0430\u043A \u0441\u044B\u0433\u0440\u0430\u0442\u044C \u0434\u0436\u043E\u043A\u0435\u0440";
+            }
+            s.hands[pid] = handOf(s, pid).filter((x) => x !== c);
+            s.trick.push({ pid, c, j });
+            if (s.trick.length < s.order.length) {
+              s.turn = (s.turn + 1) % s.order.length;
+              return;
+            }
+            const w = trickWinner(s);
+            s.took[w]++;
+            s.lastTrick = { cards: s.trick, winner: w, at: Date.now() };
+            s.phase = "trick";
+            ctx.setTimer("pk", TRICK_MS, () => {
+              s.trick = [];
+              s.turn = s.order.indexOf(w);
+              if (Object.values(s.hands).every((h) => !h.length)) {
+                scoreDeal(s);
+                s.phase = "dealEnd";
+                ctx.setTimer("pk", DEAL_END_MS, () => nextDeal(s, ctx));
+              } else s.phase = "play";
+            });
+            return;
+          }
+          case "next": {
+            if (s.phase !== "dealEnd" || !ctx.isHost) return;
+            ctx.clearTimer("pk");
+            nextDeal(s, ctx);
+            return;
+          }
+        }
+        return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435";
+      }
+      function view(s, pid) {
+        const sp = SPECIAL[s.sp] || null;
+        const hideHand = (sp == null ? void 0 : sp.dark) && s.phase === "bid";
+        const mine = handOf(s, pid);
+        const playable = s.phase === "play" && cur(s) === pid ? mine.filter((c) => !legal(s, pid, c)) : [];
+        return {
+          phase: s.phase,
+          order: s.order,
+          dealer: s.order[s.dealer],
+          turnPid: s.phase === "bid" || s.phase === "play" ? cur(s) : null,
+          deal: s.di + 1,
+          deals: s.deals.length,
+          k: s.k,
+          sp: s.sp,
+          spName: sp ? sp.name : null,
+          noBid: !!(sp == null ? void 0 : sp.noBid),
+          dark: !!(sp == null ? void 0 : sp.dark),
+          trumpCard: s.trumpCard,
+          trump: s.trump,
+          joker: JOKER,
+          hand: hideHand ? mine.map(() => null) : sortHand(mine, s.trump),
+          playable,
+          counts: Object.fromEntries(s.order.map((id) => [id, handOf(s, id).length])),
+          bids: s.bids,
+          took: s.took,
+          forbidden: s.phase === "bid" && cur(s) === pid ? forbiddenBid(s, pid) : null,
+          trick: s.trick,
+          lastTrick: s.lastTrick,
+          total: s.total,
+          sheet: s.sheet,
+          plan: s.deals.map((d) => d.sp || String(d.k)),
+          dealResult: s.phase === "dealEnd" ? s.dealResult : null,
+          winner: s.winner,
+          inGame: s.order.includes(pid)
+        };
+      }
+      function sortHand(h, trump) {
+        const order = (c) => isJoker(c) ? 999 : (suitOf(c) === trump ? 400 : SUITS.indexOf(suitOf(c)) * 100) + rankOf(c);
+        return h.slice().sort((a, b) => order(a) - order(b));
+      }
+      function onLeave(s, pid, ctx) {
+        const i = s.order.indexOf(pid);
+        if (i < 0 || s.phase === "over") return;
+        s.order.splice(i, 1);
+        delete s.total[pid];
+        if (s.order.length < 2) {
+          s.phase = "over";
+          s.winner = s.order.slice();
+          return;
+        }
+        ctx.clearTimer("pk");
+        s.deals = s.deals.map((d) => ({ ...d, k: Math.min(d.k, Math.min(9, Math.floor(36 / s.order.length))) }));
+        s.di--;
+        s.dealer = Math.min(s.dealer, s.order.length - 1) - 1;
+        nextDeal(s, ctx);
+      }
+      var isOver = (s) => s.phase === "over";
+      var results = (s) => ({ ...s.total });
+      module.exports = { meta, create, action, view, onLeave, isOver, results, legal, trickWinner, schedule, forbiddenBid };
+    }
+  });
+
   // server/waiting.js
   var require_waiting = __commonJS({
     "server/waiting.js"(exports, module) {
@@ -7568,7 +7981,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     justone: require_justone(),
     quiz: require_quiz(),
     majority: require_majority(),
-    dice: require_dice()
+    dice: require_dice(),
+    poker: require_poker()
   };
   var Waiting = require_waiting();
   for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
@@ -7978,6 +8392,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     userplus: '<circle cx="10" cy="8" r="4"/><path d="M3 21v-1a6 6 0 0 1 6-6h2M19 14v6M16 17h6"/>',
     palette: '<circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.3" fill="currentColor"/><circle cx="12" cy="7.5" r="1.3" fill="currentColor"/><circle cx="16" cy="10" r="1.3" fill="currentColor"/><path d="M12 21a2.5 2.5 0 0 1 0-5h1.5a2.5 2.5 0 0 0 0-5"/>',
     dice5: '<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="16" cy="8" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="8" cy="16" r="1.3" fill="currentColor"/><circle cx="16" cy="16" r="1.3" fill="currentColor"/>',
+    cards: '<rect x="7" y="3" width="12" height="17" rx="2" transform="rotate(12 13 11.5)"/><path d="M5.5 6.5 4 7.2a2 2 0 0 0-1 2.4l3.6 10.1a2 2 0 0 0 2.5 1.2l2.4-.9"/><path d="M13.2 9.5c-.8-1-2.6-.6-2.6.9 0 1.4 2.6 3.1 2.6 3.1s2.6-1.7 2.6-3.1c0-1.5-1.8-1.9-2.6-.9z" fill="currentColor"/>',
     flag: '<path d="M4 21V4M4 4h12l-2 4 2 4H4"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     star: '<path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4 6.5 20.3l1-6.2L3 9.7l6.2-.9z"/>',
@@ -8041,7 +8456,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     const sw = small ? 2.7 : 2;
     return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   };
-  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', dice: 'dice5', majority: 'herd' };
+  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', dice: 'dice5', poker: 'cards', majority: 'herd' };
 })();
 
 ;
@@ -8749,6 +9164,29 @@ window.RULES = {
     win: 'Первый, кто наберёт 1000 очков.',
     tips: ['Без допуска не спешите записывать мало — всё равно нельзя меньше 75.', 'Чем меньше кубиков осталось, тем выше риск, что ход сгорит.'],
   },
+  poker: {
+    title: 'Расписной покер',
+    goal: 'Заранее заказать, сколько взяток возьмёшь, — и взять ровно столько. Лишние и недостающие взятки стоят очков.',
+    meta: ['3–6 игроков', 'колода 36 карт + джокер (7♠)', '≈ 30–120 минут'],
+    steps: [
+      'Каждую сдачу карт на руках больше: 1, 2, 3… до максимума, потом обратно. В конце — спецсдачи: бескозырка, мизер, тёмная, золотая.',
+      'Козырь — открытая карта (если карты кончились — последняя карта сдающего). Джокер-козырь — играем без козыря.',
+      'Заказ взяток по очереди, начиная слева от сдающего. «Пас» — ни одной. Сдающий последний, и сумма заказов не может быть равна числу карт.',
+      'Первым ходит игрок слева от сдающего. Нужно класть карту в масть; нет масти — козырь; нет и козыря — любую. Взятку берёт старший козырь, иначе старшая карта масти захода. Взявший заходит следующим.',
+      'Джокер можно сыграть всегда: забрать взятку или скинуть как самую младшую. Заходя с джокера, можно потребовать старшие козыри или старшие карты любой масти — игроки обязаны их отдать.',
+      'Тёмная — заказываете, не глядя в карты. Золотая и мизер — без заказа.',
+    ],
+    points: [
+      ['+10', 'за каждую взятку, если взяли ровно столько, сколько заказали'],
+      ['+5', 'пас и не взяли ни одной'],
+      ['+1', 'за каждую взятку при переборе (взяли больше заказа)'],
+      ['−10', 'за каждую недобранную взятку'],
+      ['×2', 'в бескозырке и тёмной'],
+      ['±20', 'в золотой +20 за взятку, в мизере −20'],
+    ],
+    win: 'Больше всех очков после последней сдачи. Полная таблица — кнопка «Таблица».',
+    tips: ['Сдающему тяжелее всех — он не может «закрыть» сумму заказов.', 'Джокер лучше беречь на конец, когда нужно добрать или, наоборот, не взять лишнюю.'],
+  },
   tour: {
     title: 'Марафон',
     goal: 'Серия игр подряд с общей турнирной таблицей. Кто наберёт больше всего за весь вечер — чемпион.',
@@ -9035,9 +9473,9 @@ window.RULES = {
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
     cnEdit: false, // капитан исправляет подсказку
     mode: 'single',
-    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice'],
+    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice', 'poker'],
     mOn: { codenames: true, quiz: true, majority: true, spyfall: true },
-    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1 },
+    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1, poker: 1 },
     mOpen: {},
     showTable: false,
     ctlOpen: LS.get('pg_ctl', '') === '1',
@@ -9806,6 +10244,11 @@ window.RULES = {
     } else if (b.type === 'spyfall') {
       if (a.phase !== 'over' && b.phase === 'over') Sound.play(b.result?.winner === 'spy' ? (b.spies?.includes(me) ? 'win' : 'lose') : b.result?.winner === 'town' ? (b.spies?.includes(me) ? 'lose' : 'win') : 'turn');
       if (a.phase !== 'guessing' && b.phase === 'guessing') Sound.play('myturn');
+    } else if (b.type === 'poker') {
+      if (a.trick.length !== b.trick.length && b.trick.length) Sound.play('tap');
+      if (a.phase !== 'trick' && b.phase === 'trick') setTimeout(() => Sound.play(b.lastTrick?.winner === me ? 'good' : 'turn'), 300);
+      if (a.turnPid !== b.turnPid && b.turnPid === me) Sound.play('myturn');
+      if (b.phase === 'over' && a.phase !== 'over') Sound.play((b.winner || []).includes(me) ? 'win' : 'lose');
     } else if (b.type === 'dice') {
       if (a.rollId !== b.rollId && b.rollAt) Sound.play('dice');
       if (a.phase !== 'bust' && b.phase === 'bust') setTimeout(() => Sound.play('bad'), b.rollMs);
@@ -10694,6 +11137,9 @@ window.RULES = {
       }
       if (g.phase === 'review') items.push(btn('mj-skip', 'play', 'Следующий вопрос'));
       if (!t) items.push(btn('mj-restart', 'reset', 'Начать заново'));
+    } else if (g.type === 'poker') {
+      if (g.phase !== 'over') items.push(btn('pk-redeal', 'shuffle', 'Пересдать'));
+      if (!t) items.push(btn('pk-restart', 'reset', 'Начать заново'));
     } else if (g.type === 'dice') {
       if (g.phase !== 'over') items.push(btn('dc-skip', 'skip', 'Пропустить ход'));
       if (!t) items.push(btn('dc-restart', 'reset', 'Начать заново'));
@@ -10820,6 +11266,7 @@ window.RULES = {
     quiz: (id) => ((setv(id, 'rounds') || 15) * ((setv(id, 'seconds') || 30) + 12)) / 60,
     majority: (id) => ((setv(id, 'rounds') || 10) * ((setv(id, 'seconds') || 45) + 20)) / 60,
     dice: () => 25,
+    poker: (id) => ({ mini: 30, short: 50, full: 120 })[ui.settings[id + '__length'] || 'short'] || 50,
   };
   const estMin = (id) => (EST[id] ? EST[id](id) : 15);
   function fmtDur(min) {
@@ -11006,7 +11453,7 @@ window.RULES = {
   // ---------- игры ----------
   function renderGame(g) {
     if (g.waiting) return rWaiting(g);
-    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority, dice: rDice }[g.type];
+    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority, dice: rDice, poker: rPoker }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
@@ -12232,6 +12679,118 @@ window.RULES = {
     return `<div class="narrow quiz majority">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
   }
 
+  // ---------- Расписной покер ----------
+  const SUIT_SYM = { s: '♠', c: '♣', d: '♦', h: '♥' };
+  const SUIT_NAME = { s: 'пики', c: 'трефы', d: 'бубны', h: 'червы' };
+  const RANK_L = { 11: 'В', 12: 'Д', 13: 'К', 14: 'Т' };
+  const pcSuit = (c) => c.slice(-1);
+  const pcRank = (c) => Number(c.slice(0, -1));
+  // Карта: null — рубашка
+  function pcard(c, g, opts = {}) {
+    const cls = `pc ${opts.cls || ''}`;
+    if (!c) return `<span class="${cls} back"></span>`;
+    if (c === g.joker) return `<${opts.btn ? 'button' : 'span'} class="${cls} joker" ${opts.btn || ''}><b>🃏</b><small>джокер</small></${opts.btn ? 'button' : 'span'}>`;
+    const su = pcSuit(c), r = pcRank(c);
+    const red = su === 'h' || su === 'd';
+    const lbl = RANK_L[r] || r;
+    return `<${opts.btn ? 'button' : 'span'} class="${cls} ${red ? 'red' : ''} ${su === g.trump ? 'trump' : ''}" ${opts.btn || ''}><i class="tl">${lbl}<em>${SUIT_SYM[su]}</em></i><b>${SUIT_SYM[su]}</b><i class="br">${lbl}<em>${SUIT_SYM[su]}</em></i></${opts.btn ? 'button' : 'span'}>`;
+  }
+  function rPoker(g) {
+    const me = S.me;
+    const myTurn = g.turnPid === me;
+    const trumpTxt = g.trump ? `${SUIT_SYM[g.trump]} ${SUIT_NAME[g.trump]}` : 'без козыря';
+    // Места за столом: заказ / взято, кто ходит, кто сдаёт
+    const seats = g.order
+      .map((id) => {
+        const bid = g.bids[id];
+        const took = g.took[id] || 0;
+        const st = g.noBid ? `взял ${took}` : bid == null ? (g.phase === 'bid' ? 'думает…' : '—') : `${bid === 0 ? 'пас' : 'заказ ' + bid} · взял ${took}`;
+        const good = !g.noBid && bid != null && took === bid;
+        const over = !g.noBid && bid != null && took > bid;
+        return `<div class="pk-seat ${id === g.turnPid ? 'on' : ''} ${id === me ? 'me' : ''} ${good ? 'good' : ''} ${over ? 'over' : ''}">
+          ${pa(id, 40, 'round')}${id === g.dealer ? '<span class="pk-dealer" title="Сдаёт">С</span>' : ''}
+          <div class="pk-sb"><b>${nm(id)}</b><small>${st}</small></div>
+          <span class="pk-cnt" title="Карт на руках">${g.counts[id]}</span>
+          <b class="pk-tot" data-cnt="pk-${id}">${g.total[id]}</b>
+        </div>`;
+      })
+      .join('');
+    // Стол: текущая взятка (или только что собранная)
+    const showTrick = g.phase === 'trick' && g.lastTrick ? g.lastTrick.cards : g.trick;
+    const win = g.phase === 'trick' && g.lastTrick ? g.lastTrick.winner : null;
+    const jName = (j) => (j === 'low' ? 'младшая' : j === 'high' ? 'забирает' : j?.startsWith('high-') ? `старшие ${SUIT_SYM[j.slice(5)]}` : '');
+    const trick = showTrick.length
+      ? showTrick.map((x, i) => `<div class="pk-play ${x.pid === win ? 'win' : ''}" style="--i:${i}">${pcard(x.c, g)}${x.j ? `<em class="pk-j">${jName(x.j)}</em>` : ''}<span>${pa(x.pid, 22, 'round')}${nm(x.pid)}</span></div>`).join('')
+      : `<p class="pk-hint">${g.phase === 'bid' ? (myTurn ? 'Ваш заказ' : `Заказывает ${nm(g.turnPid)}`) : g.phase === 'play' ? (myTurn ? 'Ваш ход — выберите карту' : `Ходит ${nm(g.turnPid)}`) : ''}</p>`;
+    // Заказ взяток
+    let bidBox = '';
+    if (g.phase === 'bid' && myTurn) {
+      bidBox = `<div class="pk-bid"><span class="muted small">Сколько возьмёте взяток?${g.forbidden != null ? ` Сдающему нельзя ${g.forbidden} — сумма не должна равняться ${g.k}` : ''}</span><div class="pk-bid-b">${Array.from({ length: g.k + 1 }, (_, n) => `<button class="btn ${n === 0 ? 'ghost' : ''}" data-act="pk-bid" data-n="${n}" ${n === g.forbidden ? 'disabled' : ''}>${n === 0 ? 'Пас' : n}</button>`).join('')}</div></div>`;
+    }
+    // Рука
+    const canPlay = g.phase === 'play' && myTurn;
+    const hand = g.hand
+      .map((c) => {
+        const ok = canPlay && c && g.playable.includes(c);
+        return pcard(c, g, { cls: `${ok ? 'ok' : canPlay ? 'no' : ''} ${ui.pkJ === c ? 'sel' : ''}`, btn: c ? `data-act="pk-play" data-c="${c}" ${canPlay && !ok ? 'aria-disabled="true"' : ''}` : '' });
+      })
+      .join('');
+    // Как сыграть джокер
+    let jBox = '';
+    if (ui.pkJ && canPlay) {
+      const lead = !g.trick.length;
+      const opts = lead ? [...(g.trump ? [['high-' + g.trump, `Забрать: по старшим козырям ${SUIT_SYM[g.trump]}`]] : []), ...['s', 'c', 'd', 'h'].filter((x) => x !== g.trump).map((x) => ['high-' + x, `Забрать: по старшим ${SUIT_SYM[x]} ${SUIT_NAME[x]}`]), ['low', 'Скинуть как самую младшую']] : [['high', 'Забрать взятку'], ['low', 'Скинуть (младшая карта)']];
+      jBox = `<div class="pk-jbox"><b>🃏 Как сыграть джокер?</b>${opts.map(([v, t]) => `<button class="btn ${v === 'low' ? 'ghost' : 'primary'}" data-act="pk-joker" data-j="${v}">${t}</button>`).join('')}<button class="btn ghost" data-act="pk-joker-x">Отмена</button></div>`;
+    }
+    // Итоги сдачи
+    let result = '';
+    if (g.phase === 'dealEnd' && g.dealResult) {
+      result = `<div class="pk-res"><div class="side-h">Итоги сдачи${g.spName ? ` · ${g.spName}` : ` · по ${g.k}`}</div>${g.order
+        .map((id) => {
+          const r = g.dealResult.rows[id];
+          if (!r) return '';
+          return `<div class="pk-rr">${pa(id, 26, 'round')}<b>${nm(id)}</b><span class="muted small">${r.bid == null ? '' : r.bid === 0 ? 'пас' : `заказ ${r.bid}`} · взял ${r.took}</span><em class="${r.pts > 0 ? 'up' : r.pts < 0 ? 'down' : ''}">${r.pts > 0 ? '+' : ''}${r.pts}</em><b class="pk-rt">${r.total}</b></div>`;
+        })
+        .join('')}${isHost() ? `<button class="btn primary" data-act="pk-next">Следующая сдача ${ic('play', 16)}</button>` : '<p class="muted small center">Следующая сдача через пару секунд</p>'}</div>`;
+    }
+    const over = g.phase === 'over'
+      ? `<div class="pk-res"><div class="big-ic">${ic('trophy', 48)}</div><h2 class="h2 center">Победа: ${(g.winner || []).map(nm).join(', ')}!</h2>${canRestart() ? `<button class="btn primary big-w" data-act="pk-restart">${ic('reset', 18)} Ещё партию</button>` : ''}</div>`
+      : '';
+    return `<div class="poker ${ui.enter ? 'enter' : ''}">
+      <div class="pk-top">
+        <div class="pk-info"><span class="pk-chip">Сдача <b>${g.deal}</b> из ${g.deals}</span><span class="pk-chip">${g.spName ? `<b class="pk-sp">${g.spName}</b>` : `по <b>${g.k}</b> ${plural(g.k, 'карте', 'карты', 'карт')}`}</span><span class="pk-chip">Сдаёт ${nm(g.dealer)}</span></div>
+        <div class="pk-trump"><span class="muted small">Козырь</span>${g.trumpCard ? pcard(g.trumpCard, g, { cls: 'mini' }) : ''}<b>${trumpTxt}</b></div>
+        <button class="btn sm ghost" data-act="pk-sheet">${ic('list', 15)} Таблица</button>
+      </div>
+      <div class="pk-seats">${seats}</div>
+      <div class="pk-table ${g.phase === 'trick' ? 'done' : ''}">${over || result || `<div class="pk-trick">${trick}</div>`}</div>
+      ${bidBox}${jBox}
+      ${g.inGame ? `<div class="pk-hand ${canPlay ? 'turn' : ''} ${g.dark && g.phase === 'bid' ? 'dark' : ''}">${g.dark && g.phase === 'bid' ? '<span class="pk-dark">Тёмная: заказ — не глядя в карты</span>' : ''}${hand}</div>` : ''}
+      ${ui.pkSheet ? pokerSheet(g) : ''}
+    </div>`;
+  }
+  // Таблица записи, как на бумаге: строки — сдачи, у каждого игрока заказ и очки (накопительно)
+  function pokerSheet(g) {
+    const rows = g.plan
+      .map((lbl, i) => {
+        const r = g.sheet[i];
+        const nowRow = i === g.deal - 1 && g.phase !== 'over';
+        return `<tr class="${nowRow ? 'cur' : ''} ${/[BMTZ]/.test(lbl) ? 'spx' : ''}"><th>${{ B: 'Б', M: 'М', T: 'Т', Z: 'З' }[lbl] || lbl}</th>${g.order
+          .map((id) => {
+            const x = r?.rows[id];
+            const bid = x ? (x.bid == null ? '' : x.bid === 0 ? '–' : x.bid) : nowRow && g.bids[id] != null ? (g.bids[id] === 0 ? '–' : g.bids[id]) : '';
+            return `<td class="b">${bid}</td><td class="${x && x.pts < 0 ? 'neg' : ''}">${x ? x.total : ''}</td>`;
+          })
+          .join('')}</tr>`;
+      })
+      .join('');
+    return `<div class="modal-bg" data-act="pk-sheet"></div><div class="modal card pk-sheet" role="dialog" aria-label="Таблица">
+      <div class="side-h">${ic('list', 16)} Таблица записи <button class="icon-x" data-act="pk-sheet" style="margin-left:auto">${ic('x', 16)}</button></div>
+      <div class="pk-sheet-w"><table><thead><tr><th rowspan="2">Сдача</th>${g.order.map((id) => `<th colspan="2">${nm(id)}</th>`).join('')}</tr><tr>${g.order.map(() => '<th class="b">заказ</th><th>очки</th>').join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="muted small">Б — бескозырка, М — мизер, Т — тёмная, З — золотая. «–» — пас.</p>
+    </div>`;
+  }
+
   // ---------- Кости 1000 ----------
   // Подсчёт очков для подсказки при выборе (сервер считает так же и всё проверяет)
   function diceScore(vals) {
@@ -12705,6 +13264,36 @@ window.RULES = {
     'mj-ready': () => act('ready'),
     'mj-restart': () => act('restart'),
     'dc-restart': () => act('restart'),
+    'pk-restart': () => act('restart'),
+    'pk-redeal': () => act('redeal'),
+    'pk-next': () => act('next'),
+    'pk-bid': (d) => act('bid', { n: Number(d.n) }),
+    'pk-sheet': () => {
+      ui.pkSheet = !ui.pkSheet;
+      render();
+    },
+    'pk-play': (d) => {
+      const g = S.game;
+      if (!g || g.turnPid !== S.me || g.phase !== 'play') return;
+      if (!g.playable.includes(d.c)) {
+        Sound.play('error');
+        return toast(g.trick.length ? 'Этой картой ходить нельзя: нужно в масть, а если её нет — козырем' : 'Этой картой сейчас нельзя');
+      }
+      if (d.c === g.joker) {
+        ui.pkJ = d.c;
+        return render();
+      }
+      act('play', { c: d.c });
+    },
+    'pk-joker': (d) => {
+      const c = ui.pkJ;
+      ui.pkJ = null;
+      act('play', { c, j: d.j });
+    },
+    'pk-joker-x': () => {
+      ui.pkJ = null;
+      render();
+    },
     'dc-skip': () => act('skipTurn'),
     'dc-pick': (d) => {
       const i = Number(d.i);

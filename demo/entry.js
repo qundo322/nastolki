@@ -8,6 +8,7 @@ const GAMES = {
   quiz: require('../server/games/quiz'),
   majority: require('../server/games/majority'),
   dice: require('../server/games/dice'),
+  poker: require('../server/games/poker'),
 };
 
 const Waiting = require('../server/waiting');
