@@ -1,7 +1,7 @@
 // Юнит-тест «Викторины WoT»: данные, вопросы и подсчёт очков за варианты
 const assert = require('assert');
 const w = require('../server/games/wot');
-assert.strictEqual(w.TANKS.length, 150, '150 танков');
+assert.strictEqual(w.TANKS.length, 250, '250 танков');
 for (const t of w.TANKS) {
   const qs = w.questions(t);
   assert(qs.length >= 5, `${t.name}: минимум 5 вопросов`);

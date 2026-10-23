@@ -2,7 +2,7 @@ const { build } = require('./quiz');
 const { shuffle, Deck, countLabel } = require('../util');
 const RAW = require('../wot_data');
 
-// «Викторина WoT»: вопросы по 150 танкам World of Tanks — числа (как в обычной викторине) и варианты А–Г.
+// «Викторина WoT»: вопросы по 250 танкам World of Tanks — числа (как в обычной викторине) и варианты А–Г.
 // «57 mm ZiS-4 (T-34)» → «57 mm ZiS-4»: служебные пометки в скобках не нужны
 const gunName = (g) => g.replace(/\s*\([^)]*\)\s*$/, '');
 const TANKS = RAW.map(([tag, name, nat, type, tier, hp, fwd, back, view, gun, ammo, pen, dmg, cal, power, front, crew, price, clip, kind, box]) => ({ tag, name, nat, type, tier, hp, fwd, back, view, gun: gunName(gun), ammo, pen, dmg, cal, power, front, crew, price, clip, kind, box }));
@@ -12,7 +12,7 @@ const TYPE = { LT: 'Лёгкий танк', MT: 'Средний танк', HT: '
 const TYPE_SHORT = { LT: 'ЛТ', MT: 'СТ', HT: 'ТТ', TD: 'ПТ-САУ', SPG: 'САУ' };
 const SHELL_G = { ARMOR_PIERCING: 'бронебойного', ARMOR_PIERCING_CR: 'подкалиберного', HIGH_EXPLOSIVE: 'фугасного', HOLLOW_CHARGE: 'кумулятивного' };
 const SHELL = { ARMOR_PIERCING: 'бронебойным', ARMOR_PIERCING_CR: 'подкалиберным', HIGH_EXPLOSIVE: 'фугасным', HOLLOW_CHARGE: 'кумулятивным' };
-const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
 
 const who = (t) => `${t.name}`;
 const label = (t) => `${TYPE_SHORT[t.type]} ${ROMAN[t.tier]} · ${NATION[t.nat]}`;
