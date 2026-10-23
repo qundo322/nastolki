@@ -2768,10 +2768,10 @@ html.v-calm .die3.rolling, html.v-calm .die3.rolling .cube { animation: none; }
 .dh-t td { padding: 5px 4px; border-radius: 8px; background: var(--surface-2); text-align: center; font-weight: 800; font-size: 13px; }
 .dh-t td:first-child { background: none; width: 26px; }
 .mds { display: inline-flex; gap: 3px; flex: 1; }
-.md { display: inline-grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 22px; height: 22px; padding: 3px; border-radius: 5px; background: linear-gradient(160deg, #fff, #e7e1d3); box-shadow: 0 1px 2px rgba(0,0,0,.3); vertical-align: middle; flex: none; }
-.md i { border-radius: 50%; margin: 12%; }
-.md i.on { background: #1b1b22; }
-.md i.on.r { background: #c8161c; }
+i.md { display: inline-grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 22px; height: 22px; padding: 3px; border-radius: 5px; background: linear-gradient(160deg, #fff, #e7e1d3); box-shadow: 0 1px 2px rgba(0,0,0,.3); vertical-align: middle; flex: none; }
+i.md i { border-radius: 50%; margin: 12%; }
+i.md i.on { background: #1b1b22; }
+i.md i.on.r { background: #c8161c; }
 .dh-rule { display: grid; grid-template-columns: 42px 1fr; gap: 8px; align-items: center; padding: 5px 2px; font-size: 12.5px; color: var(--muted); }
 .dh-rule b { font-size: 14px; color: var(--text); text-align: center; padding: 3px 0; border-radius: 8px; background: var(--surface-2); }
 @media (max-width: 1280px) { .dice-g { grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); } .dice-help { grid-column: 1 / -1; position: static; max-height: none; } }
@@ -2884,6 +2884,15 @@ html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none
 .btn.primary:hover:not([disabled])::before { opacity: 1; }
 .btn.primary:hover:not([disabled]) { filter: none; }
 .btn.primary { transition: transform .12s, border-color .25s, box-shadow .25s, filter .15s; }
+
+/* ---- Коднеймс: нейтральный белый акцент вместо голубого (синий путается с синей командой) ---- */
+.cn { --accent: #eeeef3; --accent-hover: #ffffff; --accent-text: #ffffff; --accent-ink: #15151c; --accent-soft: rgba(255, 255, 255, .08); --accent-line: rgba(255, 255, 255, .5);
+  --accent-bg: linear-gradient(160deg, #ffffff, #dcdde4); --accent-glow: rgba(255, 255, 255, .22); }
+[data-theme='light'] .cn { --accent: #26262f; --accent-hover: #15151c; --accent-text: #15151c; --accent-ink: #ffffff; --accent-soft: rgba(20, 20, 28, .06); --accent-line: rgba(20, 20, 28, .4);
+  --accent-bg: linear-gradient(160deg, #3a3a45, #17171d); --accent-glow: rgba(20, 20, 28, .2); }
+/* капитан — жёлтым */
+.cn .tp-role { color: #f2c14b; }
+[data-theme='light'] .cn .tp-role { color: #a26f00; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
