@@ -267,6 +267,7 @@ function bot(name, real = '') {
   assert(g(h).correct, 'correct');
   assert((await helpers.find((b) => b !== h).act('next')).error, 'helpers wait for heart');
   await guesser.act('heart', { pid: helpers[2].st.me });
+  if (guesser !== h) assert((await h.act('next')).error, 'only the guesser presses «Дальше» (host too waits)');
   await guesser.act('next');
   await wait(100);
   const P = g(h).points;

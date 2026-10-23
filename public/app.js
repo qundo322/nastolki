@@ -3144,8 +3144,8 @@
       }
       const nextBtn = voting
         ? isHost() ? `<button class="btn ghost" data-act="jo-next">Хост: дальше без решения ${ic('play', 16)}</button>` : ''
-        : g.correct && !g.isGuesser && !isHost()
-          ? `<span class="muted">${g.heart == null ? `Ждём отметку от ${nm(g.guesser)}` : `${ic('heartf', 14)} Лучшая подсказка выбрана`}</span>`
+        : !g.isGuesser && !(isHost() && player(g.guesser)?.connected === false)
+          ? `<span class="muted">${g.correct && g.heart == null ? `Ждём, пока ${nm(g.guesser)} выберет лучшую подсказку и нажмёт «Дальше»` : g.correct ? `${ic('heartf', 14)} Лучшая подсказка выбрана — ждём, пока ${nm(g.guesser)} нажмёт «Дальше»` : `Ждём, пока ${nm(g.guesser)} нажмёт «Дальше»`}</span>`
           : `<button class="btn primary mega" data-act="jo-next" data-hotkey>${g.isGuesser && g.correct && g.heart == null ? 'Дальше без отметки' : 'Дальше'} ${ic('play', 20)}</button>`;
       body = `<div class="stage-card">${T}<div class="kicker">Было слово</div><div class="mega-word">${esc(g.word)}</div>
         <p class="jo-ans">Ответ: <b>${esc(g.guess || '—')}</b></p><h2 class="h2 res">${res}</h2>

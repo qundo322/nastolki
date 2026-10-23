@@ -283,8 +283,10 @@ function action(s, pid, msg, ctx) {
     case 'next': {
       if (s.phase !== 'result') return;
       if (s.guess && !s.correct && !ctx.isHost) return 'Подсказчики решают, засчитать ли ответ';
-      if (s.correct && pid !== s.guesser && !ctx.isHost) return 'Ждём, пока угадывающий отметит лучшую подсказку';
-      if (s.correct === null && !isHelper && pid !== s.guesser && !ctx.isHost) return;
+      // «Дальше» жмёт только угадывающий (он же выбирает лучшую подсказку); хост — лишь если угадывающий не в сети
+      const gp = ctx.room.players.get(s.guesser);
+      const guesserAway = !gp || gp.connected === false;
+      if (pid !== s.guesser && !(ctx.isHost && guesserAway) && !(s.guess && !s.correct && ctx.isHost)) return s.correct ? 'Ждём, пока угадывающий выберет лучшую подсказку и нажмёт «Дальше»' : 'Дальше нажимает угадывающий';
       finishRound(s, ctx);
       return;
     }

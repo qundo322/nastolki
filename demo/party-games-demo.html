@@ -5779,8 +5779,9 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           case "next": {
             if (s.phase !== "result") return;
             if (s.guess && !s.correct && !ctx.isHost) return "\u041F\u043E\u0434\u0441\u043A\u0430\u0437\u0447\u0438\u043A\u0438 \u0440\u0435\u0448\u0430\u044E\u0442, \u0437\u0430\u0441\u0447\u0438\u0442\u0430\u0442\u044C \u043B\u0438 \u043E\u0442\u0432\u0435\u0442";
-            if (s.correct && pid !== s.guesser && !ctx.isHost) return "\u0416\u0434\u0451\u043C, \u043F\u043E\u043A\u0430 \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0449\u0438\u0439 \u043E\u0442\u043C\u0435\u0442\u0438\u0442 \u043B\u0443\u0447\u0448\u0443\u044E \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443";
-            if (s.correct === null && !isHelper && pid !== s.guesser && !ctx.isHost) return;
+            const gp = ctx.room.players.get(s.guesser);
+            const guesserAway = !gp || gp.connected === false;
+            if (pid !== s.guesser && !(ctx.isHost && guesserAway) && !(s.guess && !s.correct && ctx.isHost)) return s.correct ? "\u0416\u0434\u0451\u043C, \u043F\u043E\u043A\u0430 \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0449\u0438\u0439 \u0432\u044B\u0431\u0435\u0440\u0435\u0442 \u043B\u0443\u0447\u0448\u0443\u044E \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0443 \u0438 \u043D\u0430\u0436\u043C\u0451\u0442 \xAB\u0414\u0430\u043B\u044C\u0448\u0435\xBB" : "\u0414\u0430\u043B\u044C\u0448\u0435 \u043D\u0430\u0436\u0438\u043C\u0430\u0435\u0442 \u0443\u0433\u0430\u0434\u044B\u0432\u0430\u044E\u0449\u0438\u0439";
             finishRound(s, ctx);
             return;
           }
@@ -13881,8 +13882,8 @@ void main(){
       }
       const nextBtn = voting
         ? isHost() ? `<button class="btn ghost" data-act="jo-next">Хост: дальше без решения ${ic('play', 16)}</button>` : ''
-        : g.correct && !g.isGuesser && !isHost()
-          ? `<span class="muted">${g.heart == null ? `Ждём отметку от ${nm(g.guesser)}` : `${ic('heartf', 14)} Лучшая подсказка выбрана`}</span>`
+        : !g.isGuesser && !(isHost() && player(g.guesser)?.connected === false)
+          ? `<span class="muted">${g.correct && g.heart == null ? `Ждём, пока ${nm(g.guesser)} выберет лучшую подсказку и нажмёт «Дальше»` : g.correct ? `${ic('heartf', 14)} Лучшая подсказка выбрана — ждём, пока ${nm(g.guesser)} нажмёт «Дальше»` : `Ждём, пока ${nm(g.guesser)} нажмёт «Дальше»`}</span>`
           : `<button class="btn primary mega" data-act="jo-next" data-hotkey>${g.isGuesser && g.correct && g.heart == null ? 'Дальше без отметки' : 'Дальше'} ${ic('play', 20)}</button>`;
       body = `<div class="stage-card">${T}<div class="kicker">Было слово</div><div class="mega-word">${esc(g.word)}</div>
         <p class="jo-ans">Ответ: <b>${esc(g.guess || '—')}</b></p><h2 class="h2 res">${res}</h2>
