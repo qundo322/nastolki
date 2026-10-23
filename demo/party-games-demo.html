@@ -3071,6 +3071,33 @@ html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none
 .btn.primary:hover:not([disabled]) { filter: none; }
 .btn.primary { transition: transform .12s, border-color .25s, box-shadow .25s, filter .15s; }
 
+/* ---- Подарки: объявление внизу экрана, а не на весь экран — игра остаётся видна ---- */
+.gift-ov { inset: auto 0 0 0; height: min(300px, 46vh); place-items: end center; padding: 0 16px calc(26px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(6, 6, 12, .82), rgba(6, 6, 12, .5) 48%, rgba(6, 6, 12, 0)); -webkit-backdrop-filter: none; backdrop-filter: none; overflow: hidden; }
+.gift-ov.g-crown { background: radial-gradient(60% 90% at 50% 100%, rgba(255, 200, 60, .26), transparent 70%), linear-gradient(to top, rgba(6, 6, 12, .82), rgba(6, 6, 12, .5) 48%, rgba(6, 6, 12, 0)); }
+.gift-ov.g-ring { background: radial-gradient(60% 90% at 50% 100%, rgba(255, 90, 160, .24), transparent 70%), linear-gradient(to top, rgba(6, 6, 12, .82), rgba(6, 6, 12, .5) 48%, rgba(6, 6, 12, 0)); }
+.gift-ov.g-bus { background: radial-gradient(60% 90% at 50% 100%, rgba(150, 165, 110, .26), transparent 70%), linear-gradient(to top, rgba(6, 6, 12, .82), rgba(6, 6, 12, .5) 48%, rgba(6, 6, 12, 0)); }
+/* карточка: картинка слева, текст справа */
+.gift-ov .go-card { grid-template-columns: auto minmax(0, auto); grid-template-areas: 'e t' 'e d'; align-items: center; justify-items: start; column-gap: 18px; row-gap: 4px; text-align: left; padding: 0; max-width: min(760px, 100%); }
+.gift-ov .go-card > .go-e, .gift-ov .go-card > .go-box { grid-area: e; justify-self: center; }
+.gift-ov .go-t { grid-area: t; align-self: end; font-size: clamp(19px, 2.6vw, 30px); max-width: none; }
+.gift-ov .go-d { grid-area: d; align-self: start; font-size: 13px; }
+.gift-ov .go-e { font-size: clamp(60px, 8vw, 92px); }
+.gift-ov.g-bus .go-e { font-size: clamp(64px, 8vw, 96px); }
+.gift-ov .go-box { width: clamp(84px, 10vw, 110px); height: clamp(76px, 9vw, 96px); }
+.gift-ov .go-box .go-e { font-size: clamp(42px, 5vw, 58px); }
+@keyframes goCard { from { opacity: 0; translate: 0 60px; } }
+/* частицы — в полосе снизу, вдвое компактнее */
+.gift-ov .go-fx { inset: 0; transform: scale(.5); transform-origin: 50% 70%; }
+.gift-ov .rays { top: 85%; }
+.gift-ov .go-fx .road { top: 78%; }
+@media (max-width: 560px) {
+  .gift-ov { height: min(260px, 42vh); }
+  .gift-ov .go-card { column-gap: 12px; }
+  .gift-ov .go-e { font-size: 56px; }
+}
+.gift-ov .rays { opacity: .55; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
