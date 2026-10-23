@@ -3030,3 +3030,27 @@ img.gimg { display: block; width: 1em; height: 1em; object-fit: contain; pointer
 @keyframes dustPuff { 0% { opacity: 0; scale: calc(var(--s) * .3); } 25% { opacity: .9; } 100% { opacity: 0; scale: calc(var(--s) * 1.8); translate: calc(var(--x) + 12vw) calc(var(--y) - 6vh); } }
 html.v-calm .g-bus .go-e { animation: none; }
 .sfx-h2 { margin-top: 10px; }
+
+/* ---- «Одна игра / Марафон»: плашка перетекает «жидко» — передний край уходит первым, задний догоняет ---- */
+.tabs.seg2 .tab-ind { left: 4px; right: calc(50% + 2px); width: auto; transform: none; transition: none; will-change: left, right; }
+.tabs.seg2[data-mode='tour'] .tab-ind { left: calc(50% + 2px); right: 4px; transform: none; }
+.tabs.seg2.anim-tour .tab-ind { animation: segToR .52s both; animation-delay: var(--te, 0ms); }
+.tabs.seg2.anim-single .tab-ind { animation: segToL .52s both; animation-delay: var(--te, 0ms); }
+@keyframes segToR {
+  0% { left: 4px; right: calc(50% + 2px); animation-timing-function: cubic-bezier(.5, 0, .2, 1); }
+  55% { left: calc(30% + 2px); right: 4px; animation-timing-function: cubic-bezier(.2, .9, .3, 1.15); }
+  100% { left: calc(50% + 2px); right: 4px; }
+}
+@keyframes segToL {
+  0% { left: calc(50% + 2px); right: 4px; animation-timing-function: cubic-bezier(.5, 0, .2, 1); }
+  55% { left: 4px; right: calc(30% + 2px); animation-timing-function: cubic-bezier(.2, .9, .3, 1.15); }
+  100% { left: 4px; right: calc(50% + 2px); }
+}
+/* подписи: активная плавно темнеет, когда плашка под неё доезжает */
+.tabs.seg2.anim-tour button.on, .tabs.seg2.anim-single button.on { animation: segTxt .52s both; animation-delay: var(--te, 0ms); }
+.tabs.seg2.anim-tour button:not(.on), .tabs.seg2.anim-single button:not(.on) { animation: segTxtOff .4s both; animation-delay: var(--te, 0ms); }
+@keyframes segTxt { 0%, 30% { color: var(--muted); } 70%, 100% { color: var(--accent-ink); } }
+@keyframes segTxtOff { 0% { color: var(--accent-ink); } 60%, 100% { color: var(--muted); } }
+.tabs.seg2 button:not(.on):hover { color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .tabs.seg2 .tab-ind, .tabs.seg2 button { animation: none !important; } }
+html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none !important; }

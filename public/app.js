@@ -1761,10 +1761,11 @@
         <p class="muted">${nm(S.room.hostId)} настраивает игру или марафон. Пока можно почитать правила.</p></div>
         <div class="games-grid">${GAMES.map((x) => gameCard(x, false, sel)).join('')}</div>`);
     // Переключатель с «едущей» плашкой: при смене плашка и блоки под ним анимируются
-    const ma = ui.modeAnim;
-    ui.modeAnim = null;
-    const tabs = `<div class="tabs seg2 ${ma ? 'anim-' + ma : ''}" data-mode="${ui.mode}"><i class="tab-ind" aria-hidden="true"></i><button class="${ui.mode === 'single' ? 'on' : ''}" data-act="mode" data-m="single">${ic('grid', 16)} Одна игра</button><button class="${ui.mode === 'tour' ? 'on' : ''}" data-act="mode" data-m="tour">${ic('trophy', 16)} Марафон</button></div>`;
-    const pane = (html) => `<div class="mode-pane ${ma ? (ma === 'tour' ? 'in-right' : 'in-left') : ''}">${html}</div>`;
+    // Анимация считается от времени переключения — перерисовка посередине её не обрывает
+    const mEl = ui.modeAt ? Date.now() - ui.modeAt : 1e9;
+    const ma = mEl < 600 ? ui.modeAnim : null;
+    const tabs = `<div class="tabs seg2 ${ma ? 'anim-' + ma : ''}" data-mode="${ui.mode}" style="--te:-${ma ? mEl : 0}ms"><i class="tab-ind" aria-hidden="true"></i><button class="${ui.mode === 'single' ? 'on' : ''}" data-act="mode" data-m="single">${ic('grid', 16)} Одна игра</button><button class="${ui.mode === 'tour' ? 'on' : ''}" data-act="mode" data-m="tour">${ic('trophy', 16)} Марафон</button></div>`;
+    const pane = (html) => `<div class="mode-pane ${ma && mEl < 120 ? (ma === 'tour' ? 'in-right' : 'in-left') : ''}">${html}</div>`;
     if (ui.mode === 'tour') return wrap(`${paused}${invite}${tabs}${pane(renderTourBuilder())}`);
     return wrap(`${paused}${invite}${tabs}${pane(`
       <div class="games-grid">${GAMES.map((x) => gameCard(x, true, sel)).join('')}</div>
@@ -4011,7 +4012,10 @@
       render();
     },
     mode: (d) => {
-      if (d.m !== ui.mode) ui.modeAnim = d.m;
+      if (d.m !== ui.mode) {
+        ui.modeAnim = d.m;
+        ui.modeAt = Date.now();
+      }
       ui.mode = d.m;
       render();
     },
