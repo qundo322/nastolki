@@ -3390,8 +3390,8 @@
     const el = now() - (g.rollAt || 0);
     const rolling = d.fresh && g.rollAt && el < g.rollMs + 400;
     const t0 = Date.now() - el + i * 70;
-    const cv = `<canvas class="dgl" data-v="${d.v}" data-seed="${g.rollId * 31 + i * 7}" data-t0="${rolling ? t0 : 0}" data-dur="${rolling ? 1150 : 0}" aria-hidden="true"></canvas>`;
-    const style = `--de:${-el + i * 70}ms`;
+    const cv = `<canvas class="dgl" data-v="${d.v}" data-seed="${g.rollId * 31 + i * 7}" data-t0="${rolling ? t0 : 0}" data-dur="${rolling ? 1150 : 0}" data-pw="${g.power || 0}" aria-hidden="true"></canvas>`;
+    const style = `--de:${-el + i * 70}ms;--pw:${g.power || 0}`;
     const cls = `die3 ${rolling ? 'rolling' : ''} ${opts.sel ? 'sel' : ''} ${opts.can ? 'can' : ''} ${opts.dim ? 'dim' : ''} ${opts.small ? 'small' : ''}`;
     return opts.act ? `<button class="${cls}" data-act="dc-pick" data-i="${i}" style="${style}" aria-label="Кубик ${d.v}${opts.sel ? ', выбран' : ''}">${cv}</button>` : `<span class="${cls}" style="${style}" aria-label="Кубик ${d.v}">${cv}</span>`;
   }
@@ -3889,7 +3889,10 @@
       Sound.play('tap');
       render();
     },
-    'dc-roll': () => act('roll', { keep: ui.dsel ? [...ui.dsel.set] : [] }),
+    'dc-roll': () => {
+      const power = Charge.take();
+      act('roll', { keep: ui.dsel ? [...ui.dsel.set] : [], power });
+    },
     'dc-stop': () => act('stop', { keep: ui.dsel ? [...ui.dsel.set] : [] }),
     'mj-skip': () => act('skip'),
     'mj-pick': (d) => {
@@ -3969,6 +3972,35 @@
       render();
     },
   };
+
+  // «Кости»: зажми «Бросить», чтобы накопить силу броска (с 0.2 с, максимум за 1 с). На результат не влияет — только анимация
+  const Charge = (() => {
+    const DELAY = 200, FULL = 1000;
+    let t0 = 0, pw = 0, raf = 0, released = 0;
+    const level = () => (t0 ? Math.max(0, Math.min(1, (Date.now() - t0 - DELAY) / FULL)) : 0);
+    const paint = () => {
+      pw = level();
+      document.querySelectorAll('.dc-roll').forEach((b) => { b.style.setProperty('--pw', pw.toFixed(3)); b.classList.toggle('charging', pw > 0); });
+      const row = document.querySelector('.dc-row');
+      if (row) { row.style.setProperty('--pw', pw.toFixed(3)); row.classList.toggle('charging', pw > 0); }
+      if (t0) raf = requestAnimationFrame(paint);
+    };
+    const stop = () => {
+      t0 = 0;
+      cancelAnimationFrame(raf);
+      document.querySelectorAll('.dc-roll.charging, .dc-row.charging').forEach((b) => b.classList.remove('charging'));
+    };
+    document.addEventListener('pointerdown', (e) => {
+      const b = e.target.closest('.dc-roll');
+      if (!b || b.disabled || e.button > 0) return;
+      t0 = Date.now();
+      released = 0;
+      raf = requestAnimationFrame(paint);
+    });
+    document.addEventListener('pointerup', () => { if (t0) { released = level(); stop(); } });
+    document.addEventListener('pointercancel', () => { released = 0; stop(); });
+    return { take: () => { const v = released; released = 0; return v; } };
+  })();
 
   document.addEventListener('click', async (e) => {
     // клик мимо открытого меню — закрыть его

@@ -108,7 +108,8 @@ function nextTurn(s, ctx) {
 }
 
 // Бросаем все свободные кубики
-function doRoll(s, ctx) {
+function doRoll(s, ctx, power) {
+  s.power = Math.max(0, Math.min(1, Number(power) || 0)); // сила броска — только для анимации, на результат не влияет
   for (const d of s.dice) {
     d.fresh = !d.kept;
     if (!d.kept) d.v = roll1();
@@ -210,13 +211,13 @@ function action(s, pid, msg, ctx) {
   if (Date.now() - s.rollAt < ROLL_MS - 200) return 'Кубики ещё катятся';
   switch (msg.type) {
     case 'roll': {
-      if (s.phase === 'start') return doRoll(s, ctx);
+      if (s.phase === 'start') return doRoll(s, ctx, msg.power);
       if (s.phase !== 'pick') return;
       const err = keep(s, msg.keep);
       if (err) return err;
       // Отложены все пять — подтверждающий бросок всеми кубиками
       if (s.dice.every((d) => d.kept)) for (const d of s.dice) d.kept = false;
-      return doRoll(s, ctx);
+      return doRoll(s, ctx, msg.power);
     }
     case 'stop': {
       if (s.phase !== 'pick') return;
@@ -251,6 +252,7 @@ function view(s, pid) {
     rollId: s.rollId,
     rollAt: s.rollAt,
     rollMs: ROLL_MS,
+    power: s.power || 0,
     rolls: s.rolls,
     turnPts: s.turnPts,
     best: b ? b.idx : [],

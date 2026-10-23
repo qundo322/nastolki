@@ -71,29 +71,36 @@ vec4 shade(vec2 s){
   float b = dot(o3, d3), c = dot(o3, o3) - 0.76; float h = b * b - c;
   if (h < 0.) return vec4(0.);
   float t = -b - sqrt(h), tEnd = -b + sqrt(h);
+  float md = 1e3;
   for (int i = 0; i < 90; i++) {
     vec3 p = o3 + d3 * t; float d = map(p);
+    md = min(md, d);
     if (d < 0.0004) {
+      // мультяшная заливка: плоские цвета, 2 ступени света, один блик, без реалистичных теней
       vec3 n = uR * nrm(p);
       int f; float pd = pip(p, f);
-      bool isPip = pd < 0.003;
-      vec3 base = vec3(0.965, 0.945, 0.9);
-      if (isPip) base = (f == 1 || f == 4) ? vec3(0.78, 0.07, 0.08) : vec3(0.09, 0.09, 0.1);
-      vec3 L = normalize(vec3(-0.45, 0.65, 0.75));
-      vec3 V = -rd, H = normalize(L + V);
-      float dif = max(dot(n, L), 0.) * 0.7 + 0.42;
-      float spec = pow(max(dot(n, H), 0.), isPip ? 60. : 38.) * (isPip ? 0.45 : 0.32);
-      float fr = pow(1. - max(dot(n, V), 0.), 3.);
-      // мягкое затенение внутри лунок и на рёбрах
-      float ao = clamp(map(p + (T * n) * 0.05) / 0.05, 0., 1.);
-      ao = 0.62 + 0.38 * ao;
-      vec3 col = base * dif * ao + vec3(spec) + fr * vec3(0.10, 0.09, 0.07);
-      col -= (1. - max(dot(n, vec3(0., 0., 1.)), 0.)) * 0.06 * vec3(0.4, 0.35, 0.3);
+      bool isPip = pd < 0.004;
+      vec3 L = normalize(vec3(-0.4, 0.6, 0.7));
+      float ndl = dot(n, L);
+      if (isPip) {
+        vec3 pc = (f == 1 || f == 4) ? vec3(0.93, 0.2, 0.22) : vec3(0.16, 0.15, 0.2);
+        // в лунке: светлее с одной стороны — читается «вдавленность», но без грязных теней
+        return vec4(pc * mix(0.82, 1.08, smoothstep(-0.2, 0.2, -ndl + 0.6)), 1.);
+      }
+      vec3 base = vec3(1.0, 0.985, 0.95);
+      float band = mix(0.86, 1., smoothstep(0.28, 0.36, ndl));
+      vec3 col = base * band;
+      col = mix(col, vec3(0.88, 0.84, 0.78), smoothstep(0.02, -0.06, ndl) * 0.7);
+      float spec = smoothstep(0.955, 0.97, dot(n, normalize(L + vec3(0., 0., 1.))));
+      col = mix(col, vec3(1.), spec * 0.9);
       return vec4(col, 1.);
     }
     t += d;
     if (t > tEnd) break;
   }
+  // контур по силуэту — как в мультике
+  float ow = 0.028;
+  if (md < ow) { float a = smoothstep(ow, ow * 0.6, md); return vec4(vec3(0.17, 0.14, 0.12) * a, a); }
   return vec4(0.);
 }
 void main(){
@@ -188,7 +195,7 @@ void main(){
       const seed = +cv.dataset.seed || 1;
       const ax = [hash(seed) - 0.5, hash(seed + 1) - 0.5, hash(seed + 2) - 0.5];
       ax[0] += ax[0] > 0 ? 0.4 : -0.4; // вращение «через себя», а не волчком
-      const turns = Math.PI * 2 * (2 + hash(seed + 3) * 1.5);
+      const turns = Math.PI * 2 * (2 + hash(seed + 3) * 1.5 + (+cv.dataset.pw || 0) * 2.5); // сильнее бросок — больше оборотов
       M = mul(FINAL[v], axisAngle(ax[0], ax[1], ax[2], turns * (1 - ease(k))));
     }
     gl.viewport(0, 0, w, w);

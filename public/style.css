@@ -2941,3 +2941,14 @@ html.v-calm .die3.rolling, html.v-calm .die3.rolling .cube { animation: none; }
 .die3.sel .dgl { filter: drop-shadow(0 0 2px #ffd34d) drop-shadow(0 0 3px #ffd34d) drop-shadow(0 0 12px rgba(255, 211, 77, .85)); }
 .die3.rolling { animation-duration: 1.15s; }
 .die3.rolling .dgl { filter: none; }
+
+/* ---- Кости: заряд силы броска (зажать «Бросить») ---- */
+.dc-roll { position: relative; overflow: hidden; isolation: isolate; }
+.dc-roll::after { content: ''; position: absolute; inset: 0; z-index: -1; transform-origin: left; transform: scaleX(var(--pw, 0)); background: linear-gradient(90deg, rgba(255,255,255,.0), rgba(255,255,255,.45)); opacity: 0; transition: opacity .15s; }
+.dc-roll.charging::after { opacity: 1; }
+.dc-roll.charging { scale: calc(1 + var(--pw, 0) * .05); box-shadow: 0 0 calc(var(--pw, 0) * 26px) rgba(255, 211, 77, calc(.2 + var(--pw, 0) * .6)); }
+.dc-row.charging .die3:not(.sel):not(.small) { animation: dieCharge calc(.22s - var(--pw, 0) * .14s) linear infinite; }
+@keyframes dieCharge { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: calc(var(--pw, 0) * -3px) calc(var(--pw, 0) * -2px); rotate: calc(var(--pw, 0) * -5deg); } 75% { translate: calc(var(--pw, 0) * 3px) calc(var(--pw, 0) * -1px); rotate: calc(var(--pw, 0) * 5deg); } }
+@keyframes dieDrop { 0% { translate: 0 calc(-180px - var(--pw, 0) * 160px); scale: calc(1.25 + var(--pw, 0) * .2); } 45% { translate: 0 0; scale: 1; } 62% { translate: 0 calc(-26px - var(--pw, 0) * 26px); } 78% { translate: 0 0; } 88% { translate: 0 -7px; } 100% { translate: 0 0; } }
+html.v-calm .dc-row.charging .die3 { animation: none; }
+.die3.dim .dgl { filter: brightness(.94) saturate(.9); }
