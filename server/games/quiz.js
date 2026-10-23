@@ -4,7 +4,7 @@ const { shuffle, Deck, clampInt, countLabel } = require('../util');
 // «Викторина»: ответ — число, балл получает тот, кто ближе всех к правильному
 const REVEAL_MS = 10000; // 10 секунд на результат; нажали «Дальше» все — сразу следующий вопрос
 
-const meta = {
+const META = {
   title: 'Викторина',
   emoji: '🔢',
   players: '2–20',
@@ -38,9 +38,19 @@ function mask(a) {
   return (a < 0 ? '−' : '') + 'X'.repeat(i.length) + (f ? ',' + 'X'.repeat(f.length) : '');
 }
 
+// Стандартная колода: числовые вопросы из quiz_questions
+function defaultDraw(s) {
+  if (!s.deck) s.deck = new Deck(shuffle(QUESTIONS.map((q, i) => i)));
+  const [cat, text, answer, unit] = QUESTIONS[s.deck.draw()];
+  return { kind: 'num', cat, text, answer, unit };
+}
+
+// Фабрика викторин: вопросы бывают числовые (ближе всех +1, точно +1)
+// и с вариантами А–Г (верно +1, самый быстрый верный ещё +1). Картинка — по желанию.
+function build({ meta = META, draw = defaultDraw, name = 'Викторины', timerKey = 'quiz' } = {}) {
 function create(ctx, st) {
   const ids = ctx.players().map((p) => p.id);
-  if (ids.length < 2) return 'Для «Викторины» нужно минимум 2 игрока';
+  if (ids.length < 2) return `Для «${name}» нужно минимум 2 игрока`;
   const s = {
     rounds: clampInt(st.rounds, 3, 50, 15),
     seconds: clampInt(st.seconds, 10, 120, 30),
@@ -48,7 +58,6 @@ function create(ctx, st) {
     points: Object.fromEntries(ids.map((id) => [id, 0])),
     wins: {}, // сколько раз был ближе всех — для номинаций
     exacts: {},
-    deck: new Deck(shuffle(QUESTIONS.map((q, i) => i))),
     round: 0,
     history: [],
   };
@@ -57,17 +66,17 @@ function create(ctx, st) {
 }
 
 function setTimer(s, ctx, ms, fn) {
-  ctx.clearTimer('quiz');
+  ctx.clearTimer(timerKey);
   s.endsAt = Date.now() + ms;
   s.phaseMs = ms;
-  ctx.setTimer('quiz', ms, fn);
+  ctx.setTimer(timerKey, ms, fn);
 }
 
 function startRound(s, ctx) {
   s.round++;
-  const [cat, q, a, unit] = QUESTIONS[s.deck.draw()];
-  s.q = { cat, text: q, answer: a, unit };
+  s.q = draw(s);
   s.answers = {};
+  s.answeredAt = {};
   s.res = null;
   s.phase = 'answer';
   setTimer(s, ctx, s.seconds * 1000, () => reveal(s, ctx));
@@ -75,6 +84,7 @@ function startRound(s, ctx) {
 
 function reveal(s, ctx) {
   if (s.phase !== 'answer') return;
+  if (s.q.kind === 'choice') return revealChoice(s, ctx);
   const a = s.q.answer;
   const list = Object.entries(s.answers).map(([pid, v]) => ({ pid, v, diff: Math.abs(v - a) }));
   const best = list.length ? Math.min(...list.map((x) => x.diff)) : null;
@@ -97,12 +107,32 @@ function reveal(s, ctx) {
   setTimer(s, ctx, REVEAL_MS, () => advance(s, ctx));
 }
 
+// Вопрос с вариантами: верный ответ +1, самый быстрый из верных — ещё +1
+function revealChoice(s, ctx) {
+  const ok = s.q.correct;
+  const list = Object.entries(s.answers).map(([pid, v]) => ({ pid, v, ok: v === ok, at: s.answeredAt[pid] || 0 }));
+  const right = list.filter((x) => x.ok).sort((a, b) => a.at - b.at);
+  const first = right.length && s.order.length > 1 ? right[0].pid : null;
+  const got = {};
+  for (const x of right) got[x.pid] = 1;
+  if (first) {
+    got[first] = 2;
+    s.wins[first] = (s.wins[first] || 0) + 1;
+  }
+  for (const [id, n] of Object.entries(got)) s.points[id] = (s.points[id] || 0) + n;
+  s.res = { correct: ok, list: list.sort((a, b) => (b.ok - a.ok) || a.at - b.at), winners: right.map((x) => x.pid), first, got, picks: Object.fromEntries(s.q.opts.map((_, i) => [i, list.filter((x) => x.v === i).map((x) => x.pid)])) };
+  s.history.push({ q: s.q.text, answer: s.q.opts[ok], winners: right.map((x) => x.pid) });
+  s.phase = 'reveal';
+  s.ready = {};
+  setTimer(s, ctx, REVEAL_MS, () => advance(s, ctx));
+}
+
 
 function advance(s, ctx) {
   if (s.phase !== 'reveal') return;
   if (s.round >= s.rounds) {
     s.phase = 'over';
-    ctx.clearTimer('quiz');
+    ctx.clearTimer(timerKey);
     s.endsAt = null;
     const top = Math.max(...Object.values(s.points));
     s.winners = Object.keys(s.points).filter((id) => s.points[id] === top);
@@ -118,6 +148,16 @@ function action(s, pid, msg, ctx) {
     case 'answer': {
       if (s.phase !== 'answer') return 'Время ответа вышло';
       if (!s.order.includes(pid)) return 'Вы не в игре';
+      if (s.q.kind === 'choice') {
+        // выбор окончательный — так честно считается «самый быстрый»
+        if (s.answers[pid] != null) return 'Ответ уже принят';
+        const i = Number(msg.v);
+        if (!Number.isInteger(i) || i < 0 || i >= s.q.opts.length) return 'Выберите вариант';
+        s.answers[pid] = i;
+        s.answeredAt[pid] = Date.now();
+        if (online(s, ctx).every((id) => s.answers[id] != null)) reveal(s, ctx);
+        return;
+      }
       const v = parseNum(msg.v);
       if (v == null) return 'Нужно число: например 1492 или 3,14';
       s.answers[pid] = v;
@@ -183,7 +223,11 @@ function view(s, pid) {
     rounds: s.rounds,
     endsAt: s.endsAt,
     phaseMs: s.phaseMs,
-    q: s.q ? { cat: s.q.cat, text: s.q.text, unit: s.q.unit, answer: showAll ? s.q.answer : null, mask: mask(s.q.answer) } : null,
+    q: s.q
+      ? s.q.kind === 'choice'
+        ? { kind: 'choice', cat: s.q.cat, text: s.q.text, opts: s.q.opts, img: s.q.img, correct: showAll ? s.q.correct : null }
+        : { kind: 'num', cat: s.q.cat, text: s.q.text, unit: s.q.unit, img: s.q.img, answer: showAll ? s.q.answer : null, mask: mask(s.q.answer) }
+      : null,
     answered: Object.keys(s.answers || {}),
     mine: s.answers?.[pid] ?? null,
     res: showAll ? s.res : null,
@@ -211,7 +255,7 @@ const onPresence = (s, ctx) => {
 function pause(s, ctx) {
   if (!s.endsAt) return;
   s._left = Math.max(0, s.endsAt - Date.now());
-  ctx.clearTimer('quiz');
+  ctx.clearTimer(timerKey);
 }
 function resume(s, ctx) {
   if (s._left == null) return;
@@ -227,4 +271,7 @@ const isOver = (s) => s.phase === 'over';
 const results = (s) => ({ ...s.points });
 const stats = (s) => ({ quiz: { ...s.wins } });
 
-module.exports = { meta, create, action, view, onLeave, onPresence, isOver, results, stats, pause, resume, parseNum, mask };
+return { meta, create, action, view, onLeave, onPresence, isOver, results, stats, pause, resume, parseNum, mask };
+}
+
+module.exports = { ...build(), build };

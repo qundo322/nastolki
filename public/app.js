@@ -42,9 +42,9 @@
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
     cnEdit: false, // капитан исправляет подсказку
     mode: 'single',
-    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice', 'poker'],
+    mOrder: ['codenames', 'quiz', 'wot', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice', 'poker'],
     mOn: { codenames: true, quiz: true, majority: true, spyfall: true },
-    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1, poker: 1 },
+    mRounds: { codenames: 2, quiz: 1, wot: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1, poker: 1 },
     mOpen: {},
     showTable: false,
     ctlOpen: LS.get('pg_ctl', '') === '1',
@@ -836,12 +836,12 @@
       if (g.type === 'alias') return !['teams', 'over'].includes(g.phase) && (g.explainer === me || g.turnTeam === g.myTeam);
       if (g.type === 'spyfall') return g.phase === 'play' && (g.asker === me || g.target === me);
       if (g.type === 'justone') return g.phase === 'guess' && g.isGuesser;
-      if (g.type === 'quiz' || g.type === 'majority') return g.phase === 'answer' && g.round;
+      if (g.type === 'quiz' || g.type === 'wot' || g.type === 'majority') return g.phase === 'answer' && g.round;
       return false;
     };
     const was = myTurn(a);
     const now2 = myTurn(b);
-    if (now2 && (!was || (['quiz', 'majority'].includes(b.type) && a.round !== b.round) || (b.type === 'alias' && a.turnTeam !== b.turnTeam))) setTimeout(() => Sound.play('myturn'), 120);
+    if (now2 && (!was || (['quiz', 'wot', 'majority'].includes(b.type) && a.round !== b.round) || (b.type === 'alias' && a.turnTeam !== b.turnTeam))) setTimeout(() => Sound.play('myturn'), 120);
     // Голос «да / нет / не знаю» в «Кто я?» — мягкий щелчок счётчика
     if (b.type === 'whoami' && a.q && b.q && a.q.id === b.q.id && a.q.yes + a.q.no + a.q.idk !== b.q.yes + b.q.no + b.q.idk) Sound.play('count');
     if (b.type === 'whoami' && b.q?.pend && !a.q?.pend) Sound.play('vote');
@@ -1690,7 +1690,7 @@
       if (['clues', 'filter'].includes(g.phase)) items.push(btn('h-newword', 'shuffle', 'Другое слово'));
       if (g.phase !== 'over') items.push(btn('h-skipround', 'skip', 'Пропустить раунд (без очков)'));
       if (!t) items.push(btn('jo-restart', 'reset', 'Начать заново'));
-    } else if (g.type === 'quiz') {
+    } else if (g.type === 'quiz' || g.type === 'wot') {
       if (g.phase === 'answer') {
         items.push(plusT('h-addtime', 15));
         items.push(btn('h-newq', 'shuffle', 'Другой вопрос'));
@@ -1833,6 +1833,7 @@
     whoami: () => 15,
     justone: (id) => setv(id, 'target') || 15,
     quiz: (id) => ((setv(id, 'rounds') || 15) * ((setv(id, 'seconds') || 30) + 12)) / 60,
+    wot: (id) => ((setv(id, 'rounds') || 15) * ((setv(id, 'seconds') || 30) + 12)) / 60,
     majority: (id) => ((setv(id, 'rounds') || 10) * ((setv(id, 'seconds') || 45) + 20)) / 60,
     dice: () => 25,
     poker: (id) => ({ mini: 30, short: 50, full: 120 })[ui.settings[id + '__length'] || 'short'] || 50,
@@ -2022,7 +2023,7 @@
   // ---------- игры ----------
   function renderGame(g) {
     if (g.waiting) return rWaiting(g);
-    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority, dice: rDice, poker: rPoker }[g.type];
+    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, wot: rQuiz, majority: rMajority, dice: rDice, poker: rPoker }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
@@ -2292,7 +2293,7 @@
     else if (g.type === 'spyfall' && g.phase === 'play' && (g.endsAt || g.paused)) c = { ends: g.endsAt, left: g.pausedLeft, paused: g.paused, total: g.roundMs || 480000, team: `Раунд ${g.round}`, phase: 'вопросы и подозрения' };
     else if (g.type === 'whoami' && g.phase === 'play' && g.qEnds) c = { ends: g.qEnds, total: 60000, team: nm(g.turnPid), phase: 'придумывает вопрос' };
     else if (g.type === 'justone' && g.endsAt) c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Раунд ${g.round}`, phase: { clues: 'пишем подсказки', filter: 'убираем совпадения', guess: `угадывает ${nm(g.guesser)}`, result: g.correct ? 'выбор лучшей подсказки' : 'засчитать ли ответ' }[g.phase] || '' };
-    else if (g.type === 'quiz' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
+    else if ((g.type === 'quiz' || g.type === 'wot') && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 30000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'ответы' : 'результат' };
     else if (g.type === 'majority' && g.endsAt && g.phase !== 'over') c = { ends: g.endsAt, total: g.phaseMs || 45000, team: `Вопрос ${g.round}/${g.rounds}`, phase: g.phase === 'answer' ? 'тайные ответы' : 'разбор совпадений' };
     if (!c) return '';
     const left = c.paused ? c.left : c.ends - now();
@@ -3098,6 +3099,35 @@
     </div>`;
   }
 
+  // Картинка танка с танкопедии: танк на ней смещён влево — центрируем по его рамке (box в координатах 192×90)
+  const WOT_IMG = (tag) => `https://eu-wotp.wgcdn.co/dcont/tankopedia_images/${tag}/${tag}_image.png`;
+  function wotImg(img) {
+    if (!img) return '';
+    const [x0, y0, x1, y1] = img.box || [30, 13, 110, 84];
+    const PAD = 0.1, FW = 16, FH = 9; // кадр 16:9
+    const bw = (x1 - x0) / 192, bh = (y1 - y0) / 90; // доля картинки
+    const k = Math.min((1 - 2 * PAD) / (bw * 192 / 192), ((1 - 2 * PAD) * FH / FW) / (bh * 90 / 192)); // ширина картинки в ширинах кадра
+    const w = k * 100, h = (k * 90 / 192) * (FW / FH) * 100; // в % от кадра
+    const cx = (x0 + x1) / 2 / 192, cy = (y0 + y1) / 2 / 90;
+    const left = 50 - cx * w, top = 50 - cy * h;
+    return `<div class="wot-img ${img.hide ? 'guess' : ''}"><img src="${WOT_IMG(img.tag)}" alt="" loading="eager" referrerpolicy="no-referrer" style="width:${w.toFixed(1)}%;left:${left.toFixed(1)}%;top:${top.toFixed(1)}%" onerror="this.parentNode.classList.add('err')"/></div>`;
+  }
+  const LETTERS = ['А', 'Б', 'В', 'Г'];
+  function qzChoice(g) {
+    const r = g.phase === 'reveal' ? g.res : null;
+    const mine = g.mine;
+    return `<div class="qz-opts ${r ? 'done' : ''} ${mine != null ? 'locked' : ''}">${g.q.opts
+      .map((o, i) => {
+        const ok = r && r.correct === i, bad = r && mine === i && !ok;
+        const picks = r ? r.picks[i] || [] : [];
+        const tag = r || mine != null ? 'div' : 'button';
+        return `<${tag} class="qz-opt o${i} ${mine === i ? 'mine' : ''} ${ok ? 'ok' : ''} ${bad ? 'bad' : ''}" ${tag === 'button' ? `data-act="qz-pick" data-i="${i}"` : ''}>
+          <span class="qz-l">${LETTERS[i]}</span><span class="qz-ot">${esc(o)}</span>
+          ${r ? `<span class="qz-op">${picks.map((pid) => `<span class="qz-pa ${r.first === pid ? 'first' : ''}" title="${esc(nm(pid))}">${pa(pid, 26, 'round')}</span>`).join('')}</span>` : mine === i ? `<span class="qz-op">${ic('check', 18)}</span>` : ''}
+        </${tag}>`;
+      })
+      .join('')}</div>`;
+  }
   function rQuiz(g) {
     const me = S.me;
     const T = ''; // таймер — общей полосой под шапкой
@@ -3112,11 +3142,26 @@
     let body = '';
     if (g.phase === 'answer') {
       const ready = `<div class="jo-ready"><span class="muted small">Ответили ${g.answered.length}/${g.order.length}</span><span class="jr-list">${g.order.map((id) => `<span class="jr ${g.answered.includes(id) ? 'on' : ''}"><span class="ava-wrap">${pa(id, 34, 'round')}${g.answered.includes(id) ? `<span class="rd">${ic('check', 11)}</span>` : ''}</span><small>${nm(id)}</small></span>`).join('')}</span></div>`;
-      body = `<div class="stage-card qz-card">${T}
+      if (g.q.kind === 'choice')
+        body = `<div class="stage-card qz-card">${T}${wotImg(g.q.img)}
+        <div class="qz-q">${esc(g.q.text)}</div>
+        ${qzChoice(g)}
+        ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ответ принят: <b>${LETTERS[g.mine]}</b> <span class="muted">— ждём остальных</span></div>` : '<p class="muted small">Выбор окончательный. Самый быстрый из верных получает ещё +1.</p>'}
+        ${ready}</div>`;
+      else body = `<div class="stage-card qz-card">${T}${wotImg(g.q.img)}
         <div class="qz-q">${esc(g.q.text)}</div>
         <form data-form="qz-answer" class="big-form qz-form"><input class="inp big-inp qz-inp" name="v" data-keep="qz-v" inputmode="decimal" autocomplete="off" placeholder="${esc(g.q.mask || 'Ваше число')}" aria-label="Ваше число, ${g.q.mask ? g.q.mask.replace(/[^X]/g, '').length + ' цифр' : ''}" required/>${g.q.unit ? `<span class="qz-unit">${esc(g.q.unit)}</span>` : ''}<button class="btn primary mega">${g.mine != null ? 'Изменить' : 'Ответить'}</button></form>
         ${g.mine != null ? `<div class="jo-sent">${ic('check', 18)} Ваш ответ: <b>${fmtN(g.mine, g.q.unit)}</b> <span class="muted">— можно изменить, пока идёт время</span></div>` : `<p class="muted small">${g.q.mask ? `Подсказка: в ответе <b class="qz-mask">${esc(g.q.mask)}</b> — столько цифр. ` : ''}Можно с запятой: 3,14.</p>`}
         ${ready}</div>`;
+    } else if (g.phase === 'reveal' && g.res && g.q.kind === 'choice') {
+      const r = g.res;
+      const list = r.list.map((x) => `<div class="qz-r ${x.ok ? 'win' : ''}">${pa(x.pid, 28, 'round')}<span class="jb-n">${nm(x.pid)}</span><span class="qz-rv">${LETTERS[x.v]}</span><span class="qz-rd">${x.ok ? (r.first === x.pid ? 'быстрее всех!' : 'верно') : 'мимо'}</span><b class="qz-rp">${r.got[x.pid] ? '+' + r.got[x.pid] : ''}</b></div>`).join('');
+      body = `<div class="stage-card qz-card">${T}${wotImg(g.q.img && { ...g.q.img, hide: false })}
+        <div class="qz-q sm">${esc(g.q.text)}</div>
+        ${qzChoice(g)}
+        ${r.list.length ? `<div class="qz-list">${list}</div>` : '<p class="muted">Никто не успел ответить</p>'}
+        ${nextBar(g, 'qz-ready')}
+      </div>`;
     } else if (g.phase === 'reveal' && g.res) {
       const r = g.res;
       const [lo, hi] = qzRange(r);
@@ -3151,7 +3196,7 @@
         })
         .join('');
       const iReady = g.ready.includes(me);
-      body = `<div class="stage-card qz-card">${T}
+      body = `<div class="stage-card qz-card">${T}${wotImg(g.q.img)}
         <div class="qz-q sm">${esc(g.q.text)}</div>
         <div class="qz-reveal" data-qz-round="${g.round}" data-qz-from="${lo}" data-qz-to="${r.answer}" data-qz-unit="${esc(g.q.unit || '')}" data-qz-start="${start}">
           <div class="qz-big"><span class="qz-num">${el >= QZ_FILL ? fmtN(r.answer, g.q.unit) : fmtN(lo, g.q.unit)}</span><span class="qz-u">${esc(g.q.unit || '')}</span></div>
@@ -3844,6 +3889,7 @@
     'jo-pass': () => act('guess', { text: '' }),
     'jo-override': () => act('override'),
     'qz-ready': () => act('ready'),
+    'qz-pick': (d) => act('answer', { v: Number(d.i) }),
     'qz-restart': () => act('restart'),
     'qz-add': () => act('addMe'),
     'mj-add': () => act('addMe'),

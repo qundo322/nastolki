@@ -5,7 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "test": "node test/dice.js && node test/poker.js && node test/smoke.js"
+    "test": "node test/dice.js && node test/poker.js && node test/wot.js && node test/smoke.js"
   },
   "license": "MIT",
   "dependencies": {

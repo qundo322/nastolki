@@ -14,6 +14,7 @@ const GAMES = {
   whoami: require('./games/whoami'),
   justone: require('./games/justone'),
   quiz: require('./games/quiz'),
+  wot: require('./games/wot'),
   majority: require('./games/majority'),
   dice: require('./games/dice'),
   poker: require('./games/poker'),

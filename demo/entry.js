@@ -6,6 +6,7 @@ const GAMES = {
   whoami: require('../server/games/whoami'),
   justone: require('../server/games/justone'),
   quiz: require('../server/games/quiz'),
+  wot: require('../server/games/wot'),
   majority: require('../server/games/majority'),
   dice: require('../server/games/dice'),
   poker: require('../server/games/poker'),
@@ -341,6 +342,7 @@ function hint() {
     case 'whoami':
       return s.phase === 'write' ? 'Каждый загадывает персонажа соседу — переключайтесь по игрокам.' : `Ходит ${n(s.order[s.turn])}.`;
     case 'quiz':
+    case 'wot':
       return s.phase === 'answer' ? 'Ответ — число. Переключайтесь по игрокам и ответьте за каждого.' : '';
     case 'majority':
       return s.phase === 'answer'
