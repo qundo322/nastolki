@@ -2622,11 +2622,11 @@ html { scrollbar-gutter: stable; }
 .ava-gw.hit > .ava { animation: avaHit .55s cubic-bezier(.36,.07,.19,.97) both; animation-delay: calc(var(--ge, 0ms) + 250ms); }
 @keyframes avaHit { 10%, 90% { translate: -1px 0; } 20%, 80% { translate: 3px 0; rotate: 4deg; } 30%, 50%, 70% { translate: -5px 0; rotate: -6deg; } 40%, 60% { translate: 5px 0; rotate: 5deg; } }
 .gft { position: absolute; z-index: 2; pointer-events: none; line-height: 1; display: grid; place-items: center; font-size: clamp(9px, calc(var(--s) * .4), 56px); }
-.gft.p-side { right: calc(var(--s) * -.16); bottom: calc(var(--s) * -.1); filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); animation: giftBob 3s ease-in-out infinite; }
+.gft.p-side { right: calc(var(--s) * -.16); bottom: calc(var(--s) * -.1); text-shadow: 0 2px 3px rgba(0,0,0,.35); animation: giftBob 3s ease-in-out infinite; }
 .gft.p-on { left: 50%; top: 58%; translate: -50% -50%; font-size: clamp(9px, calc(var(--s) * .44), 60px); }
-.gft.p-crown { left: 50%; top: calc(var(--s) * -.52); translate: -50% 0; font-size: clamp(11px, calc(var(--s) * .72), 96px); filter: drop-shadow(0 0 calc(var(--s) * .06) rgba(255, 200, 40, .85)); animation: crownGlow 2.4s ease-in-out infinite; }
-.gft.g-kiss { opacity: .9; rotate: -14deg; top: 62%; left: 64%; mix-blend-mode: multiply; }
-.gft.g-poop { top: 66%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.gft.p-crown { left: 50%; top: calc(var(--s) * -.52); translate: -50% 0; font-size: clamp(11px, calc(var(--s) * .72), 96px); text-shadow: 0 0 calc(var(--s) * .08) rgba(255, 200, 40, .85); animation: crownGlow 2.4s ease-in-out infinite; }
+.gft.g-kiss { opacity: .92; rotate: -14deg; top: 62%; left: 64%; }
+.gft.g-poop { top: 66%; text-shadow: 0 2px 2px rgba(0,0,0,.35); }
 .gft.g-beer.fresh::after, .gft.g-whisky.fresh::after { content: ''; }
 /* след от леща: красный отпечаток + 💢 */
 .gft.g-slap { left: 38%; top: 52%; width: calc(var(--s) * .5); height: calc(var(--s) * .4); font-size: clamp(8px, calc(var(--s) * .26), 34px); }
@@ -2642,7 +2642,7 @@ html { scrollbar-gutter: stable; }
   radial-gradient(circle at 22% 78%, #e8261b 0 8%, transparent 9%),
   radial-gradient(circle at 50% 8%, #e8261b 0 7%, transparent 8%),
   radial-gradient(circle at 46% 46%, rgba(255,255,255,.5) 0 5%, transparent 6%);
-  opacity: .88; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+  opacity: .88; }
 /* появление подарка на аватарке (только в первые секунды) */
 .gft.fresh { animation-delay: var(--ge, 0ms); }
 .gft.p-side.fresh { animation: giftIn .7s cubic-bezier(.2,1.5,.4,1) both, giftBob 3s ease-in-out .7s infinite; animation-delay: var(--ge, 0ms), calc(var(--ge, 0ms) + .7s); }
@@ -2652,7 +2652,7 @@ html { scrollbar-gutter: stable; }
 @keyframes giftSlam { 0% { scale: 2.6; opacity: 0; } 60% { scale: .85; opacity: 1; } 100% { scale: 1; } }
 @keyframes crownIn { 0% { translate: -50% -140%; scale: 1.8; opacity: 0; } 60% { translate: -50% 8%; scale: 1; opacity: 1; } 80% { translate: -50% -6%; } 100% { translate: -50% 0; } }
 @keyframes giftBob { 0%, 100% { translate: 0 0; rotate: -4deg; } 50% { translate: 0 -2px; rotate: 4deg; } }
-@keyframes crownGlow { 0%, 100% { filter: drop-shadow(0 0 calc(var(--s) * .04) rgba(255, 200, 40, .7)); } 50% { filter: drop-shadow(0 0 calc(var(--s) * .12) rgba(255, 210, 60, 1)); } }
+@keyframes crownGlow { 0%, 100% { text-shadow: 0 0 calc(var(--s) * .05) rgba(255, 200, 40, .7); } 50% { text-shadow: 0 0 calc(var(--s) * .16) rgba(255, 210, 60, 1); } }
 
 /* полноэкранное объявление */
 .gift-ov { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; pointer-events: none; background: rgba(8, 8, 14, .5); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); animation: govIn .28s ease both; overflow: hidden; }
@@ -2724,3 +2724,6 @@ html.v-calm .gift-ov .go-fx { display: none; }
 .coin-btn .coin { width: 15px; height: 15px; }
 .coin-btn.on { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 .pp-grant { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 2px 10px 10px 12px; } .pp-grant > span { width: 100%; }
+
+/* подарки на аватарке — без фона (на Windows фильтры тени давали тёмный квадрат) */
+.gft { background: none !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
