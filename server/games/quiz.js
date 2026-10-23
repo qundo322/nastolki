@@ -1,19 +1,20 @@
-const QUESTIONS = require('../quiz_questions');
+const QUESTIONS = [...require('../quiz_questions'), ...require('../quiz_data/num')];
+const CHOICE = require('../quiz_data/choice');
 const { shuffle, Deck, clampInt, countLabel } = require('../util');
 
-// «Викторина»: ответ — число, балл получает тот, кто ближе всех к правильному
+// «Викторина»: числовые вопросы (ближе всех +1, точно +1) и тесты А–Г (верно +1, быстрее всех +1)
 const REVEAL_MS = 10000; // 10 секунд на результат; нажали «Дальше» все — сразу следующий вопрос
 
 const META = {
   title: 'Викторина',
   emoji: '🔢',
   players: '2–20',
-  content: countLabel(QUESTIONS.length, 'вопрос', 'вопроса', 'вопросов'),
-  short: 'Ответ — всегда число. Кто ближе всех к правде — получает балл. Точное попадание — бонус.',
+  content: countLabel(QUESTIONS.length + CHOICE.length, 'вопрос', 'вопроса', 'вопросов'),
+  short: 'Числовые вопросы и тесты А–Г. Кто ближе всех к правде или быстрее всех верно ответил — получает балл.',
   rules: [
-    'Каждый раунд — вопрос, ответ на который число: год, высота, количество.',
-    'Все пишут свой ответ, пока идёт таймер. Ответ можно менять, пока время не вышло.',
-    'Кто ближе всех к правильному ответу — получает +1. Точное попадание — ещё +1. Если ближе всех несколько — балл получает каждый.',
+    'Каждый раунд — вопрос: либо ответ — число (год, высота, количество), либо тест с вариантами А, Б, В, Г.',
+    'Число пишут, пока идёт таймер, и его можно менять. В тесте выбор окончательный — важна скорость.',
+    'Число: кто ближе всех к правильному ответу — получает +1, точное попадание — ещё +1. Тест: верный ответ +1, самому быстрому из верных — ещё +1.',
     'После каждого раунда шкала эффектно заполняется до правильного ответа, а на ней видно, кто где промахнулся.',
     'Побеждает тот, у кого больше всего очков после последнего раунда.',
   ],
@@ -21,6 +22,17 @@ const META = {
   settings: [
     { key: 'rounds', label: 'Вопросов', type: 'select', options: [10, 15, 20, 30], default: 15 },
     { key: 'seconds', label: 'Секунд на ответ', type: 'select', options: [20, 30, 45, 60], default: 30 },
+    {
+      key: 'qmode',
+      label: 'Вопросы',
+      type: 'select',
+      options: [
+        { v: 'mix', t: 'Вперемешку' },
+        { v: 'num', t: 'Только числа' },
+        { v: 'choice', t: 'Только тесты А–Г' },
+      ],
+      default: 'mix',
+    },
   ],
 };
 
@@ -38,9 +50,16 @@ function mask(a) {
   return (a < 0 ? '−' : '') + 'X'.repeat(i.length) + (f ? ',' + 'X'.repeat(f.length) : '');
 }
 
-// Стандартная колода: числовые вопросы из quiz_questions
+// Стандартная колода: числовые вопросы и тесты А–Г; «вперемешку» — чередуются
 function defaultDraw(s) {
   if (!s.deck) s.deck = new Deck(shuffle(QUESTIONS.map((q, i) => i)));
+  if (!s.cdeck) s.cdeck = new Deck(shuffle(CHOICE.map((q, i) => i)));
+  const choice = s.qmode === 'choice' || (s.qmode !== 'num' && s.round % 2 === 0);
+  if (choice) {
+    const [cat, text, right, ...wrong] = CHOICE[s.cdeck.draw()];
+    const opts = shuffle([right, ...wrong]);
+    return { kind: 'choice', cat, text, opts, correct: opts.indexOf(right) };
+  }
   const [cat, text, answer, unit] = QUESTIONS[s.deck.draw()];
   return { kind: 'num', cat, text, answer, unit };
 }
@@ -53,6 +72,7 @@ function create(ctx, st) {
   if (ids.length < 2) return `Для «${name}» нужно минимум 2 игрока`;
   const s = {
     rounds: clampInt(st.rounds, 3, 50, 15),
+    qmode: ['mix', 'num', 'choice'].includes(st.qmode) ? st.qmode : 'mix',
     seconds: clampInt(st.seconds, 10, 120, 30),
     order: ids,
     points: Object.fromEntries(ids.map((id) => [id, 0])),
