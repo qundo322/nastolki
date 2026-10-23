@@ -1518,7 +1518,7 @@
         items.push(btn('h-newword', 'reset', 'Заменить слово (без очков)'));
       }
       if (g.phase === 'review') items.push(btn('al-confirm-force', 'check', 'Подтвердить очки за всех'));
-      if (['ready', 'running', 'review'].includes(g.phase)) items.push(btn('al-skipturn', 'skip', 'Пропустить ход'));
+      if (['ready', 'running', 'last', 'review'].includes(g.phase)) items.push(btn('al-skipturn', 'skip', 'Пропустить ход'));
       if (g.phase === 'teams') items.push(btn('al-shuffle', 'shuffle', 'Перемешать команды'));
       if (!t) items.push(btn('al-restart', 'reset', 'Начать заново'));
     } else if (g.type === 'spyfall') {
@@ -2233,7 +2233,8 @@
       ? `<div class="pcard cap ${cap === me ? 'me' : ''} ${turn && g.step === 'clue' ? 'active' : ''}">
           <div class="pc-top"><span class="ava-wrap">${pa(cap, 'md', 'round')}${rd(cap)}</span><div class="pc-n"><span>${nm(cap)}</span><span class="tp-role">${ic('crown', 12)} капитан</span></div></div>
           ${st ? `<div class="pc-stats">${stat(clues.length, plural(clues.length, 'подсказка', 'подсказки', 'подсказок'))}${stat(st.capHits[cap] || 0, 'отгадали')}</div>` : ''}
-          <div class="pc-clues">${clueList}</div>
+          ${cap === me && clues.some((c) => c.slots.some((x) => !x.done)) ? `<div class="pc-hint">${ic('pencil', 13)} нажмите на число, чтобы зачеркнуть отгаданное</div>` : ''}
+          <div class="pc-clues ${cap === me ? 'mine' : ''}">${clueList}</div>
           ${amCapHere && prep ? `<button class="btn tp-leave" data-act="cn-join" data-team="${t}">${ic('logout', 16)} Уступить место капитана</button>` : ''}
         </div>`
       : prep || !myTeam || myTeam === t
@@ -2429,6 +2430,24 @@
         ${aliasStack(g)}${g.word ? '' : `<p class="muted">Слушайте ${nm(g.explainer)} и угадывайте!</p>`}
         ${isExpl ? `<div class="mega-row"><button class="btn danger mega" data-act="al-skip">${ic('x', 26)} Пропуск${g.penalty ? ' −1' : ''}</button><button class="btn success mega" data-act="al-got">${ic('check', 26)} Угадали +1</button></div>` : ''}
         <div class="counters"><span>Угадано <b data-cnt="alg">${g.guessedNow}</b></span><span>Пропущено <b data-cnt="alk">${g.skippedNow}</b></span></div>
+      </div>`;
+    } else if (g.phase === 'last') {
+      // Последнее слово: без таймера, угадывают все команды; слово видит только объясняющий, он и отмечает, кто угадал
+      const exOff = player(g.explainer)?.connected === false;
+      const canMark = isExpl || (isHost() && exOff);
+      const order = [g.turnTeam, ...g.teams.map((_, i) => i).filter((i) => i !== g.turnTeam)];
+      center = `<div class="stage-card run al-lastw">
+        <div class="kicker">${ic('clock', 14)} Время вышло — последнее слово</div>
+        <h2 class="h2">Угадывают все команды!</h2>
+        ${aliasStack(g)}
+        ${isExpl ? '<p class="muted">Досказывайте слово — угадать может любая команда. Кто угадал первым?</p>' : `<p class="muted">Слово секретное, пока его не угадают. Кричите ответ — ${nm(g.explainer)} отметит, какая команда была первой.</p>`}
+        ${
+          canMark
+            ? `<div class="al-last-b big">${order
+                .map((i) => `<button class="al-tb" style="--tc:${ALIAS_BG[i]}" data-act="al-last" data-to="${i}">${esc(g.teams[i].name)}${i === g.turnTeam ? ' <small>(своя)</small>' : ''}</button>`)
+                .join('')}<button class="al-tb none" data-act="al-last" data-to="none">Никто не угадал</button></div>`
+            : ''
+        }
       </div>`;
     } else if (g.phase === 'review') {
       // Слова и «кто угадал последнее» отмечает только объясняющий; очки подтверждают все

@@ -12,7 +12,7 @@ const meta = {
   rules: [
     'Игроки делятся на команды. В свой ход объясняющий видит слово и объясняет его своей команде голосом — без однокоренных слов, переводов и подсказок по буквам.',
     'Соперники видят слово и следят за честностью. Объясняющий в команде меняется каждый ход.',
-    'Когда время выходит, можно досказать последнее слово — его может угадать своя команда или соперники. Затем все вместе проверяют список и подтверждают очки.',
+    'Когда время выходит, последнее слово становится общим: без таймера его угадывают все команды, а слово видит только объясняющий. Он отмечает, какая команда угадала первой, — тогда слово открывается всем. Затем все проверяют список и подтверждают очки.',
     'Очки команды: угаданное слово +1, пропуск −1 (если включён штраф). Последнее слово, угаданное соперниками, — +1 им.',
     'Побеждает команда, первой набравшая нужное число очков (проверяется в конце круга, чтобы у всех было одинаково ходов).',
     'В марафоне: команда-победитель — 1-е место (+3 каждому), вторая по очкам — +2, третья — +1.',
@@ -71,9 +71,13 @@ function prepareTurn(s, ctx) {
 function endTimer(s) {
   if (s.phase !== 'running') return;
   s.paused = false;
-  s.phase = 'review';
   s.endsAt = null;
-  if (s.word) s.turnWords.push({ w: s.word, ok: false, last: true });
+  // Время вышло, но слово на руках — «последнее слово»: без таймера, общее для всех команд.
+  // Слово остаётся секретом, пока объясняющий не отметит, какая команда его угадала
+  if (s.word) {
+    s.phase = 'last';
+    s.lastWord = s.word;
+  } else s.phase = 'review';
   s.word = null;
 }
 
@@ -137,9 +141,14 @@ function action(s, pid, msg, ctx) {
     }
     case 'lastTo': {
       // Последнее слово: сразу выбрать, кто угадал — своя команда, соперники или никто
-      if (s.phase !== 'review') return;
+      if (s.phase !== 'review' && s.phase !== 'last') return;
       if (!canMark(s, pid, ctx)) return 'Кто угадал последнее слово, отмечает объясняющий';
       s.confirms = {};
+      if (s.phase === 'last') {
+        s.turnWords.push({ w: s.lastWord, ok: false, last: true });
+        s.lastWord = null;
+        s.phase = 'review';
+      }
       const w = s.turnWords.find((x) => x.last);
       if (!w) return;
       const to = msg.to;
@@ -284,7 +293,7 @@ function view(s, pid, ctx) {
     seconds: s.seconds,
     target: s.target,
     penalty: s.penalty,
-    word: s.phase === 'running' && seesWord ? s.word : null,
+    word: s.phase === 'running' && seesWord ? s.word : s.phase === 'last' && seesWord ? s.lastWord : null,
     turnWords: s.phase === 'review' || seesWord ? s.turnWords : s.turnWords.map(() => ({ hidden: true })),
     guessedNow: s.turnWords.filter((w) => w.ok === true).length,
     skippedNow: s.turnWords.filter((w) => w.ok === false && !w.last).length,
@@ -295,7 +304,7 @@ function view(s, pid, ctx) {
 
 function onLeave(s, pid, ctx) {
   s.teams.forEach((t) => (t.members = t.members.filter((m) => m !== pid)));
-  if (pid === s.explainer && ['ready', 'running', 'review'].includes(s.phase)) {
+  if (pid === s.explainer && ['ready', 'running', 'last', 'review'].includes(s.phase)) {
     ctx.clearTimer('turn');
     prepareTurn(s, ctx);
   }

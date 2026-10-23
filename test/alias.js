@@ -1,0 +1,27 @@
+// Юнит-тест «Элиаса»: последнее слово общее и секретное, пока объясняющий не отметит угадавшую команду
+const assert = require('assert');
+const A = require('../server/games/alias');
+const timers = {};
+const players = new Map(['a', 'b', 'c', 'd'].map((id) => [id, { id, connected: true }]));
+const ctx = (host = 'a') => ({ players: () => [...players.values()], room: { players }, isHost: host === 'a', setTimer: (k, ms, fn) => (timers[k] = fn), clearTimer: (k) => delete timers[k] });
+const s = A.create(ctx(), { teams: 2, seconds: 30, target: 40 });
+s.teams[0].members = ['a', 'b'];
+s.teams[1].members = ['c', 'd'];
+assert.ifError(A.action(s, 'a', { type: 'begin' }, ctx()));
+const ex = s.explainer;
+assert.ifError(A.action(s, ex, { type: 'go' }, ctx(ex)));
+A.action(s, ex, { type: 'got' }, ctx(ex));
+const word = s.word;
+timers.turn(); // время вышло
+assert.strictEqual(s.phase, 'last', 'последнее слово — отдельная фаза');
+const other = ['a', 'b', 'c', 'd'].find((x) => x !== ex);
+assert.strictEqual(A.view(s, other, ctx(other)).word, null, 'слово секретно для всех, кроме объясняющего');
+assert(!JSON.stringify(A.view(s, other, ctx(other))).includes(word), 'слово нигде не утекает');
+assert.strictEqual(A.view(s, ex, ctx(ex)).word, word, 'объясняющий видит слово');
+assert(A.action(s, other, { type: 'lastTo', to: 1 }, ctx(other)), 'отмечает только объясняющий');
+assert.ifError(A.action(s, ex, { type: 'lastTo', to: 1 }, ctx(ex)));
+assert.strictEqual(s.phase, 'review');
+const lw = s.turnWords.find((w) => w.last);
+assert(lw.w === word && lw.ok === 1, 'соперникам засчитано');
+assert(A.view(s, other, ctx(other)).turnWords.some((w) => w.w === word), 'после угадывания слово открыто всем');
+console.log('✓ Элиас: последнее слово (юнит)');

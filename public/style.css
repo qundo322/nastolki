@@ -2892,3 +2892,23 @@ html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none
 .cn-card .marks .ava { width: 28px !important; height: 28px !important; font-size: 11px; box-shadow: 0 0 0 2px rgba(0, 0, 0, .45), 0 3px 8px rgba(0, 0, 0, .35); }
 .cn-card .marks .ava + .ava { margin-left: -6px; }
 @media (max-width: 700px) { .cn-card .marks .ava { width: 20px !important; height: 20px !important; font-size: 8px; } .cn-card .marks .ava + .ava { margin-left: -5px; } }
+
+/* ---- Коднеймс: история подсказок капитана — крупнее и удобнее зачёркивать ---- */
+.cn-side .pc-clues { gap: 4px; }
+.cn-side .pc-clues .hrow { padding: 8px 10px; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--surface-2) 70%, transparent); gap: 10px; flex-wrap: nowrap; }
+.cn-side .pc-clues .hrow.now { background: color-mix(in srgb, var(--tc, var(--accent)) 14%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--tc, var(--accent)); }
+.cn-side .pc-clues .hrow.alldone { background: transparent; opacity: .7; }
+.cn-side .pc-clues .hword { font-size: 16px; letter-spacing: .03em; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.cn-side .pc-clues .hnums { gap: 6px; flex-wrap: nowrap; }
+.cn-side .pc-clues .hnums .num { height: 34px; min-width: 42px; padding: 0 10px; font-size: 15px; border-radius: 10px; }
+.cn-side .pc-clues .hnums .num.done::after { left: 7px; right: 7px; height: 2.5px; }
+.cn-side .pc-clues.mine .num.can:not(.done) { box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.cn-side .pc-clues.mine .num.can:hover { translate: 0 -2px; box-shadow: 0 0 0 2px var(--accent), 0 6px 14px -6px rgba(0,0,0,.5); }
+.cn-side .pc-clues.mine .num.can.done:hover { color: var(--text); border-color: var(--text); }
+.pc-hint { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 6px 0 2px; }
+.cn-side .pc-clues .grp { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---- Элиас: «последнее слово» — общее, без таймера ---- */
+.al-lastw .h2 { margin: 0 0 4px; }
+.al-last-b.big { width: 100%; max-width: 620px; margin-top: 6px; }
+.al-last-b.big .al-tb { min-height: 64px; font-size: 17px; font-weight: 800; }
