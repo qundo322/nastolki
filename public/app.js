@@ -2379,7 +2379,11 @@
       <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left">${g.live && g.live[i] ? `<em class="al-live ${g.live[i] > 0 ? 'up' : 'down'}">${g.live[i] > 0 ? '+' : ''}${g.live[i]}</em>` : ''}<b data-cnt="als-${i}">${t.score + ((g.live && g.live[i]) || 0)}</b><small>из ${g.target}</small></span></div>
       ${turn ? `<div class="tp-turn">${ic('mic', 14)} Ход команды</div>` : ''}
       <div class="tp-agents">${
-        t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}</div>`).join('') ||
+        t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}${(() => {
+          const n = (g.brought || {})[id];
+          if (n == null) return '';
+          return `<span class="al-brought ${n > 0 ? 'up' : n < 0 ? 'down' : ''}" title="Столько очков принёс команде, объясняя">${n > 0 ? '+' : ''}${n}</span>`;
+        })()}</div>`).join('') ||
         '<span class="muted small">пока никого</span>'
       }</div>
       ${g.phase === 'teams' && i !== g.myTeam ? `<button class="btn tp-join" data-act="al-join" data-team="${i}">${ic('userplus', 18)} В эту команду</button>` : i === g.myTeam ? `<div class="tp-in">${ic('check', 14)} Вы в этой команде</div>` : ''}

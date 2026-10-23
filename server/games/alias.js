@@ -42,6 +42,7 @@ function create(ctx, st) {
     word: null,
     turnWords: [],
     history: [],
+    brought: {}, // pid → сколько очков принёс своей команде, объясняя
   };
   shuffle(ctx.players().map((p) => p.id)).forEach((id, i) => s.teams[i % nTeams].members.push(id));
   return s;
@@ -219,6 +220,7 @@ function action(s, pid, msg, ctx) {
       s.teams.forEach((t) => ((t.score = 0), (t.next = 0)));
       s.turnTeam = 0;
       s.history = [];
+      s.brought = {};
       s.winner = null;
       s.phase = 'teams';
       return;
@@ -239,6 +241,8 @@ function applyConfirm(s, ctx) {
     else if (s.penalty) pts--;
   }
   t.score += pts;
+  s.brought = s.brought || {};
+  s.brought[s.explainer] = (s.brought[s.explainer] || 0) + pts;
   s.history.push({ team: s.turnTeam, explainer: s.explainer, pts, n: s.turnWords.length });
   t.next++;
   s.turnTeam = (s.turnTeam + 1) % s.teams.length;
@@ -299,6 +303,7 @@ function view(s, pid, ctx) {
     skippedNow: s.turnWords.filter((w) => w.ok === false && !w.last).length,
     winner: s.winner ?? null,
     history: s.history.slice(-20),
+    brought: s.brought || {},
   };
 }
 

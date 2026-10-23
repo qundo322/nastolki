@@ -24,4 +24,6 @@ assert.strictEqual(s.phase, 'review');
 const lw = s.turnWords.find((w) => w.last);
 assert(lw.w === word && lw.ok === 1, 'соперникам засчитано');
 assert(A.view(s, other, ctx(other)).turnWords.some((w) => w.w === word), 'после угадывания слово открыто всем');
-console.log('✓ Элиас: последнее слово (юнит)');
+A.action(s, 'a', { type: 'confirm', force: true }, ctx());
+assert.strictEqual(A.view(s, 'a', ctx()).brought[ex], 1, 'объясняющему засчитано, сколько он принёс своей команде');
+console.log('✓ Элиас: последнее слово и вклад игроков (юнит)');

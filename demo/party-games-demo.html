@@ -2920,6 +2920,12 @@ html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none
 .al-last-b.big { width: 100%; max-width: 620px; margin-top: 6px; }
 .al-last-b.big .al-tb { min-height: 64px; font-size: 17px; font-weight: 800; }
 
+/* ---- Элиас: сколько очков принёс команде каждый объясняющий ---- */
+.al-brought { margin-left: auto; min-width: 34px; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; background: var(--surface-3); color: var(--muted); }
+.tp-role + .al-brought { margin-left: 6px; }
+.al-brought.up { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green-text); }
+.al-brought.down { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red-text); }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -4006,7 +4012,9 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           endsAt: null,
           word: null,
           turnWords: [],
-          history: []
+          history: [],
+          brought: {}
+          // pid → сколько очков принёс своей команде, объясняя
         };
         shuffle(ctx.players().map((p) => p.id)).forEach((id, i) => s.teams[i % nTeams].members.push(id));
         return s;
@@ -4172,6 +4180,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
             s.teams.forEach((t) => (t.score = 0, t.next = 0));
             s.turnTeam = 0;
             s.history = [];
+            s.brought = {};
             s.winner = null;
             s.phase = "teams";
             return;
@@ -4191,6 +4200,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           else if (s.penalty) pts--;
         }
         t.score += pts;
+        s.brought = s.brought || {};
+        s.brought[s.explainer] = (s.brought[s.explainer] || 0) + pts;
         s.history.push({ team: s.turnTeam, explainer: s.explainer, pts, n: s.turnWords.length });
         t.next++;
         s.turnTeam = (s.turnTeam + 1) % s.teams.length;
@@ -4247,7 +4258,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
           guessedNow: s.turnWords.filter((w) => w.ok === true).length,
           skippedNow: s.turnWords.filter((w) => w.ok === false && !w.last).length,
           winner: (_a = s.winner) != null ? _a : null,
-          history: s.history.slice(-20)
+          history: s.history.slice(-20),
+          brought: s.brought || {}
         };
       }
       function onLeave(s, pid, ctx) {
@@ -12348,7 +12360,11 @@ void main(){
       <div class="tp-head"><span class="tp-name">${esc(t.name)}</span><span class="tp-left">${g.live && g.live[i] ? `<em class="al-live ${g.live[i] > 0 ? 'up' : 'down'}">${g.live[i] > 0 ? '+' : ''}${g.live[i]}</em>` : ''}<b data-cnt="als-${i}">${t.score + ((g.live && g.live[i]) || 0)}</b><small>из ${g.target}</small></span></div>
       ${turn ? `<div class="tp-turn">${ic('mic', 14)} Ход команды</div>` : ''}
       <div class="tp-agents">${
-        t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}</div>`).join('') ||
+        t.members.map((id) => `<div class="tp-agent ${id === S.me ? 'me' : ''}">${pa(id, 'sm')}<span>${nm(id)}</span>${id === g.explainer && turn ? `<span class="tp-role">${ic('mic', 12)} объясняет</span>` : ''}${(() => {
+          const n = (g.brought || {})[id];
+          if (n == null) return '';
+          return `<span class="al-brought ${n > 0 ? 'up' : n < 0 ? 'down' : ''}" title="Столько очков принёс команде, объясняя">${n > 0 ? '+' : ''}${n}</span>`;
+        })()}</div>`).join('') ||
         '<span class="muted small">пока никого</span>'
       }</div>
       ${g.phase === 'teams' && i !== g.myTeam ? `<button class="btn tp-join" data-act="al-join" data-team="${i}">${ic('userplus', 18)} В эту команду</button>` : i === g.myTeam ? `<div class="tp-in">${ic('check', 14)} Вы в этой команде</div>` : ''}

@@ -2912,3 +2912,9 @@ html.v-calm .tabs.seg2 .tab-ind, html.v-calm .tabs.seg2 button { animation: none
 .al-lastw .h2 { margin: 0 0 4px; }
 .al-last-b.big { width: 100%; max-width: 620px; margin-top: 6px; }
 .al-last-b.big .al-tb { min-height: 64px; font-size: 17px; font-weight: 800; }
+
+/* ---- Элиас: сколько очков принёс команде каждый объясняющий ---- */
+.al-brought { margin-left: auto; min-width: 34px; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; background: var(--surface-3); color: var(--muted); }
+.tp-role + .al-brought { margin-left: 6px; }
+.al-brought.up { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green-text); }
+.al-brought.down { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red-text); }
