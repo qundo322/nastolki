@@ -3005,6 +3005,8 @@ img.gic { display: inline-block; flex: none; object-fit: contain; vertical-align
 @keyframes gicFloat { 50% { translate: 0 -5px; } }
 html.v-calm .wait-ic img.gic, html.v-calm .gcard:hover .gemoji img.gic { animation: none; scale: none; rotate: none; }
 .rl-tabs img.gic, .ttable img.gic, .tm-step img.gic, .vp-sh img.gic, .mname img.gic { filter: none; }
+.gcard .gemoji:has(img.gic) { align-self: flex-start; justify-content: flex-start; }
+.gcard .gemoji img.gic { margin-left: -6px; transform-origin: 30% 70%; }
 
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
