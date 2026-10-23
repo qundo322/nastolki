@@ -2735,6 +2735,83 @@ html.v-calm .gift-ov .go-fx { display: none; }
 /* подарки на аватарке — без фона (на Windows фильтры тени давали тёмный квадрат) */
 .gft { background: none !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
 
+/* ===================== Кости 1000 ===================== */
+.dice-g { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.dice-side { position: sticky; top: 76px; max-height: calc(100vh - 170px); overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: thin; padding: 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.dp-list { display: grid; gap: 8px; margin-top: 10px; }
+.dp { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); border: 2px solid transparent; }
+.dp.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+.dp.me { background: var(--surface-3); }
+.dp-b { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.dp-n { font-weight: 800; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-n small { color: var(--muted); font-weight: 600; }
+.dp-tag { font-size: 11px; font-weight: 800; }
+.dp-tag.no { color: var(--muted); }
+.dp-tag.barrel { color: var(--accent-text, var(--accent)); }
+.dp-tag.win { color: var(--green-text, var(--green)); display: inline-flex; align-items: center; gap: 4px; }
+.dp-bar { position: relative; display: block; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: visible; }
+.dp-bar > i:first-child { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), #ff9f43); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.dp-bar .mk { position: absolute; top: -2px; width: 2px; height: 10px; background: var(--muted); border-radius: 2px; opacity: .6; }
+.dp-bar .m-barrel { background: var(--accent); opacity: 1; }
+.dp-t { font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; }
+.dl-h { margin-top: 14px; }
+.dl-list { display: grid; gap: 4px; margin-top: 8px; }
+.dl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 6px 8px; border-radius: 10px; background: var(--surface-2); }
+.dl.bust { color: var(--red-text, var(--red)); }
+.dl.drop { color: var(--accent-text, var(--accent)); }
+.dl b { color: var(--green-text, var(--green)); }
+.dice-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.dc-head { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.dc-who { flex: 1; display: flex; align-items: center; gap: 12px; }
+.dc-who > div { display: grid; }
+.dc-who b { font-size: 18px; }
+.dc-pts { display: grid; justify-items: end; min-width: 90px; }
+.dc-pts b { font-size: 30px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.dc-pts em { font-style: normal; font-size: 13px; font-weight: 900; color: var(--green-text, var(--green)); }
+/* стол */
+.dc-table { position: relative; display: grid; justify-items: center; gap: 16px; padding: 44px 16px 26px; min-height: 260px; border-radius: 24px; background: radial-gradient(120% 90% at 50% 20%, #1f6b47, #124331 70%, #0c2f22); box-shadow: inset 0 0 0 6px #6b4422, inset 0 0 0 9px #4a2d15, inset 0 18px 40px rgba(0,0,0,.35), 0 18px 40px -18px rgba(0,0,0,.6); perspective: 900px; overflow: hidden; }
+.dc-row { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(12px, 2.4vw, 26px); min-height: 92px; align-items: center; }
+.dc-kept { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 99px; background: rgba(0,0,0,.25); }
+.dc-kept .muted { color: rgba(255,255,255,.7); margin-right: 4px; }
+.dc-table.busted .dc-row { filter: grayscale(.7) brightness(.8); }
+.dc-bust { position: absolute; left: 50%; bottom: 16px; translate: -50% 0; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 99px; background: var(--red); color: #fff; font-weight: 900; white-space: nowrap; animation: nxIn .4s cubic-bezier(.2,.9,.3,1.2) 1.2s backwards; }
+/* 3D-кубик */
+.die3 { --ds: clamp(54px, 8vw, 80px); position: relative; width: var(--ds); height: var(--ds); padding: 0; border: 0; background: none; cursor: default; transform-style: preserve-3d; rotate: var(--tilt); }
+button.die3 { cursor: pointer; }
+.die3.small { --ds: 34px; rotate: 0deg; }
+.die3 .cube { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(var(--fx)) rotateY(var(--fy)); transition: transform .3s; }
+.die3 .face { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 14%; border-radius: 18%; background: radial-gradient(circle at 30% 25%, #ffffff, #f1ede4 60%, #ddd6c8); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), inset 0 -4px 8px rgba(0,0,0,.12); backface-visibility: hidden; }
+.die3 .face i { display: block; margin: 16%; border-radius: 50%; }
+.die3 .face i.on { background: radial-gradient(circle at 35% 30%, #4a4a4a, #111); box-shadow: inset 0 1px 1px rgba(255,255,255,.25); }
+.die3 .face.f1 i.on, .die3 .face.f4 i.on { background: radial-gradient(circle at 35% 30%, #ff5a5a, #b10f0f); }
+.die3 .f1 { transform: translateZ(calc(var(--ds) / 2)); }
+.die3 .f6 { transform: rotateY(180deg) translateZ(calc(var(--ds) / 2)); }
+.die3 .f2 { transform: rotateX(90deg) translateZ(calc(var(--ds) / 2)); }
+.die3 .f5 { transform: rotateX(-90deg) translateZ(calc(var(--ds) / 2)); }
+.die3 .f3 { transform: rotateY(90deg) translateZ(calc(var(--ds) / 2)); }
+.die3 .f4 { transform: rotateY(-90deg) translateZ(calc(var(--ds) / 2)); }
+.die3::after { content: ''; position: absolute; left: 8%; right: 8%; bottom: -14%; height: 18%; border-radius: 50%; background: rgba(0,0,0,.35); filter: blur(6px); z-index: -1; }
+/* бросок: кубик падает сверху, кувыркается и ложится нужной гранью */
+.die3.rolling { animation: dieDrop 1.15s cubic-bezier(.3,.6,.4,1) both; animation-delay: var(--de); }
+.die3.rolling .cube { animation: dieSpin 1.15s cubic-bezier(.12,.55,.3,1) both; animation-delay: var(--de); transition: none; }
+@keyframes dieDrop { 0% { translate: 0 -180px; scale: 1.25; } 45% { translate: 0 0; scale: 1; } 62% { translate: 0 -26px; } 78% { translate: 0 0; } 88% { translate: 0 -7px; } 100% { translate: 0 0; } }
+@keyframes dieSpin { from { transform: rotateX(var(--sx)) rotateY(var(--sy)); } to { transform: rotateX(var(--fx)) rotateY(var(--fy)); } }
+.die3.dim .face { filter: brightness(.75); }
+.die3.can:not(.sel) .face { box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), inset 0 -4px 8px rgba(0,0,0,.12), 0 0 0 3px rgba(255, 211, 77, .55); }
+.die3.sel { translate: 0 -10px; }
+.die3.sel .face { box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), 0 0 0 4px #ffd34d, 0 0 18px rgba(255, 211, 77, .8); }
+button.die3:not(.rolling) { transition: translate .18s cubic-bezier(.3,1.6,.5,1); }
+button.die3:hover:not(.rolling) { translate: 0 -6px; }
+.dc-actions { display: grid; justify-items: center; gap: 8px; }
+.dc-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.dc-why { margin: 0; font-size: 13px; font-weight: 700; color: var(--muted); }
+.dc-why.ok { color: var(--green-text, var(--green)); }
+.dc-over { display: inline-flex; align-items: center; gap: 10px; font-size: 20px; color: var(--accent-text, var(--accent)); }
+.dice-g.enter .dp { animation: introUp .45s cubic-bezier(.16,1,.3,1) backwards; }
+@media (max-width: 1000px) { .dice-g { grid-template-columns: 1fr; } .dice-side { position: static; max-height: none; order: 2; } }
+@media (max-width: 560px) { .dc-head { flex-wrap: wrap; } .dc-pts b { font-size: 24px; } }
+html.v-calm .die3.rolling, html.v-calm .die3.rolling .cube { animation: none; }
+
 
 #demo-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 .db-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
@@ -6837,6 +6914,268 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     }
   });
 
+  // server/games/dice.js
+  var require_dice = __commonJS({
+    "server/games/dice.js"(exports, module) {
+      var { shuffle } = require_util();
+      var TARGET = 1e3;
+      var ENTRY = 75;
+      var BARREL = 850;
+      var BARREL_NEED = TARGET - BARREL;
+      var ROLL_MS = 1200;
+      var BUST_MS = 2200;
+      var meta = {
+        title: "\u041A\u043E\u0441\u0442\u0438 1000",
+        emoji: "\u{1F3B2}",
+        players: "2\u201310",
+        content: "5 \u043A\u0443\u0431\u0438\u043A\u043E\u0432",
+        short: "\u0411\u0440\u043E\u0441\u0430\u0439 5 \u043A\u0443\u0431\u0438\u043A\u043E\u0432, \u043E\u0442\u043A\u043B\u0430\u0434\u044B\u0432\u0430\u0439 \u0435\u0434\u0438\u043D\u0438\u0446\u044B, \u043F\u044F\u0442\u0451\u0440\u043A\u0438 \u0438 \u043A\u043E\u043C\u0431\u0438\u043D\u0430\u0446\u0438\u0438. \u041A\u0442\u043E \u043F\u0435\u0440\u0432\u044B\u043C \u043D\u0430\u0431\u0435\u0440\u0451\u0442 1000 \u2014 \u043F\u043E\u0431\u0435\u0434\u0438\u043B. \u0420\u0438\u0441\u043A\u043D\u0451\u0448\u044C \u0435\u0449\u0451 \u0440\u0430\u0437?",
+        rules: [
+          "\u0425\u043E\u0434\u044F\u0442 \u043F\u043E \u043E\u0447\u0435\u0440\u0435\u0434\u0438. \u0411\u0440\u043E\u0441\u0430\u0435\u0442\u0435 5 \u043A\u0443\u0431\u0438\u043A\u043E\u0432 \u0438 \u043E\u0442\u043A\u043B\u0430\u0434\u044B\u0432\u0430\u0435\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u043D\u0443 \u0437\u0430\u0447\u0451\u0442\u043D\u0443\u044E \u043A\u043E\u0441\u0442\u044C: \xAB1\xBB \u2014 10 \u043E\u0447\u043A\u043E\u0432, \xAB5\xBB \u2014 5 \u043E\u0447\u043A\u043E\u0432, \u0442\u0440\u0438 \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u044B\u0445 \u0438 \u0431\u043E\u043B\u044C\u0448\u0435 \u2014 \u043A\u043E\u043C\u0431\u0438\u043D\u0430\u0446\u0438\u044F.",
+          "\u041E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043A\u0443\u0431\u0438\u043A\u0438 \u043C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u0431\u0440\u043E\u0441\u0438\u0442\u044C \u0438 \u043D\u0430\u0431\u0440\u0430\u0442\u044C \u0435\u0449\u0451 \u2014 \u0438\u043B\u0438 \u0437\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043D\u0430\u0431\u0440\u0430\u043D\u043D\u043E\u0435 \u0437\u0430 \u0445\u043E\u0434. \u0415\u0441\u043B\u0438 \u0432 \u0431\u0440\u043E\u0441\u043A\u0435 \u043D\u0435\u0442 \u043D\u0438 \u043E\u0434\u043D\u043E\u0439 \u0437\u0430\u0447\u0451\u0442\u043D\u043E\u0439 \u043A\u043E\u0441\u0442\u0438 \u2014 \u0445\u043E\u0434 \u0441\u0433\u043E\u0440\u0430\u0435\u0442.",
+          "\u041E\u0442\u043B\u043E\u0436\u0438\u043B\u0438 \u0432\u0441\u0435 5 \u043A\u0443\u0431\u0438\u043A\u043E\u0432 \u2014 \u043D\u0443\u0436\u0435\u043D \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u044E\u0449\u0438\u0439 \u0431\u0440\u043E\u0441\u043E\u043A \u0432\u0441\u0435\u043C\u0438 \u043F\u044F\u0442\u044C\u044E: \u0435\u0441\u0442\u044C \u0437\u0430\u0447\u0451\u0442\u043D\u0430\u044F \u043A\u043E\u0441\u0442\u044C \u2014 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0435, \u043D\u0435\u0442 \u2014 \u0445\u043E\u0434 \u0441\u0433\u043E\u0440\u0430\u0435\u0442.",
+          "\u0414\u043E\u043F\u0443\u0441\u043A: \u043F\u0435\u0440\u0432\u0430\u044F \u0437\u0430\u043F\u0438\u0441\u044C \u2014 \u043D\u0435 \u043C\u0435\u043D\u044C\u0448\u0435 75 \u043E\u0447\u043A\u043E\u0432 \u0437\u0430 \u0445\u043E\u0434. \u0411\u043E\u0447\u043A\u0430: \u043D\u0430 850 \u043E\u0447\u043A\u0438 \u043E\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u044E\u0442\u0441\u044F, \u0434\u0430\u043B\u044C\u0448\u0435 \u043D\u0443\u0436\u043D\u043E \u043D\u0430\u0431\u0440\u0430\u0442\u044C 150 \u0437\u0430 \u043E\u0434\u0438\u043D \u0445\u043E\u0434.",
+          "\u041A\u0442\u043E \u0432\u0441\u0442\u0430\u043B \u043D\u0430 \u0431\u043E\u0447\u043A\u0443, \u0441\u0431\u0440\u0430\u0441\u044B\u0432\u0430\u0435\u0442 \u0441 \u043D\u0435\u0451 \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0445 \u2014 \u043E\u043D\u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u043A \u0441\u0432\u043E\u0435\u043C\u0443 \u0434\u043E\u043F\u0443\u0441\u043A\u0443. \u041F\u0435\u0440\u0432\u044B\u0439, \u043A\u0442\u043E \u043D\u0430\u0431\u0435\u0440\u0451\u0442 1000, \u043F\u043E\u0431\u0435\u0436\u0434\u0430\u0435\u0442."
+        ],
+        restartActions: ["restart"],
+        settings: []
+      };
+      var COMBO = (face, n) => {
+        if (n === 3) return face === 1 ? 100 : face * 10;
+        if (n === 4) return face === 1 ? 200 : face * 20;
+        if (n === 5) return face === 1 ? 1e3 : face * 100;
+        return 0;
+      };
+      function score(values) {
+        if (!values.length) return null;
+        const sorted = values.slice().sort((a, b) => a - b).join("");
+        if (values.length === 5 && sorted === "12345") return 125;
+        if (values.length === 5 && sorted === "23456") return 250;
+        const cnt = [0, 0, 0, 0, 0, 0, 0];
+        for (const v of values) cnt[v]++;
+        let pts = 0;
+        for (let f = 1; f <= 6; f++) {
+          let n = cnt[f];
+          if (n >= 3) {
+            pts += COMBO(f, n);
+            n = 0;
+          }
+          if (n) {
+            if (f === 1) pts += 10 * n;
+            else if (f === 5) pts += 5 * n;
+            else return null;
+          }
+        }
+        return pts;
+      }
+      function best(dice) {
+        const free = dice.map((d, i) => d.kept ? -1 : i).filter((i) => i >= 0);
+        let top = { pts: 0, idx: [] };
+        for (let mask = 1; mask < 1 << free.length; mask++) {
+          const idx = free.filter((_, k) => mask & 1 << k);
+          const p = score(idx.map((i) => dice[i].v));
+          if (p != null && (p > top.pts || p === top.pts && idx.length > top.idx.length)) top = { pts: p, idx };
+        }
+        return top;
+      }
+      var roll1 = () => 1 + Math.floor(Math.random() * 6);
+      function create(ctx) {
+        const ids = shuffle(ctx.players().map((p) => p.id));
+        if (ids.length < 2) return "\u0414\u043B\u044F \xAB\u041A\u043E\u0441\u0442\u0435\u0439\xBB \u043D\u0443\u0436\u043D\u043E \u043C\u0438\u043D\u0438\u043C\u0443\u043C 2 \u0438\u0433\u0440\u043E\u043A\u0430";
+        const s = {
+          order: ids,
+          turn: 0,
+          total: Object.fromEntries(ids.map((id) => [id, 0])),
+          entry: {},
+          // с каким счётом игрок прошёл допуск — туда сбрасывает с бочки
+          log: [],
+          winner: null
+        };
+        newTurn(s);
+        return s;
+      }
+      function newTurn(s) {
+        s.phase = "start";
+        s.dice = Array.from({ length: 5 }, () => ({ v: roll1(), kept: false, fresh: false }));
+        s.turnPts = 0;
+        s.rolls = 0;
+        s.rollId = (s.rollId || 0) + 1;
+        s.rollAt = 0;
+        s.bust = null;
+      }
+      var cur = (s) => s.order[s.turn];
+      function nextTurn(s, ctx) {
+        var _a;
+        for (let k = 0; k < s.order.length; k++) {
+          s.turn = (s.turn + 1) % s.order.length;
+          if (((_a = ctx.room.players.get(cur(s))) == null ? void 0 : _a.connected) !== false) break;
+        }
+        newTurn(s);
+      }
+      function doRoll(s, ctx) {
+        for (const d of s.dice) {
+          d.fresh = !d.kept;
+          if (!d.kept) d.v = roll1();
+        }
+        s.rolls++;
+        s.rollId++;
+        s.rollAt = Date.now();
+        s.phase = "pick";
+        if (!best(s.dice).pts) {
+          s.phase = "bust";
+          s.bust = { lost: s.turnPts };
+          s.log.unshift({ pid: cur(s), kind: "bust", pts: s.turnPts });
+          s.log.length = Math.min(s.log.length, 12);
+          ctx.setTimer("dice", ROLL_MS + BUST_MS, () => {
+            if (s.phase === "bust") nextTurn(s, ctx);
+          });
+        }
+      }
+      function keep(s, idx) {
+        const list = [...new Set((idx || []).map(Number))].filter((i) => s.dice[i] && !s.dice[i].kept);
+        if (!list.length) return "\u041E\u0442\u043B\u043E\u0436\u0438\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u043D\u0443 \u0437\u0430\u0447\u0451\u0442\u043D\u0443\u044E \u043A\u043E\u0441\u0442\u044C";
+        const pts = score(list.map((i) => s.dice[i].v));
+        if (pts == null) return "\u041E\u0442\u043B\u043E\u0436\u0438\u0442\u044C \u043C\u043E\u0436\u043D\u043E \u0442\u043E\u043B\u044C\u043A\u043E \u0437\u0430\u0447\u0451\u0442\u043D\u044B\u0435 \u043A\u043E\u0441\u0442\u0438: 1, 5 \u0438\u043B\u0438 \u043A\u043E\u043C\u0431\u0438\u043D\u0430\u0446\u0438\u0438";
+        for (const i of list) s.dice[i].kept = true;
+        s.turnPts += pts;
+        return null;
+      }
+      function canRecord(s, pid, pts) {
+        const t = s.total[pid] || 0;
+        if (!s.entry[pid] && pts < ENTRY) return `\u0414\u043E\u043F\u0443\u0441\u043A: \u0434\u043B\u044F \u043F\u0435\u0440\u0432\u043E\u0439 \u0437\u0430\u043F\u0438\u0441\u0438 \u043D\u0443\u0436\u043D\u043E \u043C\u0438\u043D\u0438\u043C\u0443\u043C ${ENTRY} \u043E\u0447\u043A\u043E\u0432 \u0437\u0430 \u0445\u043E\u0434`;
+        if (t === BARREL && pts < BARREL_NEED) return `\u041D\u0430 \u0431\u043E\u0447\u043A\u0435 \u043D\u0443\u0436\u043D\u043E \u043D\u0430\u0431\u0440\u0430\u0442\u044C ${BARREL_NEED} \u043E\u0447\u043A\u043E\u0432 \u0437\u0430 \u0445\u043E\u0434`;
+        return null;
+      }
+      function record(s, ctx) {
+        const pid = cur(s);
+        const before = s.total[pid] || 0;
+        let after = before + s.turnPts;
+        let note = "";
+        if (!s.entry[pid]) {
+          s.entry[pid] = after;
+          note = "\u0434\u043E\u043F\u0443\u0441\u043A";
+        }
+        if (before === BARREL) {
+          after = TARGET;
+        } else if (after >= BARREL) {
+          after = BARREL;
+          note = "\u0431\u043E\u0447\u043A\u0430";
+          for (const id of s.order) {
+            if (id !== pid && s.total[id] === BARREL) {
+              s.total[id] = s.entry[id] || 0;
+              s.log.unshift({ pid: id, kind: "drop", by: pid, to: s.total[id] });
+            }
+          }
+        }
+        s.total[pid] = after;
+        s.log.unshift({ pid, kind: "rec", pts: s.turnPts, total: after, note });
+        s.log.length = Math.min(s.log.length, 12);
+        if (after >= TARGET) {
+          s.phase = "over";
+          s.winner = pid;
+          return;
+        }
+        nextTurn(s, ctx);
+      }
+      function action(s, pid, msg, ctx) {
+        if (msg.type === "restart") {
+          if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
+          for (const id of s.order) s.total[id] = 0;
+          s.entry = {};
+          s.log = [];
+          s.winner = null;
+          s.turn = 0;
+          newTurn(s);
+          return;
+        }
+        if (msg.type === "addMe") {
+          if (s.order.includes(pid)) return;
+          s.order.push(pid);
+          s.total[pid] = 0;
+          return;
+        }
+        if (msg.type === "skipTurn") {
+          if (!ctx.isHost) return "\u0422\u043E\u043B\u044C\u043A\u043E \u0445\u043E\u0441\u0442";
+          if (s.phase === "over") return;
+          ctx.clearTimer("dice");
+          nextTurn(s, ctx);
+          return;
+        }
+        if (s.phase === "over") return "\u0418\u0433\u0440\u0430 \u043E\u043A\u043E\u043D\u0447\u0435\u043D\u0430";
+        if (pid !== cur(s)) return "\u0421\u0435\u0439\u0447\u0430\u0441 \u0431\u0440\u043E\u0441\u0430\u0435\u0442 \u0434\u0440\u0443\u0433\u043E\u0439 \u0438\u0433\u0440\u043E\u043A";
+        if (Date.now() - s.rollAt < ROLL_MS - 200) return "\u041A\u0443\u0431\u0438\u043A\u0438 \u0435\u0449\u0451 \u043A\u0430\u0442\u044F\u0442\u0441\u044F";
+        switch (msg.type) {
+          case "roll": {
+            if (s.phase === "start") return doRoll(s, ctx);
+            if (s.phase !== "pick") return;
+            const err = keep(s, msg.keep);
+            if (err) return err;
+            if (s.dice.every((d) => d.kept)) for (const d of s.dice) d.kept = false;
+            return doRoll(s, ctx);
+          }
+          case "stop": {
+            if (s.phase !== "pick") return;
+            const list = (msg.keep || []).map(Number);
+            const idx = list.filter((i) => s.dice[i] && !s.dice[i].kept);
+            const pts = score(idx.map((i) => s.dice[i].v));
+            if (pts == null) return "\u041E\u0442\u043B\u043E\u0436\u0438\u0442\u044C \u043C\u043E\u0436\u043D\u043E \u0442\u043E\u043B\u044C\u043A\u043E \u0437\u0430\u0447\u0451\u0442\u043D\u044B\u0435 \u043A\u043E\u0441\u0442\u0438: 1, 5 \u0438\u043B\u0438 \u043A\u043E\u043C\u0431\u0438\u043D\u0430\u0446\u0438\u0438";
+            if (s.dice.every((d, i) => d.kept || idx.includes(i))) return "\u0412\u0441\u0435 5 \u043A\u0443\u0431\u0438\u043A\u043E\u0432 \u0437\u0430\u0447\u0451\u0442\u043D\u044B\u0435 \u2014 \u043D\u0443\u0436\u0435\u043D \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u044E\u0449\u0438\u0439 \u0431\u0440\u043E\u0441\u043E\u043A";
+            const err = canRecord(s, pid, s.turnPts + pts);
+            if (err) return err;
+            keep(s, idx);
+            record(s, ctx);
+            return;
+          }
+        }
+        return "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435";
+      }
+      function view(s, pid) {
+        const me = cur(s);
+        const b = s.phase === "pick" ? best(s.dice) : null;
+        return {
+          phase: s.phase,
+          order: s.order,
+          turnPid: me,
+          total: s.total,
+          entered: Object.fromEntries(s.order.map((id) => [id, !!s.entry[id]])),
+          entry: ENTRY,
+          barrel: BARREL,
+          target: TARGET,
+          dice: s.dice.map((d) => ({ v: d.v, kept: d.kept, fresh: d.fresh })),
+          rollId: s.rollId,
+          rollAt: s.rollAt,
+          rollMs: ROLL_MS,
+          rolls: s.rolls,
+          turnPts: s.turnPts,
+          best: b ? b.idx : [],
+          bestPts: b ? b.pts : 0,
+          bust: s.bust,
+          log: s.log.slice(0, 10),
+          winner: s.winner,
+          inGame: s.order.includes(pid)
+        };
+      }
+      function onLeave(s, pid, ctx) {
+        const wasTurn = cur(s) === pid;
+        const idx = s.order.indexOf(pid);
+        if (idx < 0) return;
+        s.order.splice(idx, 1);
+        delete s.total[pid];
+        delete s.entry[pid];
+        if (!s.order.length) return;
+        if (idx < s.turn || s.turn >= s.order.length) s.turn = (s.turn - (idx < s.turn ? 1 : 0) + s.order.length) % s.order.length;
+        if (wasTurn && s.phase !== "over") {
+          ctx.clearTimer("dice");
+          s.turn = (s.turn - 1 + s.order.length) % s.order.length;
+          nextTurn(s, ctx);
+        }
+      }
+      var isOver = (s) => s.phase === "over";
+      var results = (s) => ({ ...s.total });
+      module.exports = { meta, create, action, view, onLeave, isOver, results, score, best };
+    }
+  });
+
   // server/waiting.js
   var require_waiting = __commonJS({
     "server/waiting.js"(exports, module) {
@@ -7228,7 +7567,8 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     whoami: require_whoami(),
     justone: require_justone(),
     quiz: require_quiz(),
-    majority: require_majority()
+    majority: require_majority(),
+    dice: require_dice()
   };
   var Waiting = require_waiting();
   for (const k of Object.keys(GAMES)) GAMES[k] = Waiting.wrap(GAMES[k]);
@@ -7701,7 +8041,7 @@ IT-\u043A\u043E\u043D\u0444\u0435\u0440\u0435\u043D\u0446\u0438\u044F \u2014 \u0
     const sw = small ? 2.7 : 2;
     return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   };
-  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', majority: 'herd' };
+  window.GAME_ICON = { codenames: 'grid', alias: 'hat', spyfall: 'spy', whoami: 'question', justone: 'bulb', quiz: 'hash', dice: 'dice5', majority: 'herd' };
 })();
 
 ;
@@ -8147,6 +8487,10 @@ void main(){
     },
     strike: () => noise(0.12, { gain: 0.1, from: 3000, to: 1200, q: 2 }),
     open: () => tone(600, 0.08, { type: 'sine', gain: 0.08, to: 900 }),
+    // стук кубиков по столу
+    dice: () => {
+      for (let i = 0; i < 7; i++) noise(0.05, { gain: 0.16 - i * 0.015, from: 2500, to: 1200, q: 2.5, delay: 0.08 + i * 0.11 + Math.random() * 0.05 });
+    },
     // ---- подарки ----
     coin: () => [1318, 1760].forEach((f, i) => tone(f, 0.12, { type: 'square', gain: 0.05, delay: i * 0.07 })),
     gift_kiss: () => {
@@ -8379,6 +8723,31 @@ window.RULES = {
     ],
     win: 'Больше всех очков после последнего вопроса.',
     tips: ['Не пытайтесь быть оригинальными — здесь выигрывает самый очевидный ответ.', 'В базе 500 вопросов: быт, еда, праздники, работа, свет и блэкауты, город, отдых.'],
+  },
+  dice: {
+    title: 'Кости 1000',
+    goal: 'Бросайте 5 кубиков, откладывайте зачётные кости и первым наберите 1000 очков.',
+    meta: ['2–10 игроков', 'каждый сам за себя', '≈ 20–40 минут'],
+    steps: [
+      'Ходят по очереди. Нажмите «Бросить» — выпадут 5 кубиков.',
+      'Отложите хотя бы одну зачётную кость (нажмите на кубик — он поднимется). По умолчанию выбраны все зачётные.',
+      '«Бросить ещё» — перебросить оставшиеся кубики и набрать больше. «Записать» — забрать очки хода себе.',
+      'В броске нет ни одной зачётной кости — ход сгорает, очки за этот ход пропадают.',
+      'Отложили все 5 кубиков — нужен подтверждающий бросок всеми пятью: есть зачётная кость — продолжаете.',
+      'Допуск: чтобы начать, за один ход нужно набрать 75 очков. Бочка: на 850 очки останавливаются, дальше нужно 150 за один ход.',
+      'Кто встал на бочку, сбрасывает с неё остальных — они возвращаются к своему допуску.',
+    ],
+    points: [
+      ['10', 'каждая «1»'],
+      ['5', 'каждая «5»'],
+      ['×3', 'три одинаковых: 1 — 100, иначе грань × 10 (три шестёрки — 60)'],
+      ['×4', 'четыре одинаковых — вдвое больше трёх (четыре единицы — 200)'],
+      ['×5', 'пять одинаковых: 1 — 1000, иначе грань × 100'],
+      ['125', 'малый стрит 1-2-3-4-5'],
+      ['250', 'большой стрит 2-3-4-5-6'],
+    ],
+    win: 'Первый, кто наберёт 1000 очков.',
+    tips: ['Без допуска не спешите записывать мало — всё равно нельзя меньше 75.', 'Чем меньше кубиков осталось, тем выше риск, что ход сгорит.'],
   },
   tour: {
     title: 'Марафон',
@@ -8666,9 +9035,9 @@ window.RULES = {
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
     cnEdit: false, // капитан исправляет подсказку
     mode: 'single',
-    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone'],
+    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice'],
     mOn: { codenames: true, quiz: true, majority: true, spyfall: true },
-    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1 },
+    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1 },
     mOpen: {},
     showTable: false,
     ctlOpen: LS.get('pg_ctl', '') === '1',
@@ -9437,6 +9806,11 @@ window.RULES = {
     } else if (b.type === 'spyfall') {
       if (a.phase !== 'over' && b.phase === 'over') Sound.play(b.result?.winner === 'spy' ? (b.spies?.includes(me) ? 'win' : 'lose') : b.result?.winner === 'town' ? (b.spies?.includes(me) ? 'lose' : 'win') : 'turn');
       if (a.phase !== 'guessing' && b.phase === 'guessing') Sound.play('myturn');
+    } else if (b.type === 'dice') {
+      if (a.rollId !== b.rollId && b.rollAt) Sound.play('dice');
+      if (a.phase !== 'bust' && b.phase === 'bust') setTimeout(() => Sound.play('bad'), b.rollMs);
+      if (a.turnPid !== b.turnPid && b.turnPid === me) Sound.play('myturn');
+      if (b.phase === 'over' && a.phase !== 'over') Sound.play(b.winner === me ? 'win' : 'lose');
     } else if (b.type === 'majority') {
       if (a.phase === 'answer' && b.phase === 'review') Sound.play(b.preview?.[me] ? 'good' : 'turn');
       if (b.phase === 'over' && a.phase !== 'over') Sound.play((b.winners || []).includes(me) ? 'win' : 'lose');
@@ -10320,6 +10694,9 @@ window.RULES = {
       }
       if (g.phase === 'review') items.push(btn('mj-skip', 'play', 'Следующий вопрос'));
       if (!t) items.push(btn('mj-restart', 'reset', 'Начать заново'));
+    } else if (g.type === 'dice') {
+      if (g.phase !== 'over') items.push(btn('dc-skip', 'skip', 'Пропустить ход'));
+      if (!t) items.push(btn('dc-restart', 'reset', 'Начать заново'));
     }
     items.push('<span class="ctl-sep"></span>');
     items.push(btn('stop', 'home', 'В лобби (пауза)'));
@@ -10442,6 +10819,7 @@ window.RULES = {
     justone: (id) => setv(id, 'target') || 15,
     quiz: (id) => ((setv(id, 'rounds') || 15) * ((setv(id, 'seconds') || 30) + 12)) / 60,
     majority: (id) => ((setv(id, 'rounds') || 10) * ((setv(id, 'seconds') || 45) + 20)) / 60,
+    dice: () => 25,
   };
   const estMin = (id) => (EST[id] ? EST[id](id) : 15);
   function fmtDur(min) {
@@ -10628,7 +11006,7 @@ window.RULES = {
   // ---------- игры ----------
   function renderGame(g) {
     if (g.waiting) return rWaiting(g);
-    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority }[g.type];
+    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority, dice: rDice }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
@@ -11854,6 +12232,139 @@ window.RULES = {
     return `<div class="narrow quiz majority">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
   }
 
+  // ---------- Кости 1000 ----------
+  // Подсчёт очков для подсказки при выборе (сервер считает так же и всё проверяет)
+  function diceScore(vals) {
+    if (!vals.length) return null;
+    const sorted = vals.slice().sort((a, b) => a - b).join('');
+    if (vals.length === 5 && sorted === '12345') return 125;
+    if (vals.length === 5 && sorted === '23456') return 250;
+    const cnt = [0, 0, 0, 0, 0, 0, 0];
+    for (const v of vals) cnt[v]++;
+    let pts = 0;
+    for (let f = 1; f <= 6; f++) {
+      let n = cnt[f];
+      if (n >= 3) {
+        pts += n === 3 ? (f === 1 ? 100 : f * 10) : n === 4 ? (f === 1 ? 200 : f * 20) : f === 1 ? 1000 : f * 100;
+        n = 0;
+      }
+      if (n) {
+        if (f === 1) pts += 10 * n;
+        else if (f === 5) pts += 5 * n;
+        else return null;
+      }
+    }
+    return pts;
+  }
+  const PIPS = { 1: [5], 2: [3, 7], 3: [3, 5, 7], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+  // Поворот кубика, при котором грань v смотрит на нас (противоположные грани в сумме 7)
+  const FACE_ROT = { 1: [0, 0], 2: [-90, 0], 3: [0, -90], 4: [0, 90], 5: [90, 0], 6: [0, 180] };
+  const faceHtml = (v) => `<span class="face f${v}">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
+  const CUBE = [1, 2, 3, 4, 5, 6].map(faceHtml).join('');
+  const hash = (n) => {
+    let x = (n * 2654435761) >>> 0;
+    x ^= x >>> 15;
+    return x / 4294967295;
+  };
+  function die3(d, i, g, opts = {}) {
+    const [fx, fy] = FACE_ROT[d.v];
+    const r1 = hash(g.rollId * 13 + i), r2 = hash(g.rollId * 29 + i * 7);
+    const sx = fx - 720 - Math.floor(r1 * 4) * 90;
+    const sy = fy + 720 + Math.floor(r2 * 4) * 90;
+    const el = now() - (g.rollAt || 0);
+    const rolling = d.fresh && g.rollAt && el < g.rollMs + 400;
+    const style = `--fx:${fx}deg;--fy:${fy}deg;--sx:${sx}deg;--sy:${sy}deg;--de:${-el + i * 70}ms;--tilt:${((r1 - 0.5) * 16).toFixed(1)}deg`;
+    const cls = `die3 ${rolling ? 'rolling' : ''} ${opts.sel ? 'sel' : ''} ${opts.can ? 'can' : ''} ${opts.dim ? 'dim' : ''} ${opts.small ? 'small' : ''}`;
+    return opts.act ? `<button class="${cls}" data-act="dc-pick" data-i="${i}" style="${style}" aria-label="Кубик ${d.v}${opts.sel ? ', выбран' : ''}"><span class="cube">${CUBE}</span></button>` : `<span class="${cls}" style="${style}"><span class="cube">${CUBE}</span></span>`;
+  }
+  function rDice(g) {
+    const me = S.me;
+    const myTurn = g.turnPid === me && g.phase !== 'over';
+    // Выбор костей: на каждый новый бросок по умолчанию выбраны все зачётные
+    if (!ui.dsel || ui.dsel.rollId !== g.rollId) ui.dsel = { rollId: g.rollId, set: new Set(g.best || []) };
+    const sel = [...ui.dsel.set].filter((i) => g.dice[i] && !g.dice[i].kept);
+    const selPts = g.phase === 'pick' ? diceScore(sel.map((i) => g.dice[i].v)) : null;
+    const free = g.dice.map((d, i) => ({ d, i })).filter((x) => !x.d.kept);
+    const kept = g.dice.map((d, i) => ({ d, i })).filter((x) => x.d.kept);
+    const rollingNow = g.rollAt && now() - g.rollAt < g.rollMs;
+    if (rollingNow && ui.dRend !== g.rollId) {
+      ui.dRend = g.rollId; // после анимации — перерисовать, чтобы включить кнопки
+      setTimeout(render, g.rollMs - (now() - g.rollAt) + 80);
+    }
+    const total = g.total[g.turnPid] || 0;
+    const entered = g.entered[g.turnPid];
+    const sum = g.turnPts + (selPts || 0);
+    // Можно ли записать и почему нет
+    const allKept = g.phase === 'pick' && free.every((x) => sel.includes(x.i));
+    let stopWhy = '';
+    if (g.phase === 'pick') {
+      if (selPts == null) stopWhy = sel.length ? 'выбраны незачётные кости' : 'выберите зачётные кости';
+      else if (allKept) stopWhy = 'все 5 зачётные — нужен подтверждающий бросок';
+      else if (!entered && sum < g.entry) stopWhy = `допуск — нужно ${g.entry}+`;
+      else if (total === g.barrel && sum < g.target - g.barrel) stopWhy = `на бочке нужно ${g.target - g.barrel}+`;
+    }
+    const after = !stopWhy && g.phase === 'pick' ? (total === g.barrel ? g.target : Math.min(g.barrel, total + sum)) : null;
+    // Игроки слева: счёт, прогресс до 1000, допуск и бочка
+    const players = g.order
+      .map((id) => {
+        const t = g.total[id] || 0;
+        const on = id === g.turnPid && g.phase !== 'over';
+        const tag = g.winner === id ? `<b class="dp-tag win">${ic('trophy', 12)} победа</b>` : t === g.barrel ? '<b class="dp-tag barrel">🛢 на бочке</b>' : !g.entered[id] ? '<b class="dp-tag no">нет допуска</b>' : '';
+        return `<div class="dp ${on ? 'on' : ''} ${id === me ? 'me' : ''}">
+          ${pa(id, 44, 'round')}
+          <div class="dp-b"><span class="dp-n">${nm(id)}${id === me ? ' <small>(вы)</small>' : ''}</span>${tag}
+            <i class="dp-bar"><i style="width:${(t / g.target) * 100}%"></i><i class="mk m-entry" style="left:${(g.entry / g.target) * 100}%"></i><i class="mk m-barrel" style="left:${(g.barrel / g.target) * 100}%"></i></i></div>
+          <b class="dp-t" data-cnt="dc-${id}">${t}</b>
+        </div>`;
+      })
+      .join('');
+    const logRow = (l) =>
+      l.kind === 'bust'
+        ? `<div class="dl bust">${pa(l.pid, 20, 'round')}<span>${nm(l.pid)} — пусто${l.pts ? `, сгорело ${l.pts}` : ''}</span></div>`
+        : l.kind === 'drop'
+          ? `<div class="dl drop">${pa(l.pid, 20, 'round')}<span>${nm(l.pid)} слетел с бочки на ${l.to} — его сбросил ${nm(l.by)}</span></div>`
+          : `<div class="dl rec">${pa(l.pid, 20, 'round')}<span>${nm(l.pid)} записал <b>+${l.pts}</b> → ${l.total}${l.note ? ` · ${l.note}` : ''}</span></div>`;
+    let actions = '';
+    if (g.phase === 'over') {
+      actions = `<div class="dc-over">${ic('trophy', 26)} <b>${nm(g.winner)}</b> набрал 1000 и победил!</div>${canRestart() ? `<button class="btn primary big-w" data-act="dc-restart">${ic('reset', 18)} Сыграть ещё</button>` : ''}`;
+    } else if (!myTurn) {
+      actions = `<p class="muted center">${g.phase === 'bust' ? '' : `Бросает ${nm(g.turnPid)}…`}</p>`;
+    } else if (g.phase === 'start') {
+      actions = `<button class="btn primary mega dc-roll" data-act="dc-roll">${ic('dice5', 26)} Бросить</button>`;
+    } else if (g.phase === 'pick') {
+      const nRoll = allKept ? 5 : free.length - sel.length;
+      actions = `<div class="dc-btns">
+        <button class="btn primary mega dc-roll" data-act="dc-roll" ${selPts == null || rollingNow ? 'disabled' : ''}>${ic('dice5', 24)} ${allKept ? 'Подтверждающий бросок · 5' : `Бросить ещё · ${nRoll}`}</button>
+        <button class="btn success mega" data-act="dc-stop" ${stopWhy || rollingNow ? 'disabled' : ''}>${ic('check', 22)} Записать${after != null ? ` → ${after}` : ''}</button>
+      </div>
+      <p class="dc-why ${stopWhy ? '' : 'ok'}">${stopWhy ? `Записать нельзя: ${stopWhy}` : 'Можно записать или рискнуть и бросить ещё'}</p>`;
+    }
+    const status = g.phase === 'bust'
+      ? `<div class="dc-bust">${ic('x', 20)} Пусто! ${g.bust?.lost ? `Сгорело ${g.bust.lost} очков` : 'Ни одной зачётной кости'} — ход переходит</div>`
+      : '';
+    return `<div class="dice-g ${ui.enter ? 'enter' : ''}">
+      <aside class="dice-side" data-scroll="dice-side">
+        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">допуск ${g.entry} · бочка ${g.barrel} · до ${g.target}</span></div>
+        <div class="dp-list">${players}</div>
+        ${g.log.length ? `<div class="side-h dl-h">${ic('list', 15)} Ходы</div><div class="dl-list">${g.log.map(logRow).join('')}</div>` : ''}
+      </aside>
+      <section class="dice-main">
+        <div class="dc-head">
+          <div class="dc-who">${pa(g.turnPid, 40, 'round')}<div><span class="muted small">${g.phase === 'over' ? 'Игра окончена' : myTurn ? 'Ваш ход' : 'Ходит'}</span><b>${nm(g.turnPid)}</b></div></div>
+          <div class="dc-pts"><span class="muted small">За ход</span><b data-cnt="dc-turn">${g.phase === 'bust' ? 0 : g.turnPts}</b>${selPts ? `<em>+${selPts}</em>` : ''}</div>
+          <div class="dc-pts"><span class="muted small">На счёте</span><b>${total}</b></div>
+        </div>
+        <div class="dc-table ${g.phase === 'bust' && !rollingNow ? 'busted' : ''}">
+          <div class="dc-row">${free.length ? free.map(({ d, i }) => die3(d, i, g, { act: myTurn && g.phase === 'pick', sel: g.phase === 'pick' && ui.dsel.set.has(i), can: (g.best || []).includes(i), dim: g.phase === 'start' })).join('') : ''}</div>
+          ${kept.length ? `<div class="dc-kept"><span class="muted small">Отложено</span>${kept.map(({ d, i }) => die3({ ...d, fresh: false }, i, g, { small: true })).join('')}</div>` : ''}
+          ${status}
+        </div>
+        ${g.phase === 'pick' && myTurn ? '<p class="muted small center">Нажмите на кубик, чтобы взять или вернуть. Подсвечены зачётные</p>' : ''}
+        <div class="dc-actions">${actions}</div>
+      </section>
+    </div>`;
+  }
+
   // ---------- Коднеймс: капитанский вид «по цветам» ----------
   // Порядок: свои → соперников → нейтральные → убийца; внутри группы открытые — в конце
   function cnRank(c, i, myTeam) {
@@ -12193,6 +12704,18 @@ window.RULES = {
     'mj-add': () => act('addMe'),
     'mj-ready': () => act('ready'),
     'mj-restart': () => act('restart'),
+    'dc-restart': () => act('restart'),
+    'dc-skip': () => act('skipTurn'),
+    'dc-pick': (d) => {
+      const i = Number(d.i);
+      if (!ui.dsel) return;
+      if (ui.dsel.set.has(i)) ui.dsel.set.delete(i);
+      else ui.dsel.set.add(i);
+      Sound.play('tap');
+      render();
+    },
+    'dc-roll': () => act('roll', { keep: ui.dsel ? [...ui.dsel.set] : [] }),
+    'dc-stop': () => act('stop', { keep: ui.dsel ? [...ui.dsel.set] : [] }),
     'mj-skip': () => act('skip'),
     'mj-pick': (d) => {
       // хост склеивает группы: первый клик — выбрать, второй — куда добавить

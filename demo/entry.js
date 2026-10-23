@@ -7,6 +7,7 @@ const GAMES = {
   justone: require('../server/games/justone'),
   quiz: require('../server/games/quiz'),
   majority: require('../server/games/majority'),
+  dice: require('../server/games/dice'),
 };
 
 const Waiting = require('../server/waiting');

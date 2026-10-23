@@ -42,9 +42,9 @@
     cnSlots: null, // [{id, v}] — силы слов в подсказке капитана
     cnEdit: false, // капитан исправляет подсказку
     mode: 'single',
-    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone'],
+    mOrder: ['codenames', 'quiz', 'majority', 'spyfall', 'alias', 'whoami', 'justone', 'dice'],
     mOn: { codenames: true, quiz: true, majority: true, spyfall: true },
-    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1 },
+    mRounds: { codenames: 2, quiz: 1, majority: 1, spyfall: 1, alias: 1, whoami: 1, justone: 1, dice: 1 },
     mOpen: {},
     showTable: false,
     ctlOpen: LS.get('pg_ctl', '') === '1',
@@ -813,6 +813,11 @@
     } else if (b.type === 'spyfall') {
       if (a.phase !== 'over' && b.phase === 'over') Sound.play(b.result?.winner === 'spy' ? (b.spies?.includes(me) ? 'win' : 'lose') : b.result?.winner === 'town' ? (b.spies?.includes(me) ? 'lose' : 'win') : 'turn');
       if (a.phase !== 'guessing' && b.phase === 'guessing') Sound.play('myturn');
+    } else if (b.type === 'dice') {
+      if (a.rollId !== b.rollId && b.rollAt) Sound.play('dice');
+      if (a.phase !== 'bust' && b.phase === 'bust') setTimeout(() => Sound.play('bad'), b.rollMs);
+      if (a.turnPid !== b.turnPid && b.turnPid === me) Sound.play('myturn');
+      if (b.phase === 'over' && a.phase !== 'over') Sound.play(b.winner === me ? 'win' : 'lose');
     } else if (b.type === 'majority') {
       if (a.phase === 'answer' && b.phase === 'review') Sound.play(b.preview?.[me] ? 'good' : 'turn');
       if (b.phase === 'over' && a.phase !== 'over') Sound.play((b.winners || []).includes(me) ? 'win' : 'lose');
@@ -1696,6 +1701,9 @@
       }
       if (g.phase === 'review') items.push(btn('mj-skip', 'play', 'Следующий вопрос'));
       if (!t) items.push(btn('mj-restart', 'reset', 'Начать заново'));
+    } else if (g.type === 'dice') {
+      if (g.phase !== 'over') items.push(btn('dc-skip', 'skip', 'Пропустить ход'));
+      if (!t) items.push(btn('dc-restart', 'reset', 'Начать заново'));
     }
     items.push('<span class="ctl-sep"></span>');
     items.push(btn('stop', 'home', 'В лобби (пауза)'));
@@ -1818,6 +1826,7 @@
     justone: (id) => setv(id, 'target') || 15,
     quiz: (id) => ((setv(id, 'rounds') || 15) * ((setv(id, 'seconds') || 30) + 12)) / 60,
     majority: (id) => ((setv(id, 'rounds') || 10) * ((setv(id, 'seconds') || 45) + 20)) / 60,
+    dice: () => 25,
   };
   const estMin = (id) => (EST[id] ? EST[id](id) : 15);
   function fmtDur(min) {
@@ -2004,7 +2013,7 @@
   // ---------- игры ----------
   function renderGame(g) {
     if (g.waiting) return rWaiting(g);
-    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority }[g.type];
+    const fn = { codenames: rCodenames, alias: rAlias, spyfall: rSpy, whoami: rWho, justone: rJust, quiz: rQuiz, majority: rMajority, dice: rDice }[g.type];
     return fn ? fn(g) : '<p>Неизвестная игра</p>';
   }
   const canRestart = () => isHost() && !tour();
@@ -3230,6 +3239,139 @@
     return `<div class="narrow quiz majority">${g.phase !== 'over' ? head : ''}${body}${board}</div>`;
   }
 
+  // ---------- Кости 1000 ----------
+  // Подсчёт очков для подсказки при выборе (сервер считает так же и всё проверяет)
+  function diceScore(vals) {
+    if (!vals.length) return null;
+    const sorted = vals.slice().sort((a, b) => a - b).join('');
+    if (vals.length === 5 && sorted === '12345') return 125;
+    if (vals.length === 5 && sorted === '23456') return 250;
+    const cnt = [0, 0, 0, 0, 0, 0, 0];
+    for (const v of vals) cnt[v]++;
+    let pts = 0;
+    for (let f = 1; f <= 6; f++) {
+      let n = cnt[f];
+      if (n >= 3) {
+        pts += n === 3 ? (f === 1 ? 100 : f * 10) : n === 4 ? (f === 1 ? 200 : f * 20) : f === 1 ? 1000 : f * 100;
+        n = 0;
+      }
+      if (n) {
+        if (f === 1) pts += 10 * n;
+        else if (f === 5) pts += 5 * n;
+        else return null;
+      }
+    }
+    return pts;
+  }
+  const PIPS = { 1: [5], 2: [3, 7], 3: [3, 5, 7], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+  // Поворот кубика, при котором грань v смотрит на нас (противоположные грани в сумме 7)
+  const FACE_ROT = { 1: [0, 0], 2: [-90, 0], 3: [0, -90], 4: [0, 90], 5: [90, 0], 6: [0, 180] };
+  const faceHtml = (v) => `<span class="face f${v}">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
+  const CUBE = [1, 2, 3, 4, 5, 6].map(faceHtml).join('');
+  const hash = (n) => {
+    let x = (n * 2654435761) >>> 0;
+    x ^= x >>> 15;
+    return x / 4294967295;
+  };
+  function die3(d, i, g, opts = {}) {
+    const [fx, fy] = FACE_ROT[d.v];
+    const r1 = hash(g.rollId * 13 + i), r2 = hash(g.rollId * 29 + i * 7);
+    const sx = fx - 720 - Math.floor(r1 * 4) * 90;
+    const sy = fy + 720 + Math.floor(r2 * 4) * 90;
+    const el = now() - (g.rollAt || 0);
+    const rolling = d.fresh && g.rollAt && el < g.rollMs + 400;
+    const style = `--fx:${fx}deg;--fy:${fy}deg;--sx:${sx}deg;--sy:${sy}deg;--de:${-el + i * 70}ms;--tilt:${((r1 - 0.5) * 16).toFixed(1)}deg`;
+    const cls = `die3 ${rolling ? 'rolling' : ''} ${opts.sel ? 'sel' : ''} ${opts.can ? 'can' : ''} ${opts.dim ? 'dim' : ''} ${opts.small ? 'small' : ''}`;
+    return opts.act ? `<button class="${cls}" data-act="dc-pick" data-i="${i}" style="${style}" aria-label="Кубик ${d.v}${opts.sel ? ', выбран' : ''}"><span class="cube">${CUBE}</span></button>` : `<span class="${cls}" style="${style}"><span class="cube">${CUBE}</span></span>`;
+  }
+  function rDice(g) {
+    const me = S.me;
+    const myTurn = g.turnPid === me && g.phase !== 'over';
+    // Выбор костей: на каждый новый бросок по умолчанию выбраны все зачётные
+    if (!ui.dsel || ui.dsel.rollId !== g.rollId) ui.dsel = { rollId: g.rollId, set: new Set(g.best || []) };
+    const sel = [...ui.dsel.set].filter((i) => g.dice[i] && !g.dice[i].kept);
+    const selPts = g.phase === 'pick' ? diceScore(sel.map((i) => g.dice[i].v)) : null;
+    const free = g.dice.map((d, i) => ({ d, i })).filter((x) => !x.d.kept);
+    const kept = g.dice.map((d, i) => ({ d, i })).filter((x) => x.d.kept);
+    const rollingNow = g.rollAt && now() - g.rollAt < g.rollMs;
+    if (rollingNow && ui.dRend !== g.rollId) {
+      ui.dRend = g.rollId; // после анимации — перерисовать, чтобы включить кнопки
+      setTimeout(render, g.rollMs - (now() - g.rollAt) + 80);
+    }
+    const total = g.total[g.turnPid] || 0;
+    const entered = g.entered[g.turnPid];
+    const sum = g.turnPts + (selPts || 0);
+    // Можно ли записать и почему нет
+    const allKept = g.phase === 'pick' && free.every((x) => sel.includes(x.i));
+    let stopWhy = '';
+    if (g.phase === 'pick') {
+      if (selPts == null) stopWhy = sel.length ? 'выбраны незачётные кости' : 'выберите зачётные кости';
+      else if (allKept) stopWhy = 'все 5 зачётные — нужен подтверждающий бросок';
+      else if (!entered && sum < g.entry) stopWhy = `допуск — нужно ${g.entry}+`;
+      else if (total === g.barrel && sum < g.target - g.barrel) stopWhy = `на бочке нужно ${g.target - g.barrel}+`;
+    }
+    const after = !stopWhy && g.phase === 'pick' ? (total === g.barrel ? g.target : Math.min(g.barrel, total + sum)) : null;
+    // Игроки слева: счёт, прогресс до 1000, допуск и бочка
+    const players = g.order
+      .map((id) => {
+        const t = g.total[id] || 0;
+        const on = id === g.turnPid && g.phase !== 'over';
+        const tag = g.winner === id ? `<b class="dp-tag win">${ic('trophy', 12)} победа</b>` : t === g.barrel ? '<b class="dp-tag barrel">🛢 на бочке</b>' : !g.entered[id] ? '<b class="dp-tag no">нет допуска</b>' : '';
+        return `<div class="dp ${on ? 'on' : ''} ${id === me ? 'me' : ''}">
+          ${pa(id, 44, 'round')}
+          <div class="dp-b"><span class="dp-n">${nm(id)}${id === me ? ' <small>(вы)</small>' : ''}</span>${tag}
+            <i class="dp-bar"><i style="width:${(t / g.target) * 100}%"></i><i class="mk m-entry" style="left:${(g.entry / g.target) * 100}%"></i><i class="mk m-barrel" style="left:${(g.barrel / g.target) * 100}%"></i></i></div>
+          <b class="dp-t" data-cnt="dc-${id}">${t}</b>
+        </div>`;
+      })
+      .join('');
+    const logRow = (l) =>
+      l.kind === 'bust'
+        ? `<div class="dl bust">${pa(l.pid, 20, 'round')}<span>${nm(l.pid)} — пусто${l.pts ? `, сгорело ${l.pts}` : ''}</span></div>`
+        : l.kind === 'drop'
+          ? `<div class="dl drop">${pa(l.pid, 20, 'round')}<span>${nm(l.pid)} слетел с бочки на ${l.to} — его сбросил ${nm(l.by)}</span></div>`
+          : `<div class="dl rec">${pa(l.pid, 20, 'round')}<span>${nm(l.pid)} записал <b>+${l.pts}</b> → ${l.total}${l.note ? ` · ${l.note}` : ''}</span></div>`;
+    let actions = '';
+    if (g.phase === 'over') {
+      actions = `<div class="dc-over">${ic('trophy', 26)} <b>${nm(g.winner)}</b> набрал 1000 и победил!</div>${canRestart() ? `<button class="btn primary big-w" data-act="dc-restart">${ic('reset', 18)} Сыграть ещё</button>` : ''}`;
+    } else if (!myTurn) {
+      actions = `<p class="muted center">${g.phase === 'bust' ? '' : `Бросает ${nm(g.turnPid)}…`}</p>`;
+    } else if (g.phase === 'start') {
+      actions = `<button class="btn primary mega dc-roll" data-act="dc-roll">${ic('dice5', 26)} Бросить</button>`;
+    } else if (g.phase === 'pick') {
+      const nRoll = allKept ? 5 : free.length - sel.length;
+      actions = `<div class="dc-btns">
+        <button class="btn primary mega dc-roll" data-act="dc-roll" ${selPts == null || rollingNow ? 'disabled' : ''}>${ic('dice5', 24)} ${allKept ? 'Подтверждающий бросок · 5' : `Бросить ещё · ${nRoll}`}</button>
+        <button class="btn success mega" data-act="dc-stop" ${stopWhy || rollingNow ? 'disabled' : ''}>${ic('check', 22)} Записать${after != null ? ` → ${after}` : ''}</button>
+      </div>
+      <p class="dc-why ${stopWhy ? '' : 'ok'}">${stopWhy ? `Записать нельзя: ${stopWhy}` : 'Можно записать или рискнуть и бросить ещё'}</p>`;
+    }
+    const status = g.phase === 'bust'
+      ? `<div class="dc-bust">${ic('x', 20)} Пусто! ${g.bust?.lost ? `Сгорело ${g.bust.lost} очков` : 'Ни одной зачётной кости'} — ход переходит</div>`
+      : '';
+    return `<div class="dice-g ${ui.enter ? 'enter' : ''}">
+      <aside class="dice-side" data-scroll="dice-side">
+        <div class="side-h">${ic('users', 16)} Игроки <span class="muted small">допуск ${g.entry} · бочка ${g.barrel} · до ${g.target}</span></div>
+        <div class="dp-list">${players}</div>
+        ${g.log.length ? `<div class="side-h dl-h">${ic('list', 15)} Ходы</div><div class="dl-list">${g.log.map(logRow).join('')}</div>` : ''}
+      </aside>
+      <section class="dice-main">
+        <div class="dc-head">
+          <div class="dc-who">${pa(g.turnPid, 40, 'round')}<div><span class="muted small">${g.phase === 'over' ? 'Игра окончена' : myTurn ? 'Ваш ход' : 'Ходит'}</span><b>${nm(g.turnPid)}</b></div></div>
+          <div class="dc-pts"><span class="muted small">За ход</span><b data-cnt="dc-turn">${g.phase === 'bust' ? 0 : g.turnPts}</b>${selPts ? `<em>+${selPts}</em>` : ''}</div>
+          <div class="dc-pts"><span class="muted small">На счёте</span><b>${total}</b></div>
+        </div>
+        <div class="dc-table ${g.phase === 'bust' && !rollingNow ? 'busted' : ''}">
+          <div class="dc-row">${free.length ? free.map(({ d, i }) => die3(d, i, g, { act: myTurn && g.phase === 'pick', sel: g.phase === 'pick' && ui.dsel.set.has(i), can: (g.best || []).includes(i), dim: g.phase === 'start' })).join('') : ''}</div>
+          ${kept.length ? `<div class="dc-kept"><span class="muted small">Отложено</span>${kept.map(({ d, i }) => die3({ ...d, fresh: false }, i, g, { small: true })).join('')}</div>` : ''}
+          ${status}
+        </div>
+        ${g.phase === 'pick' && myTurn ? '<p class="muted small center">Нажмите на кубик, чтобы взять или вернуть. Подсвечены зачётные</p>' : ''}
+        <div class="dc-actions">${actions}</div>
+      </section>
+    </div>`;
+  }
+
   // ---------- Коднеймс: капитанский вид «по цветам» ----------
   // Порядок: свои → соперников → нейтральные → убийца; внутри группы открытые — в конце
   function cnRank(c, i, myTeam) {
@@ -3569,6 +3711,18 @@
     'mj-add': () => act('addMe'),
     'mj-ready': () => act('ready'),
     'mj-restart': () => act('restart'),
+    'dc-restart': () => act('restart'),
+    'dc-skip': () => act('skipTurn'),
+    'dc-pick': (d) => {
+      const i = Number(d.i);
+      if (!ui.dsel) return;
+      if (ui.dsel.set.has(i)) ui.dsel.set.delete(i);
+      else ui.dsel.set.add(i);
+      Sound.play('tap');
+      render();
+    },
+    'dc-roll': () => act('roll', { keep: ui.dsel ? [...ui.dsel.set] : [] }),
+    'dc-stop': () => act('stop', { keep: ui.dsel ? [...ui.dsel.set] : [] }),
     'mj-skip': () => act('skip'),
     'mj-pick': (d) => {
       // хост склеивает группы: первый клик — выбрать, второй — куда добавить

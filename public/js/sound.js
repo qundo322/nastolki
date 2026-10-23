@@ -122,6 +122,10 @@
     },
     strike: () => noise(0.12, { gain: 0.1, from: 3000, to: 1200, q: 2 }),
     open: () => tone(600, 0.08, { type: 'sine', gain: 0.08, to: 900 }),
+    // стук кубиков по столу
+    dice: () => {
+      for (let i = 0; i < 7; i++) noise(0.05, { gain: 0.16 - i * 0.015, from: 2500, to: 1200, q: 2.5, delay: 0.08 + i * 0.11 + Math.random() * 0.05 });
+    },
     // ---- подарки ----
     coin: () => [1318, 1760].forEach((f, i) => tone(f, 0.12, { type: 'square', gain: 0.05, delay: i * 0.07 })),
     gift_kiss: () => {
